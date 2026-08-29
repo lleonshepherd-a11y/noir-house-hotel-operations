@@ -37,6 +37,8 @@ button,input,select,textarea { font:inherit; } button { color:inherit; }
 /* Clean, unboxed utility icons */
 .top-actions .icon-button{border:0;background:transparent;box-shadow:none}
 .top-actions .icon-button:hover{background:transparent;color:#fff;transform:scale(1.08)}
+.top-actions .count-badge{background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.045));border:1px solid rgba(255,255,255,.42);box-shadow:inset 1px 1px 0 rgba(255,255,255,.34),0 5px 15px rgba(0,0,0,.26);backdrop-filter:blur(9px) saturate(160%);-webkit-backdrop-filter:blur(9px) saturate(160%);color:#fff}
+.notification-popover .popover-heading strong{padding:5px 8px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.018));box-shadow:inset 1px 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(8px) saturate(150%);-webkit-backdrop-filter:blur(8px) saturate(150%)}
 .pin-icon{flex-basis:24px;width:24px;height:24px;border-radius:0;background:transparent!important;box-shadow:none}
 .quick-note button{width:24px;border:0;border-radius:0;background:transparent;box-shadow:none;display:grid;place-items:center}
 .notification-symbol{width:24px;border:0;border-radius:0;background:transparent;box-shadow:none}
