@@ -1,10 +1,10 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell, BellRing, ChefHat, ChevronDown, CloudSun, ConciergeBell,
   Crown, Droplets, LayoutDashboard, Martini, MessageSquareText,
-  MoreHorizontal, NotebookPen, Pin, Plus, Search, Send, Settings,
+  Mic, MoreHorizontal, NotebookPen, Paperclip, Pin, Plus, Search, Send, Settings,
   ShieldCheck, Sparkles, UtensilsCrossed, Wrench, X, Zap,
 } from 'lucide-react';
 
@@ -53,6 +53,11 @@ export default function Home() {
   const [urgent, setUrgent] = useState(false);
   const [recipient, setRecipient] = useState('All departments');
   const [draft, setDraft] = useState('');
+  const [attachment, setAttachment] = useState('');
+  const [messageError, setMessageError] = useState('');
+  const [recording, setRecording] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunks = useRef<Blob[]>([]);
   const [noteDraft, setNoteDraft] = useState('');
   const [pinnedNotes, setPinnedNotes] = useState([
     { id: 1, text: 'VIP arrival · Astor Suite · 20:15', urgent: false },
@@ -72,11 +77,13 @@ export default function Home() {
   const sendMessage = (event: FormEvent) => {
     event.preventDefault();
     if (!draft.trim()) return;
-    const next = { id: Date.now(), from: recipient, text: draft.trim(), time: new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()), unread: false, urgent };
+    const blockedLanguage = /\b(fuck|shit|bitch|cunt|bastard|asshole|dick|prick|wanker)\w*\b/i;
+    if (blockedLanguage.test(draft)) { setMessageError('Please rewrite this message using professional language.'); return; }
+    const next = { id: Date.now(), from: recipient, text: `${draft.trim()}${attachment ? ` · Attachment: ${attachment}` : ''}`, time: new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()), unread: false, urgent };
     setMessages((current) => [next, ...current]);
     if (urgent) setPinnedNotes((current) => [{ id: next.id, text: `${recipient} · ${next.text}`, urgent: true }, ...current]);
     playPing(urgent);
-    setDraft(''); setUrgent(false); setComposerOpen(false);
+    setDraft(''); setAttachment(''); setMessageError(''); setUrgent(false); setComposerOpen(false);
   };
 
   const pinNote = (event: FormEvent) => {
@@ -84,6 +91,22 @@ export default function Home() {
     if (!noteDraft.trim()) return;
     setPinnedNotes((current) => [{ id: Date.now(), text: noteDraft.trim(), urgent: false }, ...current]);
     setNoteDraft(''); playPing(false);
+  };
+
+  const toggleVoiceNote = async () => {
+    if (recording && recorderRef.current) { recorderRef.current.stop(); setRecording(false); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordingChunks.current = [];
+      recorder.ondataavailable = (event) => { if (event.data.size) recordingChunks.current.push(event.data); };
+      recorder.onstop = () => {
+        const voiceNote = new Blob(recordingChunks.current, { type: recorder.mimeType });
+        setAttachment(`Voice note · ${Math.max(1, Math.round(voiceNote.size / 1024))} KB`);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorderRef.current = recorder; recorder.start(); setRecording(true);
+    } catch { setMessageError('Microphone access is needed to record a voice note.'); }
   };
 
   return (
@@ -147,7 +170,7 @@ export default function Home() {
           </section>
         </div>
 
-        {composerOpen && <div className="composer glass-panel" role="dialog" aria-label="New message"><div className="composer-heading"><div><span>New message</span><small>Send across the hotel</small></div><button onClick={() => setComposerOpen(false)} aria-label="Close message composer"><X size={18} /></button></div><form onSubmit={sendMessage}><label>To<select value={recipient} onChange={(event) => setRecipient(event.target.value)}><option>All departments</option>{departments.map((department) => <option key={department.name}>{department.name}</option>)}</select></label><textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Write your message…" autoFocus /><div className="composer-footer"><button type="button" className={`urgent-toggle ${urgent ? 'active' : ''}`} onClick={() => setUrgent((value) => !value)}><Zap size={15} /> Urgent</button><button type="submit" className="send-button">Send message <Send size={15} /></button></div></form></div>}
+        {composerOpen && <div className="composer glass-panel" role="dialog" aria-label="New message"><div className="composer-heading"><div><span>New message</span><small>Send across the hotel</small></div><button onClick={() => setComposerOpen(false)} aria-label="Close message composer"><X size={18} /></button></div><form onSubmit={sendMessage}><div className="recipient-heading"><span>Send to</span><small>{recipient}</small></div><div className="recipient-picker"><button type="button" className={recipient === 'All departments' ? 'active' : ''} onClick={() => setRecipient('All departments')}><Sparkles size={13} /> All departments</button>{departments.map((department) => { const Icon = department.icon; return <button type="button" className={recipient === department.name ? 'active' : ''} onClick={() => setRecipient(department.name)} key={department.name}><Icon size={13} /> {department.name}</button>; })}</div><textarea value={draft} onChange={(event) => { setDraft(event.target.value); setMessageError(''); }} placeholder="Write your message…" autoFocus />{messageError && <p className="message-error"><ShieldCheck size={13} /> {messageError}</p>}{attachment && <div className="attachment-chip"><Paperclip size={13} /><span>{attachment}</span><button type="button" onClick={() => setAttachment('')} aria-label="Remove attachment"><X size={12} /></button></div>}<div className="composer-footer"><div className="composer-tools"><button type="button" className={`urgent-toggle ${urgent ? 'active' : ''}`} onClick={() => setUrgent((value) => !value)}><Zap size={15} /> Urgent</button><label className="attach-button"><Paperclip size={15} /><span>Attach</span><input type="file" accept="image/*,.pdf,application/pdf" onChange={(event) => setAttachment(event.target.files?.[0]?.name ?? '')} /></label><button type="button" className={`voice-button ${recording ? 'recording' : ''}`} onClick={toggleVoiceNote}><Mic size={15} />{recording ? 'Stop' : 'Voice'}</button></div><button type="submit" className="send-button">Send message <Send size={15} /></button></div></form></div>}
       </section>
     </main>
   );
