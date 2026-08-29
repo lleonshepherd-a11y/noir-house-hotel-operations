@@ -2,10 +2,10 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Bell, BellRing, ChefHat, ChevronDown, CloudSun, ConciergeBell,
+  Bell, BellRing, ChefHat, ChevronDown, CloudRain, CloudSun, ConciergeBell,
   Crown, Droplets, LayoutDashboard, Martini, MessageSquareText,
   Mic, MoreHorizontal, NotebookPen, Paperclip, Pin, Plus, Search, Send, Settings,
-  ShieldCheck, Sparkles, UtensilsCrossed, Wrench, X, Zap,
+  ShieldCheck, Sparkles, Sun, UtensilsCrossed, Wrench, X, Zap,
 } from 'lucide-react';
 
 const departments = [
@@ -48,6 +48,8 @@ function playPing(urgent = false) {
 
 export default function Home() {
   const [now, setNow] = useState(new Date());
+  const [activeDepartment, setActiveDepartment] = useState('Front of House');
+  const [weather, setWeather] = useState({ temperature: 17, label: 'Partly cloudy', kind: 'cloud' });
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [urgent, setUrgent] = useState(false);
@@ -68,6 +70,18 @@ export default function Home() {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m,weather_code&timezone=Europe%2FLondon')
+      .then((response) => response.json())
+      .then((data) => {
+        const code = Number(data.current?.weather_code ?? 2);
+        const kind = code <= 1 ? 'sun' : code >= 51 ? 'rain' : 'cloud';
+        const label = kind === 'sun' ? 'Clear outside' : kind === 'rain' ? 'Rain outside' : 'Partly cloudy';
+        setWeather({ temperature: Math.round(data.current?.temperature_2m ?? 17), label, kind });
+      })
+      .catch(() => undefined);
   }, []);
 
   const unreadCount = useMemo(() => messages.filter((message) => message.unread).length, [messages]);
@@ -125,8 +139,8 @@ export default function Home() {
 
       <section className="workspace">
         <header className="topbar glass-panel">
-          <div className="property-heading"><p>NOIR HOUSE · LONDON</p><h1>Good evening, Eleanor</h1></div>
-          <div className="weather" aria-label="London weather: partly cloudy, 17 degrees"><div className="weather-icon"><CloudSun size={25} /></div><div><strong>17°</strong><span>Partly cloudy</span></div></div>
+          <div className="property-heading"><p>NOIR HOUSE · LONDON</p><div className="department-greeting"><span>Good evening,</span><select aria-label="Active department" value={activeDepartment} onChange={(event) => setActiveDepartment(event.target.value)}>{departments.map((department) => <option key={department.name}>{department.name}</option>)}</select></div></div>
+          <div className="weather" aria-label={`London weather: ${weather.label}, ${weather.temperature} degrees`}><div className={`weather-icon ${weather.kind}`}>{weather.kind === 'sun' ? <Sun size={27} /> : weather.kind === 'rain' ? <CloudRain size={27} /> : <CloudSun size={27} />}</div><div><strong>{weather.temperature}°</strong><span>{weather.label}</span></div></div>
           <div className="date-time"><div><span>{date}</span><strong>{time}</strong></div></div>
           <div className="top-actions">
             <button className="icon-button search-action" aria-label="Search"><Search size={18} /></button>
