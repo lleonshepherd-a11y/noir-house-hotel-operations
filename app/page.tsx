@@ -12,6 +12,7 @@ import {
   Crown,
   Droplets,
   LayoutDashboard,
+  ListChecks,
   Martini,
   MessageSquareText,
   Mic,
@@ -1072,19 +1073,6 @@ export default function Home() {
                 placeholder="Write your message…"
                 autoFocus
               />
-              <label className={`task-toggle ${assignAsTask ? 'active' : ''}`}>
-                <input
-                  type="checkbox"
-                  checked={assignAsTask}
-                  disabled={recipient === 'All departments'}
-                  onChange={(event) => setAssignAsTask(event.target.checked)}
-                />
-                <ShieldCheck size={14} />
-                <span>
-                  Create a task from this message
-                  <small>Choose a department, then send to add it to Tasks</small>
-                </span>
-              </label>
               {assignAsTask && (
                 <input
                   className="task-note-input"
@@ -1117,6 +1105,16 @@ export default function Home() {
               )}
               <div className="composer-footer">
                 <div className="composer-tools">
+                  <button
+                    type="button"
+                    className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
+                    onClick={() => setAssignAsTask((value) => !value)}
+                    disabled={recipient === 'All departments'}
+                    aria-label={assignAsTask ? 'Send as a normal message' : 'Create a task from this message'}
+                    title={assignAsTask ? 'Task selected' : 'Create task'}
+                  >
+                    <ListChecks size={18} />
+                  </button>
                   <button
                     type="button"
                     className={`urgent-toggle ${urgent ? 'active' : ''}`}

@@ -47,8 +47,9 @@ button,input,select,textarea { font:inherit; } button { color:inherit; }
 .quick-note button{width:24px;border:0;border-radius:0;background:transparent;box-shadow:none;display:grid;place-items:center}
 .notification-symbol{width:24px;border:0;border-radius:0;background:transparent;box-shadow:none}
 .recipient-picker button:first-child{grid-column:auto;justify-content:flex-start}
-.composer .attach-button,.composer .voice-button{width:30px;height:38px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:grid!important;place-items:center;color:#aaa89f!important;cursor:pointer}
+.composer .attach-button,.composer .voice-button{width:30px;height:38px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:grid!important;place-items:center;color:#aaa89f!important;cursor:pointer}.composer .attach-button{color:#6fa9d2!important}.composer .attach-button:hover{color:#8dc7ee!important;filter:drop-shadow(0 0 6px rgba(78,151,202,.35))}
 .composer .urgent-toggle{width:32px;height:38px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:grid;place-items:center;color:#cf6f68}.composer .urgent-toggle:hover{color:#ff8f87;background:transparent}.composer .urgent-toggle.active{color:#ff8f87;border:0;background:transparent;filter:drop-shadow(0 0 6px rgba(240,111,101,.5))}
+.composer .task-icon-toggle{width:32px;height:38px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:grid;place-items:center;color:#d58a3a;cursor:pointer}.composer .task-icon-toggle:hover{color:#f0a14e}.composer .task-icon-toggle.active{color:#ffad55;filter:drop-shadow(0 0 7px rgba(226,138,52,.55))}.composer .task-icon-toggle:disabled{opacity:.3;cursor:not-allowed;filter:none}
 .composer .attach-button:hover,.composer .voice-button:hover{color:#fff!important;background:transparent}
 .composer .voice-button.recording{color:#ff8c83!important;background:transparent;animation:recordPulse 1.2s ease-in-out infinite}
 .weather-icon{animation:none;position:relative}
