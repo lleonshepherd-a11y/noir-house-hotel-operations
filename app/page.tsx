@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   BellRing,
+  CalendarClock,
+  CalendarDays,
   ChefHat,
   ChevronDown,
   CloudRain,
@@ -13,6 +15,7 @@ import {
   Droplets,
   LayoutDashboard,
   ListChecks,
+  LogIn,
   Martini,
   MessageSquareText,
   Mic,
@@ -47,10 +50,13 @@ const departments = [
 type HotelMessage = {
   id: number;
   from: string;
+  to: string;
   text: string;
   time: string;
   unread: boolean;
   urgent: boolean;
+  seenAt?: string;
+  seenBy?: string;
   attachmentUrl?: string;
   attachmentName?: string;
 };
@@ -59,6 +65,7 @@ const initialMessages: HotelMessage[] = [
   {
     id: 101,
     from: 'General Manager',
+    to: 'Kitchen',
     text: "Prepare tomorrow's menu and send it back for approval.",
     time: '19:44',
     unread: false,
@@ -67,6 +74,7 @@ const initialMessages: HotelMessage[] = [
   {
     id: 1,
     from: 'Front of House',
+    to: 'Restaurant',
     text: 'The Carrington party has arrived — 6 guests, table 12.',
     time: '19:42',
     unread: true,
@@ -75,6 +83,7 @@ const initialMessages: HotelMessage[] = [
   {
     id: 2,
     from: 'Kitchen',
+    to: 'Restaurant',
     text: 'Sea bass special: 4 portions remaining for this evening.',
     time: '19:38',
     unread: true,
@@ -83,6 +92,7 @@ const initialMessages: HotelMessage[] = [
   {
     id: 3,
     from: 'Restaurant',
+    to: 'Front of House',
     text: 'Allergy confirmation needed for table 8 before mains.',
     time: '19:35',
     unread: true,
@@ -91,6 +101,7 @@ const initialMessages: HotelMessage[] = [
   {
     id: 4,
     from: 'Bar',
+    to: 'Front of House',
     text: 'Champagne service is ready for the Astor Suite.',
     time: '19:31',
     unread: false,
@@ -110,6 +121,16 @@ type AssignedTask = {
   attachmentUrl?: string;
   attachmentName?: string;
   note?: string;
+  openedAt?: string;
+  openedBy?: string;
+};
+
+type DepartmentAppointment = {
+  id: number;
+  department: string;
+  title: string;
+  startsAt: string;
+  reminderMinutes: number;
 };
 
 const taskStatusOrder: TaskStatus[] = [
@@ -192,12 +213,36 @@ export default function Home() {
   const [announcementAcknowledged, setAnnouncementAcknowledged] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'security' | 'settings' | null>(null);
+  const [gentleSounds, setGentleSounds] = useState(true);
+  const [calmMotion, setCalmMotion] = useState(true);
+  const [appointmentTitle, setAppointmentTitle] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [appointmentReminder, setAppointmentReminder] = useState('15');
+  const [dismissedAppointments, setDismissedAppointments] = useState<number[]>([]);
+  const [appointments, setAppointments] = useState<DepartmentAppointment[]>(() => {
+    const arrival = new Date();
+    arrival.setDate(arrival.getDate() + (arrival.getHours() >= 9 ? 1 : 0));
+    arrival.setHours(9, 0, 0, 0);
+    return [
+      {
+        id: 901,
+        department: 'Front of House',
+        title: 'PC technician arriving',
+        startsAt: arrival.toISOString(),
+        reminderMinutes: 15,
+      },
+    ];
+  });
   const [pushPermission, setPushPermission] = useState<
     NotificationPermission | 'unsupported' | 'configuration-required'
   >('default');
   const [urgent, setUrgent] = useState(false);
   const [assignAsTask, setAssignAsTask] = useState(false);
   const [spellCheckEnabled, setSpellCheckEnabled] = useState(true);
+  const [spellCheckNotice, setSpellCheckNotice] = useState('Spell check on');
   const [taskNote, setTaskNote] = useState('');
   const [taskNoteEdits, setTaskNoteEdits] = useState<Record<number, string>>({});
   const [recipient, setRecipient] = useState('All departments');
@@ -206,6 +251,7 @@ export default function Home() {
   const [attachmentPreview, setAttachmentPreview] = useState('');
   const [messageError, setMessageError] = useState('');
   const [recording, setRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunks = useRef<Blob[]>([]);
   const [noteDraft, setNoteDraft] = useState('');
@@ -232,11 +278,45 @@ export default function Home() {
   const [messages, setMessages] = useState(initialMessages);
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
 
+  const departmentAppointments = useMemo(
+    () =>
+      appointments
+        .filter((appointment) => appointment.department === activeDepartment)
+        .sort(
+          (left, right) =>
+            new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime(),
+        ),
+    [activeDepartment, appointments],
+  );
+  const selectedDepartment = departments.find(
+    (department) => department.name === activeDepartment,
+  ) ?? departments[1];
+  const SelectedDepartmentIcon = selectedDepartment.icon;
+
+  const currentAppointment = useMemo(() => {
+    if (!now) return undefined;
+    return departmentAppointments.find((appointment) => {
+      const startsAt = new Date(appointment.startsAt).getTime();
+      const reminderStarts = startsAt - appointment.reminderMinutes * 60 * 1000;
+      const elapsed = now.getTime() - startsAt;
+      return now.getTime() >= reminderStarts && elapsed <= 15 * 60 * 1000 && !dismissedAppointments.includes(appointment.id);
+    });
+  }, [departmentAppointments, dismissedAppointments, now]);
+
   useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!recording) return;
+    const timer = window.setInterval(
+      () => setRecordingSeconds((seconds) => seconds + 1),
+      1000,
+    );
+    return () => window.clearInterval(timer);
+  }, [recording]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('Notification' in window)) {
@@ -290,6 +370,26 @@ export default function Home() {
       ),
     );
   };
+
+  const markMessageOpened = (messageId: number) => {
+    const seenAt = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId && message.to === activeDepartment
+          ? {
+              ...message,
+              unread: false,
+              seenAt,
+              seenBy: activeDepartment,
+            }
+          : message,
+      ),
+    );
+  };
   const date = now
     ? new Intl.DateTimeFormat('en-GB', {
         weekday: 'long',
@@ -323,7 +423,8 @@ export default function Home() {
     }
     const next = {
       id: Date.now(),
-      from: recipient,
+      from: activeDepartment,
+      to: recipient,
       text: `${draft.trim()}${attachment ? ` · Attachment: ${attachment}` : ''}`,
       time: new Intl.DateTimeFormat('en-GB', {
         hour: '2-digit',
@@ -357,7 +458,7 @@ export default function Home() {
         { id: next.id, text: next.text, urgent: true, department: recipient },
         ...current,
       ]);
-    playPing(urgent);
+    if (gentleSounds) playPing(urgent);
     setDraft('');
     setAttachment('');
     setAttachmentPreview('');
@@ -366,6 +467,24 @@ export default function Home() {
     setAssignAsTask(false);
     setTaskNote('');
     setComposerOpen(false);
+  };
+
+  const addAppointment = (event: FormEvent) => {
+    event.preventDefault();
+    if (!appointmentTitle.trim() || !appointmentTime) return;
+    setAppointments((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        department: activeDepartment,
+        title: appointmentTitle.trim(),
+        startsAt: new Date(appointmentTime).toISOString(),
+        reminderMinutes: Number(appointmentReminder),
+      },
+    ]);
+    setAppointmentTitle('');
+    setAppointmentTime('');
+    setAppointmentReminder('15');
   };
 
   const advanceTask = (taskId: number) => {
@@ -384,6 +503,21 @@ export default function Home() {
           }).format(new Date()),
         };
       }),
+    );
+  };
+
+  const markTaskOpened = (taskId: number) => {
+    const openedAt = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    setAssignedTasks((current) =>
+      current.map((task) =>
+        task.id === taskId && task.to === activeDepartment && !task.openedAt
+          ? { ...task, openedAt, openedBy: activeDepartment }
+          : task,
+      ),
     );
   };
 
@@ -458,7 +592,7 @@ export default function Home() {
       ...current,
     ]);
     setNoteDraft('');
-    playPing(false);
+    if (gentleSounds) playPing(false);
   };
 
   const toggleVoiceNote = async () => {
@@ -485,6 +619,7 @@ export default function Home() {
       };
       recorderRef.current = recorder;
       recorder.start();
+      setRecordingSeconds(0);
       setRecording(true);
     } catch {
       setMessageError('Microphone access is needed to record a voice note.');
@@ -492,7 +627,7 @@ export default function Home() {
   };
 
   return (
-    <main className="hotel-shell">
+    <main className={`hotel-shell ${calmMotion ? '' : 'calm-motion-off'}`}>
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
       {activeNotification && (
@@ -530,7 +665,7 @@ export default function Home() {
                   ...current,
                 ]);
                 markNotificationSeen(activeNotification.id);
-                playPing(false);
+                if (gentleSounds) playPing(false);
               }}
             >
               <Pin size={15} />
@@ -554,31 +689,239 @@ export default function Home() {
           <span>N</span>
         </div>
         <nav aria-label="Main navigation">
-          <button className="nav-button active" aria-label="Dashboard">
+          <button
+            className={`nav-button ${!calendarOpen && !utilityPanel ? 'active' : ''}`}
+            aria-label="Dashboard"
+            title="Dashboard"
+            onClick={() => {
+              setCalendarOpen(false);
+              setUtilityPanel(null);
+              setComposerOpen(false);
+            }}
+          >
             <LayoutDashboard size={20} />
           </button>
           <button
             className="nav-button"
             aria-label="Messages"
-            onClick={() => setComposerOpen(true)}
+            title="Messages"
+            onClick={() => {
+              setComposerOpen(true);
+              setCalendarOpen(false);
+              setUtilityPanel(null);
+            }}
           >
             <MessageSquareText size={20} />
             <span className="nav-dot" />
           </button>
-          <button className="nav-button" aria-label="Notes">
+          <button
+            className={`nav-button ${utilityPanel === 'notes' ? 'active' : ''}`}
+            aria-label="Department notes"
+            title="Department notes"
+            onClick={() => {
+              setUtilityPanel((panel) => (panel === 'notes' ? null : 'notes'));
+              setCalendarOpen(false);
+            }}
+          >
             <NotebookPen size={20} />
           </button>
-          <button className="nav-button" aria-label="Security">
+          <button
+            className={`nav-button ${calendarOpen ? 'active' : ''}`}
+            aria-label={`${activeDepartment} calendar`}
+            title={`${activeDepartment} calendar`}
+            onClick={() => {
+              setCalendarOpen((open) => !open);
+              setUtilityPanel(null);
+            }}
+          >
+            <CalendarDays size={20} />
+            {departmentAppointments.length > 0 && <span className="calendar-nav-dot" />}
+          </button>
+          <button
+            className={`nav-button ${utilityPanel === 'security' ? 'active' : ''}`}
+            aria-label="Accountability and security"
+            title="Accountability and security"
+            onClick={() => {
+              setUtilityPanel((panel) => (panel === 'security' ? null : 'security'));
+              setCalendarOpen(false);
+            }}
+          >
             <ShieldCheck size={20} />
           </button>
         </nav>
         <div className="sidebar-bottom">
-          <button className="nav-button" aria-label="Settings">
+          <button className="nav-button" aria-label="Login" onClick={() => setLoginOpen(true)}>
+            <LogIn size={18} />
+          </button>
+          <button
+            className={`nav-button ${utilityPanel === 'settings' ? 'active' : ''}`}
+            aria-label="Settings"
+            title="Settings"
+            onClick={() => {
+              setUtilityPanel((panel) => (panel === 'settings' ? null : 'settings'));
+              setCalendarOpen(false);
+            }}
+          >
             <Settings size={19} />
           </button>
           <div className="profile-avatar">EM</div>
         </div>
       </aside>
+
+      {utilityPanel && (
+        <section className="utility-panel glass-panel" aria-label={`${utilityPanel} panel`}>
+          <div className="calendar-heading">
+            <div>
+              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
+              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'security' ? 'Security & audit' : 'Settings'}</strong>
+            </div>
+            <button onClick={() => setUtilityPanel(null)} aria-label={`Close ${utilityPanel}`}><X size={17} /></button>
+          </div>
+          {utilityPanel === 'notes' && (
+            <>
+              <form className="utility-note-form" onSubmit={pinNote}>
+                <textarea value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder={`Write a note for ${activeDepartment}…`} />
+                <button type="submit" disabled={!noteDraft.trim()}><Pin size={14} /> Save note</button>
+              </form>
+              <div className="utility-note-list">
+                {pinnedNotes.filter((note) => note.department === activeDepartment).map((note) => (
+                  <article key={note.id}><Pin size={12} /><span>{note.text}</span></article>
+                ))}
+              </div>
+            </>
+          )}
+          {utilityPanel === 'security' && (
+            <div className="security-summary">
+              <article><ShieldCheck size={17} /><div><strong>Accountable activity</strong><span>Message and task opening times remain visible in their conversations.</span></div></article>
+              <article><LogIn size={17} /><div><strong>Authentication checkpoint</strong><span>Department accounts and staff PINs connect here in the backend phase.</span></div></article>
+              <article><ListChecks size={17} /><div><strong>No silent deletion</strong><span>Production records will be archived with a named audit event.</span></div></article>
+            </div>
+          )}
+          {utilityPanel === 'settings' && (
+            <div className="settings-list">
+              <label><span><strong>Gentle notification sounds</strong><small>One ping for normal messages</small></span><input type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
+              <label><span><strong>Calm interface motion</strong><small>Subtle visual movement and reminders</small></span><input type="checkbox" checked={calmMotion} onChange={(event) => setCalmMotion(event.target.checked)} /></label>
+            </div>
+          )}
+        </section>
+      )}
+
+      {loginOpen && (
+        <div className="login-backdrop" role="presentation" onClick={() => setLoginOpen(false)}>
+          <section className="login-placeholder glass-panel" role="dialog" aria-label="Department login" onClick={(event) => event.stopPropagation()}>
+            <button className="login-close" onClick={() => setLoginOpen(false)} aria-label="Close login">
+              <X size={17} />
+            </button>
+            <span className="login-symbol"><ShieldCheck size={21} /></span>
+            <small>Secure access</small>
+            <h2>Department login</h2>
+            <p>Department accounts and staff PIN sign-in will connect here during the backend authentication phase.</p>
+            <button className="login-disabled" disabled>
+              Authentication not connected yet
+            </button>
+          </section>
+        </div>
+      )}
+
+      {currentAppointment && (
+        <section className="calendar-reminder" aria-live="polite" aria-label="Calendar reminder">
+          <div className="calendar-reminder-icon">
+            <CalendarClock size={18} />
+          </div>
+          <div>
+            <span>Calendar · {activeDepartment}</span>
+            <strong>{currentAppointment.title}</strong>
+            <small>
+              {new Intl.DateTimeFormat('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }).format(new Date(currentAppointment.startsAt))}
+              {now && new Date(currentAppointment.startsAt).getTime() > now.getTime()
+                ? ` · In ${Math.max(1, Math.ceil((new Date(currentAppointment.startsAt).getTime() - now.getTime()) / 60000))} min`
+                : ' · Due now'}
+            </small>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setDismissedAppointments((current) => [...current, currentAppointment.id])
+            }
+          >
+            Seen
+          </button>
+        </section>
+      )}
+
+      {calendarOpen && (
+        <section className="department-calendar glass-panel" aria-label={`${activeDepartment} calendar panel`}>
+          <div className="calendar-heading">
+            <div>
+              <span>Department calendar</span>
+              <strong>{activeDepartment}</strong>
+            </div>
+            <button type="button" onClick={() => setCalendarOpen(false)} aria-label="Close calendar">
+              <X size={17} />
+            </button>
+          </div>
+          <form onSubmit={addAppointment}>
+            <label>
+              Appointment
+              <input
+                value={appointmentTitle}
+                onChange={(event) => setAppointmentTitle(event.target.value)}
+                placeholder="e.g. PC technician arriving"
+              />
+            </label>
+            <label>
+              Date and time
+              <input
+                type="datetime-local"
+                value={appointmentTime}
+                onChange={(event) => setAppointmentTime(event.target.value)}
+              />
+            </label>
+            <label>
+              Remind me
+              <select
+                value={appointmentReminder}
+                onChange={(event) => setAppointmentReminder(event.target.value)}
+              >
+                <option value="5">5 minutes before</option>
+                <option value="15">15 minutes before</option>
+                <option value="30">30 minutes before</option>
+                <option value="60">1 hour before</option>
+              </select>
+            </label>
+            <button type="submit" disabled={!appointmentTitle.trim() || !appointmentTime}>
+              <Plus size={15} /> Add to {activeDepartment}
+            </button>
+          </form>
+          <div className="calendar-list">
+            <span>Upcoming</span>
+            {departmentAppointments.length === 0 ? (
+              <p>No appointments recorded for this department.</p>
+            ) : (
+              departmentAppointments.slice(0, 5).map((appointment) => (
+                <article key={appointment.id}>
+                  <time dateTime={appointment.startsAt}>
+                    {new Intl.DateTimeFormat('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    }).format(new Date(appointment.startsAt))}
+                  </time>
+                  <strong>{appointment.title}</strong>
+                  <small>{appointment.department} only</small>
+                  <small>{appointment.reminderMinutes} min reminder</small>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="workspace">
         <header className="topbar glass-panel">
@@ -586,15 +929,38 @@ export default function Home() {
             <p>NOIR HOUSE · LONDON</p>
             <div className="department-greeting">
               <span>Good evening,</span>
-              <select
-                aria-label="Active department"
-                value={activeDepartment}
-                onChange={(event) => setActiveDepartment(event.target.value)}
-              >
-                {departments.map((department) => (
-                  <option key={department.name}>{department.name}</option>
-                ))}
-              </select>
+              <details className="department-switcher">
+                <summary
+                  className="department-switcher-trigger"
+                  aria-label="Active department"
+                >
+                  <SelectedDepartmentIcon size={14} />
+                  <span>{selectedDepartment.name}</span>
+                  <ChevronDown size={12} />
+                </summary>
+                <div className="department-switcher-menu" role="menu">
+                    {departments.map((department) => {
+                      const DepartmentIcon = department.icon;
+                      return (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={department.name === activeDepartment ? 'selected' : ''}
+                          key={department.name}
+                          onClick={(event) => {
+                            setActiveDepartment(department.name);
+                            event.currentTarget
+                              .closest('details')
+                              ?.removeAttribute('open');
+                          }}
+                        >
+                          <DepartmentIcon size={14} style={{ color: department.accent }} />
+                          <span>{department.name}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </details>
             </div>
           </div>
           <div
@@ -705,7 +1071,7 @@ export default function Home() {
                                 },
                                 ...current,
                               ]);
-                              playPing(false);
+                              if (gentleSounds) playPing(false);
                             }}
                           >
                             <Pin size={13} />
@@ -851,6 +1217,23 @@ export default function Home() {
                             <time>{message.time}</time>
                           </div>
                           <p>{message.text}</p>
+                          {!message.seenAt && message.to === activeDepartment && (
+                            <button
+                              type="button"
+                              className={`open-message ${message.urgent ? 'urgent' : ''}`}
+                              onClick={() => markMessageOpened(message.id)}
+                            >
+                              Open {message.urgent ? 'urgent ' : ''}message
+                            </button>
+                          )}
+                          {message.seenAt && (
+                            <div className="message-read-receipt">
+                              <ShieldCheck size={12} />
+                              <span>
+                                Seen by {message.seenBy} · {message.seenAt}
+                              </span>
+                            </div>
+                          )}
                           {message.attachmentUrl && (
                             <figure className="message-attachment">
                               <img
@@ -878,6 +1261,19 @@ export default function Home() {
                                 ))}
                               </div>
                               {task.note && <p className="task-note">{task.note}</p>}
+                              {!task.openedAt && task.to === activeDepartment && (
+                                <button
+                                  className="open-linked-task"
+                                  onClick={() => markTaskOpened(task.id)}
+                                >
+                                  Open task
+                                </button>
+                              )}
+                              {task.openedAt && (
+                                <div className="task-open-receipt">
+                                  <ShieldCheck size={11} /> Opened by {task.openedBy} · {task.openedAt}
+                                </div>
+                              )}
                               {canAdvanceTask && (
                                 <button onClick={() => advanceTask(task.id)}>
                                   Mark {nextTaskStatus}
@@ -940,6 +1336,19 @@ export default function Home() {
                         </figure>
                       )}
                       {task.note && <p className="task-note">{task.note}</p>}
+                      {!task.openedAt && task.to === activeDepartment && (
+                        <button
+                          className="open-task-button"
+                          onClick={() => markTaskOpened(task.id)}
+                        >
+                          Open task
+                        </button>
+                      )}
+                      {task.openedAt && (
+                        <div className="task-open-receipt">
+                          <ShieldCheck size={11} /> Opened by {task.openedBy} · {task.openedAt}
+                        </div>
+                      )}
                       {task.to === activeDepartment && (
                         <div className="task-note-editor">
                           <input
@@ -1070,9 +1479,12 @@ export default function Home() {
                 })}
               </div>
               <textarea
+                key={spellCheckEnabled ? 'spell-check-on' : 'spell-check-off'}
                 value={draft}
                 spellCheck={spellCheckEnabled}
                 lang="en-GB"
+                autoCorrect={spellCheckEnabled ? 'on' : 'off'}
+                autoCapitalize={spellCheckEnabled ? 'sentences' : 'off'}
                 onChange={(event) => {
                   setDraft(event.target.value);
                   setMessageError('');
@@ -1115,12 +1527,21 @@ export default function Home() {
                   <button
                     type="button"
                     className={`spellcheck-toggle ${spellCheckEnabled ? 'active' : ''}`}
-                    onClick={() => setSpellCheckEnabled((value) => !value)}
+                    onClick={() => {
+                      setSpellCheckEnabled((value) => {
+                        const next = !value;
+                        setSpellCheckNotice(next ? 'Spell check on' : 'Spell check off');
+                        return next;
+                      });
+                    }}
                     aria-label={spellCheckEnabled ? 'Turn spell-check off' : 'Turn spell-check on'}
                     title={spellCheckEnabled ? 'Spell-check on' : 'Spell-check off'}
                   >
                     <SpellCheck size={18} />
                   </button>
+                  <span className={`spellcheck-status ${spellCheckEnabled ? 'active' : ''}`}>
+                    {spellCheckNotice}
+                  </span>
                   <button
                     type="button"
                     className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
@@ -1170,6 +1591,12 @@ export default function Home() {
                   >
                     <Mic size={17} />
                   </button>
+                  {recording && (
+                    <span className="voice-live-indicator" aria-live="polite">
+                      <span className="voice-wave" aria-hidden="true"><i /><i /><i /></span>
+                      <time>{String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:{String(recordingSeconds % 60).padStart(2, '0')}</time>
+                    </span>
+                  )}
                 </div>
                 <button type="submit" className="send-button">
                   {assignAsTask ? 'Assign task' : 'Send message'} <Send size={15} />
