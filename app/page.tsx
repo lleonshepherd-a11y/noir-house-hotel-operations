@@ -47,6 +47,24 @@ const departments = [
   { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a7b59b' },
 ];
 
+const commonSpellingCorrections: Record<string, string> = {
+  accomodation: 'accommodation',
+  adress: 'address',
+  availible: 'available',
+  brekfast: 'breakfast',
+  buisness: 'business',
+  calender: 'calendar',
+  conciege: 'concierge',
+  departmant: 'department',
+  maintanance: 'maintenance',
+  recieve: 'receive',
+  restarant: 'restaurant',
+  seperate: 'separate',
+  tommorow: 'tomorrow',
+  technican: 'technician',
+  urgant: 'urgent',
+};
+
 type HotelMessage = {
   id: number;
   from: string;
@@ -229,7 +247,7 @@ export default function Home() {
       {
         id: 901,
         department: 'Front of House',
-        title: 'PC technician arriving',
+        title: 'Morning team briefing',
         startsAt: arrival.toISOString(),
         reminderMinutes: 15,
       },
@@ -301,6 +319,14 @@ export default function Home() {
       return now.getTime() >= reminderStarts && elapsed <= 15 * 60 * 1000 && !dismissedAppointments.includes(appointment.id);
     });
   }, [departmentAppointments, dismissedAppointments, now]);
+
+  const spellingSuggestions = useMemo(() => {
+    if (!spellCheckEnabled || !draft.trim()) return [];
+    const words = draft.toLowerCase().match(/[a-z']+/g) ?? [];
+    return Array.from(new Set(words))
+      .filter((word) => Boolean(commonSpellingCorrections[word]))
+      .map((word) => ({ word, correction: commonSpellingCorrections[word] }));
+  }, [draft, spellCheckEnabled]);
 
   useEffect(() => {
     setNow(new Date());
@@ -484,6 +510,16 @@ export default function Home() {
     setAppointmentTitle('');
     setAppointmentTime('');
     setAppointmentReminder('15');
+  };
+
+  const applySpellingCorrection = (word: string, correction: string) => {
+    setDraft((current) =>
+      current.replace(new RegExp(`\\b${word}\\b`, 'gi'), (match) =>
+        match[0] === match[0]?.toUpperCase()
+          ? correction[0].toUpperCase() + correction.slice(1)
+          : correction,
+      ),
+    );
   };
 
   const advanceTask = (taskId: number) => {
@@ -845,11 +881,11 @@ export default function Home() {
           </div>
           <form onSubmit={addAppointment}>
             <label>
-              Appointment
+              Calendar entry
               <input
                 value={appointmentTitle}
                 onChange={(event) => setAppointmentTitle(event.target.value)}
-                placeholder="e.g. PC technician arriving"
+                placeholder="Write what is happening…"
               />
             </label>
             <label>
@@ -1474,6 +1510,27 @@ export default function Home() {
                 placeholder="Write your message…"
                 autoFocus
               />
+              {spellCheckEnabled && draft.trim() && (
+                <div className={`spelling-results ${spellingSuggestions.length ? 'has-suggestions' : ''}`} aria-live="polite">
+                  <SpellCheck size={13} />
+                  {spellingSuggestions.length ? (
+                    <div>
+                      <span>Suggested corrections</span>
+                      {spellingSuggestions.map((suggestion) => (
+                        <button
+                          type="button"
+                          key={suggestion.word}
+                          onClick={() => applySpellingCorrection(suggestion.word, suggestion.correction)}
+                        >
+                          {suggestion.word} → {suggestion.correction}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span>No common spelling issues found</span>
+                  )}
+                </div>
+              )}
               {assignAsTask && (
                 <input
                   className="task-note-input"
