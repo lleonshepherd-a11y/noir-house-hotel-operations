@@ -42,7 +42,18 @@ const departments = [
   { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a7b59b' },
 ];
 
-const initialMessages = [
+type HotelMessage = {
+  id: number;
+  from: string;
+  text: string;
+  time: string;
+  unread: boolean;
+  urgent: boolean;
+  attachmentUrl?: string;
+  attachmentName?: string;
+};
+
+const initialMessages: HotelMessage[] = [
   {
     id: 101,
     from: 'General Manager',
@@ -87,6 +98,18 @@ const initialMessages = [
 
 type TaskStatus = 'Sent' | 'Acknowledged' | 'In progress' | 'Complete';
 
+type AssignedTask = {
+  id: number;
+  title: string;
+  from: string;
+  to: string;
+  status: TaskStatus;
+  updated: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  note?: string;
+};
+
 const taskStatusOrder: TaskStatus[] = [
   'Sent',
   'Acknowledged',
@@ -94,7 +117,7 @@ const taskStatusOrder: TaskStatus[] = [
   'Complete',
 ];
 
-const initialAssignedTasks = [
+const initialAssignedTasks: AssignedTask[] = [
   {
     id: 101,
     title: "Prepare tomorrow's menu",
@@ -102,6 +125,7 @@ const initialAssignedTasks = [
     to: 'Kitchen',
     status: 'Acknowledged' as TaskStatus,
     updated: '19:44',
+    note: 'Please include the updated seasonal dishes and allergen notes.',
   },
   {
     id: 102,
@@ -172,9 +196,12 @@ export default function Home() {
   >('default');
   const [urgent, setUrgent] = useState(false);
   const [assignAsTask, setAssignAsTask] = useState(false);
+  const [taskNote, setTaskNote] = useState('');
+  const [taskNoteEdits, setTaskNoteEdits] = useState<Record<number, string>>({});
   const [recipient, setRecipient] = useState('All departments');
   const [draft, setDraft] = useState('');
   const [attachment, setAttachment] = useState('');
+  const [attachmentPreview, setAttachmentPreview] = useState('');
   const [messageError, setMessageError] = useState('');
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -299,6 +326,8 @@ export default function Home() {
       }).format(new Date()),
       unread: false,
       urgent,
+      attachmentUrl: attachmentPreview || undefined,
+      attachmentName: attachment || undefined,
     };
     setMessages((current) => [next, ...current]);
     if (assignAsTask && recipient !== 'All departments') {
@@ -310,6 +339,9 @@ export default function Home() {
           to: recipient,
           status: 'Sent',
           updated: next.time,
+          attachmentUrl: attachmentPreview || undefined,
+          attachmentName: attachment || undefined,
+          note: taskNote.trim() || undefined,
         },
         ...current,
       ]);
@@ -322,9 +354,11 @@ export default function Home() {
     playPing(urgent);
     setDraft('');
     setAttachment('');
+    setAttachmentPreview('');
     setMessageError('');
     setUrgent(false);
     setAssignAsTask(false);
+    setTaskNote('');
     setComposerOpen(false);
   };
 
@@ -344,6 +378,24 @@ export default function Home() {
           }).format(new Date()),
         };
       }),
+    );
+  };
+
+  const saveTaskNote = (taskId: number) => {
+    setAssignedTasks((current) =>
+      current.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              note: (taskNoteEdits[taskId] ?? task.note ?? '').trim() || undefined,
+              updated: new Intl.DateTimeFormat('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }).format(new Date()),
+            }
+          : task,
+      ),
     );
   };
 
@@ -793,6 +845,17 @@ export default function Home() {
                             <time>{message.time}</time>
                           </div>
                           <p>{message.text}</p>
+                          {message.attachmentUrl && (
+                            <figure className="message-attachment">
+                              <img
+                                src={message.attachmentUrl}
+                                alt={message.attachmentName || 'Task attachment'}
+                              />
+                              <figcaption>
+                                <Paperclip size={11} /> {message.attachmentName}
+                              </figcaption>
+                            </figure>
+                          )}
                           {task && (
                             <div className="message-task-state">
                               <div>
@@ -808,6 +871,7 @@ export default function Home() {
                                   />
                                 ))}
                               </div>
+                              {task.note && <p className="task-note">{task.note}</p>}
                               {canAdvanceTask && (
                                 <button onClick={() => advanceTask(task.id)}>
                                   Mark {nextTaskStatus}
@@ -860,6 +924,32 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      {task.attachmentUrl && (
+                        <figure className="task-attachment">
+                          <img
+                            src={task.attachmentUrl}
+                            alt={task.attachmentName || 'Task attachment'}
+                          />
+                          <figcaption>{task.attachmentName}</figcaption>
+                        </figure>
+                      )}
+                      {task.note && <p className="task-note">{task.note}</p>}
+                      {task.to === activeDepartment && (
+                        <div className="task-note-editor">
+                          <input
+                            value={taskNoteEdits[task.id] ?? task.note ?? ''}
+                            onChange={(event) =>
+                              setTaskNoteEdits((current) => ({
+                                ...current,
+                                [task.id]: event.target.value,
+                              }))
+                            }
+                            placeholder="Add a short task note…"
+                            aria-label={`Note for ${task.title}`}
+                          />
+                          <button onClick={() => saveTaskNote(task.id)}>Save note</button>
+                        </div>
+                      )}
                       <div className="tracked-task-footer">
                         <small>Updated {task.updated} · visible to sender</small>
                         <div>
@@ -995,6 +1085,15 @@ export default function Home() {
                   <small>Choose a department, then send to add it to Tasks</small>
                 </span>
               </label>
+              {assignAsTask && (
+                <input
+                  className="task-note-input"
+                  value={taskNote}
+                  onChange={(event) => setTaskNote(event.target.value)}
+                  placeholder="Add a short note for the person receiving this task…"
+                  aria-label="Task note"
+                />
+              )}
               {messageError && (
                 <p className="message-error">
                   <ShieldCheck size={13} /> {messageError}
@@ -1006,7 +1105,10 @@ export default function Home() {
                   <span>{attachment}</span>
                   <button
                     type="button"
-                    onClick={() => setAttachment('')}
+                    onClick={() => {
+                      setAttachment('');
+                      setAttachmentPreview('');
+                    }}
                     aria-label="Remove attachment"
                   >
                     <X size={12} />
@@ -1033,7 +1135,15 @@ export default function Home() {
                       type="file"
                       accept="image/*,.pdf,application/pdf"
                       onChange={(event) =>
-                        setAttachment(event.target.files?.[0]?.name ?? '')
+                        {
+                          const file = event.target.files?.[0];
+                          setAttachment(file?.name ?? '');
+                          setAttachmentPreview(
+                            file?.type.startsWith('image/')
+                              ? URL.createObjectURL(file)
+                              : '',
+                          );
+                        }
                       }
                     />
                   </label>
