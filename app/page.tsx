@@ -44,6 +44,14 @@ const departments = [
 
 const initialMessages = [
   {
+    id: 101,
+    from: 'General Manager',
+    text: "Prepare tomorrow's menu and send it back for approval.",
+    time: '19:44',
+    unread: false,
+    urgent: false,
+  },
+  {
     id: 1,
     from: 'Front of House',
     text: 'The Carrington party has arrived — 6 guests, table 12.',
@@ -77,6 +85,49 @@ const initialMessages = [
   },
 ];
 
+type TaskStatus = 'Sent' | 'Acknowledged' | 'In progress' | 'Complete';
+
+const taskStatusOrder: TaskStatus[] = [
+  'Sent',
+  'Acknowledged',
+  'In progress',
+  'Complete',
+];
+
+const initialAssignedTasks = [
+  {
+    id: 101,
+    title: "Prepare tomorrow's menu",
+    from: 'General Manager',
+    to: 'Kitchen',
+    status: 'Acknowledged' as TaskStatus,
+    updated: '19:44',
+  },
+  {
+    id: 102,
+    title: 'Repair the dishwasher',
+    from: 'Kitchen',
+    to: 'Maintenance',
+    status: 'In progress' as TaskStatus,
+    updated: '19:39',
+  },
+  {
+    id: 103,
+    title: 'Prepare the Astor Suite arrival',
+    from: 'Front of House',
+    to: 'Housekeeping',
+    status: 'Complete' as TaskStatus,
+    updated: '19:31',
+  },
+];
+
+function urlBase64ToUint8Array(value: string) {
+  const padding = '='.repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const decoded = window.atob(base64);
+  return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+}
+
 function playPing(urgent = false) {
   try {
     const AudioContextClass =
@@ -106,7 +157,7 @@ function playPing(urgent = false) {
 }
 
 export default function Home() {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const [activeDepartment, setActiveDepartment] = useState('Front of House');
   const [weather, setWeather] = useState({
     temperature: 17,
@@ -116,7 +167,11 @@ export default function Home() {
   const [announcementAcknowledged, setAnnouncementAcknowledged] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [pushPermission, setPushPermission] = useState<
+    NotificationPermission | 'unsupported' | 'configuration-required'
+  >('default');
   const [urgent, setUrgent] = useState(false);
+  const [assignAsTask, setAssignAsTask] = useState(false);
   const [recipient, setRecipient] = useState('All departments');
   const [draft, setDraft] = useState('');
   const [attachment, setAttachment] = useState('');
@@ -146,10 +201,21 @@ export default function Home() {
     },
   ]);
   const [messages, setMessages] = useState(initialMessages);
+  const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
 
   useEffect(() => {
+    setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+      setPushPermission('unsupported');
+      return;
+    }
+    setPushPermission(Notification.permission);
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -179,17 +245,37 @@ export default function Home() {
     () => messages.filter((message) => message.unread).length,
     [messages],
   );
-  const date = new Intl.DateTimeFormat('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(now);
-  const time = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(now);
+  const activeNotification = useMemo(
+    () => messages.find((message) => message.unread),
+    [messages],
+  );
+  const seenNotifications = useMemo(
+    () => messages.filter((message) => !message.unread),
+    [messages],
+  );
+
+  const markNotificationSeen = (messageId: number) => {
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId ? { ...message, unread: false } : message,
+      ),
+    );
+  };
+  const date = now
+    ? new Intl.DateTimeFormat('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }).format(now)
+    : 'Loading date';
+  const time = now
+    ? new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(now)
+    : '--:--:--';
 
   const sendMessage = (event: FormEvent) => {
     event.preventDefault();
@@ -215,6 +301,19 @@ export default function Home() {
       urgent,
     };
     setMessages((current) => [next, ...current]);
+    if (assignAsTask && recipient !== 'All departments') {
+      setAssignedTasks((current) => [
+        {
+          id: next.id,
+          title: draft.trim(),
+          from: activeDepartment,
+          to: recipient,
+          status: 'Sent',
+          updated: next.time,
+        },
+        ...current,
+      ]);
+    }
     if (urgent && recipient !== 'All departments')
       setPinnedNotes((current) => [
         { id: next.id, text: next.text, urgent: true, department: recipient },
@@ -225,7 +324,67 @@ export default function Home() {
     setAttachment('');
     setMessageError('');
     setUrgent(false);
+    setAssignAsTask(false);
     setComposerOpen(false);
+  };
+
+  const advanceTask = (taskId: number) => {
+    setAssignedTasks((current) =>
+      current.map((task) => {
+        if (task.id !== taskId || task.to !== activeDepartment) return task;
+        const currentIndex = taskStatusOrder.indexOf(task.status);
+        const status = taskStatusOrder[Math.min(currentIndex + 1, taskStatusOrder.length - 1)];
+        return {
+          ...task,
+          status,
+          updated: new Intl.DateTimeFormat('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }).format(new Date()),
+        };
+      }),
+    );
+  };
+
+  const enableComputerAlerts = async () => {
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+      setPushPermission('unsupported');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setPushPermission(permission);
+    if (permission !== 'granted') return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const publicKey = import.meta.env.VITE_WEB_PUSH_VAPID_PUBLIC_KEY as
+      | string
+      | undefined;
+    const subscribeUrl = import.meta.env.VITE_WEB_PUSH_SUBSCRIBE_URL as
+      | string
+      | undefined;
+
+    if (!publicKey || !subscribeUrl) {
+      setPushPermission('configuration-required');
+      await registration.showNotification('Computer alerts permitted', {
+        body: 'This device is ready. Secure background delivery still needs the hotel push service to be connected.',
+        icon: '/favicon.svg',
+        tag: 'noir-house-permission-check',
+      });
+      return;
+    }
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+    const response = await fetch(subscribeUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription, department: activeDepartment }),
+    });
+    if (!response.ok) setPushPermission('configuration-required');
   };
 
   const pinNote = (event: FormEvent) => {
@@ -278,6 +437,60 @@ export default function Home() {
     <main className="hotel-shell">
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
+      {activeNotification && (
+        <section
+          className={`live-notification ${activeNotification.urgent ? 'urgent' : ''}`}
+          aria-live={activeNotification.urgent ? 'assertive' : 'polite'}
+          aria-label="New notification"
+        >
+          <span className="live-notification-symbol">
+            {activeNotification.urgent ? (
+              <Zap size={18} />
+            ) : (
+              <BellRing size={18} />
+            )}
+          </span>
+          <div className="live-notification-copy">
+            <span>
+              {activeNotification.urgent ? 'Urgent notification' : 'New notification'}
+              <time>{activeNotification.time}</time>
+            </span>
+            <strong>{activeNotification.from}</strong>
+            <p>{activeNotification.text}</p>
+          </div>
+          <div className="live-notification-actions">
+            <button
+              aria-label="Pin notification"
+              onClick={() => {
+                setPinnedNotes((current) => [
+                  {
+                    id: Date.now(),
+                    text: `${activeNotification.from} · ${activeNotification.text}`,
+                    urgent: activeNotification.urgent,
+                    department: activeDepartment,
+                  },
+                  ...current,
+                ]);
+                markNotificationSeen(activeNotification.id);
+                playPing(false);
+              }}
+            >
+              <Pin size={15} />
+            </button>
+            <button
+              aria-label="Mark notification as seen"
+              onClick={() => markNotificationSeen(activeNotification.id)}
+            >
+              <X size={15} />
+            </button>
+          </div>
+          {unreadCount > 1 && (
+            <small className="notification-queue-count">
+              {unreadCount - 1} waiting
+            </small>
+          )}
+        </section>
+      )}
       <aside className="sidebar">
         <div className="brand-mark" aria-label="Noir Hotel">
           <span>N</span>
@@ -377,14 +590,34 @@ export default function Home() {
                   <div className="popover-heading">
                     <div>
                       <span>Notifications</span>
-                      <strong>{unreadCount} new</strong>
+                      <strong>{seenNotifications.length} seen</strong>
                     </div>
                     <button onClick={() => setNotificationsOpen(false)}>
                       <X size={16} />
                     </button>
                   </div>
-                  {messages
-                    .filter((message) => message.unread)
+                  <button
+                    className={`push-permission status-${pushPermission}`}
+                    onClick={enableComputerAlerts}
+                    disabled={pushPermission === 'denied' || pushPermission === 'unsupported'}
+                  >
+                    <BellRing size={14} />
+                    <span>
+                      {pushPermission === 'granted'
+                        ? 'Computer alerts enabled'
+                        : pushPermission === 'configuration-required'
+                          ? 'Device ready · delivery setup required'
+                          : pushPermission === 'denied'
+                            ? 'Computer alerts blocked in browser settings'
+                            : pushPermission === 'unsupported'
+                              ? 'Computer alerts unavailable'
+                              : 'Enable computer alerts'}
+                    </span>
+                  </button>
+                  {seenNotifications.length === 0 && (
+                    <p className="notification-empty">No seen notifications yet.</p>
+                  )}
+                  {seenNotifications
                     .map((message) => (
                       <article
                         key={message.id}
@@ -410,23 +643,17 @@ export default function Home() {
                                   id: Date.now(),
                                   text: `${message.from} · ${message.text}`,
                                   urgent: message.urgent,
+                                  department: activeDepartment,
                                 },
                                 ...current,
                               ]);
-                              setMessages((current) =>
-                                current.map((item) =>
-                                  item.id === message.id
-                                    ? { ...item, unread: false }
-                                    : item,
-                                ),
-                              );
                               playPing(false);
                             }}
                           >
                             <Pin size={13} />
                           </button>
                           <button
-                            aria-label="Dismiss notification"
+                            aria-label="Remove notification from history"
                             onClick={() =>
                               setMessages((current) =>
                                 current.filter(
@@ -533,33 +760,66 @@ export default function Home() {
                   </button>
                 </div>
                 <div className="message-list">
-                  {messages.slice(0, 4).map((message) => (
-                    <article
-                      className={`message-row ${message.urgent ? 'urgent' : ''}`}
-                      key={message.id}
-                    >
-                      <span className="message-avatar">
-                        {message.from
-                          .split(' ')
-                          .map((word) => word[0])
-                          .join('')
-                          .slice(0, 2)}
-                      </span>
-                      <div className="message-copy">
-                        <div>
-                          <strong>{message.from}</strong>
-                          {message.urgent && (
-                            <span className="urgent-label">
-                              <Zap size={11} /> urgent
-                            </span>
+                  {messages.slice(0, 4).map((message) => {
+                    const task = assignedTasks.find((item) => item.id === message.id);
+                    const taskIndex = task ? taskStatusOrder.indexOf(task.status) : -1;
+                    const canAdvanceTask = Boolean(
+                      task && task.to === activeDepartment && task.status !== 'Complete',
+                    );
+                    const nextTaskStatus = task
+                      ? taskStatusOrder[Math.min(taskIndex + 1, taskStatusOrder.length - 1)]
+                      : 'Acknowledged';
+                    return (
+                      <article
+                        id={`message-${message.id}`}
+                        className={`message-row ${message.urgent ? 'urgent' : ''} ${task ? 'task-message' : ''}`}
+                        key={message.id}
+                      >
+                        <span className="message-avatar">
+                          {message.from
+                            .split(' ')
+                            .map((word) => word[0])
+                            .join('')
+                            .slice(0, 2)}
+                        </span>
+                        <div className="message-copy">
+                          <div>
+                            <strong>{message.from}</strong>
+                            {message.urgent && (
+                              <span className="urgent-label">
+                                <Zap size={11} /> urgent
+                              </span>
+                            )}
+                            <time>{message.time}</time>
+                          </div>
+                          <p>{message.text}</p>
+                          {task && (
+                            <div className="message-task-state">
+                              <div>
+                                <span>Assigned to {task.to}</span>
+                                <strong>{task.status}</strong>
+                              </div>
+                              <div className="message-task-progress">
+                                {taskStatusOrder.slice(1).map((stage, index) => (
+                                  <i
+                                    className={taskIndex >= index + 1 ? 'reached' : ''}
+                                    key={stage}
+                                    title={stage}
+                                  />
+                                ))}
+                              </div>
+                              {canAdvanceTask && (
+                                <button onClick={() => advanceTask(task.id)}>
+                                  Mark {nextTaskStatus}
+                                </button>
+                              )}
+                            </div>
                           )}
-                          <time>{message.time}</time>
                         </div>
-                        <p>{message.text}</p>
-                      </div>
-                      {message.unread && <span className="unread-dot" />}
-                    </article>
-                  ))}
+                        {message.unread && <span className="unread-dot" />}
+                      </article>
+                    );
+                  })}
                 </div>
               </section>
             </div>
@@ -569,34 +829,60 @@ export default function Home() {
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">Accountability</span>
-                    <h2>Response tracker</h2>
+                    <h2>Tasks</h2>
                   </div>
                   <ShieldCheck size={18} />
                 </div>
-                <div className="response-row">
-                  <span className="response-status approved" />
-                  <div>
-                    <strong>Dry-cleaning approval</strong>
-                    <span>General Manager replied</span>
-                    <small>Approved · 2 min ago</small>
-                  </div>
-                </div>
-                <div className="response-row">
-                  <span className="response-status acknowledged" />
-                  <div>
-                    <strong>Dishwasher repair</strong>
-                    <span>Maintenance acknowledged</span>
-                    <small>Engineer attending · 6 min ago</small>
-                  </div>
-                </div>
-                <div className="response-row">
-                  <span className="response-status waiting" />
-                  <div>
-                    <strong>Extra room setup</strong>
-                    <span>Sent to Housekeeping</span>
-                    <small>Awaiting reply · 9 min ago</small>
-                  </div>
-                </div>
+                {assignedTasks.slice(0, 3).map((task) => {
+                  const currentIndex = taskStatusOrder.indexOf(task.status);
+                  const canAdvance =
+                    task.to === activeDepartment && task.status !== 'Complete';
+                  const nextStatus =
+                    taskStatusOrder[Math.min(currentIndex + 1, taskStatusOrder.length - 1)];
+                  return (
+                    <article className="tracked-task" key={task.id}>
+                      <div className="tracked-task-heading">
+                        <div>
+                          <strong>{task.title}</strong>
+                          <span>{task.from} → {task.to}</span>
+                        </div>
+                        <span className={`task-status status-${task.status.toLowerCase().replace(' ', '-')}`}>
+                          {task.status}
+                        </span>
+                      </div>
+                      <div className="task-progress" aria-label={`Task status: ${task.status}`}>
+                        {taskStatusOrder.slice(1).map((stage, index) => (
+                          <span
+                            className={currentIndex >= index + 1 ? 'reached' : ''}
+                            key={stage}
+                          >
+                            {stage}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="tracked-task-footer">
+                        <small>Updated {task.updated} · visible to sender</small>
+                        <div>
+                          <button
+                            className="view-message-button"
+                            onClick={() =>
+                              document
+                                .getElementById(`message-${task.id}`)
+                                ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            }
+                          >
+                            View message
+                          </button>
+                          {canAdvance && (
+                            <button onClick={() => advanceTask(task.id)}>
+                              Mark {nextStatus}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </section>
               <section className="attention-card glass-panel">
                 <div className="section-heading">
@@ -696,6 +982,19 @@ export default function Home() {
                 placeholder="Write your message…"
                 autoFocus
               />
+              <label className={`task-toggle ${assignAsTask ? 'active' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={assignAsTask}
+                  disabled={recipient === 'All departments'}
+                  onChange={(event) => setAssignAsTask(event.target.checked)}
+                />
+                <ShieldCheck size={14} />
+                <span>
+                  Create a task from this message
+                  <small>Choose a department, then send to add it to Tasks</small>
+                </span>
+              </label>
               {messageError && (
                 <p className="message-error">
                   <ShieldCheck size={13} /> {messageError}
@@ -720,8 +1019,10 @@ export default function Home() {
                     type="button"
                     className={`urgent-toggle ${urgent ? 'active' : ''}`}
                     onClick={() => setUrgent((value) => !value)}
+                    aria-label={urgent ? 'Remove urgent priority' : 'Mark message urgent'}
+                    title={urgent ? 'Urgent priority selected' : 'Mark as urgent'}
                   >
-                    <Zap size={15} /> Urgent
+                    <Zap size={17} />
                   </button>
                   <label
                     className="attach-button"
@@ -748,7 +1049,7 @@ export default function Home() {
                   </button>
                 </div>
                 <button type="submit" className="send-button">
-                  Send message <Send size={15} />
+                  {assignAsTask ? 'Assign task' : 'Send message'} <Send size={15} />
                 </button>
               </div>
             </form>
