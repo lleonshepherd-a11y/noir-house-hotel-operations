@@ -309,6 +309,10 @@ export default function Home() {
   const sendMessage = (event: FormEvent) => {
     event.preventDefault();
     if (!draft.trim()) return;
+    if (assignAsTask && recipient === 'All departments') {
+      setMessageError('Choose one department so the task has a clear owner.');
+      return;
+    }
     const blockedLanguage =
       /\b(fuck|shit|bitch|cunt|bastard|asshole|dick|prick|wanker)\w*\b/i;
     if (blockedLanguage.test(draft)) {
@@ -1121,7 +1125,6 @@ export default function Home() {
                     type="button"
                     className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
                     onClick={() => setAssignAsTask((value) => !value)}
-                    disabled={recipient === 'All departments'}
                     aria-label={assignAsTask ? 'Send as a normal message' : 'Create a task from this message'}
                     title={assignAsTask ? 'Task selected' : 'Create task'}
                   >
