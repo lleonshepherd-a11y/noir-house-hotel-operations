@@ -25,6 +25,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  SpellCheck,
   Sun,
   UtensilsCrossed,
   Wrench,
@@ -160,21 +161,20 @@ function playPing(urgent = false) {
       (window as typeof window & { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     const context = new AudioContextClass();
-    const gain = context.createGain();
-    gain.gain.setValueAtTime(0.0001, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(
-      urgent ? 0.2 : 0.1,
-      context.currentTime + 0.01,
-    );
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.5);
-    gain.connect(context.destination);
-    [urgent ? 880 : 660, urgent ? 1175 : 880].forEach((frequency, index) => {
+    const offsets = urgent ? [0, 0.24, 0.48] : [0];
+    offsets.forEach((offset) => {
+      const gain = context.createGain();
+      const start = context.currentTime + offset;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(urgent ? 0.075 : 0.055, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.2);
+      gain.connect(context.destination);
       const oscillator = context.createOscillator();
       oscillator.type = 'sine';
-      oscillator.frequency.value = frequency;
+      oscillator.frequency.value = urgent ? 940 : 760;
       oscillator.connect(gain);
-      oscillator.start(context.currentTime + index * 0.11);
-      oscillator.stop(context.currentTime + 0.45);
+      oscillator.start(start);
+      oscillator.stop(start + 0.21);
     });
   } catch {
     /* Browsers may block sound before interaction. */
@@ -197,6 +197,7 @@ export default function Home() {
   >('default');
   const [urgent, setUrgent] = useState(false);
   const [assignAsTask, setAssignAsTask] = useState(false);
+  const [spellCheckEnabled, setSpellCheckEnabled] = useState(true);
   const [taskNote, setTaskNote] = useState('');
   const [taskNoteEdits, setTaskNoteEdits] = useState<Record<number, string>>({});
   const [recipient, setRecipient] = useState('All departments');
@@ -896,7 +897,7 @@ export default function Home() {
                     <span className="eyebrow">Accountability</span>
                     <h2>Tasks</h2>
                   </div>
-                  <ShieldCheck size={18} />
+                  <ListChecks size={18} aria-label="Tasks" />
                 </div>
                 {assignedTasks.slice(0, 3).map((task) => {
                   const currentIndex = taskStatusOrder.indexOf(task.status);
@@ -1066,6 +1067,8 @@ export default function Home() {
               </div>
               <textarea
                 value={draft}
+                spellCheck={spellCheckEnabled}
+                lang="en-GB"
                 onChange={(event) => {
                   setDraft(event.target.value);
                   setMessageError('');
@@ -1105,6 +1108,15 @@ export default function Home() {
               )}
               <div className="composer-footer">
                 <div className="composer-tools">
+                  <button
+                    type="button"
+                    className={`spellcheck-toggle ${spellCheckEnabled ? 'active' : ''}`}
+                    onClick={() => setSpellCheckEnabled((value) => !value)}
+                    aria-label={spellCheckEnabled ? 'Turn spell-check off' : 'Turn spell-check on'}
+                    title={spellCheckEnabled ? 'Spell-check on' : 'Spell-check off'}
+                  >
+                    <SpellCheck size={18} />
+                  </button>
                   <button
                     type="button"
                     className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
