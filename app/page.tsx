@@ -387,6 +387,48 @@ export default function Home() {
     () => messages.filter((message) => !message.unread),
     [messages],
   );
+  const attentionItems = useMemo(() => {
+    const urgentMessages = messages
+      .filter(
+        (message) =>
+          message.to === activeDepartment && message.urgent && !message.seenAt,
+      )
+      .map((message) => ({
+        id: `message-${message.id}`,
+        kind: 'urgent' as const,
+        title: message.text,
+        meta: `${message.from} · ${message.time}`,
+        messageId: message.id,
+      }));
+    const unacknowledgedTasks = assignedTasks
+      .filter(
+        (task) => task.to === activeDepartment && task.status === 'Sent',
+      )
+      .map((task) => ({
+        id: `task-${task.id}`,
+        kind: 'unacknowledged' as const,
+        title: task.title,
+        meta: `${task.from} · awaiting acknowledgement`,
+        messageId: task.id,
+      }));
+    const overdueCalendarItems = !now
+      ? []
+      : departmentAppointments
+          .filter(
+            (appointment) =>
+              new Date(appointment.startsAt).getTime() < now.getTime() &&
+              !dismissedAppointments.includes(appointment.id),
+          )
+          .map((appointment) => ({
+            id: `calendar-${appointment.id}`,
+            kind: 'overdue' as const,
+            title: appointment.title,
+            meta: 'Calendar entry · overdue',
+            messageId: undefined,
+          }));
+
+    return [...urgentMessages, ...unacknowledgedTasks, ...overdueCalendarItems].slice(0, 4);
+  }, [activeDepartment, assignedTasks, departmentAppointments, dismissedAppointments, messages, now]);
 
   const markNotificationSeen = (messageId: number) => {
     setMessages((current) =>
@@ -1305,6 +1347,63 @@ export default function Home() {
                     );
                   })}
                 </div>
+              </section>
+              <section className="needs-attention glass-panel" aria-labelledby="needs-attention-title">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">Priority overview</span>
+                    <h2 id="needs-attention-title">Needs your attention</h2>
+                  </div>
+                  {attentionItems.length > 0 && (
+                    <span className="attention-count">{attentionItems.length}</span>
+                  )}
+                </div>
+                {attentionItems.length === 0 ? (
+                  <div className="caught-up-state">
+                    <span><ShieldCheck size={16} /></span>
+                    <div>
+                      <strong>All caught up</strong>
+                      <p>No urgent, overdue, or unacknowledged items for {activeDepartment}.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="attention-list">
+                    {attentionItems.map((item) => (
+                      <article className={`attention-item ${item.kind}`} key={item.id}>
+                        <span className="attention-symbol">
+                          {item.kind === 'urgent' ? (
+                            <Zap size={14} />
+                          ) : item.kind === 'overdue' ? (
+                            <CalendarClock size={14} />
+                          ) : (
+                            <ListChecks size={14} />
+                          )}
+                        </span>
+                        <div>
+                          <strong>{item.title}</strong>
+                          <p>{item.meta}</p>
+                        </div>
+                        {item.messageId ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              markMessageOpened(item.messageId);
+                              document
+                                .getElementById(`message-${item.messageId}`)
+                                ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}
+                          >
+                            Open
+                          </button>
+                        ) : (
+                          <button type="button" onClick={() => setCalendarOpen(true)}>
+                            View
+                          </button>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
               </section>
             </div>
 
