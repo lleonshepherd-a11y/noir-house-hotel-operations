@@ -14,8 +14,8 @@ import {
   Crown,
   Droplets,
   LayoutDashboard,
+  KeyRound,
   ListChecks,
-  LogIn,
   Martini,
   MessageSquareText,
   Mic,
@@ -214,7 +214,6 @@ export default function Home() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
   const [utilityPanel, setUtilityPanel] = useState<'notes' | 'security' | 'settings' | null>(null);
   const [gentleSounds, setGentleSounds] = useState(true);
   const [calmMotion, setCalmMotion] = useState(true);
@@ -750,9 +749,6 @@ export default function Home() {
           </button>
         </nav>
         <div className="sidebar-bottom">
-          <button className="nav-button" aria-label="Login" onClick={() => setLoginOpen(true)}>
-            <LogIn size={18} />
-          </button>
           <button
             className={`nav-button ${utilityPanel === 'settings' ? 'active' : ''}`}
             aria-label="Settings"
@@ -764,7 +760,7 @@ export default function Home() {
           >
             <Settings size={19} />
           </button>
-          <div className="profile-avatar">EM</div>
+          <div className="profile-avatar" aria-label="Current shift profile EM" title="Current shift profile">EM</div>
         </div>
       </aside>
 
@@ -793,7 +789,7 @@ export default function Home() {
           {utilityPanel === 'security' && (
             <div className="security-summary">
               <article><ShieldCheck size={17} /><div><strong>Accountable activity</strong><span>Message and task opening times remain visible in their conversations.</span></div></article>
-              <article><LogIn size={17} /><div><strong>Authentication checkpoint</strong><span>Department accounts and staff PINs connect here in the backend phase.</span></div></article>
+              <article><KeyRound size={17} /><div><strong>PIN only when required</strong><span>The shared console stays active; a staff PIN is reserved for privileged actions.</span></div></article>
               <article><ListChecks size={17} /><div><strong>No silent deletion</strong><span>Production records will be archived with a named audit event.</span></div></article>
             </div>
           )}
@@ -804,23 +800,6 @@ export default function Home() {
             </div>
           )}
         </section>
-      )}
-
-      {loginOpen && (
-        <div className="login-backdrop" role="presentation" onClick={() => setLoginOpen(false)}>
-          <section className="login-placeholder glass-panel" role="dialog" aria-label="Department login" onClick={(event) => event.stopPropagation()}>
-            <button className="login-close" onClick={() => setLoginOpen(false)} aria-label="Close login">
-              <X size={17} />
-            </button>
-            <span className="login-symbol"><ShieldCheck size={21} /></span>
-            <small>Secure access</small>
-            <h2>Department login</h2>
-            <p>Department accounts and staff PIN sign-in will connect here during the backend authentication phase.</p>
-            <button className="login-disabled" disabled>
-              Authentication not connected yet
-            </button>
-          </section>
-        </div>
       )}
 
       {currentAppointment && (
@@ -995,6 +974,9 @@ export default function Home() {
             </div>
           </div>
           <div className="top-actions">
+            <span className="console-active" aria-label="Shared console active">
+              <i /> Console active
+            </span>
             <button className="icon-button search-action" aria-label="Search">
               <Search size={18} />
             </button>
