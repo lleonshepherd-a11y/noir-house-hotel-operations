@@ -23,6 +23,7 @@ import {
   Paperclip,
   Pin,
   Plus,
+  QrCode,
   Search,
   Send,
   Settings,
@@ -151,6 +152,53 @@ type DepartmentAppointment = {
   reminderMinutes: number;
 };
 
+type ShiftHandover = {
+  id: number;
+  department: string;
+  author: string;
+  text: string;
+  time: string;
+  important: boolean;
+  complete: boolean;
+};
+
+type GuestRequest = {
+  id: number;
+  room: string;
+  text: string;
+  time: string;
+  urgent: boolean;
+  status: 'New' | 'Escalated' | 'Resolved';
+  internalAssignment?: string;
+  reply?: string;
+};
+
+const guestHelpTopics = [
+  ['Restaurant hours', 'Dinner is served from 18:00 until 22:30.'],
+  ['Bar hours', 'The hotel bar is open from 12:00 until midnight.'],
+  ['Parking', 'Valet parking is available at the main entrance.'],
+  ['Wi-Fi', 'Connect to Noir House Guest and enter your surname and room number.'],
+  ['Breakfast', 'Breakfast is served from 06:30 until 10:30.'],
+  ['Checkout', 'Checkout is at 11:00. Reception can discuss a later departure.'],
+  ['Reception', 'Reception is staffed 24 hours a day.'],
+  ['Housekeeping', 'Extra towels and room items can be requested here.'],
+  ['Luggage', 'The concierge can store luggage before arrival or after checkout.'],
+  ['Taxis', 'The concierge can arrange a licensed taxi for you.'],
+  ['Local directions', 'Ask the concierge for walking routes and local recommendations.'],
+  ['Emergency help', 'For immediate danger call emergency services, then alert Reception.'],
+] as const;
+
+const activeStaffNames: Record<string, string> = {
+  'General Manager': 'Alex M.',
+  'Front of House': 'Jordan M.',
+  Concierge: 'Sam R.',
+  Restaurant: 'Ellie T.',
+  Kitchen: 'Marco L.',
+  Bar: 'Nina P.',
+  Housekeeping: 'Priya S.',
+  Maintenance: 'Daniel K.',
+};
+
 const taskStatusOrder: TaskStatus[] = [
   'Sent',
   'Acknowledged',
@@ -231,8 +279,10 @@ export default function Home() {
   const [announcementAcknowledged, setAnnouncementAcknowledged] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [guestNotificationsOpen, setGuestNotificationsOpen] = useState(false);
+  const [shiftNotificationsOpen, setShiftNotificationsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'security' | 'settings' | null>(null);
+  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'guest' | 'security' | 'settings' | null>(null);
   const [gentleSounds, setGentleSounds] = useState(true);
   const [calmMotion, setCalmMotion] = useState(true);
   const [appointmentTitle, setAppointmentTitle] = useState('');
@@ -294,6 +344,37 @@ export default function Home() {
   ]);
   const [messages, setMessages] = useState(initialMessages);
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
+  const [handoverDraft, setHandoverDraft] = useState('');
+  const [handoverImportant, setHandoverImportant] = useState(false);
+  const [shiftHandovers, setShiftHandovers] = useState<ShiftHandover[]>([
+    {
+      id: 801,
+      department: 'Front of House',
+      author: 'Jordan M.',
+      text: 'Astor Suite guest is arriving at 20:15. Champagne service is ready.',
+      time: '19:48',
+      important: true,
+      complete: false,
+    },
+    {
+      id: 802,
+      department: 'Front of House',
+      author: 'Amelia C.',
+      text: 'Morning shift should confirm the airport car for room 214.',
+      time: '18:55',
+      important: false,
+      complete: false,
+    },
+  ]);
+  const [guestRoom, setGuestRoom] = useState('214');
+  const [guestDraft, setGuestDraft] = useState('');
+  const [guestUrgent, setGuestUrgent] = useState(false);
+  const [selectedGuestHelp, setSelectedGuestHelp] = useState<(typeof guestHelpTopics)[number] | null>(null);
+  const [guestRequests, setGuestRequests] = useState<GuestRequest[]>([
+    { id: 701, room: '235', text: 'Please confirm when our room is ready.', time: '19:46', urgent: false, status: 'New' },
+    { id: 702, room: '118', text: 'I need assistance at Reception, please.', time: '19:43', urgent: true, status: 'New' },
+  ]);
+  const [guestReplyDrafts, setGuestReplyDrafts] = useState<Record<number, string>>({});
 
   const departmentAppointments = useMemo(
     () =>
@@ -309,6 +390,11 @@ export default function Home() {
     (department) => department.name === activeDepartment,
   ) ?? departments[1];
   const SelectedDepartmentIcon = selectedDepartment.icon;
+  const canAccessGuestRequests =
+    activeDepartment === 'Front of House' || activeDepartment === 'General Manager';
+  const pendingGuestRequests = guestRequests.filter((request) => request.status === 'New');
+  const featuredGuestRequest =
+    pendingGuestRequests.find((request) => request.urgent) ?? pendingGuestRequests[0];
 
   const currentAppointment = useMemo(() => {
     if (!now) return undefined;
@@ -436,6 +522,48 @@ export default function Home() {
         message.id === messageId ? { ...message, unread: false } : message,
       ),
     );
+  };
+
+  const addShiftHandover = (event: FormEvent) => {
+    event.preventDefault();
+    const text = handoverDraft.trim();
+    if (!text) return;
+    const time = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    setShiftHandovers((current) => [
+      {
+        id: Date.now(),
+        department: activeDepartment,
+        author: activeStaffNames[activeDepartment] ?? activeDepartment,
+        text,
+        time,
+        important: handoverImportant,
+        complete: false,
+      },
+      ...current,
+    ]);
+    setHandoverDraft('');
+    setHandoverImportant(false);
+  };
+
+  const submitGuestRequest = (event: FormEvent) => {
+    event.preventDefault();
+    const text = guestDraft.trim();
+    if (!text) return;
+    const time = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    setGuestRequests((current) => [
+      { id: Date.now(), room: guestRoom.trim() || 'Guest', text, time, urgent: guestUrgent, status: 'New' },
+      ...current,
+    ]);
+    setGuestDraft('');
+    setGuestUrgent(false);
   };
 
   const markMessageOpened = (messageId: number) => {
@@ -803,6 +931,24 @@ export default function Home() {
             <NotebookPen size={20} />
           </button>
           <button
+            className={`nav-button ${utilityPanel === 'guest' ? 'active' : ''} ${canAccessGuestRequests ? '' : 'restricted'}`}
+            aria-label={canAccessGuestRequests ? 'Guest requests' : 'Guest requests — restricted to Reception, Front of House and Duty Manager'}
+            title={canAccessGuestRequests ? 'Guest requests' : 'Guest requests — restricted'}
+            onClick={() => {
+              setUtilityPanel((panel) => (panel === 'guest' ? null : 'guest'));
+              setCalendarOpen(false);
+              setComposerOpen(false);
+            }}
+          >
+            <QrCode size={20} />
+            {canAccessGuestRequests && guestRequests.filter((request) => request.status === 'New').length > 0 && (
+              <span className="guest-nav-count">
+                {guestRequests.filter((request) => request.status === 'New').length}
+              </span>
+            )}
+            {!canAccessGuestRequests && <KeyRound size={9} className="guest-nav-lock" />}
+          </button>
+          <button
             className={`nav-button ${calendarOpen ? 'active' : ''}`}
             aria-label={`${activeDepartment} calendar`}
             title={`${activeDepartment} calendar`}
@@ -843,11 +989,11 @@ export default function Home() {
       </aside>
 
       {utilityPanel && (
-        <section className="utility-panel glass-panel" aria-label={`${utilityPanel} panel`}>
+        <section className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`} aria-label={`${utilityPanel} panel`}>
           <div className="calendar-heading">
             <div>
-              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
-              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'security' ? 'Security & audit' : 'Settings'}</strong>
+              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
+              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'guest' ? 'Guest requests' : utilityPanel === 'security' ? 'Security & audit' : 'Settings'}</strong>
             </div>
             <button onClick={() => setUtilityPanel(null)} aria-label={`Close ${utilityPanel}`}><X size={17} /></button>
           </div>
@@ -863,6 +1009,101 @@ export default function Home() {
                 ))}
               </div>
             </>
+          )}
+          {utilityPanel === 'guest' && (
+            canAccessGuestRequests ? <div className="guest-requests-layout">
+              <section className="guest-help-preview" aria-label="Guest QR help preview">
+                <div className="guest-preview-heading">
+                  <span className="guest-qr-mark"><QrCode size={22} /></span>
+                  <div><small>NOIR HOUSE GUEST HELP</small><strong>How can we help?</strong></div>
+                </div>
+                <p className="guest-welcome">Tap a common question or send a private request to the hotel team.</p>
+                <div className="guest-topic-grid">
+                  {guestHelpTopics.map((topic) => (
+                    <button type="button" key={topic[0]} onClick={() => setSelectedGuestHelp(topic)}>
+                      {topic[0]}
+                    </button>
+                  ))}
+                </div>
+                {selectedGuestHelp && (
+                  <div className="guest-help-answer">
+                    <strong>{selectedGuestHelp[0]}</strong>
+                    <p>{selectedGuestHelp[1]}</p>
+                  </div>
+                )}
+                <form className="guest-message-form" onSubmit={submitGuestRequest}>
+                  <label>Room or name<input value={guestRoom} onChange={(event) => setGuestRoom(event.target.value)} /></label>
+                  <textarea value={guestDraft} onChange={(event) => setGuestDraft(event.target.value)} placeholder="Ask another question or request help…" aria-label="Guest request" />
+                  <div>
+                    <button type="button" className={guestUrgent ? 'active' : ''} onClick={() => setGuestUrgent((value) => !value)} aria-pressed={guestUrgent}>
+                      <Zap size={13} /> I need urgent help
+                    </button>
+                    <button type="submit" disabled={!guestDraft.trim()}>Send request <Send size={13} /></button>
+                  </div>
+                </form>
+              </section>
+              <section className="guest-queue" aria-label="Guest request queue">
+                <div className="guest-queue-heading">
+                  <div><span>STAFF VIEW</span><strong>Guest request queue</strong></div>
+                  <span>{guestRequests.filter((request) => request.status !== 'Resolved').length} open</span>
+                </div>
+                {guestRequests.map((request) => (
+                  <article className={`${request.urgent ? 'urgent' : ''} status-${request.status.toLowerCase()}`} key={request.id}>
+                    <span className="guest-request-room">{request.room === 'Guest' ? 'Guest' : `Room ${request.room}`}</span>
+                    <strong>{request.text}</strong>
+                    <small>{request.time} · {request.status}</small>
+                    <div>
+                      {request.urgent && request.status === 'New' && (
+                        <button onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Escalated' } : item))}>
+                          Escalate to Reception / duty manager
+                        </button>
+                      )}
+                      {request.status !== 'Resolved' && (
+                        <button onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item))}>
+                          Resolve
+                        </button>
+                      )}
+                      {request.status !== 'Resolved' && !request.internalAssignment && (
+                        <button onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, internalAssignment: 'Kitchen' } : item))}>
+                          Ask Kitchen internally
+                        </button>
+                      )}
+                    </div>
+                    {request.internalAssignment && (
+                      <p className="guest-internal-assignment"><ChefHat size={12} /> Internal input requested from {request.internalAssignment}; guest conversation remains private.</p>
+                    )}
+                    {request.status !== 'Resolved' && (
+                      <div className="guest-reply-row">
+                        <input
+                          value={guestReplyDrafts[request.id] ?? ''}
+                          onChange={(event) => setGuestReplyDrafts((current) => ({ ...current, [request.id]: event.target.value }))}
+                          placeholder="Reply to guest…"
+                          aria-label={`Reply to ${request.room}`}
+                        />
+                        <button
+                          disabled={!(guestReplyDrafts[request.id] ?? '').trim()}
+                          onClick={() => {
+                            const reply = (guestReplyDrafts[request.id] ?? '').trim();
+                            if (!reply) return;
+                            setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, reply } : item));
+                            setGuestReplyDrafts((current) => ({ ...current, [request.id]: '' }));
+                          }}
+                        >
+                          Send reply
+                        </button>
+                      </div>
+                    )}
+                    {request.reply && <p className="guest-sent-reply"><ShieldCheck size={12} /> Reply sent: “{request.reply}”</p>}
+                  </article>
+                ))}
+                <p className="guest-channel-note"><ShieldCheck size={13} /> Guest requests remain separate from internal department chat.</p>
+              </section>
+            </div> : <div className="guest-access-denied">
+              <span><KeyRound size={20} /></span>
+              <strong>Guest conversations are restricted</strong>
+              <p>Only Reception, Front of House and the Duty Manager can open guest requests or send replies.</p>
+              <small>{activeDepartment} can receive a separate internal task when guest-facing staff need operational input.</small>
+            </div>
           )}
           {utilityPanel === 'security' && (
             <div className="security-summary">
@@ -1058,11 +1299,59 @@ export default function Home() {
             <button className="icon-button search-action" aria-label="Search">
               <Search size={18} />
             </button>
+            <div className="notification-wrap top-notification guest-top-notification">
+              <button
+                className={`icon-button ${pendingGuestRequests.length ? 'has-alert' : ''}`}
+                aria-label={`${pendingGuestRequests.length} new guest requests`}
+                onClick={() => {
+                  if (!canAccessGuestRequests) {
+                    setUtilityPanel('guest');
+                    return;
+                  }
+                  setGuestNotificationsOpen((open) => !open);
+                  setNotificationsOpen(false);
+                  setShiftNotificationsOpen(false);
+                }}
+              >
+                <ConciergeBell size={18} />
+                {pendingGuestRequests.length > 0 && canAccessGuestRequests && (
+                  <span className={`guest-alert-count ${pendingGuestRequests.some((request) => request.urgent) ? 'urgent' : ''}`}>
+                    {pendingGuestRequests.length}
+                  </span>
+                )}
+              </button>
+              {guestNotificationsOpen && canAccessGuestRequests && (
+                <div className="notification-popover guest-notification-popover glass-panel">
+                  <div className="popover-heading">
+                    <div><span>Guest Requests</span><strong>{pendingGuestRequests.length} new</strong></div>
+                    <button onClick={() => setGuestNotificationsOpen(false)}><X size={16} /></button>
+                  </div>
+                  {pendingGuestRequests.map((request) => (
+                    <button
+                      className={`guest-notification-row ${request.urgent ? 'urgent' : ''}`}
+                      key={request.id}
+                      onClick={() => {
+                        setGuestNotificationsOpen(false);
+                        setUtilityPanel('guest');
+                      }}
+                    >
+                      <ConciergeBell size={15} />
+                      <span><strong>{request.room === 'Guest' ? 'Guest' : `Room ${request.room}`}</strong><small>{request.text}</small></span>
+                      <time>{request.time}</time>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="notification-wrap">
               <button
                 className={`icon-button ${unreadCount ? 'has-alert' : ''}`}
-                aria-label={`${unreadCount} unread notifications`}
-                onClick={() => setNotificationsOpen((open) => !open)}
+                aria-label={`${unreadCount} unread internal messages`}
+                onClick={() => {
+                  setNotificationsOpen((open) => !open);
+                  setGuestNotificationsOpen(false);
+                  setShiftNotificationsOpen(false);
+                }}
               >
                 <Bell size={18} />
                 {unreadCount > 0 && (
@@ -1073,7 +1362,7 @@ export default function Home() {
                 <div className="notification-popover glass-panel">
                   <div className="popover-heading">
                     <div>
-                      <span>Notifications</span>
+                      <span>Internal Messages</span>
                       <strong>{seenNotifications.length} seen</strong>
                     </div>
                     <button onClick={() => setNotificationsOpen(false)}>
@@ -1154,6 +1443,50 @@ export default function Home() {
                 </div>
               )}
             </div>
+            <div className="notification-wrap top-notification shift-top-notification">
+              <button
+                className="icon-button"
+                aria-label={`${departmentAppointments.length} calendar entries and ${shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length} outstanding handovers`}
+                onClick={() => {
+                  setShiftNotificationsOpen((open) => !open);
+                  setNotificationsOpen(false);
+                  setGuestNotificationsOpen(false);
+                }}
+              >
+                <CalendarDays size={18} />
+                {(departmentAppointments.length + shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length) > 0 && (
+                  <span className="shift-alert-count">
+                    {departmentAppointments.length + shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length}
+                  </span>
+                )}
+              </button>
+              {shiftNotificationsOpen && (
+                <div className="notification-popover shift-notification-popover glass-panel">
+                  <div className="popover-heading">
+                    <div><span>Calendar / Shift</span><strong>{activeDepartment}</strong></div>
+                    <button onClick={() => setShiftNotificationsOpen(false)}><X size={16} /></button>
+                  </div>
+                  <div className="shift-notification-group">
+                    <strong>UPCOMING CALENDAR</strong>
+                    {departmentAppointments.slice(0, 3).map((appointment) => (
+                      <button key={appointment.id} onClick={() => { setShiftNotificationsOpen(false); setCalendarOpen(true); }}>
+                        <CalendarClock size={14} /><span>{appointment.title}</span>
+                      </button>
+                    ))}
+                    {departmentAppointments.length === 0 && <small>No upcoming entries</small>}
+                  </div>
+                  <div className="shift-notification-group">
+                    <strong>OUTSTANDING HANDOVER</strong>
+                    {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).slice(0, 3).map((item) => (
+                      <button key={item.id} onClick={() => { setShiftNotificationsOpen(false); document.getElementById('shift-handover-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>
+                        <NotebookPen size={14} /><span>{item.text}</span>
+                      </button>
+                    ))}
+                    {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length === 0 && <small>All handed over</small>}
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               className="compose-button"
               onClick={() => setComposerOpen((open) => !open)}
@@ -1180,6 +1513,23 @@ export default function Home() {
               {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
             </button>
           </section>
+          {canAccessGuestRequests && featuredGuestRequest && (
+            <section className={`guest-request-alert glass-panel ${featuredGuestRequest.urgent ? 'urgent' : ''}`} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
+              <span className="guest-request-alert-icon"><QrCode size={17} /></span>
+              <div>
+                <span>{featuredGuestRequest.urgent ? 'URGENT GUEST REQUEST' : 'GUEST REQUEST · HUMAN REPLY NEEDED'}</span>
+                <strong>{featuredGuestRequest.room === 'Guest' ? 'Guest' : `Room ${featuredGuestRequest.room}`} · {featuredGuestRequest.text}</strong>
+                <small>{featuredGuestRequest.time} · Separate from internal messages</small>
+              </div>
+              <button onClick={() => {
+                setUtilityPanel('guest');
+                setCalendarOpen(false);
+                setComposerOpen(false);
+              }}>
+                Open guest requests
+              </button>
+            </section>
+          )}
           <section className="pinboard glass-panel">
             <div className="section-heading">
               <div>
@@ -1405,6 +1755,70 @@ export default function Home() {
                   </div>
                 )}
               </section>
+              <section className="shift-handover glass-panel" aria-labelledby="shift-handover-title">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">Next shift</span>
+                    <h2 id="shift-handover-title">Shift handover</h2>
+                  </div>
+                  <span className="handover-count">
+                    {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length} outstanding
+                  </span>
+                </div>
+                <form className="handover-form" onSubmit={addShiftHandover}>
+                  <textarea
+                    value={handoverDraft}
+                    onChange={(event) => setHandoverDraft(event.target.value)}
+                    placeholder={`Leave a clear note for the next ${activeDepartment} shift…`}
+                    aria-label="New shift handover note"
+                  />
+                  <div>
+                    <button
+                      type="button"
+                      className={handoverImportant ? 'active' : ''}
+                      onClick={() => setHandoverImportant((value) => !value)}
+                      aria-pressed={handoverImportant}
+                    >
+                      <Zap size={13} /> Important
+                    </button>
+                    <button type="submit" disabled={!handoverDraft.trim()}>
+                      Add handover <Send size={13} />
+                    </button>
+                  </div>
+                </form>
+                <div className="handover-list">
+                  {shiftHandovers
+                    .filter((item) => item.department === activeDepartment)
+                    .slice(0, 4)
+                    .map((item) => (
+                      <article
+                        className={`${item.important ? 'important' : ''} ${item.complete ? 'complete' : ''}`}
+                        key={item.id}
+                      >
+                        <span className="handover-status">
+                          {item.complete ? <ShieldCheck size={14} /> : item.important ? <Zap size={14} /> : <NotebookPen size={14} />}
+                        </span>
+                        <div>
+                          <p>{item.text}</p>
+                          <small>{item.author} · {item.department} · {item.time}</small>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={item.complete}
+                          onClick={() =>
+                            setShiftHandovers((current) =>
+                              current.map((handover) =>
+                                handover.id === item.id ? { ...handover, complete: true } : handover,
+                              ),
+                            )
+                          }
+                        >
+                          {item.complete ? 'Handed over' : 'Mark handed over'}
+                        </button>
+                      </article>
+                    ))}
+                </div>
+              </section>
             </div>
 
             <aside className="right-column">
@@ -1568,7 +1982,7 @@ export default function Home() {
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={sendMessage}>
+            <form onSubmit={sendMessage} tabIndex={0} aria-label="Message details">
               <div className="recipient-heading">
                 <span>Send to</span>
                 <small>{recipient}</small>
@@ -1600,6 +2014,8 @@ export default function Home() {
                 value={draft}
                 spellCheck={spellCheckEnabled}
                 lang="en-GB"
+                inputMode="text"
+                autoComplete="on"
                 autoCorrect={spellCheckEnabled ? 'on' : 'off'}
                 autoCapitalize={spellCheckEnabled ? 'sentences' : 'off'}
                 onChange={(event) => {
