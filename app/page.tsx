@@ -1463,6 +1463,20 @@ export default function Home() {
         </header>
 
         <div className="content">
+          <section className="management-announcement glass-panel">
+            <BellRing size={18} />
+            <div>
+              <span>GENERAL MANAGER ANNOUNCEMENT</span>
+              <strong>Fire drill · Staff car park · Tomorrow at 07:00</strong>
+              <small>Posted by Alex Morgan · 20:04</small>
+            </div>
+            <button
+              className={announcementAcknowledged ? 'acknowledged' : ''}
+              onClick={() => setAnnouncementAcknowledged(true)}
+            >
+              {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
+            </button>
+          </section>
           <section className="pinboard glass-panel">
             <div className="section-heading">
               <div>
@@ -1513,20 +1527,6 @@ export default function Home() {
               </form>
             </div>
           </section>
-          <section className="management-announcement glass-panel">
-            <BellRing size={18} />
-            <div>
-              <span>GENERAL MANAGER ANNOUNCEMENT</span>
-              <strong>Fire drill · Staff car park · Tomorrow at 07:00</strong>
-              <small>Posted by Alex Morgan · 20:04</small>
-            </div>
-            <button
-              className={announcementAcknowledged ? 'acknowledged' : ''}
-              onClick={() => setAnnouncementAcknowledged(true)}
-            >
-              {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
-            </button>
-          </section>
           {canAccessGuestRequests && featuredGuestRequest && (
             <section className={`guest-request-alert glass-panel ${featuredGuestRequest.urgent ? 'urgent' : ''}`} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
               <span className="guest-request-alert-icon"><ConciergeBell size={17} /></span>
@@ -1544,6 +1544,70 @@ export default function Home() {
               </button>
             </section>
           )}
+          <section className="shift-handover glass-panel" aria-labelledby="shift-handover-title">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">Next shift</span>
+                <h2 id="shift-handover-title">Shift handover</h2>
+              </div>
+              <span className="handover-count">
+                {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length} outstanding
+              </span>
+            </div>
+            <form className="handover-form" onSubmit={addShiftHandover}>
+              <textarea
+                value={handoverDraft}
+                onChange={(event) => setHandoverDraft(event.target.value)}
+                placeholder={`Leave a clear note for the next ${activeDepartment} shift…`}
+                aria-label="New shift handover note"
+              />
+              <div>
+                <button
+                  type="button"
+                  className={handoverImportant ? 'active' : ''}
+                  onClick={() => setHandoverImportant((value) => !value)}
+                  aria-pressed={handoverImportant}
+                >
+                  <Zap size={13} /> Important
+                </button>
+                <button type="submit" disabled={!handoverDraft.trim()}>
+                  Add handover <Send size={13} />
+                </button>
+              </div>
+            </form>
+            <div className="handover-list">
+              {shiftHandovers
+                .filter((item) => item.department === activeDepartment)
+                .slice(0, 4)
+                .map((item) => (
+                  <article
+                    className={`${item.important ? 'important' : ''} ${item.complete ? 'complete' : ''}`}
+                    key={item.id}
+                  >
+                    <span className="handover-status">
+                      {item.complete ? <ShieldCheck size={14} /> : item.important ? <Zap size={14} /> : <NotebookPen size={14} />}
+                    </span>
+                    <div>
+                      <p>{item.text}</p>
+                      <small>{item.author} · {item.department} · {item.time}</small>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={item.complete}
+                      onClick={() =>
+                        setShiftHandovers((current) =>
+                          current.map((handover) =>
+                            handover.id === item.id ? { ...handover, complete: true } : handover,
+                          ),
+                        )
+                      }
+                    >
+                      {item.complete ? 'Handed over' : 'Mark handed over'}
+                    </button>
+                  </article>
+                ))}
+            </div>
+          </section>
           <section className="dashboard-grid">
             <div className="main-column">
               <section className="activity glass-panel">
@@ -1717,70 +1781,6 @@ export default function Home() {
                     ))}
                   </div>
                 )}
-              </section>
-              <section className="shift-handover glass-panel" aria-labelledby="shift-handover-title">
-                <div className="section-heading">
-                  <div>
-                    <span className="eyebrow">Next shift</span>
-                    <h2 id="shift-handover-title">Shift handover</h2>
-                  </div>
-                  <span className="handover-count">
-                    {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length} outstanding
-                  </span>
-                </div>
-                <form className="handover-form" onSubmit={addShiftHandover}>
-                  <textarea
-                    value={handoverDraft}
-                    onChange={(event) => setHandoverDraft(event.target.value)}
-                    placeholder={`Leave a clear note for the next ${activeDepartment} shift…`}
-                    aria-label="New shift handover note"
-                  />
-                  <div>
-                    <button
-                      type="button"
-                      className={handoverImportant ? 'active' : ''}
-                      onClick={() => setHandoverImportant((value) => !value)}
-                      aria-pressed={handoverImportant}
-                    >
-                      <Zap size={13} /> Important
-                    </button>
-                    <button type="submit" disabled={!handoverDraft.trim()}>
-                      Add handover <Send size={13} />
-                    </button>
-                  </div>
-                </form>
-                <div className="handover-list">
-                  {shiftHandovers
-                    .filter((item) => item.department === activeDepartment)
-                    .slice(0, 4)
-                    .map((item) => (
-                      <article
-                        className={`${item.important ? 'important' : ''} ${item.complete ? 'complete' : ''}`}
-                        key={item.id}
-                      >
-                        <span className="handover-status">
-                          {item.complete ? <ShieldCheck size={14} /> : item.important ? <Zap size={14} /> : <NotebookPen size={14} />}
-                        </span>
-                        <div>
-                          <p>{item.text}</p>
-                          <small>{item.author} · {item.department} · {item.time}</small>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={item.complete}
-                          onClick={() =>
-                            setShiftHandovers((current) =>
-                              current.map((handover) =>
-                                handover.id === item.id ? { ...handover, complete: true } : handover,
-                              ),
-                            )
-                          }
-                        >
-                          {item.complete ? 'Handed over' : 'Mark handed over'}
-                        </button>
-                      </article>
-                    ))}
-                </div>
               </section>
             </div>
 
