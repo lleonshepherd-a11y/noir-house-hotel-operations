@@ -48,6 +48,33 @@ const departments = [
   { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a7b59b' },
 ];
 
+const staffEncouragementMessages: Record<string, { morning: string[]; afternoon: string[]; night: string[] }> = {
+  'Front of House': {
+    morning: ['Good morning. Wishing you a smooth and successful shift today.'],
+    afternoon: [
+      'Every guest deserves a warm welcome.',
+      'Thank you for making the difference.',
+      'Small acts of kindness create memorable guest experiences.',
+      'Keep up the great work.',
+      'Every interaction matters.',
+      'Have a great shift, and thank you for all you do today.',
+    ],
+    night: [
+      'Stay calm, take one guest at a time, and let the rest follow.',
+      'A smile, patience, and professionalism never go unnoticed.',
+      'You’re part of what makes this hotel a great place to stay.',
+      'Thank you for everything you do behind the scenes and at the front desk.',
+      'Your calm approach helps every guest feel welcome.',
+    ],
+  },
+};
+
+const defaultStaffEncouragement = {
+  morning: ['Good morning. Wishing you a smooth and successful shift today.'],
+  afternoon: ['Thank you for making the difference.', 'Keep up the great work.', 'Every interaction matters.'],
+  night: ['Stay calm, take one task at a time, and let the rest follow.', 'Thank you for everything you do behind the scenes.'],
+};
+
 const commonSpellingCorrections: Record<string, string> = {
   accomodation: 'accommodation',
   adress: 'address',
@@ -614,6 +641,14 @@ export default function Home() {
         hour12: false,
       }).format(now)
     : '--:--:--';
+  const encouragementHour = now?.getHours() ?? 9;
+  const encouragementPeriod = encouragementHour < 12 ? 'morning' : encouragementHour < 18 ? 'afternoon' : 'night';
+  const encouragementSet = staffEncouragementMessages[activeDepartment] ?? defaultStaffEncouragement;
+  const encouragementOptions = encouragementSet[encouragementPeriod];
+  const encouragementSlot = now
+    ? Math.floor(now.getTime() / 86_400_000) * 12 + Math.floor(encouragementHour / 2)
+    : 0;
+  const staffEncouragement = encouragementOptions[encouragementSlot % encouragementOptions.length];
 
   const sendMessage = (event: FormEvent) => {
     event.preventDefault();
@@ -1300,6 +1335,9 @@ export default function Home() {
             <div>
               <span>{date}</span>
               <strong>{time}</strong>
+              <p className="staff-encouragement" key={`${activeDepartment}-${encouragementSlot}`}>
+                {staffEncouragement}
+              </p>
             </div>
           </div>
           <div className="top-actions">

@@ -195,4 +195,9 @@ body{background:#010201;color:#fff}
 .today-glance-state{display:flex;align-items:center;gap:7px;margin-top:10px;padding:9px 10px;border-radius:11px;background:rgba(205,187,140,.055);color:#cdbb8c;font-size:8px}
 .today-glance-state.clear{background:rgba(95,162,119,.07);color:#9bc5aa}
 @media(max-width:600px){.today-glance-stats{grid-template-columns:1fr}.today-glance-stats div{display:flex;align-items:center;justify-content:space-between;gap:8px}.today-glance-stats span{margin:0;text-align:right}}
+.date-time>div{justify-content:center}
+.staff-encouragement{width:clamp(210px,22vw,330px);margin:8px 0 0;color:#fff;font-size:11px;font-weight:480;line-height:1.42;letter-spacing:.005em;text-align:right;text-wrap:balance;text-shadow:0 1px 12px rgba(0,0,0,.72),0 0 14px rgba(255,255,255,.06);animation:encouragementIn .45s ease-out both}
+@keyframes encouragementIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (min-width:601px) and (max-width:820px){.date-time{min-width:190px}.staff-encouragement{width:190px;font-size:10px;line-height:1.35;margin-top:6px}}
+@media(max-width:600px){.staff-encouragement{display:none}}
 .department-greeting{white-space:nowrap}.department-switcher-trigger{max-width:148px}.department-switcher-trigger span{max-width:112px}
