@@ -989,7 +989,7 @@ export default function Home() {
       </aside>
 
       {utilityPanel && (
-        <section className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`} aria-label={`${utilityPanel} panel`}>
+        <section className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`} aria-label={`${utilityPanel} panel`} tabIndex={utilityPanel === 'guest' ? 0 : undefined}>
           <div className="calendar-heading">
             <div>
               <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
