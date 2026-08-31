@@ -176,4 +176,7 @@ body{background:#010201;color:#fff}
 .shift-notification-row .compact-actions{gap:3px}
 .shift-notification-row .compact-actions button{height:25px;min-width:43px;padding:0 5px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.035)}
 @media(max-width:600px){.notification-actions button,.guest-notification-actions button{min-width:42px;padding:0 5px}.notification-actions button span,.guest-notification-actions button span{font-size:5px}.shift-notification-row{grid-template-columns:1fr}.shift-notification-row .compact-actions{justify-self:end}}
+.composer{z-index:200;display:flex;flex-direction:column;box-sizing:border-box}
+.composer-heading{position:relative;z-index:2;flex:0 0 auto;background:linear-gradient(180deg,rgba(9,10,9,.98),rgba(9,10,9,.82))}
+.composer form{flex:1 1 auto;height:auto;min-height:0;overflow-y:auto;overflow-x:hidden}
 .department-greeting{white-space:nowrap}.department-switcher-trigger{max-width:148px}.department-switcher-trigger span{max-width:112px}
