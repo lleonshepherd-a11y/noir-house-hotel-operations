@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   BellRing,
@@ -274,6 +274,9 @@ export default function Home() {
   const [appointmentTime, setAppointmentTime] = useState('');
   const [appointmentReminder, setAppointmentReminder] = useState('15');
   const [dismissedAppointments, setDismissedAppointments] = useState<number[]>([]);
+  const [pinnedNotificationKeys, setPinnedNotificationKeys] = useState<string[]>([]);
+  const [dismissedShiftNotificationKeys, setDismissedShiftNotificationKeys] = useState<string[]>([]);
+  const notificationSwipeStart = useRef<Record<string, number>>({});
   const [appointments, setAppointments] = useState<DepartmentAppointment[]>(() => {
     const arrival = new Date();
     arrival.setDate(arrival.getDate() + (arrival.getHours() >= 9 ? 1 : 0));
@@ -504,6 +507,28 @@ export default function Home() {
         message.id === messageId ? { ...message, unread: false } : message,
       ),
     );
+  };
+
+  const toggleNotificationPin = (key: string) => {
+    setPinnedNotificationKeys((current) =>
+      current.includes(key)
+        ? current.filter((item) => item !== key)
+        : [key, ...current],
+    );
+  };
+
+  const beginNotificationSwipe = (key: string, event: ReactPointerEvent<HTMLElement>) => {
+    notificationSwipeStart.current[key] = event.clientX;
+  };
+
+  const finishNotificationSwipe = (
+    key: string,
+    event: ReactPointerEvent<HTMLElement>,
+    dismiss: () => void,
+  ) => {
+    const start = notificationSwipeStart.current[key];
+    delete notificationSwipeStart.current[key];
+    if (typeof start === 'number' && start - event.clientX > 56) dismiss();
   };
 
   const addShiftHandover = (event: FormEvent) => {
@@ -1282,10 +1307,17 @@ export default function Home() {
                     <div><span>Guest Requests</span><strong>{pendingGuestRequests.length} new</strong></div>
                     <button onClick={() => setGuestNotificationsOpen(false)}><X size={16} /></button>
                   </div>
-                  {pendingGuestRequests.map((request) => (
+                  {[...pendingGuestRequests]
+                    .sort((a, b) => Number(pinnedNotificationKeys.includes(`guest-${b.id}`)) - Number(pinnedNotificationKeys.includes(`guest-${a.id}`)))
+                    .map((request) => {
+                    const notificationKey = `guest-${request.id}`;
+                    const isPinned = pinnedNotificationKeys.includes(notificationKey);
+                    return (
                     <article
-                      className={`guest-notification-row ${request.urgent ? 'urgent' : ''}`}
+                      className={`guest-notification-row swipe-notification ${request.urgent ? 'urgent' : ''} ${isPinned ? 'pinned' : ''}`}
                       key={request.id}
+                      onPointerDown={(event) => beginNotificationSwipe(notificationKey, event)}
+                      onPointerUp={(event) => finishNotificationSwipe(notificationKey, event, () => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item)))}
                     >
                       <ConciergeBell size={15} />
                       <button className="guest-notification-copy" onClick={() => { setGuestNotificationsOpen(false); setUtilityPanel('guest'); }}>
@@ -1294,16 +1326,21 @@ export default function Home() {
                       <time>{request.time}</time>
                       <span className="guest-notification-actions">
                         <button
-                          aria-label="Pin guest request"
-                          onClick={() => setPinnedNotes((current) => [{ id: Date.now(), text: `Guest request · ${request.room === 'Guest' ? 'Guest' : `Room ${request.room}`} · ${request.text}`, urgent: request.urgent, department: activeDepartment }, ...current])}
-                        ><Pin size={13} /></button>
+                          aria-label={isPinned ? 'Unpin guest request notification' : 'Pin guest request notification'}
+                          aria-pressed={isPinned}
+                          onClick={() => {
+                            toggleNotificationPin(notificationKey);
+                            if (!isPinned) setPinnedNotes((current) => [{ id: Date.now(), text: `Guest request · ${request.room === 'Guest' ? 'Guest' : `Room ${request.room}`} · ${request.text}`, urgent: request.urgent, department: activeDepartment }, ...current]);
+                          }}
+                        ><Pin size={13} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
                         <button
-                          aria-label="Dismiss handled guest request"
+                          aria-label="Swipe away guest request notification"
                           onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item))}
-                        ><X size={13} /></button>
+                        ><X size={13} /><span>Swipe</span></button>
                       </span>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1354,11 +1391,14 @@ export default function Home() {
                   {seenNotifications.length === 0 && (
                     <p className="notification-empty">No seen notifications yet.</p>
                   )}
-                  {seenNotifications
+                  {[...seenNotifications]
+                    .sort((a, b) => Number(pinnedNotificationKeys.includes(`internal-${b.id}`)) - Number(pinnedNotificationKeys.includes(`internal-${a.id}`)))
                     .map((message) => (
                       <article
                         key={message.id}
-                        className={`notification-item ${message.urgent ? 'urgent' : ''}`}
+                        className={`notification-item swipe-notification ${message.urgent ? 'urgent' : ''} ${pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'pinned' : ''}`}
+                        onPointerDown={(event) => beginNotificationSwipe(`internal-${message.id}`, event)}
+                        onPointerUp={(event) => finishNotificationSwipe(`internal-${message.id}`, event, () => setMessages((current) => current.filter((item) => item.id !== message.id)))}
                       >
                         <span className="notification-symbol">
                           {message.urgent ? (
@@ -1373,24 +1413,20 @@ export default function Home() {
                         </span>
                         <span className="notification-actions">
                           <button
-                            aria-label="Pin notification"
+                            aria-label={pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'Unpin internal message notification' : 'Pin internal message notification'}
+                            aria-pressed={pinnedNotificationKeys.includes(`internal-${message.id}`)}
                             onClick={() => {
-                              setPinnedNotes((current) => [
-                                {
-                                  id: Date.now(),
-                                  text: `${message.from} · ${message.text}`,
-                                  urgent: message.urgent,
-                                  department: activeDepartment,
-                                },
-                                ...current,
-                              ]);
+                              const key = `internal-${message.id}`;
+                              const isPinned = pinnedNotificationKeys.includes(key);
+                              toggleNotificationPin(key);
+                              if (!isPinned) setPinnedNotes((current) => [{ id: Date.now(), text: `${message.from} · ${message.text}`, urgent: message.urgent, department: activeDepartment }, ...current]);
                               if (gentleSounds) playPing(false);
                             }}
                           >
-                            <Pin size={13} />
+                            <Pin size={13} /><span>{pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'Pinned' : 'Pin'}</span>
                           </button>
                           <button
-                            aria-label="Remove notification from history"
+                            aria-label="Swipe away internal message notification"
                             onClick={() =>
                               setMessages((current) =>
                                 current.filter(
@@ -1399,7 +1435,7 @@ export default function Home() {
                               )
                             }
                           >
-                            <X size={13} />
+                            <X size={13} /><span>Swipe</span>
                           </button>
                         </span>
                       </article>
@@ -1432,20 +1468,58 @@ export default function Home() {
                   </div>
                   <div className="shift-notification-group">
                     <strong>UPCOMING CALENDAR</strong>
-                    {departmentAppointments.slice(0, 3).map((appointment) => (
-                      <button key={appointment.id} onClick={() => { setShiftNotificationsOpen(false); setCalendarOpen(true); }}>
-                        <CalendarClock size={14} /><span>{appointment.title}</span>
-                      </button>
-                    ))}
+                    {departmentAppointments
+                      .filter((appointment) => !dismissedShiftNotificationKeys.includes(`calendar-${appointment.id}`))
+                      .sort((a, b) => Number(pinnedNotificationKeys.includes(`calendar-${b.id}`)) - Number(pinnedNotificationKeys.includes(`calendar-${a.id}`)))
+                      .slice(0, 3)
+                      .map((appointment) => {
+                        const notificationKey = `calendar-${appointment.id}`;
+                        const isPinned = pinnedNotificationKeys.includes(notificationKey);
+                        return (
+                          <article
+                            className={`shift-notification-row swipe-notification ${isPinned ? 'pinned' : ''}`}
+                            key={appointment.id}
+                            onPointerDown={(event) => beginNotificationSwipe(notificationKey, event)}
+                            onPointerUp={(event) => finishNotificationSwipe(notificationKey, event, () => setDismissedShiftNotificationKeys((current) => [...current, notificationKey]))}
+                          >
+                            <button className="shift-notification-copy" onClick={() => { setShiftNotificationsOpen(false); setCalendarOpen(true); }}>
+                              <CalendarClock size={14} /><span>{appointment.title}</span>
+                            </button>
+                            <span className="notification-actions compact-actions">
+                              <button aria-label={isPinned ? 'Unpin calendar notification' : 'Pin calendar notification'} aria-pressed={isPinned} onClick={() => toggleNotificationPin(notificationKey)}><Pin size={12} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
+                              <button aria-label="Swipe away calendar notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><X size={12} /><span>Swipe</span></button>
+                            </span>
+                          </article>
+                        );
+                      })}
                     {departmentAppointments.length === 0 && <small>No upcoming entries</small>}
                   </div>
                   <div className="shift-notification-group">
                     <strong>OUTSTANDING HANDOVER</strong>
-                    {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).slice(0, 3).map((item) => (
-                      <button key={item.id} onClick={() => { setShiftNotificationsOpen(false); document.getElementById('shift-handover-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>
-                        <NotebookPen size={14} /><span>{item.text}</span>
-                      </button>
-                    ))}
+                    {shiftHandovers
+                      .filter((item) => item.department === activeDepartment && !item.complete && !dismissedShiftNotificationKeys.includes(`handover-${item.id}`))
+                      .sort((a, b) => Number(pinnedNotificationKeys.includes(`handover-${b.id}`)) - Number(pinnedNotificationKeys.includes(`handover-${a.id}`)))
+                      .slice(0, 3)
+                      .map((item) => {
+                        const notificationKey = `handover-${item.id}`;
+                        const isPinned = pinnedNotificationKeys.includes(notificationKey);
+                        return (
+                          <article
+                            className={`shift-notification-row swipe-notification ${isPinned ? 'pinned' : ''}`}
+                            key={item.id}
+                            onPointerDown={(event) => beginNotificationSwipe(notificationKey, event)}
+                            onPointerUp={(event) => finishNotificationSwipe(notificationKey, event, () => setDismissedShiftNotificationKeys((current) => [...current, notificationKey]))}
+                          >
+                            <button className="shift-notification-copy" onClick={() => { setShiftNotificationsOpen(false); document.getElementById('shift-handover-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>
+                              <NotebookPen size={14} /><span>{item.text}</span>
+                            </button>
+                            <span className="notification-actions compact-actions">
+                              <button aria-label={isPinned ? 'Unpin handover notification' : 'Pin handover notification'} aria-pressed={isPinned} onClick={() => toggleNotificationPin(notificationKey)}><Pin size={12} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
+                              <button aria-label="Swipe away handover notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><X size={12} /><span>Swipe</span></button>
+                            </span>
+                          </article>
+                        );
+                      })}
                     {shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length === 0 && <small>All handed over</small>}
                   </div>
                 </div>
