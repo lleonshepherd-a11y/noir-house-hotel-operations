@@ -173,21 +173,6 @@ type GuestRequest = {
   reply?: string;
 };
 
-const guestHelpTopics = [
-  ['Restaurant hours', 'Dinner is served from 18:00 until 22:30.'],
-  ['Bar hours', 'The hotel bar is open from 12:00 until midnight.'],
-  ['Chemist nearby', 'Reception can direct you to the nearest open chemist.'],
-  ['Wi-Fi', 'Connect to Noir House Guest and enter your surname and room number.'],
-  ['Breakfast', 'Breakfast is served from 06:30 until 10:30.'],
-  ['Checkout', 'Checkout is at 11:00. Reception can discuss a later departure.'],
-  ['Reception', 'Reception is staffed 24 hours a day.'],
-  ['Housekeeping', 'Extra towels and room items can be requested here.'],
-  ["Warm baby's milk", 'Please contact Reception so the hotel team can assist safely.'],
-  ['Taxis', 'The concierge can arrange a licensed taxi for you.'],
-  ['Local directions', 'Ask the concierge for walking routes and local recommendations.'],
-  ['Emergency help', 'For immediate danger call emergency services, then alert Reception.'],
-] as const;
-
 const activeStaffNames: Record<string, string> = {
   'General Manager': 'Alex M.',
   'Front of House': 'Jordan M.',
@@ -366,10 +351,6 @@ export default function Home() {
       complete: false,
     },
   ]);
-  const [guestRoom, setGuestRoom] = useState('214');
-  const [guestDraft, setGuestDraft] = useState('');
-  const [guestUrgent, setGuestUrgent] = useState(false);
-  const [selectedGuestHelp, setSelectedGuestHelp] = useState<(typeof guestHelpTopics)[number] | null>(null);
   const [guestRequests, setGuestRequests] = useState<GuestRequest[]>([
     { id: 701, room: '235', text: 'Is there a chemist nearby?', time: '19:46', urgent: false, status: 'New' },
     { id: 702, room: '118', text: 'Water is leaking from the bathroom ceiling.', time: '19:43', urgent: true, status: 'New' },
@@ -548,23 +529,6 @@ export default function Home() {
     ]);
     setHandoverDraft('');
     setHandoverImportant(false);
-  };
-
-  const submitGuestRequest = (event: FormEvent) => {
-    event.preventDefault();
-    const text = guestDraft.trim();
-    if (!text) return;
-    const time = new Intl.DateTimeFormat('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date());
-    setGuestRequests((current) => [
-      { id: Date.now(), room: guestRoom.trim() || 'Guest', text, time, urgent: guestUrgent, status: 'New' },
-      ...current,
-    ]);
-    setGuestDraft('');
-    setGuestUrgent(false);
   };
 
   const markMessageOpened = (messageId: number) => {
@@ -932,7 +896,7 @@ export default function Home() {
             <NotebookPen size={20} />
           </button>
           <button
-            className={`nav-button ${utilityPanel === 'guest' ? 'active' : ''} ${canAccessGuestRequests ? '' : 'restricted'}`}
+            className={`nav-button guest-nav-button ${utilityPanel === 'guest' ? 'active' : ''} ${canAccessGuestRequests ? '' : 'restricted'} ${pendingGuestRequests.some((request) => request.urgent) ? 'guest-urgent' : ''}`}
             aria-label={canAccessGuestRequests ? 'Guest requests' : 'Guest requests — restricted to Reception, Front of House and Duty Manager'}
             title={canAccessGuestRequests ? 'Guest requests' : 'Guest requests — restricted'}
             onClick={() => {
@@ -941,7 +905,7 @@ export default function Home() {
               setComposerOpen(false);
             }}
           >
-            <QrCode size={20} />
+            <ConciergeBell size={20} />
             {canAccessGuestRequests && guestRequests.filter((request) => request.status === 'New').length > 0 && (
               <span className="guest-nav-count">
                 {guestRequests.filter((request) => request.status === 'New').length}
@@ -959,7 +923,7 @@ export default function Home() {
             }}
           >
             <CalendarDays size={20} />
-            {departmentAppointments.length > 0 && <span className="calendar-nav-dot" />}
+            {departmentAppointments.length > 0 && <span className="calendar-nav-dot">{departmentAppointments.length}</span>}
           </button>
           <button
             className={`nav-button ${utilityPanel === 'security' ? 'active' : ''}`}
@@ -1029,41 +993,14 @@ export default function Home() {
             </>
           )}
           {utilityPanel === 'guest' && (
-            canAccessGuestRequests ? <div className="guest-requests-layout">
-              <section className="guest-help-preview" aria-label="Guest QR help preview">
-                <div className="guest-preview-heading">
-                  <span className="guest-qr-mark"><QrCode size={22} /></span>
-                  <div><small>NOIR HOUSE GUEST HELP</small><strong>How can we help?</strong></div>
-                </div>
-                <p className="guest-welcome">Tap a common question or send a private request to the hotel team.</p>
-                <div className="guest-topic-grid">
-                  {guestHelpTopics.map((topic) => (
-                    <button type="button" key={topic[0]} onClick={() => setSelectedGuestHelp(topic)}>
-                      {topic[0]}
-                    </button>
-                  ))}
-                </div>
-                {selectedGuestHelp && (
-                  <div className="guest-help-answer">
-                    <strong>{selectedGuestHelp[0]}</strong>
-                    <p>{selectedGuestHelp[1]}</p>
-                  </div>
-                )}
-                <form className="guest-message-form" onSubmit={submitGuestRequest}>
-                  <label>Room or name<input value={guestRoom} onChange={(event) => setGuestRoom(event.target.value)} /></label>
-                  <textarea value={guestDraft} onChange={(event) => setGuestDraft(event.target.value)} placeholder="Ask another question or request help…" aria-label="Guest request" />
-                  <div>
-                    <button type="button" className={guestUrgent ? 'active' : ''} onClick={() => setGuestUrgent((value) => !value)} aria-pressed={guestUrgent}>
-                      <Zap size={13} /> I need urgent help
-                    </button>
-                    <button type="submit" disabled={!guestDraft.trim()}>Send request <Send size={13} /></button>
-                  </div>
-                </form>
-              </section>
+            canAccessGuestRequests ? <div className="guest-requests-layout staff-only">
               <section className="guest-queue" aria-label="Guest request queue">
                 <div className="guest-queue-heading">
                   <div><span>STAFF VIEW</span><strong>Guest request queue</strong></div>
-                  <span>{guestRequests.filter((request) => request.status !== 'Resolved').length} open</span>
+                  <div className="guest-queue-heading-actions">
+                    <span>{guestRequests.filter((request) => request.status !== 'Resolved').length} open</span>
+                    <a href="/guest-help" target="_blank" rel="noreferrer"><QrCode size={12} /> Guest QR page</a>
+                  </div>
                 </div>
                 {guestRequests.map((request) => (
                   <article className={`${request.urgent ? 'urgent' : ''} status-${request.status.toLowerCase()}`} key={request.id}>
@@ -1592,7 +1529,7 @@ export default function Home() {
           </section>
           {canAccessGuestRequests && featuredGuestRequest && (
             <section className={`guest-request-alert glass-panel ${featuredGuestRequest.urgent ? 'urgent' : ''}`} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
-              <span className="guest-request-alert-icon"><QrCode size={17} /></span>
+              <span className="guest-request-alert-icon"><ConciergeBell size={17} /></span>
               <div>
                 <span>{featuredGuestRequest.urgent ? 'URGENT GUEST REQUEST' : 'GUEST REQUEST · HUMAN REPLY NEEDED'}</span>
                 <strong>{featuredGuestRequest.room === 'Guest' ? 'Guest' : `Room ${featuredGuestRequest.room}`} · {featuredGuestRequest.text}</strong>
