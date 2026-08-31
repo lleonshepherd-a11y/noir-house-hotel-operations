@@ -176,13 +176,13 @@ type GuestRequest = {
 const guestHelpTopics = [
   ['Restaurant hours', 'Dinner is served from 18:00 until 22:30.'],
   ['Bar hours', 'The hotel bar is open from 12:00 until midnight.'],
-  ['Parking', 'Valet parking is available at the main entrance.'],
+  ['Chemist nearby', 'Reception can direct you to the nearest open chemist.'],
   ['Wi-Fi', 'Connect to Noir House Guest and enter your surname and room number.'],
   ['Breakfast', 'Breakfast is served from 06:30 until 10:30.'],
   ['Checkout', 'Checkout is at 11:00. Reception can discuss a later departure.'],
   ['Reception', 'Reception is staffed 24 hours a day.'],
   ['Housekeeping', 'Extra towels and room items can be requested here.'],
-  ['Luggage', 'The concierge can store luggage before arrival or after checkout.'],
+  ["Warm baby's milk", 'Please contact Reception so the hotel team can assist safely.'],
   ['Taxis', 'The concierge can arrange a licensed taxi for you.'],
   ['Local directions', 'Ask the concierge for walking routes and local recommendations.'],
   ['Emergency help', 'For immediate danger call emergency services, then alert Reception.'],
@@ -371,8 +371,9 @@ export default function Home() {
   const [guestUrgent, setGuestUrgent] = useState(false);
   const [selectedGuestHelp, setSelectedGuestHelp] = useState<(typeof guestHelpTopics)[number] | null>(null);
   const [guestRequests, setGuestRequests] = useState<GuestRequest[]>([
-    { id: 701, room: '235', text: 'Please confirm when our room is ready.', time: '19:46', urgent: false, status: 'New' },
+    { id: 701, room: '235', text: 'Is there a chemist nearby?', time: '19:46', urgent: false, status: 'New' },
     { id: 702, room: '118', text: 'I need assistance at Reception, please.', time: '19:43', urgent: true, status: 'New' },
+    { id: 703, room: '307', text: "Where can I warm my baby's milk?", time: '19:40', urgent: false, status: 'New' },
   ]);
   const [guestReplyDrafts, setGuestReplyDrafts] = useState<Record<number, string>>({});
 
