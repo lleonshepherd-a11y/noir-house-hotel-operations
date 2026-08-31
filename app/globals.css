@@ -180,4 +180,19 @@ body{background:#010201;color:#fff}
 .composer-heading{position:relative;z-index:2;flex:0 0 auto;background:linear-gradient(180deg,rgba(9,10,9,.98),rgba(9,10,9,.82))}
 .composer form{flex:1 1 auto;height:auto;min-height:0;overflow-y:auto;overflow-x:hidden}
 .content>.shift-handover{margin-bottom:18px;isolation:isolate}
+.notification-open-action{border:0;background:transparent;color:inherit;padding:0;text-align:left;cursor:pointer}
+.notification-open-action:hover strong{color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.28);text-underline-offset:3px}
+.reply-context{margin-bottom:13px;padding:11px 12px;border:1px solid rgba(205,187,140,.2);border-radius:13px;background:linear-gradient(145deg,rgba(205,187,140,.075),rgba(255,255,255,.018))}
+.reply-context span{color:#d7c89d;font-size:7px;text-transform:uppercase;letter-spacing:.1em}
+.reply-context p{margin:5px 0 0;color:#f3f2ed;font-size:9px;line-height:1.5}
+.guest-queue article.selected,.calendar-list article.selected,.handover-list article.selected{border-color:rgba(255,255,255,.34);background:linear-gradient(100deg,rgba(255,255,255,.09),rgba(255,255,255,.015));box-shadow:inset 2px 0 0 rgba(255,255,255,.78),0 0 18px rgba(255,255,255,.08)}
+.today-glance{border-radius:18px;padding:17px;background:linear-gradient(145deg,rgba(13,15,14,.94),rgba(1,2,1,.86))}
+.today-glance .section-heading>svg{color:#9cc8ad;filter:drop-shadow(0 0 8px rgba(117,190,145,.2))}
+.today-glance-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:13px}
+.today-glance-stats div{min-width:0;padding:10px 8px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(255,255,255,.025)}
+.today-glance-stats strong{display:block;color:#fff;font-size:17px;font-weight:520}
+.today-glance-stats span{display:block;margin-top:3px;color:#989b95;font-size:7px;line-height:1.35}
+.today-glance-state{display:flex;align-items:center;gap:7px;margin-top:10px;padding:9px 10px;border-radius:11px;background:rgba(205,187,140,.055);color:#cdbb8c;font-size:8px}
+.today-glance-state.clear{background:rgba(95,162,119,.07);color:#9bc5aa}
+@media(max-width:600px){.today-glance-stats{grid-template-columns:1fr}.today-glance-stats div{display:flex;align-items:center;justify-content:space-between;gap:8px}.today-glance-stats span{margin:0;text-align:right}}
 .department-greeting{white-space:nowrap}.department-switcher-trigger{max-width:148px}.department-switcher-trigger span{max-width:112px}

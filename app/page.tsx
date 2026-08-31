@@ -360,6 +360,10 @@ export default function Home() {
     { id: 703, room: '307', text: "Where can I warm my baby's milk?", time: '19:40', urgent: false, status: 'New' },
   ]);
   const [guestReplyDrafts, setGuestReplyDrafts] = useState<Record<number, string>>({});
+  const [selectedGuestRequestId, setSelectedGuestRequestId] = useState<number | null>(null);
+  const [selectedCalendarId, setSelectedCalendarId] = useState<number | null>(null);
+  const [selectedHandoverId, setSelectedHandoverId] = useState<number | null>(null);
+  const [replyContext, setReplyContext] = useState<{ id: number; from: string; text: string; time: string } | null>(null);
 
   const departmentAppointments = useMemo(
     () =>
@@ -531,6 +535,26 @@ export default function Home() {
     if (typeof start === 'number' && start - event.clientX > 56) dismiss();
   };
 
+  const openInternalNotification = (message: { id: number; from: string; text: string; time: string }) => {
+    setReplyContext(message);
+    setRecipient(message.from);
+    setDraft('');
+    setNotificationsOpen(false);
+    setComposerOpen(true);
+    markNotificationSeen(message.id);
+  };
+
+  const openGuestNotification = (requestId: number) => {
+    setSelectedGuestRequestId(requestId);
+    setGuestNotificationsOpen(false);
+    setUtilityPanel('guest');
+    setCalendarOpen(false);
+    setComposerOpen(false);
+    window.setTimeout(() => {
+      document.getElementById(`guest-request-${requestId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+  };
+
   const addShiftHandover = (event: FormEvent) => {
     event.preventDefault();
     const text = handoverDraft.trim();
@@ -651,6 +675,7 @@ export default function Home() {
     setUrgent(false);
     setAssignAsTask(false);
     setTaskNote('');
+    setReplyContext(null);
     setComposerOpen(false);
   };
 
@@ -820,6 +845,11 @@ export default function Home() {
       setMessageError('Microphone access is needed to record a voice note.');
     }
   };
+
+  const answeredGuestRequestCount = guestRequests.filter((request) => request.status === 'Resolved' || Boolean(request.reply)).length;
+  const openTaskCount = assignedTasks.filter((task) => task.to === activeDepartment && task.status !== 'Complete').length;
+  const outstandingHandoverCount = shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length;
+  const todayAllClear = guestRequests.every((request) => request.status !== 'New') && openTaskCount === 0 && outstandingHandoverCount === 0;
 
   return (
     <main className={`hotel-shell ${calmMotion ? '' : 'calm-motion-off'}`}>
@@ -1028,7 +1058,7 @@ export default function Home() {
                   </div>
                 </div>
                 {guestRequests.map((request) => (
-                  <article className={`${request.urgent ? 'urgent' : ''} status-${request.status.toLowerCase()}`} key={request.id}>
+                  <article id={`guest-request-${request.id}`} className={`${request.urgent ? 'urgent' : ''} ${selectedGuestRequestId === request.id ? 'selected' : ''} status-${request.status.toLowerCase()}`} key={request.id}>
                     <span className="guest-request-room">{request.room === 'Guest' ? 'Guest' : `Room ${request.room}`}</span>
                     <strong>{request.text}</strong>
                     <small>{request.time} · {request.status}</small>
@@ -1181,7 +1211,7 @@ export default function Home() {
               <p>No appointments recorded for this department.</p>
             ) : (
               departmentAppointments.slice(0, 5).map((appointment) => (
-                <article key={appointment.id}>
+                <article id={`calendar-entry-${appointment.id}`} className={selectedCalendarId === appointment.id ? 'selected' : ''} key={appointment.id}>
                   <time dateTime={appointment.startsAt}>
                     {new Intl.DateTimeFormat('en-GB', {
                       day: '2-digit',
@@ -1320,7 +1350,7 @@ export default function Home() {
                       onPointerUp={(event) => finishNotificationSwipe(notificationKey, event, () => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item)))}
                     >
                       <ConciergeBell size={15} />
-                      <button className="guest-notification-copy" onClick={() => { setGuestNotificationsOpen(false); setUtilityPanel('guest'); }}>
+                      <button className="guest-notification-copy" onClick={() => openGuestNotification(request.id)}>
                         <strong>{request.room === 'Guest' ? 'Guest' : `Room ${request.room}`}</strong><small>{request.text}</small>
                       </button>
                       <time>{request.time}</time>
@@ -1336,7 +1366,7 @@ export default function Home() {
                         <button
                           aria-label="Swipe away guest request notification"
                           onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item))}
-                        ><X size={13} /><span>Swipe</span></button>
+                        ><span>Swipe</span></button>
                       </span>
                     </article>
                     );
@@ -1407,10 +1437,10 @@ export default function Home() {
                             <BellRing size={15} />
                           )}
                         </span>
-                        <span className="notification-copy">
+                        <button className="notification-copy notification-open-action" onClick={() => openInternalNotification(message)}>
                           <strong>{message.from}</strong>
                           <small>{message.text}</small>
-                        </span>
+                        </button>
                         <span className="notification-actions">
                           <button
                             aria-label={pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'Unpin internal message notification' : 'Pin internal message notification'}
@@ -1435,7 +1465,7 @@ export default function Home() {
                               )
                             }
                           >
-                            <X size={13} /><span>Swipe</span>
+                            <span>Swipe</span>
                           </button>
                         </span>
                       </article>
@@ -1482,12 +1512,17 @@ export default function Home() {
                             onPointerDown={(event) => beginNotificationSwipe(notificationKey, event)}
                             onPointerUp={(event) => finishNotificationSwipe(notificationKey, event, () => setDismissedShiftNotificationKeys((current) => [...current, notificationKey]))}
                           >
-                            <button className="shift-notification-copy" onClick={() => { setShiftNotificationsOpen(false); setCalendarOpen(true); }}>
+                            <button className="shift-notification-copy" onClick={() => {
+                              setSelectedCalendarId(appointment.id);
+                              setShiftNotificationsOpen(false);
+                              setCalendarOpen(true);
+                              window.setTimeout(() => document.getElementById(`calendar-entry-${appointment.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+                            }}>
                               <CalendarClock size={14} /><span>{appointment.title}</span>
                             </button>
                             <span className="notification-actions compact-actions">
                               <button aria-label={isPinned ? 'Unpin calendar notification' : 'Pin calendar notification'} aria-pressed={isPinned} onClick={() => toggleNotificationPin(notificationKey)}><Pin size={12} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
-                              <button aria-label="Swipe away calendar notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><X size={12} /><span>Swipe</span></button>
+                              <button aria-label="Swipe away calendar notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><span>Swipe</span></button>
                             </span>
                           </article>
                         );
@@ -1510,12 +1545,16 @@ export default function Home() {
                             onPointerDown={(event) => beginNotificationSwipe(notificationKey, event)}
                             onPointerUp={(event) => finishNotificationSwipe(notificationKey, event, () => setDismissedShiftNotificationKeys((current) => [...current, notificationKey]))}
                           >
-                            <button className="shift-notification-copy" onClick={() => { setShiftNotificationsOpen(false); document.getElementById('shift-handover-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>
+                            <button className="shift-notification-copy" onClick={() => {
+                              setSelectedHandoverId(item.id);
+                              setShiftNotificationsOpen(false);
+                              window.setTimeout(() => document.getElementById(`handover-entry-${item.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 40);
+                            }}>
                               <NotebookPen size={14} /><span>{item.text}</span>
                             </button>
                             <span className="notification-actions compact-actions">
                               <button aria-label={isPinned ? 'Unpin handover notification' : 'Pin handover notification'} aria-pressed={isPinned} onClick={() => toggleNotificationPin(notificationKey)}><Pin size={12} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
-                              <button aria-label="Swipe away handover notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><X size={12} /><span>Swipe</span></button>
+                              <button aria-label="Swipe away handover notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><span>Swipe</span></button>
                             </span>
                           </article>
                         );
@@ -1527,7 +1566,10 @@ export default function Home() {
             </div>
             <button
               className="compose-button"
-              onClick={() => setComposerOpen((open) => !open)}
+              onClick={() => {
+                setReplyContext(null);
+                setComposerOpen((open) => !open);
+              }}
             >
               <Plus size={18} />
               <span>New message</span>
@@ -1655,7 +1697,8 @@ export default function Home() {
                 .slice(0, 4)
                 .map((item) => (
                   <article
-                    className={`${item.important ? 'important' : ''} ${item.complete ? 'complete' : ''}`}
+                    id={`handover-entry-${item.id}`}
+                    className={`${item.important ? 'important' : ''} ${item.complete ? 'complete' : ''} ${selectedHandoverId === item.id ? 'selected' : ''}`}
                     key={item.id}
                   >
                     <span className="handover-status">
@@ -1997,6 +2040,24 @@ export default function Home() {
                   </div>
                 </div>
               </section>
+              <section className="today-glance glass-panel" aria-labelledby="today-glance-title">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">Operational summary</span>
+                    <h2 id="today-glance-title">Today at a glance</h2>
+                  </div>
+                  <ShieldCheck size={18} />
+                </div>
+                <div className="today-glance-stats">
+                  <div><strong>{answeredGuestRequestCount}</strong><span>Guest requests answered</span></div>
+                  <div><strong>{openTaskCount}</strong><span>Open tasks</span></div>
+                  <div><strong>{outstandingHandoverCount}</strong><span>Handovers outstanding</span></div>
+                </div>
+                <div className={`today-glance-state ${todayAllClear ? 'clear' : ''}`}>
+                  <ShieldCheck size={14} />
+                  <span>{todayAllClear ? 'You’re on top of it' : 'Keep the handover moving'}</span>
+                </div>
+              </section>
             </aside>
           </section>
         </div>
@@ -2020,6 +2081,12 @@ export default function Home() {
               </button>
             </div>
             <form onSubmit={sendMessage} tabIndex={0} aria-label="Message details">
+              {replyContext && (
+                <div className="reply-context" aria-label="Replying to message">
+                  <span>Replying to {replyContext.from} · {replyContext.time}</span>
+                  <p>{replyContext.text}</p>
+                </div>
+              )}
               <div className="recipient-heading">
                 <span>Send to</span>
                 <small>{recipient}</small>
