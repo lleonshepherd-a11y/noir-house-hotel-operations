@@ -990,7 +990,24 @@ export default function Home() {
       </aside>
 
       {utilityPanel && (
-        <section className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`} aria-label={`${utilityPanel} panel`} tabIndex={utilityPanel === 'guest' ? 0 : undefined}>
+        <section
+          className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`}
+          aria-label={`${utilityPanel} panel`}
+          tabIndex={utilityPanel === 'guest' ? 0 : undefined}
+          onKeyDown={(event) => {
+            if (utilityPanel !== 'guest' || event.target !== event.currentTarget) return;
+            if (event.key === 'PageDown' || event.key === 'ArrowDown') {
+              event.preventDefault();
+              event.currentTarget.scrollBy({ top: event.key === 'PageDown' ? 320 : 48, behavior: 'smooth' });
+            } else if (event.key === 'PageUp' || event.key === 'ArrowUp') {
+              event.preventDefault();
+              event.currentTarget.scrollBy({ top: event.key === 'PageUp' ? -320 : -48, behavior: 'smooth' });
+            } else if (event.key === 'Home' || event.key === 'End') {
+              event.preventDefault();
+              event.currentTarget.scrollTo({ top: event.key === 'Home' ? 0 : event.currentTarget.scrollHeight, behavior: 'smooth' });
+            }
+          }}
+        >
           <div className="calendar-heading">
             <div>
               <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
@@ -1302,7 +1319,8 @@ export default function Home() {
             </button>
             <div className="notification-wrap top-notification guest-top-notification">
               <button
-                className={`icon-button ${pendingGuestRequests.length ? 'has-alert' : ''}`}
+                key={pendingGuestRequests.map((request) => request.id).join('-') || 'no-guest-alerts'}
+                className={`icon-button ${pendingGuestRequests.length ? 'has-alert' : ''} ${pendingGuestRequests.some((request) => request.urgent) ? 'guest-urgent' : ''}`}
                 aria-label={`${pendingGuestRequests.length} new guest requests`}
                 onClick={() => {
                   if (!canAccessGuestRequests) {
@@ -1328,18 +1346,26 @@ export default function Home() {
                     <button onClick={() => setGuestNotificationsOpen(false)}><X size={16} /></button>
                   </div>
                   {pendingGuestRequests.map((request) => (
-                    <button
+                    <article
                       className={`guest-notification-row ${request.urgent ? 'urgent' : ''}`}
                       key={request.id}
-                      onClick={() => {
-                        setGuestNotificationsOpen(false);
-                        setUtilityPanel('guest');
-                      }}
                     >
                       <ConciergeBell size={15} />
-                      <span><strong>{request.room === 'Guest' ? 'Guest' : `Room ${request.room}`}</strong><small>{request.text}</small></span>
+                      <button className="guest-notification-copy" onClick={() => { setGuestNotificationsOpen(false); setUtilityPanel('guest'); }}>
+                        <strong>{request.room === 'Guest' ? 'Guest' : `Room ${request.room}`}</strong><small>{request.text}</small>
+                      </button>
                       <time>{request.time}</time>
-                    </button>
+                      <span className="guest-notification-actions">
+                        <button
+                          aria-label="Pin guest request"
+                          onClick={() => setPinnedNotes((current) => [{ id: Date.now(), text: `Guest request · ${request.room === 'Guest' ? 'Guest' : `Room ${request.room}`} · ${request.text}`, urgent: request.urgent, department: activeDepartment }, ...current])}
+                        ><Pin size={13} /></button>
+                        <button
+                          aria-label="Dismiss handled guest request"
+                          onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item))}
+                        ><X size={13} /></button>
+                      </span>
+                    </article>
                   ))}
                 </div>
               )}
@@ -1500,37 +1526,6 @@ export default function Home() {
         </header>
 
         <div className="content">
-          <section className="management-announcement glass-panel">
-            <BellRing size={18} />
-            <div>
-              <span>GENERAL MANAGER ANNOUNCEMENT</span>
-              <strong>Fire drill · Staff car park · Tomorrow at 07:00</strong>
-              <small>Posted by Alex Morgan · 20:04</small>
-            </div>
-            <button
-              className={announcementAcknowledged ? 'acknowledged' : ''}
-              onClick={() => setAnnouncementAcknowledged(true)}
-            >
-              {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
-            </button>
-          </section>
-          {canAccessGuestRequests && featuredGuestRequest && (
-            <section className={`guest-request-alert glass-panel ${featuredGuestRequest.urgent ? 'urgent' : ''}`} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
-              <span className="guest-request-alert-icon"><QrCode size={17} /></span>
-              <div>
-                <span>{featuredGuestRequest.urgent ? 'URGENT GUEST REQUEST' : 'GUEST REQUEST · HUMAN REPLY NEEDED'}</span>
-                <strong>{featuredGuestRequest.room === 'Guest' ? 'Guest' : `Room ${featuredGuestRequest.room}`} · {featuredGuestRequest.text}</strong>
-                <small>{featuredGuestRequest.time} · Separate from internal messages</small>
-              </div>
-              <button onClick={() => {
-                setUtilityPanel('guest');
-                setCalendarOpen(false);
-                setComposerOpen(false);
-              }}>
-                Open guest requests
-              </button>
-            </section>
-          )}
           <section className="pinboard glass-panel">
             <div className="section-heading">
               <div>
@@ -1581,7 +1576,37 @@ export default function Home() {
               </form>
             </div>
           </section>
-
+          <section className="management-announcement glass-panel">
+            <BellRing size={18} />
+            <div>
+              <span>GENERAL MANAGER ANNOUNCEMENT</span>
+              <strong>Fire drill · Staff car park · Tomorrow at 07:00</strong>
+              <small>Posted by Alex Morgan · 20:04</small>
+            </div>
+            <button
+              className={announcementAcknowledged ? 'acknowledged' : ''}
+              onClick={() => setAnnouncementAcknowledged(true)}
+            >
+              {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
+            </button>
+          </section>
+          {canAccessGuestRequests && featuredGuestRequest && (
+            <section className={`guest-request-alert glass-panel ${featuredGuestRequest.urgent ? 'urgent' : ''}`} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
+              <span className="guest-request-alert-icon"><QrCode size={17} /></span>
+              <div>
+                <span>{featuredGuestRequest.urgent ? 'URGENT GUEST REQUEST' : 'GUEST REQUEST · HUMAN REPLY NEEDED'}</span>
+                <strong>{featuredGuestRequest.room === 'Guest' ? 'Guest' : `Room ${featuredGuestRequest.room}`} · {featuredGuestRequest.text}</strong>
+                <small>{featuredGuestRequest.time} · Separate from internal messages</small>
+              </div>
+              <button onClick={() => {
+                setUtilityPanel('guest');
+                setCalendarOpen(false);
+                setComposerOpen(false);
+              }}>
+                Open guest requests
+              </button>
+            </section>
+          )}
           <section className="dashboard-grid">
             <div className="main-column">
               <section className="activity glass-panel">
