@@ -372,7 +372,7 @@ export default function Home() {
   const [selectedGuestHelp, setSelectedGuestHelp] = useState<(typeof guestHelpTopics)[number] | null>(null);
   const [guestRequests, setGuestRequests] = useState<GuestRequest[]>([
     { id: 701, room: '235', text: 'Is there a chemist nearby?', time: '19:46', urgent: false, status: 'New' },
-    { id: 702, room: '118', text: 'I need assistance at Reception, please.', time: '19:43', urgent: true, status: 'New' },
+    { id: 702, room: '118', text: 'Water is leaking from the bathroom ceiling.', time: '19:43', urgent: true, status: 'New' },
     { id: 703, room: '307', text: "Where can I warm my baby's milk?", time: '19:40', urgent: false, status: 'New' },
   ]);
   const [guestReplyDrafts, setGuestReplyDrafts] = useState<Record<number, string>>({});
