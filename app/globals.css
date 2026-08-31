@@ -179,4 +179,5 @@ body{background:#010201;color:#fff}
 .composer{z-index:200;display:flex;flex-direction:column;box-sizing:border-box}
 .composer-heading{position:relative;z-index:2;flex:0 0 auto;background:linear-gradient(180deg,rgba(9,10,9,.98),rgba(9,10,9,.82))}
 .composer form{flex:1 1 auto;height:auto;min-height:0;overflow-y:auto;overflow-x:hidden}
+.content>.shift-handover{margin-bottom:18px;isolation:isolate}
 .department-greeting{white-space:nowrap}.department-switcher-trigger{max-width:148px}.department-switcher-trigger span{max-width:112px}
