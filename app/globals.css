@@ -150,4 +150,7 @@ body{background:#010201;color:#fff}
 .sidebar .nav-button,.sidebar .icon-button,.topbar .icon-button{color:rgba(255,255,255,.9)}
 .sidebar .nav-button:hover,.sidebar .nav-button.active,.sidebar .icon-button:hover,.topbar .icon-button:hover,.topbar .icon-button.has-alert{color:#fff}
 .sidebar .nav-button svg,.sidebar .icon-button svg,.topbar .icon-button svg{filter:drop-shadow(0 1px 7px rgba(255,255,255,.13))}
+.topbar{overflow:visible;z-index:100}
+.topbar .notification-wrap{z-index:110}
+.topbar .notification-popover{z-index:120}
 .department-greeting{white-space:nowrap}.department-switcher-trigger{max-width:148px}.department-switcher-trigger span{max-width:112px}
