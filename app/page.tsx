@@ -2098,6 +2098,7 @@ export default function Home() {
               </section>
             </aside>
           </section>
+          <footer className="product-credit">Powered by Freedom Services</footer>
         </div>
 
         {composerOpen && (
