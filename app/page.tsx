@@ -642,11 +642,18 @@ export default function Home() {
       }).format(now)
     : '--:--:--';
   const encouragementHour = now?.getHours() ?? 9;
-  const encouragementPeriod = encouragementHour < 12 ? 'morning' : encouragementHour < 18 ? 'afternoon' : 'night';
+  const encouragementMinuteOfDay = now ? now.getHours() * 60 + now.getMinutes() : 8 * 60;
+  const isStaffMorningGreeting = encouragementMinuteOfDay >= 7 * 60 + 30 && encouragementMinuteOfDay < 9 * 60 + 30;
+  const encouragementPeriod = isStaffMorningGreeting
+    ? 'morning'
+    : encouragementMinuteOfDay < 7 * 60 + 30 || encouragementMinuteOfDay >= 18 * 60
+      ? 'night'
+      : 'afternoon';
   const encouragementSet = staffEncouragementMessages[activeDepartment] ?? defaultStaffEncouragement;
   const encouragementOptions = encouragementSet[encouragementPeriod];
   const encouragementSlot = now
-    ? Math.floor(now.getTime() / 86_400_000) * 12 + Math.floor(encouragementHour / 2)
+    ? Math.floor(now.getTime() / 86_400_000) * 12 +
+      Math.max(0, Math.floor((encouragementMinuteOfDay - (9 * 60 + 30)) / 120))
     : 0;
   const staffEncouragement = encouragementOptions[encouragementSlot % encouragementOptions.length];
 
