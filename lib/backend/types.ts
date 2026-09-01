@@ -17,6 +17,12 @@ export type Resource =
 
 export type Action = 'create' | 'read' | 'update' | 'acknowledge' | 'archive';
 
+export const managementRoles = new Set<StaffRole>(['duty_manager', 'general_manager', 'admin']);
+
+export function isManagement(identity: StaffIdentity) {
+  return managementRoles.has(identity.role);
+}
+
 export interface StaffIdentity {
   staffId: string;
   hotelId: string;

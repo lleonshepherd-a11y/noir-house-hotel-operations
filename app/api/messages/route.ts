@@ -2,6 +2,7 @@ import { appendAuditEvent } from '@/lib/backend/audit';
 import { assertAccess } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
+import { isManagement } from '@/lib/backend/types';
 
 export async function GET(request: Request) {
   try {
@@ -17,6 +18,10 @@ export async function GET(request: Request) {
     if (!conversation || conversation.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
     if (conversation.kind === 'guest_request') {
       assertAccess(identity, 'read', 'guest_request', { hotelId: conversation.hotel_id });
+    } else if (!isManagement(identity)) {
+      const membership = await db.prepare(`SELECT 1 AS allowed FROM conversation_departments
+        WHERE conversation_id = ? AND department_id = ?`).bind(conversationId, identity.departmentId).first();
+      if (!membership) return new Response('Forbidden', { status: 403 });
     }
     const messages = await db
       .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.reply_to_message_id, m.created_at,
@@ -71,6 +76,11 @@ export async function POST(request: Request) {
       const conversation = await db.prepare('SELECT hotel_id, kind FROM conversations WHERE id = ?').bind(conversationId).first<{ hotel_id: string; kind: string }>();
       if (!conversation || conversation.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
       if (conversation.kind === 'guest_request') assertAccess(identity, 'update', 'guest_request', { hotelId: conversation.hotel_id });
+      else if (!isManagement(identity)) {
+        const membership = await db.prepare(`SELECT 1 AS allowed FROM conversation_departments
+          WHERE conversation_id = ? AND department_id = ?`).bind(conversationId, identity.departmentId).first();
+        if (!membership) return new Response('Forbidden', { status: 403 });
+      }
     }
     const messageId = crypto.randomUUID();
     await db

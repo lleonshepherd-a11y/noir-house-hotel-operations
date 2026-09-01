@@ -2446,7 +2446,11 @@ export default function Home() {
               }}><CalendarDays size={15} /> Open full calendar</button>
             </section>
           )}
-          <footer className="product-credit">Powered by Freedom Services</footer>
+          <footer className="product-credit">
+            <a href="https://freedomservices.uk/" target="_blank" rel="noopener noreferrer">
+              Powered by Freedom Services Online
+            </a>
+          </footer>
         </div>
 
         {composerOpen && (

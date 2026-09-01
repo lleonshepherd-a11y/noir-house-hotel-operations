@@ -154,6 +154,47 @@ export const schemaStatements = [
     event_hash TEXT NOT NULL UNIQUE,
     created_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS conversation_watchers (
+    conversation_id TEXT NOT NULL REFERENCES conversations(id),
+    staff_id TEXT NOT NULL REFERENCES staff(id),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(conversation_id, staff_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS conversation_participation (
+    conversation_id TEXT NOT NULL REFERENCES conversations(id),
+    staff_id TEXT NOT NULL REFERENCES staff(id),
+    joined_at TEXT NOT NULL,
+    left_at TEXT,
+    PRIMARY KEY(conversation_id, staff_id, joined_at)
+  )`,
+  `CREATE TABLE IF NOT EXISTS management_decisions (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL REFERENCES conversations(id),
+    requested_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    decided_by_staff_id TEXT REFERENCES staff(id),
+    category TEXT NOT NULL CHECK(category IN ('guest_refund','room_upgrade','table_allocation','overtime','emergency_maintenance','other')),
+    summary TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'awaiting' CHECK(status IN ('awaiting','approved','declined','more_information','resolved')),
+    decision_note TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    resolved_at TEXT
+  )`,
+  `CREATE TABLE IF NOT EXISTS planner_entries (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT REFERENCES departments(id),
+    conversation_id TEXT REFERENCES conversations(id),
+    created_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    title TEXT NOT NULL,
+    details TEXT,
+    category TEXT NOT NULL DEFAULT 'general' CHECK(category IN ('urgent','important','information','completed','general')),
+    starts_at TEXT NOT NULL,
+    ends_at TEXT,
+    status TEXT NOT NULL DEFAULT 'scheduled' CHECK(status IN ('scheduled','completed','cancelled')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
   `CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_receipts_department_viewed ON message_receipts(department_id, viewed_at)`,
   `CREATE INDEX IF NOT EXISTS idx_tasks_department_status ON tasks(assigned_department_id, status)`,
@@ -162,6 +203,9 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_guest_requests_hotel_status ON guest_requests(hotel_id, status, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_hotel_created ON audit_events(hotel_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_events(entity_type, entity_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_watchers_staff ON conversation_watchers(staff_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_decisions_status ON management_decisions(status, updated_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_planner_hotel_start ON planner_entries(hotel_id, starts_at)`,
 ] as const;
 
 export async function ensureSchema(db: D1Database) {
