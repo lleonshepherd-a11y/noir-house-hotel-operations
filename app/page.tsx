@@ -4,15 +4,16 @@ import { FormEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRe
 import {
   Bell,
   BellRing,
+  BedDouble,
   CalendarClock,
   CalendarDays,
   ChefHat,
   ChevronDown,
+  ChevronUp,
   CloudRain,
   CloudSun,
   ConciergeBell,
   Crown,
-  Droplets,
   LayoutDashboard,
   KeyRound,
   ListChecks,
@@ -43,7 +44,7 @@ const departments = [
   { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#c7af91' },
   { name: 'Kitchen', icon: ChefHat, online: 7, accent: '#d2aa86' },
   { name: 'Bar', icon: Martini, online: 4, accent: '#b9acd5' },
-  { name: 'Housekeeping', icon: Droplets, online: 11, accent: '#9eb9c5' },
+  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: '#9eb9c5' },
   { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a7b59b' },
 ];
 
@@ -120,6 +121,14 @@ type BrowserSpeechRecognition = {
 };
 
 type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+type DashboardTileId = 'pinboard' | 'guest' | 'handover' | 'management' | 'operations' | 'planner';
+
+const defaultDashboardTileOrder: DashboardTileId[] = ['pinboard', 'guest', 'handover', 'management', 'operations', 'planner'];
+const dashboardTileLabels: Record<DashboardTileId, string> = {
+  pinboard: 'Department pinboard', guest: 'Guest request alert', handover: 'Shift handover',
+  management: 'Management operations', operations: 'Recent messages and tasks', planner: 'Ops Planner and action log',
+};
 
 const initialMessages: HotelMessage[] = [
   {
@@ -500,6 +509,8 @@ export default function Home() {
   const [managementThreadNotes, setManagementThreadNotes] = useState<Record<number, string[]>>({});
   const [managementNoteDraft, setManagementNoteDraft] = useState('');
   const [managementReassign, setManagementReassign] = useState('');
+  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
+  const [departmentTileLayouts, setDepartmentTileLayouts] = useState<Record<string, DashboardTileId[]>>({});
 
   const departmentAppointments = useMemo(
     () =>
@@ -568,6 +579,28 @@ export default function Home() {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('noir-house-department-layouts');
+      if (stored) setDepartmentTileLayouts(JSON.parse(stored) as Record<string, DashboardTileId[]>);
+    } catch {
+      /* The dashboard remains usable when local preferences are unavailable. */
+    }
+  }, []);
+
+  const activeTileOrder = departmentTileLayouts[activeDepartment] ?? defaultDashboardTileOrder;
+  const tileOrder = (tile: DashboardTileId) => 10 + activeTileOrder.indexOf(tile);
+  const moveDashboardTile = (tile: DashboardTileId, direction: -1 | 1) => {
+    const current = [...activeTileOrder];
+    const from = current.indexOf(tile);
+    const to = from + direction;
+    if (from < 0 || to < 0 || to >= current.length) return;
+    [current[from], current[to]] = [current[to], current[from]];
+    const next = { ...departmentTileLayouts, [activeDepartment]: current };
+    setDepartmentTileLayouts(next);
+    try { window.localStorage.setItem('noir-house-department-layouts', JSON.stringify(next)); } catch { /* Local preference storage may be blocked. */ }
+  };
 
   useEffect(() => {
     if (!recording) return;
@@ -1095,7 +1128,7 @@ export default function Home() {
   const outstandingHandoverCount = shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length;
   const todayAllClear = guestRequests.every((request) => request.status !== 'New') && openTaskCount === 0 && outstandingHandoverCount === 0;
   const managementDecisionIds = new Set([201, 202, 203, 204, 205]);
-  const managementIssues = messages.map((message) => {
+  const internalManagementIssues = messages.map((message) => {
     const linkedTask = assignedTasks.find((task) => task.id === message.id);
     const department = message.from === 'Reception' ? 'Front of House' : message.from;
     return {
@@ -1108,14 +1141,29 @@ export default function Home() {
       status: resolvedManagementIds.includes(message.id) ? 'Resolved' : linkedTask?.status ?? 'Open',
       requiresDecision: managementDecisionIds.has(message.id),
       task: linkedTask,
+      source: 'internal' as const,
     };
   });
+  const guestManagementIssues = guestRequests.map((request) => ({
+    id: 100_000 + request.id,
+    department: 'Guest Requests',
+    title: `${request.room === 'Guest' ? 'Guest' : `Room ${request.room}`} · ${request.text}`,
+    summary: request.reply ? `${request.text} · Reply: ${request.reply}` : request.text,
+    time: request.time,
+    priority: request.urgent ? 'Urgent' : 'Normal',
+    status: request.status,
+    requiresDecision: request.urgent && request.status !== 'Resolved',
+    task: undefined,
+    source: 'guest' as const,
+  }));
+  const managementIssues = [...guestManagementIssues, ...internalManagementIssues];
   const filteredManagementIssues = managementIssues.filter((issue) =>
     (managementDepartmentFilter === 'All departments' || issue.department === managementDepartmentFilter) &&
     (managementPriorityFilter === 'All priorities' || issue.priority === managementPriorityFilter) &&
     (managementStatusFilter === 'All statuses' || (managementStatusFilter === 'Open' ? issue.status !== 'Resolved' && issue.status !== 'Complete' : issue.status === managementStatusFilter)),
   );
   const selectedManagementIssue = managementIssues.find((issue) => issue.id === selectedManagementThreadId) ?? null;
+  const managementUpdateSignal = watchedManagementIds.length + steppedInManagementIds.length + resolvedManagementIds.length + Object.values(managementThreadNotes).reduce((total, notes) => total + notes.length, 0);
 
   const publishAnnouncement = async (event: FormEvent) => {
     event.preventDefault();
@@ -1736,7 +1784,10 @@ export default function Home() {
                   )}
                   {[...seenNotifications]
                     .sort((a, b) => Number(pinnedNotificationKeys.includes(`internal-${b.id}`)) - Number(pinnedNotificationKeys.includes(`internal-${a.id}`)))
-                    .map((message) => (
+                    .map((message) => {
+                      const messageDepartment = message.from === 'Reception' ? 'Front of House' : message.from;
+                      const MessageDepartmentIcon = departments.find((department) => department.name === messageDepartment)?.icon ?? MessageSquareText;
+                      return (
                       <article
                         key={message.id}
                         className={`notification-item swipe-notification ${message.urgent ? 'urgent' : ''} ${pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'pinned' : ''}`}
@@ -1744,11 +1795,8 @@ export default function Home() {
                         onPointerUp={(event) => finishNotificationSwipe(`internal-${message.id}`, event, () => setMessages((current) => current.filter((item) => item.id !== message.id)))}
                       >
                         <span className="notification-symbol">
-                          {message.urgent ? (
-                            <Zap size={15} />
-                          ) : (
-                            <BellRing size={15} />
-                          )}
+                          <MessageDepartmentIcon size={15} />
+                          {message.urgent && <Zap className="notification-priority-mark" size={8} />}
                         </span>
                         <button className="notification-copy notification-open-action" onClick={() => openInternalNotification(message)}>
                           <strong>{message.from}</strong>
@@ -1782,7 +1830,7 @@ export default function Home() {
                           </button>
                         </span>
                       </article>
-                    ))}
+                    );})}
                 </div>
               )}
             </div>
@@ -1892,7 +1940,7 @@ export default function Home() {
         </header>
 
         <div className="content">
-          <section className="management-announcement glass-panel">
+          <section className="management-announcement glass-panel" style={{ order: 0 }}>
             <BellRing size={18} />
             <div>
               <span>GENERAL MANAGER ANNOUNCEMENT</span>
@@ -1930,7 +1978,16 @@ export default function Home() {
             )}
             {activeDepartment === 'General Manager' && announcementStatus && <small className="announcement-status">{announcementStatus}</small>}
           </section>
-          <section className="pinboard glass-panel">
+          <section className="layout-customizer glass-panel" style={{ order: 1 }} aria-label="Department dashboard layout">
+            <div><strong>{activeDepartment} layout</strong><span>Shared by this department · GM announcement remains fixed</span></div>
+            <button type="button" onClick={() => setLayoutEditorOpen((open) => !open)}>{layoutEditorOpen ? 'Done' : 'Customise tiles'}</button>
+            {layoutEditorOpen && <div className="layout-editor">
+              {activeTileOrder.map((tile, index) => (
+                <article key={tile}><span><i>{index + 1}</i>{dashboardTileLabels[tile]}</span><div><button type="button" disabled={index === 0} onClick={() => moveDashboardTile(tile, -1)} aria-label={`Move ${dashboardTileLabels[tile]} up`}><ChevronUp size={14} /></button><button type="button" disabled={index === activeTileOrder.length - 1} onClick={() => moveDashboardTile(tile, 1)} aria-label={`Move ${dashboardTileLabels[tile]} down`}><ChevronDown size={14} /></button></div></article>
+              ))}
+            </div>}
+          </section>
+          <section className="pinboard glass-panel dashboard-movable" style={{ order: tileOrder('pinboard') }}>
             <div className="section-heading">
               <div>
                 <span className="eyebrow">
@@ -1981,7 +2038,7 @@ export default function Home() {
             </div>
           </section>
           {canAccessGuestRequests && featuredGuestRequest && (
-            <section className={`guest-request-alert glass-panel ${featuredGuestRequest.urgent ? 'urgent' : ''}`} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
+            <section className={`guest-request-alert glass-panel dashboard-movable ${featuredGuestRequest.urgent ? 'urgent' : ''}`} style={{ order: tileOrder('guest') }} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
               <span className="guest-request-alert-icon"><ConciergeBell size={17} /></span>
               <div>
                 <span>{featuredGuestRequest.urgent ? 'URGENT GUEST REQUEST' : 'GUEST REQUEST · HUMAN REPLY NEEDED'}</span>
@@ -1997,7 +2054,7 @@ export default function Home() {
               </button>
             </section>
           )}
-          <section className="shift-handover glass-panel" aria-labelledby="shift-handover-title">
+          <section className="shift-handover glass-panel dashboard-movable" style={{ order: tileOrder('handover') }} aria-labelledby="shift-handover-title">
             <div className="section-heading">
               <div>
                 <span className="eyebrow">Next shift</span>
@@ -2063,13 +2120,13 @@ export default function Home() {
             </div>
           </section>
           {activeDepartment === 'General Manager' && (
-            <section className="gm-oversight glass-panel" aria-labelledby="gm-oversight-title">
+            <section className="gm-oversight glass-panel dashboard-movable" style={{ order: tileOrder('management') }} aria-labelledby="gm-oversight-title">
               <div className="gm-oversight-heading">
                 <div><span className="eyebrow">Permission-based hotel oversight</span><h2 id="gm-oversight-title">Management operations</h2><p>Every item opens its original thread and retains the complete history.</p></div>
                 <ShieldCheck size={20} />
               </div>
               <div className="gm-filters" aria-label="Management feed filters">
-                <select aria-label="Filter by department" value={managementDepartmentFilter} onChange={(event) => setManagementDepartmentFilter(event.target.value)}><option>All departments</option>{departments.filter((item) => item.name !== 'General Manager').map((item) => <option key={item.name}>{item.name}</option>)}</select>
+                <select aria-label="Filter by department" value={managementDepartmentFilter} onChange={(event) => setManagementDepartmentFilter(event.target.value)}><option>All departments</option><option>Guest Requests</option>{departments.filter((item) => item.name !== 'General Manager').map((item) => <option key={item.name}>{item.name}</option>)}</select>
                 <select aria-label="Filter by priority" value={managementPriorityFilter} onChange={(event) => setManagementPriorityFilter(event.target.value)}><option>All priorities</option><option>Urgent</option><option>Normal</option></select>
                 <select aria-label="Filter by status" value={managementStatusFilter} onChange={(event) => setManagementStatusFilter(event.target.value)}><option>All statuses</option><option>Open</option><option>Sent</option><option>Acknowledged</option><option>In progress</option><option>Complete</option><option>Resolved</option></select>
                 <select aria-label="Filter by date" value={managementDateFilter} onChange={(event) => setManagementDateFilter(event.target.value)}><option>Today</option><option>Last 7 days</option><option>This month</option></select>
@@ -2087,7 +2144,7 @@ export default function Home() {
                   </div>
                 </section>
                 <section className="management-live-feed" aria-labelledby="management-live-title">
-                  <div className="section-heading"><div><span className="eyebrow">All departments · live</span><h3 id="management-live-title">Messages & tasks</h3></div><span className="request-count">{filteredManagementIssues.length}</span></div>
+                  <div className="section-heading"><div><span className="eyebrow">All departments and guest requests · live</span><h3 id="management-live-title">Messages, tasks & guest requests</h3></div><span className="request-count">{filteredManagementIssues.length}</span></div>
                   <div className="gm-feed-list compact">
                     {filteredManagementIssues.slice(0, 8).map((issue) => (
                       <article key={issue.id}><button className="gm-thread-open" onClick={() => setSelectedManagementThreadId(issue.id)}><span>{issue.department} · {issue.priority} · {issue.status}</span><strong>{issue.title}</strong></button><button className={watchedManagementIds.includes(issue.id) ? 'watching' : ''} onClick={() => setWatchedManagementIds((current) => current.includes(issue.id) ? current.filter((id) => id !== issue.id) : [...current, issue.id])}>{watchedManagementIds.includes(issue.id) ? 'Watching' : 'Watch'}</button></article>
@@ -2095,7 +2152,7 @@ export default function Home() {
                   </div>
                 </section>
                 <section className="management-updates" aria-labelledby="management-updates-title">
-                  <div className="section-heading"><div><span className="eyebrow">Following</span><h3 id="management-updates-title">Updates</h3></div><BellRing size={16} /></div>
+                  <div className="section-heading"><div><span className="eyebrow">Following</span><h3 id="management-updates-title">Updates</h3></div><span key={managementUpdateSignal} className={`gm-updates-bell ${managementUpdateSignal ? 'has-update' : ''}`} aria-label={managementUpdateSignal ? 'Management updates available' : 'No new management updates'}><BellRing size={16} /></span></div>
                   <div className="gm-feed-list compact">
                     {managementIssues.filter((issue) => watchedManagementIds.includes(issue.id) || steppedInManagementIds.includes(issue.id)).slice(0, 5).map((issue) => (
                       <article key={issue.id}><button className="gm-thread-open" onClick={() => setSelectedManagementThreadId(issue.id)}><span>{watchedManagementIds.includes(issue.id) ? 'Watched' : 'Stepped in'} · status {issue.status}</span><strong>{issue.title}</strong><small>Open original thread</small></button></article>
@@ -2136,7 +2193,7 @@ export default function Home() {
               )}
             </section>
           )}
-          <section className="dashboard-grid">
+          <section className="dashboard-grid dashboard-movable" style={{ order: tileOrder('operations') }}>
             <div className="main-column">
               <section className="activity glass-panel">
                 <div className="section-heading">
@@ -2478,7 +2535,7 @@ export default function Home() {
               </section>
             </aside>
           </section>
-          <section className="lower-ops-grid" aria-label="Operations planning overview">
+          <section className="lower-ops-grid dashboard-movable" style={{ order: tileOrder('planner') }} aria-label="Operations planning overview">
           <section className="month-planner glass-panel" aria-labelledby="month-planner-title">
             <div className="month-planner-heading">
               <div>
@@ -2582,7 +2639,7 @@ export default function Home() {
               }}><Plus size={15} /> Add entry for this day</button>}
             </section>
           )}
-          <footer className="product-credit">
+          <footer className="product-credit" style={{ order: 100 }}>
             <a href="https://freedomservices.uk/" target="_blank" rel="noopener noreferrer">
               Powered by Freedom Services Online
             </a>
