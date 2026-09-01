@@ -153,6 +153,11 @@ const initialMessages: HotelMessage[] = [
     unread: false,
     urgent: false,
   },
+  { id: 201, from: 'Front of House', to: 'General Manager', text: 'Guest refund approval requested after a delayed room handover.', time: '18:58', unread: true, urgent: true },
+  { id: 202, from: 'Reception', to: 'General Manager', text: 'Room upgrade decision needed for a service recovery.', time: '18:46', unread: true, urgent: false },
+  { id: 203, from: 'Restaurant', to: 'General Manager', text: 'Please decide whether table 14 can be released for the waiting party.', time: '18:31', unread: true, urgent: false },
+  { id: 204, from: 'Kitchen', to: 'General Manager', text: 'Overtime approval requested for the closing team tonight.', time: '18:18', unread: true, urgent: false },
+  { id: 205, from: 'Maintenance', to: 'General Manager', text: 'Urgent operational maintenance decision needed for the laundry boiler.', time: '18:04', unread: true, urgent: true },
 ];
 
 type TaskStatus = 'Sent' | 'Acknowledged' | 'In progress' | 'Complete';
@@ -449,6 +454,17 @@ export default function Home() {
   const [selectedPlannerDay, setSelectedPlannerDay] = useState<number | null>(null);
   const [selectedHandoverId, setSelectedHandoverId] = useState<number | null>(null);
   const [replyContext, setReplyContext] = useState<{ id: number; from: string; text: string; time: string } | null>(null);
+  const [managementDepartmentFilter, setManagementDepartmentFilter] = useState('All departments');
+  const [managementPriorityFilter, setManagementPriorityFilter] = useState('All priorities');
+  const [managementStatusFilter, setManagementStatusFilter] = useState('Open');
+  const [managementDateFilter, setManagementDateFilter] = useState('Today');
+  const [selectedManagementThreadId, setSelectedManagementThreadId] = useState<number | null>(null);
+  const [watchedManagementIds, setWatchedManagementIds] = useState<number[]>([]);
+  const [steppedInManagementIds, setSteppedInManagementIds] = useState<number[]>([]);
+  const [resolvedManagementIds, setResolvedManagementIds] = useState<number[]>([]);
+  const [managementThreadNotes, setManagementThreadNotes] = useState<Record<number, string[]>>({});
+  const [managementNoteDraft, setManagementNoteDraft] = useState('');
+  const [managementReassign, setManagementReassign] = useState('');
 
   const departmentAppointments = useMemo(
     () =>
@@ -976,6 +992,28 @@ export default function Home() {
   const openTaskCount = assignedTasks.filter((task) => task.to === activeDepartment && task.status !== 'Complete').length;
   const outstandingHandoverCount = shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length;
   const todayAllClear = guestRequests.every((request) => request.status !== 'New') && openTaskCount === 0 && outstandingHandoverCount === 0;
+  const managementDecisionIds = new Set([201, 202, 203, 204, 205]);
+  const managementIssues = messages.map((message) => {
+    const linkedTask = assignedTasks.find((task) => task.id === message.id);
+    const department = message.from === 'Reception' ? 'Front of House' : message.from;
+    return {
+      id: message.id,
+      department,
+      title: linkedTask?.title ?? message.text,
+      summary: message.text,
+      time: message.time,
+      priority: message.urgent ? 'Urgent' : 'Normal',
+      status: resolvedManagementIds.includes(message.id) ? 'Resolved' : linkedTask?.status ?? 'Open',
+      requiresDecision: managementDecisionIds.has(message.id),
+      task: linkedTask,
+    };
+  });
+  const filteredManagementIssues = managementIssues.filter((issue) =>
+    (managementDepartmentFilter === 'All departments' || issue.department === managementDepartmentFilter) &&
+    (managementPriorityFilter === 'All priorities' || issue.priority === managementPriorityFilter) &&
+    (managementStatusFilter === 'All statuses' || (managementStatusFilter === 'Open' ? issue.status !== 'Resolved' && issue.status !== 'Complete' : issue.status === managementStatusFilter)),
+  );
+  const selectedManagementIssue = managementIssues.find((issue) => issue.id === selectedManagementThreadId) ?? null;
 
   const publishAnnouncement = async (event: FormEvent) => {
     event.preventDefault();
@@ -1909,6 +1947,80 @@ export default function Home() {
                 ))}
             </div>
           </section>
+          {activeDepartment === 'General Manager' && (
+            <section className="gm-oversight glass-panel" aria-labelledby="gm-oversight-title">
+              <div className="gm-oversight-heading">
+                <div><span className="eyebrow">Permission-based hotel oversight</span><h2 id="gm-oversight-title">Management operations</h2><p>Every item opens its original thread and retains the complete history.</p></div>
+                <ShieldCheck size={20} />
+              </div>
+              <div className="gm-filters" aria-label="Management feed filters">
+                <select aria-label="Filter by department" value={managementDepartmentFilter} onChange={(event) => setManagementDepartmentFilter(event.target.value)}><option>All departments</option>{departments.filter((item) => item.name !== 'General Manager').map((item) => <option key={item.name}>{item.name}</option>)}</select>
+                <select aria-label="Filter by priority" value={managementPriorityFilter} onChange={(event) => setManagementPriorityFilter(event.target.value)}><option>All priorities</option><option>Urgent</option><option>Normal</option></select>
+                <select aria-label="Filter by status" value={managementStatusFilter} onChange={(event) => setManagementStatusFilter(event.target.value)}><option>All statuses</option><option>Open</option><option>Sent</option><option>Acknowledged</option><option>In progress</option><option>Complete</option><option>Resolved</option></select>
+                <select aria-label="Filter by date" value={managementDateFilter} onChange={(event) => setManagementDateFilter(event.target.value)}><option>Today</option><option>Last 7 days</option><option>This month</option></select>
+              </div>
+              <div className="gm-oversight-grid">
+                <section className="management-decisions" aria-labelledby="management-decisions-title">
+                  <div className="section-heading"><div><span className="eyebrow">Manager action required</span><h3 id="management-decisions-title">Awaiting Management Decision</h3></div><span className="attention-count">{managementIssues.filter((issue) => issue.requiresDecision && issue.status !== 'Resolved').length}</span></div>
+                  <div className="gm-feed-list">
+                    {managementIssues.filter((issue) => issue.requiresDecision && issue.status !== 'Resolved').map((issue) => (
+                      <article key={issue.id} className={issue.priority === 'Urgent' ? 'urgent' : ''}>
+                        <button className="gm-thread-open" onClick={() => setSelectedManagementThreadId(issue.id)}><span>{issue.department} · {issue.time}</span><strong>{issue.title}</strong><small>Open original thread</small></button>
+                        <button className={watchedManagementIds.includes(issue.id) ? 'watching' : ''} onClick={() => setWatchedManagementIds((current) => current.includes(issue.id) ? current.filter((id) => id !== issue.id) : [...current, issue.id])}>{watchedManagementIds.includes(issue.id) ? 'Watching' : 'Watch'}</button>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+                <section className="management-live-feed" aria-labelledby="management-live-title">
+                  <div className="section-heading"><div><span className="eyebrow">All departments · live</span><h3 id="management-live-title">Messages & tasks</h3></div><span className="request-count">{filteredManagementIssues.length}</span></div>
+                  <div className="gm-feed-list compact">
+                    {filteredManagementIssues.slice(0, 8).map((issue) => (
+                      <article key={issue.id}><button className="gm-thread-open" onClick={() => setSelectedManagementThreadId(issue.id)}><span>{issue.department} · {issue.priority} · {issue.status}</span><strong>{issue.title}</strong></button><button className={watchedManagementIds.includes(issue.id) ? 'watching' : ''} onClick={() => setWatchedManagementIds((current) => current.includes(issue.id) ? current.filter((id) => id !== issue.id) : [...current, issue.id])}>{watchedManagementIds.includes(issue.id) ? 'Watching' : 'Watch'}</button></article>
+                    ))}
+                  </div>
+                </section>
+                <section className="management-updates" aria-labelledby="management-updates-title">
+                  <div className="section-heading"><div><span className="eyebrow">Following</span><h3 id="management-updates-title">Updates</h3></div><BellRing size={16} /></div>
+                  <div className="gm-feed-list compact">
+                    {managementIssues.filter((issue) => watchedManagementIds.includes(issue.id) || steppedInManagementIds.includes(issue.id)).slice(0, 5).map((issue) => (
+                      <article key={issue.id}><button className="gm-thread-open" onClick={() => setSelectedManagementThreadId(issue.id)}><span>{watchedManagementIds.includes(issue.id) ? 'Watched' : 'Stepped in'} · status {issue.status}</span><strong>{issue.title}</strong><small>Open original thread</small></button></article>
+                    ))}
+                    {!watchedManagementIds.length && !steppedInManagementIds.length && <p className="gm-empty">Watch an item or step into a thread to receive updates here.</p>}
+                  </div>
+                </section>
+              </div>
+            </section>
+          )}
+          {activeDepartment === 'General Manager' && selectedManagementIssue && (
+            <section className="gm-thread-panel" role="dialog" aria-modal="true" aria-labelledby="gm-thread-title">
+              <button className="gm-thread-close" onClick={() => setSelectedManagementThreadId(null)} aria-label="Close management thread"><X size={18} /></button>
+              <span className="eyebrow">Original thread · {selectedManagementIssue.department}</span>
+              <h2 id="gm-thread-title">{selectedManagementIssue.title}</h2>
+              <div className="gm-thread-history">
+                <article><strong>{selectedManagementIssue.department}</strong><p>{selectedManagementIssue.summary}</p><small>{selectedManagementIssue.time} · {selectedManagementIssue.status}</small></article>
+                {(managementThreadNotes[selectedManagementIssue.id] ?? []).map((note, index) => <article className="gm-entry" key={`${selectedManagementIssue.id}-${index}`}><strong>General Manager</strong><p>{note}</p><small>Added to this original thread</small></article>)}
+              </div>
+              <div className="gm-participation-controls">
+                <button className={watchedManagementIds.includes(selectedManagementIssue.id) ? 'active' : ''} onClick={() => setWatchedManagementIds((current) => current.includes(selectedManagementIssue.id) ? current.filter((id) => id !== selectedManagementIssue.id) : [...current, selectedManagementIssue.id])}>{watchedManagementIds.includes(selectedManagementIssue.id) ? 'Watching' : 'Watch'}</button>
+                <button className={steppedInManagementIds.includes(selectedManagementIssue.id) ? 'active' : ''} onClick={() => setSteppedInManagementIds((current) => current.includes(selectedManagementIssue.id) ? current.filter((id) => id !== selectedManagementIssue.id) : [...current, selectedManagementIssue.id])}>{steppedInManagementIds.includes(selectedManagementIssue.id) ? 'Step back' : 'Step in'}</button>
+              </div>
+              {steppedInManagementIds.includes(selectedManagementIssue.id) && (
+                <div className="gm-thread-actions">
+                  <textarea value={managementNoteDraft} onChange={(event) => setManagementNoteDraft(event.target.value)} placeholder="Comment, decide, request an update, or thank the team…" />
+                  <select value={managementReassign} onChange={(event) => setManagementReassign(event.target.value)}><option value="">Keep current owner</option>{departments.filter((item) => item.name !== 'General Manager').map((item) => <option key={item.name}>{item.name}</option>)}</select>
+                  <div>
+                    {['Request update', 'Thank staff', 'Decision: approved'].map((action) => <button key={action} onClick={() => setManagementNoteDraft(action)}>{action}</button>)}
+                  </div>
+                  <button className="gm-post-action" disabled={!managementNoteDraft.trim() && !managementReassign} onClick={() => {
+                    const entry = [managementNoteDraft.trim(), managementReassign ? `Reassigned to ${managementReassign}` : ''].filter(Boolean).join(' · ');
+                    setManagementThreadNotes((current) => ({ ...current, [selectedManagementIssue.id]: [...(current[selectedManagementIssue.id] ?? []), entry] }));
+                    setManagementNoteDraft(''); setManagementReassign('');
+                  }}>Add to original thread</button>
+                  <button className="gm-resolve-action" onClick={() => { setResolvedManagementIds((current) => [...new Set([...current, selectedManagementIssue.id])]); setSelectedManagementThreadId(null); }}>Resolve and close</button>
+                </div>
+              )}
+            </section>
+          )}
           <section className="dashboard-grid">
             <div className="main-column">
               <section className="activity glass-panel">
