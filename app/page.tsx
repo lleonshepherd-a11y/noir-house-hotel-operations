@@ -266,20 +266,31 @@ function playPing(urgent = false) {
       (window as typeof window & { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     const context = new AudioContextClass();
-    const offsets = urgent ? [0, 0.24, 0.48] : [0];
-    offsets.forEach((offset) => {
+    // A low, two-tone hotel-console signature rather than a phone-style chime.
+    const notes = urgent
+      ? [
+          { offset: 0, frequency: 360, duration: 0.24, volume: 0.042 },
+          { offset: 0, frequency: 540, duration: 0.24, volume: 0.026 },
+          { offset: 0.24, frequency: 480, duration: 0.32, volume: 0.048 },
+          { offset: 0.24, frequency: 720, duration: 0.32, volume: 0.028 },
+        ]
+      : [
+          { offset: 0, frequency: 420, duration: 0.16, volume: 0.035 },
+          { offset: 0, frequency: 630, duration: 0.16, volume: 0.02 },
+        ];
+    notes.forEach(({ offset, frequency, duration, volume }) => {
       const gain = context.createGain();
       const start = context.currentTime + offset;
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(urgent ? 0.075 : 0.055, start + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.2);
+      gain.gain.exponentialRampToValueAtTime(volume, start + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
       gain.connect(context.destination);
       const oscillator = context.createOscillator();
       oscillator.type = 'sine';
-      oscillator.frequency.value = urgent ? 940 : 760;
+      oscillator.frequency.value = frequency;
       oscillator.connect(gain);
       oscillator.start(start);
-      oscillator.stop(start + 0.21);
+      oscillator.stop(start + duration + 0.01);
     });
   } catch {
     /* Browsers may block sound before interaction. */
@@ -1335,7 +1346,7 @@ export default function Home() {
           )}
           {utilityPanel === 'settings' && (
             <div className="settings-list">
-              <label><span><strong>Gentle notification sounds</strong><small>One ping for normal messages</small></span><input type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
+              <label><span><strong>Notification sounds</strong><small>Short chime normally · calm distinct pattern when urgent</small></span><input type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
               <label><span><strong>Calm interface motion</strong><small>Subtle visual movement and reminders</small></span><input type="checkbox" checked={calmMotion} onChange={(event) => setCalmMotion(event.target.checked)} /></label>
             </div>
           )}
