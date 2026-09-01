@@ -321,6 +321,9 @@ export default function Home() {
     arrival.setHours(9, 0, 0, 0);
     const dishwasherRepair = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(12, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 10, 30);
     const kitchenStarter = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(18, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 9, 0);
+    const receptionPcRepair = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(8, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 11, 0);
+    const staffTraining = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(21, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 14, 0);
+    const plannedMaintenance = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(25, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 8, 30);
     return [
       {
         id: 901,
@@ -345,6 +348,30 @@ export default function Home() {
         startsAt: kitchenStarter.toISOString(),
         reminderMinutes: 60,
         category: 'staff',
+      },
+      {
+        id: 904,
+        department: 'Front of House',
+        title: 'Reception PC repair',
+        startsAt: receptionPcRepair.toISOString(),
+        reminderMinutes: 30,
+        category: 'maintenance',
+      },
+      {
+        id: 905,
+        department: 'Front of House',
+        title: 'Staff training',
+        startsAt: staffTraining.toISOString(),
+        reminderMinutes: 60,
+        category: 'staff',
+      },
+      {
+        id: 906,
+        department: 'Maintenance',
+        title: 'Planned maintenance',
+        startsAt: plannedMaintenance.toISOString(),
+        reminderMinutes: 60,
+        category: 'routine',
       },
     ];
   });
