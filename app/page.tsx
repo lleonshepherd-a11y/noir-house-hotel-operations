@@ -29,7 +29,6 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
-  SpellCheck,
   Sun,
   UtensilsCrossed,
   Wrench,
@@ -105,7 +104,22 @@ type HotelMessage = {
   seenBy?: string;
   attachmentUrl?: string;
   attachmentName?: string;
+  voiceNoteUrl?: string;
+  voiceNoteDuration?: number;
 };
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 
 const initialMessages: HotelMessage[] = [
   {
@@ -327,6 +341,7 @@ export default function Home() {
   const [appointmentTime, setAppointmentTime] = useState('');
   const [appointmentReminder, setAppointmentReminder] = useState('15');
   const [appointmentCategory, setAppointmentCategory] = useState<DepartmentAppointment['category']>('routine');
+  const [calendarEditingId, setCalendarEditingId] = useState<number | null>(null);
   const [dismissedAppointments, setDismissedAppointments] = useState<number[]>([]);
   const [pinnedNotificationKeys, setPinnedNotificationKeys] = useState<string[]>([]);
   const [dismissedShiftNotificationKeys, setDismissedShiftNotificationKeys] = useState<string[]>([]);
@@ -407,7 +422,12 @@ export default function Home() {
   const [messageError, setMessageError] = useState('');
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [voiceNoteUrl, setVoiceNoteUrl] = useState('');
+  const [voiceNoteDuration, setVoiceNoteDuration] = useState(0);
+  const [dictating, setDictating] = useState(false);
+  const [dictationAvailable, setDictationAvailable] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const recordingChunks = useRef<Blob[]>([]);
   const [noteDraft, setNoteDraft] = useState('');
   const [pinnedNotes, setPinnedNotes] = useState([
@@ -557,6 +577,14 @@ export default function Home() {
     );
     return () => window.clearInterval(timer);
   }, [recording]);
+
+  useEffect(() => {
+    const speechWindow = window as typeof window & {
+      SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+      webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    };
+    setDictationAvailable(Boolean(speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition));
+  }, []);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('Notification' in window)) {
@@ -799,6 +827,8 @@ export default function Home() {
       urgent,
       attachmentUrl: attachmentPreview || undefined,
       attachmentName: attachment || undefined,
+      voiceNoteUrl: voiceNoteUrl || undefined,
+      voiceNoteDuration: voiceNoteUrl ? voiceNoteDuration : undefined,
     };
     setMessages((current) => [next, ...current]);
     if (assignAsTask && recipient !== 'All departments') {
@@ -826,6 +856,8 @@ export default function Home() {
     setDraft('');
     setAttachment('');
     setAttachmentPreview('');
+    setVoiceNoteUrl('');
+    setVoiceNoteDuration(0);
     setMessageError('');
     setUrgent(false);
     setAssignAsTask(false);
@@ -837,17 +869,19 @@ export default function Home() {
   const addAppointment = (event: FormEvent) => {
     event.preventDefault();
     if (!appointmentTitle.trim() || !appointmentTime) return;
-    setAppointments((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        department: activeDepartment,
-        title: appointmentTitle.trim(),
-        startsAt: new Date(appointmentTime).toISOString(),
-        reminderMinutes: Number(appointmentReminder),
+    if (calendarEditingId) {
+      setAppointments((current) => current.map((item) => item.id === calendarEditingId ? {
+        ...item, title: appointmentTitle.trim(), startsAt: new Date(appointmentTime).toISOString(),
+        reminderMinutes: Number(appointmentReminder), category: appointmentCategory,
+      } : item));
+    } else {
+      setAppointments((current) => [...current, {
+        id: Date.now(), department: activeDepartment, title: appointmentTitle.trim(),
+        startsAt: new Date(appointmentTime).toISOString(), reminderMinutes: Number(appointmentReminder),
         category: appointmentCategory,
-      },
-    ]);
+      }]);
+    }
+    setCalendarEditingId(null);
     setAppointmentTitle('');
     setAppointmentTime('');
     setAppointmentReminder('15');
@@ -1010,6 +1044,8 @@ export default function Home() {
         const voiceNote = new Blob(recordingChunks.current, {
           type: recorder.mimeType,
         });
+        setVoiceNoteUrl(URL.createObjectURL(voiceNote));
+        setVoiceNoteDuration(Math.max(1, recordingSeconds));
         setAttachment(
           `Voice note · ${Math.max(1, Math.round(voiceNote.size / 1024))} KB`,
         );
@@ -1022,6 +1058,36 @@ export default function Home() {
     } catch {
       setMessageError('Microphone access is needed to record a voice note.');
     }
+  };
+
+  const toggleDictation = () => {
+    if (dictating) {
+      speechRecognitionRef.current?.stop();
+      return;
+    }
+    const speechWindow = window as typeof window & {
+      SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+      webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    };
+    const Recognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setMessageError('Voice to text is not available in this browser. You can still type or record a voice note.');
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = 'en-GB';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results).map((result) => result[0]?.transcript ?? '').join(' ').trim();
+      if (transcript) setDraft((current) => `${current}${current.trim() ? ' ' : ''}${transcript}`);
+    };
+    recognition.onerror = () => setMessageError('Voice to text could not hear that clearly. Please try again or type your message.');
+    recognition.onend = () => setDictating(false);
+    speechRecognitionRef.current = recognition;
+    setMessageError('');
+    setDictating(true);
+    recognition.start();
   };
 
   const answeredGuestRequestCount = guestRequests.filter((request) => request.status === 'Resolved' || Boolean(request.reply)).length;
@@ -1432,9 +1498,12 @@ export default function Home() {
                 <option value="urgent">Red · Needs attention</option>
               </select>
             </label>
-            <button type="submit" disabled={!appointmentTitle.trim() || !appointmentTime}>
-              <Plus size={15} /> Add to {activeDepartment}
-            </button>
+            <div className="calendar-form-actions">
+              {calendarEditingId && <button type="button" onClick={() => { setCalendarEditingId(null); setAppointmentTitle(''); setAppointmentTime(''); setAppointmentReminder('15'); setAppointmentCategory('routine'); }}>Cancel</button>}
+              <button type="submit" disabled={!appointmentTitle.trim() || !appointmentTime}>
+                <Plus size={15} /> {calendarEditingId ? 'Save changes' : `Add to ${activeDepartment}`}
+              </button>
+            </div>
           </form>
           <div className="calendar-list">
             <span>Upcoming</span>
@@ -1455,6 +1524,16 @@ export default function Home() {
                   <strong>{appointment.title}</strong>
                   <small>{appointment.department} only</small>
                   <small>{appointment.reminderMinutes} min reminder</small>
+                  <button type="button" onClick={() => {
+                    const local = new Date(appointment.startsAt);
+                    const localValue = new Date(local.getTime() - local.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    setSelectedCalendarId(appointment.id);
+                    setCalendarEditingId(appointment.id);
+                    setAppointmentTitle(appointment.title);
+                    setAppointmentTime(localValue);
+                    setAppointmentReminder(String(appointment.reminderMinutes));
+                    setAppointmentCategory(appointment.category);
+                  }}>Edit</button>
                 </article>
               ))
             )}
@@ -2102,7 +2181,14 @@ export default function Home() {
                             )}
                             <time>{message.time}</time>
                           </div>
-                          <p>{message.text}</p>
+                          {message.voiceNoteUrl ? (
+                            <div className="voice-note-message" aria-label={`Voice note, ${message.voiceNoteDuration ?? 1} seconds`}>
+                              <span className="voice-note-symbol"><Mic size={15} /></span>
+                              <div><strong>Voice note</strong><span className="voice-note-waveform" aria-hidden="true"><i /><i /><i /><i /><i /></span></div>
+                              <time>{Math.floor((message.voiceNoteDuration ?? 1) / 60)}:{String((message.voiceNoteDuration ?? 1) % 60).padStart(2, '0')}</time>
+                              <audio controls preload="metadata" src={message.voiceNoteUrl}>Your browser cannot play this voice note.</audio>
+                            </div>
+                          ) : <p>{message.text}</p>}
                           {!message.seenAt && message.to === activeDepartment && (
                             <button
                               type="button"
@@ -2555,14 +2641,13 @@ export default function Home() {
                 })}
               </div>
               <textarea
-                key={spellCheckEnabled ? 'spell-check-on' : 'spell-check-off'}
                 value={draft}
-                spellCheck={spellCheckEnabled}
+                spellCheck
                 lang="en-GB"
                 inputMode="text"
                 autoComplete="on"
-                autoCorrect={spellCheckEnabled ? 'on' : 'off'}
-                autoCapitalize={spellCheckEnabled ? 'sentences' : 'off'}
+                autoCorrect="on"
+                autoCapitalize="sentences"
                 onChange={(event) => {
                   setDraft(event.target.value);
                   setMessageError('');
@@ -2570,27 +2655,6 @@ export default function Home() {
                 placeholder="Write your message…"
                 autoFocus
               />
-              {spellCheckEnabled && draft.trim() && (
-                <div className={`spelling-results ${spellingSuggestions.length ? 'has-suggestions' : ''}`} aria-live="polite">
-                  <SpellCheck size={13} />
-                  {spellingSuggestions.length ? (
-                    <div>
-                      <span>Suggested corrections</span>
-                      {spellingSuggestions.map((suggestion) => (
-                        <button
-                          type="button"
-                          key={suggestion.word}
-                          onClick={() => applySpellingCorrection(suggestion.word, suggestion.correction)}
-                        >
-                          {suggestion.word} → {suggestion.correction}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <span>No common spelling issues found</span>
-                  )}
-                </div>
-              )}
               {assignAsTask && (
                 <input
                   className="task-note-input"
@@ -2623,24 +2687,9 @@ export default function Home() {
               )}
               <div className="composer-footer">
                 <div className="composer-tools">
-                  <button
-                    type="button"
-                    className={`spellcheck-toggle ${spellCheckEnabled ? 'active' : ''}`}
-                    onClick={() => {
-                      setSpellCheckEnabled((value) => {
-                        const next = !value;
-                        setSpellCheckNotice(next ? 'Spell check on' : 'Spell check off');
-                        return next;
-                      });
-                    }}
-                    aria-label={spellCheckEnabled ? 'Turn spell-check off' : 'Turn spell-check on'}
-                    title={spellCheckEnabled ? 'Spell-check on' : 'Spell-check off'}
-                  >
-                    <SpellCheck size={18} />
+                  <button type="button" className={`voice-to-text-button ${dictating ? 'active' : ''}`} onClick={toggleDictation} disabled={!dictationAvailable} aria-pressed={dictating} aria-label={dictationAvailable ? (dictating ? 'Stop voice to text' : 'Start voice to text') : 'Voice to text is unavailable in this browser'} title={dictationAvailable ? 'Voice to text' : 'Voice to text unavailable'}>
+                    <Mic size={17} /><span>{dictating ? 'Listening…' : 'Voice to text'}</span>
                   </button>
-                  <span className={`spellcheck-status ${spellCheckEnabled ? 'active' : ''}`}>
-                    {spellCheckNotice}
-                  </span>
                   <button
                     type="button"
                     className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
