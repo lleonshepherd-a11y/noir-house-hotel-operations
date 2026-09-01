@@ -452,6 +452,10 @@ export default function Home() {
   const [selectedGuestRequestId, setSelectedGuestRequestId] = useState<number | null>(null);
   const [selectedCalendarId, setSelectedCalendarId] = useState<number | null>(null);
   const [selectedPlannerDay, setSelectedPlannerDay] = useState<number | null>(null);
+  const [plannerEntryMode, setPlannerEntryMode] = useState<'add' | 'edit' | null>(null);
+  const [plannerEditingId, setPlannerEditingId] = useState<number | null>(null);
+  const [plannerEntryTitle, setPlannerEntryTitle] = useState('');
+  const [plannerEntryTime, setPlannerEntryTime] = useState('09:00');
   const [selectedHandoverId, setSelectedHandoverId] = useState<number | null>(null);
   const [replyContext, setReplyContext] = useState<{ id: number; from: string; text: string; time: string } | null>(null);
   const [managementDepartmentFilter, setManagementDepartmentFilter] = useState('All departments');
@@ -837,6 +841,27 @@ export default function Home() {
     setAppointmentTime('');
     setAppointmentReminder('15');
     setAppointmentCategory('routine');
+  };
+
+  const savePlannerEntry = (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedPlannerDay || !plannerEntryTitle.trim() || !plannerEntryTime) return;
+    const [hours, minutes] = plannerEntryTime.split(':').map(Number);
+    const startsAt = new Date(plannerYear, plannerMonthIndex, selectedPlannerDay, hours, minutes).toISOString();
+    if (plannerEntryMode === 'edit' && plannerEditingId) {
+      setAppointments((current) => current.map((item) => item.id === plannerEditingId
+        ? { ...item, title: plannerEntryTitle.trim(), startsAt }
+        : item));
+    } else {
+      setAppointments((current) => [...current, {
+        id: Date.now(), department: activeDepartment, title: plannerEntryTitle.trim(), startsAt,
+        reminderMinutes: 15, category: 'routine',
+      }]);
+    }
+    setPlannerEntryMode(null);
+    setPlannerEditingId(null);
+    setPlannerEntryTitle('');
+    setPlannerEntryTime('09:00');
   };
 
   const applySpellingCorrection = (word: string, correction: string) => {
@@ -2385,6 +2410,8 @@ export default function Home() {
                   className={`${now && cell.day === now.getDate() ? 'today' : ''} ${cell.events.length ? 'has-events' : ''}`}
                   onClick={() => {
                     setSelectedPlannerDay(cell.day);
+                    setPlannerEntryMode(null);
+                    setPlannerEditingId(null);
                   }}
                   aria-label={`${cell.day} ${plannerMonthLabel}${cell.events.length ? `, ${cell.events.length} calendar item${cell.events.length > 1 ? 's' : ''}` : ''}`}
                 >
@@ -2428,7 +2455,7 @@ export default function Home() {
           </section>
           {selectedPlannerDay && (
             <section className="planner-day-panel" role="dialog" aria-modal="true" aria-labelledby="planner-day-title">
-              <button className="planner-day-close" type="button" onClick={() => setSelectedPlannerDay(null)} aria-label="Close Ops Planner day details"><X size={18} /></button>
+              <button className="planner-day-close" type="button" onClick={() => { setSelectedPlannerDay(null); setPlannerEntryMode(null); setPlannerEditingId(null); }} aria-label="Close Ops Planner day details"><X size={18} /></button>
               <span className="eyebrow">Ops Planner · {activeDepartment}</span>
               <h2 id="planner-day-title">{selectedPlannerDay} {plannerMonthLabel}</h2>
               <div className="planner-day-entries">
@@ -2436,14 +2463,26 @@ export default function Home() {
                   <article key={event.id}>
                     <i className={`planner-pin-${event.category}`} />
                     <div><strong>{event.title}</strong><span>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(event.startsAt))}</span></div>
+                    <button type="button" onClick={() => {
+                      setPlannerEntryMode('edit');
+                      setPlannerEditingId(event.id);
+                      setPlannerEntryTitle(event.title);
+                      setPlannerEntryTime(new Date(event.startsAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }));
+                    }}>Edit</button>
                   </article>
                 )) : <p>No operational entries for this day.</p>}
               </div>
-              <button className="planner-day-calendar" type="button" onClick={() => {
-                setSelectedCalendarId(selectedPlannerEvents[0]?.id ?? null);
-                setSelectedPlannerDay(null);
-                setCalendarOpen(true);
-              }}><CalendarDays size={15} /> Open full calendar</button>
+              {plannerEntryMode && <form className="planner-day-form" onSubmit={savePlannerEntry}>
+                <label>Entry<input autoFocus value={plannerEntryTitle} onChange={(event) => setPlannerEntryTitle(event.target.value)} placeholder="What is happening?" /></label>
+                <label>Time<input type="time" value={plannerEntryTime} onChange={(event) => setPlannerEntryTime(event.target.value)} /></label>
+                <div><button type="button" onClick={() => { setPlannerEntryMode(null); setPlannerEditingId(null); }}>Cancel</button><button type="submit" disabled={!plannerEntryTitle.trim()}>{plannerEntryMode === 'edit' ? 'Save changes' : 'Add entry'}</button></div>
+              </form>}
+              {!plannerEntryMode && <button className="planner-day-calendar" type="button" onClick={() => {
+                setPlannerEntryMode('add');
+                setPlannerEditingId(null);
+                setPlannerEntryTitle('');
+                setPlannerEntryTime('09:00');
+              }}><Plus size={15} /> Add entry for this day</button>}
             </section>
           )}
           <footer className="product-credit">
