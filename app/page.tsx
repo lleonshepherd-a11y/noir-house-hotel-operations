@@ -1402,9 +1402,9 @@ export default function Home() {
                           }}
                         ><Pin size={13} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
                         <button
-                          aria-label="Swipe away guest request notification"
+                          aria-label="Clear guest request notification; it can also be swiped away"
                           onClick={() => setGuestRequests((current) => current.map((item) => item.id === request.id ? { ...item, status: 'Resolved' } : item))}
-                        ><span>Swipe</span></button>
+                        ><span>Clear</span></button>
                       </span>
                     </article>
                     );
@@ -1494,7 +1494,7 @@ export default function Home() {
                             <Pin size={13} /><span>{pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'Pinned' : 'Pin'}</span>
                           </button>
                           <button
-                            aria-label="Swipe away internal message notification"
+                            aria-label="Clear internal message notification; it can also be swiped away"
                             onClick={() =>
                               setMessages((current) =>
                                 current.filter(
@@ -1503,7 +1503,7 @@ export default function Home() {
                               )
                             }
                           >
-                            <span>Swipe</span>
+                            <span>Clear</span>
                           </button>
                         </span>
                       </article>
@@ -1560,7 +1560,7 @@ export default function Home() {
                             </button>
                             <span className="notification-actions compact-actions">
                               <button aria-label={isPinned ? 'Unpin calendar notification' : 'Pin calendar notification'} aria-pressed={isPinned} onClick={() => toggleNotificationPin(notificationKey)}><Pin size={12} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
-                              <button aria-label="Swipe away calendar notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><span>Swipe</span></button>
+                              <button aria-label="Clear calendar notification; it can also be swiped away" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><span>Clear</span></button>
                             </span>
                           </article>
                         );
@@ -1592,7 +1592,7 @@ export default function Home() {
                             </button>
                             <span className="notification-actions compact-actions">
                               <button aria-label={isPinned ? 'Unpin handover notification' : 'Pin handover notification'} aria-pressed={isPinned} onClick={() => toggleNotificationPin(notificationKey)}><Pin size={12} /><span>{isPinned ? 'Pinned' : 'Pin'}</span></button>
-                              <button aria-label="Swipe away handover notification" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><span>Swipe</span></button>
+                              <button aria-label="Clear handover notification; it can also be swiped away" onClick={() => setDismissedShiftNotificationKeys((current) => [...current, notificationKey])}><span>Clear</span></button>
                             </span>
                           </article>
                         );
