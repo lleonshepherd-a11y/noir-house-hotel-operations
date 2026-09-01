@@ -419,6 +419,7 @@ export default function Home() {
   const [guestReplyDrafts, setGuestReplyDrafts] = useState<Record<number, string>>({});
   const [selectedGuestRequestId, setSelectedGuestRequestId] = useState<number | null>(null);
   const [selectedCalendarId, setSelectedCalendarId] = useState<number | null>(null);
+  const [selectedPlannerDay, setSelectedPlannerDay] = useState<number | null>(null);
   const [selectedHandoverId, setSelectedHandoverId] = useState<number | null>(null);
   const [replyContext, setReplyContext] = useState<{ id: number; from: string; text: string; time: string } | null>(null);
 
@@ -447,6 +448,12 @@ export default function Home() {
     });
     return { day, events };
   });
+  const selectedPlannerEvents = selectedPlannerDay
+    ? departmentAppointments.filter((appointment) => {
+        const date = new Date(appointment.startsAt);
+        return date.getFullYear() === plannerYear && date.getMonth() === plannerMonthIndex && date.getDate() === selectedPlannerDay;
+      })
+    : [];
   const selectedDepartment = departments.find(
     (department) => department.name === activeDepartment,
   ) ?? departments[1];
@@ -2150,7 +2157,7 @@ export default function Home() {
                   );
                 })}
               </section>
-              <section className="attention-card glass-panel">
+              <section className="attention-card glass-panel sidebar-secondary">
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">Owned actions</span>
@@ -2190,11 +2197,11 @@ export default function Home() {
                   </div>
                 </div>
               </section>
-              <section className="today-glance glass-panel" aria-labelledby="today-glance-title">
+              <section className="today-glance glass-panel sidebar-secondary" aria-labelledby="today-glance-sidebar-title">
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">Operational summary</span>
-                    <h2 id="today-glance-title">Today at a glance</h2>
+                    <h2 id="today-glance-sidebar-title">Today at a glance</h2>
                   </div>
                   <ShieldCheck size={18} />
                 </div>
@@ -2210,6 +2217,7 @@ export default function Home() {
               </section>
             </aside>
           </section>
+          <section className="lower-ops-grid" aria-label="Operations planning overview">
           <section className="month-planner glass-panel" aria-labelledby="month-planner-title">
             <div className="month-planner-heading">
               <div>
@@ -2237,8 +2245,7 @@ export default function Home() {
                   key={cell.day}
                   className={`${now && cell.day === now.getDate() ? 'today' : ''} ${cell.events.length ? 'has-events' : ''}`}
                   onClick={() => {
-                    setSelectedCalendarId(cell.events[0]?.id ?? null);
-                    setCalendarOpen(true);
+                    setSelectedPlannerDay(cell.day);
                   }}
                   aria-label={`${cell.day} ${plannerMonthLabel}${cell.events.length ? `, ${cell.events.length} calendar item${cell.events.length > 1 ? 's' : ''}` : ''}`}
                 >
@@ -2255,6 +2262,51 @@ export default function Home() {
               ) : <span className="month-planner-empty" key={`empty-${index}`} />)}
             </div>
           </section>
+          <div className="lower-ops-stack">
+            <section className="attention-card glass-panel">
+              <div className="section-heading">
+                <div><span className="eyebrow">Owned actions</span><h2>Action log</h2></div>
+                <span className="request-count">3</span>
+              </div>
+              <div className="request"><span className="priority high" /><div><strong>Allergy confirmation</strong><p>Owned by Restaurant · Due now</p></div><ChevronDown size={15} /></div>
+              <div className="request"><span className="priority medium" /><div><strong>Dishwasher repair</strong><p>Owned by Maintenance · Scheduled</p></div><ChevronDown size={15} /></div>
+              <div className="request"><span className="priority low" /><div><strong>New kitchen starter</strong><p>Owned by Kitchen · Upcoming</p></div><ChevronDown size={15} /></div>
+              <div className="handover-signoff"><ShieldCheck size={14} /><div><strong>Shift handover accepted</strong><span>Jordan M. · Front of House · 19:00</span></div></div>
+            </section>
+            <section className="today-glance glass-panel" aria-labelledby="today-glance-title">
+              <div className="section-heading">
+                <div><span className="eyebrow">Operational summary</span><h2 id="today-glance-title">Today at a glance</h2></div>
+                <ShieldCheck size={18} />
+              </div>
+              <div className="today-glance-stats">
+                <div><strong>{answeredGuestRequestCount}</strong><span>Guest requests answered</span></div>
+                <div><strong>{openTaskCount}</strong><span>Open tasks</span></div>
+                <div><strong>{outstandingHandoverCount}</strong><span>Handovers outstanding</span></div>
+              </div>
+              <div className={`today-glance-state ${todayAllClear ? 'clear' : ''}`}><ShieldCheck size={14} /><span>{todayAllClear ? 'You’re on top of it' : 'Keep the handover moving'}</span></div>
+            </section>
+          </div>
+          </section>
+          {selectedPlannerDay && (
+            <section className="planner-day-panel" role="dialog" aria-modal="true" aria-labelledby="planner-day-title">
+              <button className="planner-day-close" type="button" onClick={() => setSelectedPlannerDay(null)} aria-label="Close Ops Planner day details"><X size={18} /></button>
+              <span className="eyebrow">Ops Planner · {activeDepartment}</span>
+              <h2 id="planner-day-title">{selectedPlannerDay} {plannerMonthLabel}</h2>
+              <div className="planner-day-entries">
+                {selectedPlannerEvents.length ? selectedPlannerEvents.map((event) => (
+                  <article key={event.id}>
+                    <i className={`planner-pin-${event.category}`} />
+                    <div><strong>{event.title}</strong><span>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(event.startsAt))}</span></div>
+                  </article>
+                )) : <p>No operational entries for this day.</p>}
+              </div>
+              <button className="planner-day-calendar" type="button" onClick={() => {
+                setSelectedCalendarId(selectedPlannerEvents[0]?.id ?? null);
+                setSelectedPlannerDay(null);
+                setCalendarOpen(true);
+              }}><CalendarDays size={15} /> Open full calendar</button>
+            </section>
+          )}
           <footer className="product-credit">Powered by Freedom Services</footer>
         </div>
 
