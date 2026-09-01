@@ -289,6 +289,15 @@ export default function Home() {
     kind: 'cloud',
   });
   const [announcementAcknowledged, setAnnouncementAcknowledged] = useState(false);
+  const [announcementEditorOpen, setAnnouncementEditorOpen] = useState(false);
+  const [announcementDraft, setAnnouncementDraft] = useState('');
+  const [announcementExpiry, setAnnouncementExpiry] = useState('');
+  const [announcementStatus, setAnnouncementStatus] = useState('');
+  const [hotelAnnouncement, setHotelAnnouncement] = useState({
+    body: 'Fire drill · Staff car park · Tomorrow at 07:00',
+    author: 'Alex Morgan',
+    postedAt: '20:04',
+  });
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [guestNotificationsOpen, setGuestNotificationsOpen] = useState(false);
@@ -892,6 +901,29 @@ export default function Home() {
   const openTaskCount = assignedTasks.filter((task) => task.to === activeDepartment && task.status !== 'Complete').length;
   const outstandingHandoverCount = shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length;
   const todayAllClear = guestRequests.every((request) => request.status !== 'New') && openTaskCount === 0 && outstandingHandoverCount === 0;
+
+  const publishAnnouncement = async (event: FormEvent) => {
+    event.preventDefault();
+    const body = announcementDraft.trim();
+    if (!body) return;
+    const postedAt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(new Date());
+    setHotelAnnouncement({ body, author: activeStaffNames['General Manager'] ?? 'General Manager', postedAt });
+    setAnnouncementAcknowledged(false);
+    setAnnouncementStatus('Announcement published across every department dashboard.');
+    setAnnouncementEditorOpen(false);
+    const token = window.sessionStorage.getItem('hotel_staff_session');
+    if (!token) return;
+    try {
+      const response = await fetch('/api/operations/announcements', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        body: JSON.stringify({ body, expiresAt: announcementExpiry || null }),
+      });
+      if (!response.ok) throw new Error();
+    } catch {
+      setAnnouncementStatus('Preview updated. The permanent announcement will sync after staff sign-in is connected.');
+    }
+  };
 
   return (
     <main className={`hotel-shell ${calmMotion ? '' : 'calm-motion-off'}`}>
@@ -1628,15 +1660,39 @@ export default function Home() {
             <BellRing size={18} />
             <div>
               <span>GENERAL MANAGER ANNOUNCEMENT</span>
-              <strong>Fire drill · Staff car park · Tomorrow at 07:00</strong>
-              <small>Posted by Alex Morgan · 20:04</small>
+              <strong>{hotelAnnouncement.body}</strong>
+              <small>Posted by {hotelAnnouncement.author} · {hotelAnnouncement.postedAt}</small>
             </div>
-            <button
-              className={announcementAcknowledged ? 'acknowledged' : ''}
-              onClick={() => setAnnouncementAcknowledged(true)}
-            >
-              {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
-            </button>
+            <div className="announcement-controls">
+              {activeDepartment === 'General Manager' && (
+                <button className="announcement-manage" onClick={() => setAnnouncementEditorOpen((open) => !open)}>
+                  <Plus size={13} /> Manage
+                </button>
+              )}
+              <button
+                className={announcementAcknowledged ? 'acknowledged' : ''}
+                onClick={() => setAnnouncementAcknowledged(true)}
+              >
+                {announcementAcknowledged ? 'Acknowledged' : 'Acknowledge'}
+              </button>
+            </div>
+            {activeDepartment === 'General Manager' && announcementEditorOpen && (
+              <form className="announcement-editor" onSubmit={publishAnnouncement}>
+                <label>
+                  Hotel-wide announcement
+                  <textarea value={announcementDraft} onChange={(event) => setAnnouncementDraft(event.target.value)} placeholder="Write the notice every department must see…" autoFocus />
+                </label>
+                <label>
+                  Remove automatically (optional)
+                  <input type="datetime-local" value={announcementExpiry} onChange={(event) => setAnnouncementExpiry(event.target.value)} />
+                </label>
+                <div>
+                  <button type="button" onClick={() => setAnnouncementEditorOpen(false)}>Cancel</button>
+                  <button type="submit" disabled={!announcementDraft.trim()}>Publish to all dashboards</button>
+                </div>
+              </form>
+            )}
+            {activeDepartment === 'General Manager' && announcementStatus && <small className="announcement-status">{announcementStatus}</small>}
           </section>
           <section className="pinboard glass-panel">
             <div className="section-heading">
