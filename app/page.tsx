@@ -177,6 +177,7 @@ type DepartmentAppointment = {
   title: string;
   startsAt: string;
   reminderMinutes: number;
+  category: 'urgent' | 'maintenance' | 'staff' | 'routine';
 };
 
 type ShiftHandover = {
@@ -309,6 +310,7 @@ export default function Home() {
   const [appointmentTitle, setAppointmentTitle] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
   const [appointmentReminder, setAppointmentReminder] = useState('15');
+  const [appointmentCategory, setAppointmentCategory] = useState<DepartmentAppointment['category']>('routine');
   const [dismissedAppointments, setDismissedAppointments] = useState<number[]>([]);
   const [pinnedNotificationKeys, setPinnedNotificationKeys] = useState<string[]>([]);
   const [dismissedShiftNotificationKeys, setDismissedShiftNotificationKeys] = useState<string[]>([]);
@@ -317,6 +319,8 @@ export default function Home() {
     const arrival = new Date();
     arrival.setDate(arrival.getDate() + (arrival.getHours() >= 9 ? 1 : 0));
     arrival.setHours(9, 0, 0, 0);
+    const dishwasherRepair = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(12, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 10, 30);
+    const kitchenStarter = new Date(arrival.getFullYear(), arrival.getMonth(), Math.min(18, new Date(arrival.getFullYear(), arrival.getMonth() + 1, 0).getDate()), 9, 0);
     return [
       {
         id: 901,
@@ -324,6 +328,23 @@ export default function Home() {
         title: 'Morning team briefing',
         startsAt: arrival.toISOString(),
         reminderMinutes: 15,
+        category: 'staff',
+      },
+      {
+        id: 902,
+        department: 'Maintenance',
+        title: 'Dishwasher repair',
+        startsAt: dishwasherRepair.toISOString(),
+        reminderMinutes: 30,
+        category: 'maintenance',
+      },
+      {
+        id: 903,
+        department: 'Kitchen',
+        title: 'New kitchen starter',
+        startsAt: kitchenStarter.toISOString(),
+        reminderMinutes: 60,
+        category: 'staff',
       },
     ];
   });
@@ -411,12 +432,30 @@ export default function Home() {
         ),
     [activeDepartment, appointments],
   );
+  const plannerMonth = now ?? new Date();
+  const plannerYear = plannerMonth.getFullYear();
+  const plannerMonthIndex = plannerMonth.getMonth();
+  const plannerMonthLabel = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(plannerMonth);
+  const plannerDayCount = new Date(plannerYear, plannerMonthIndex + 1, 0).getDate();
+  const plannerLeadingDays = (new Date(plannerYear, plannerMonthIndex, 1).getDay() + 6) % 7;
+  const plannerCells = Array.from({ length: plannerLeadingDays + plannerDayCount }, (_, index) => {
+    if (index < plannerLeadingDays) return null;
+    const day = index - plannerLeadingDays + 1;
+    const events = departmentAppointments.filter((appointment) => {
+      const date = new Date(appointment.startsAt);
+      return date.getFullYear() === plannerYear && date.getMonth() === plannerMonthIndex && date.getDate() === day;
+    });
+    return { day, events };
+  });
   const selectedDepartment = departments.find(
     (department) => department.name === activeDepartment,
   ) ?? departments[1];
   const SelectedDepartmentIcon = selectedDepartment.icon;
   const canAccessGuestRequests =
     activeDepartment === 'Front of House' || activeDepartment === 'General Manager';
+  useEffect(() => {
+    if (!canAccessGuestRequests && utilityPanel === 'guest') setUtilityPanel(null);
+  }, [canAccessGuestRequests, utilityPanel]);
   const pendingGuestRequests = guestRequests.filter((request) => request.status === 'New');
   const featuredGuestRequest =
     pendingGuestRequests.find((request) => request.urgent) ?? pendingGuestRequests[0];
@@ -741,11 +780,13 @@ export default function Home() {
         title: appointmentTitle.trim(),
         startsAt: new Date(appointmentTime).toISOString(),
         reminderMinutes: Number(appointmentReminder),
+        category: appointmentCategory,
       },
     ]);
     setAppointmentTitle('');
     setAppointmentTime('');
     setAppointmentReminder('15');
+    setAppointmentCategory('routine');
   };
 
   const applySpellingCorrection = (word: string, correction: string) => {
@@ -1024,7 +1065,7 @@ export default function Home() {
           >
             <NotebookPen size={20} />
           </button>
-          <button
+          {canAccessGuestRequests && <button
             className={`nav-button guest-nav-button ${utilityPanel === 'guest' ? 'active' : ''} ${canAccessGuestRequests ? '' : 'restricted'} ${pendingGuestRequests.some((request) => request.urgent) ? 'guest-urgent' : ''}`}
             aria-label={canAccessGuestRequests ? 'Guest requests' : 'Guest requests — restricted to Reception, Front of House and Duty Manager'}
             title={canAccessGuestRequests ? 'Guest requests' : 'Guest requests — restricted'}
@@ -1040,8 +1081,7 @@ export default function Home() {
                 {guestRequests.filter((request) => request.status === 'New').length}
               </span>
             )}
-            {!canAccessGuestRequests && <KeyRound size={9} className="guest-nav-lock" />}
-          </button>
+          </button>}
           <button
             className={`nav-button ${calendarOpen ? 'active' : ''}`}
             aria-label={`${activeDepartment} calendar`}
@@ -1273,6 +1313,15 @@ export default function Home() {
                 <option value="15">15 minutes before</option>
                 <option value="30">30 minutes before</option>
                 <option value="60">1 hour before</option>
+              </select>
+            </label>
+            <label>
+              Ops Planner pin
+              <select value={appointmentCategory} onChange={(event) => setAppointmentCategory(event.target.value as DepartmentAppointment['category'])}>
+                <option value="routine">Green · Routine</option>
+                <option value="maintenance">Amber · Maintenance / priority</option>
+                <option value="staff">Blue · Staff / shift / admin</option>
+                <option value="urgent">Red · Needs attention</option>
               </select>
             </label>
             <button type="submit" disabled={!appointmentTitle.trim() || !appointmentTime}>
@@ -2160,6 +2209,51 @@ export default function Home() {
                 </div>
               </section>
             </aside>
+          </section>
+          <section className="month-planner glass-panel" aria-labelledby="month-planner-title">
+            <div className="month-planner-heading">
+              <div>
+                <span className="eyebrow">Month at a glance</span>
+                <h2 id="month-planner-title">Ops Planner · {plannerMonthLabel}</h2>
+                <p>{activeDepartment} · select any day to open its calendar details</p>
+              </div>
+              <button type="button" onClick={() => setCalendarOpen(true)}>
+                <CalendarDays size={15} /> Open full calendar
+              </button>
+            </div>
+            <div className="month-planner-legend" aria-label="Ops Planner pin colours">
+              <span className="urgent"><i /> Needs attention</span>
+              <span className="maintenance"><i /> Maintenance</span>
+              <span className="staff"><i /> Staff / shift</span>
+              <span className="routine"><i /> Routine</span>
+            </div>
+            <div className="month-planner-weekdays" aria-hidden="true">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <span key={day}>{day}</span>)}
+            </div>
+            <div className="month-planner-grid">
+              {plannerCells.map((cell, index) => cell ? (
+                <button
+                  type="button"
+                  key={cell.day}
+                  className={`${now && cell.day === now.getDate() ? 'today' : ''} ${cell.events.length ? 'has-events' : ''}`}
+                  onClick={() => {
+                    setSelectedCalendarId(cell.events[0]?.id ?? null);
+                    setCalendarOpen(true);
+                  }}
+                  aria-label={`${cell.day} ${plannerMonthLabel}${cell.events.length ? `, ${cell.events.length} calendar item${cell.events.length > 1 ? 's' : ''}` : ''}`}
+                >
+                  <span className="month-planner-date">{cell.day}</span>
+                  <span className="month-planner-events">
+                    {cell.events.slice(0, 2).map((event) => (
+                      <span className={`planner-event-${event.category}`} key={event.id} title={event.title}>
+                        <i /> {event.title}
+                      </span>
+                    ))}
+                    {cell.events.length > 2 && <small>+{cell.events.length - 2} more</small>}
+                  </span>
+                </button>
+              ) : <span className="month-planner-empty" key={`empty-${index}`} />)}
+            </div>
           </section>
           <footer className="product-credit">Powered by Freedom Services</footer>
         </div>
