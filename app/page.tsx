@@ -2498,7 +2498,7 @@ export default function Home() {
                     <strong>{housekeepingRooms.filter((room) => roomStatuses[room] === 'Ready').length} / {housekeepingRooms.length}</strong>
                   </div>
                   <div className="gm-status-chip-list">
-                    {housekeepingRooms.filter((room) => roomStatuses[room] === 'Ready').map((room) => <span key={room} className="gm-status-chip">{room}</span>)}
+                    {housekeepingRooms.filter((room) => roomStatuses[room] === 'Ready').map((room) => <span key={room} className="gm-status-chip door">{room}</span>)}
                     {!housekeepingRooms.some((room) => roomStatuses[room] === 'Ready') && <p className="gm-empty">No rooms marked ready yet.</p>}
                   </div>
                 </div>
@@ -2509,7 +2509,7 @@ export default function Home() {
                     <strong>{restaurantTables.filter((table) => tableStatuses[table] === 'Cleared').length} / {restaurantTables.length}</strong>
                   </div>
                   <div className="gm-status-chip-list">
-                    {restaurantTables.filter((table) => tableStatuses[table] === 'Cleared').map((table) => <span key={table} className="gm-status-chip">{table}</span>)}
+                    {restaurantTables.filter((table) => tableStatuses[table] === 'Cleared').map((table) => <span key={table} className="gm-status-chip table">{table}</span>)}
                     {!restaurantTables.some((table) => tableStatuses[table] === 'Cleared') && <p className="gm-empty">No tables marked cleared yet.</p>}
                   </div>
                 </div>
