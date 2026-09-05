@@ -3031,7 +3031,7 @@ export default function Home() {
               }}><Plus size={15} /> Add entry for this day</button>}
             </section>
           )}
-          <footer className="product-credit" data-deployment-check="github-main-20260905" style={{ order: 100 }}>
+          <footer className="product-credit" style={{ order: 100 }}>
             <a href="https://freedomservices.uk/" target="_blank" rel="noopener noreferrer">
               Powered by Freedom Services Online
             </a>
