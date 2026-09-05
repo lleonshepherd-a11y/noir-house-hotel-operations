@@ -124,6 +124,14 @@ type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 
 type DashboardTileId = 'pinboard' | 'guest' | 'handover' | 'management' | 'operations' | 'planner';
 
+type RoomStatus = 'To clean' | 'Ready';
+
+const housekeepingRooms = [
+  101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+  201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
+  301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
+];
+
 const defaultDashboardTileOrder: DashboardTileId[] = ['pinboard', 'guest', 'handover', 'management', 'operations', 'planner'];
 const dashboardTileLabels: Record<DashboardTileId, string> = {
   pinboard: 'Department pinboard', guest: 'Guest request alert', handover: 'Shift handover',
@@ -460,6 +468,12 @@ export default function Home() {
     },
   ]);
   const [messages, setMessages] = useState(initialMessages);
+  const [housekeepingFloor, setHousekeepingFloor] = useState(1);
+  const [roomStatuses, setRoomStatuses] = useState<Record<number, RoomStatus>>({
+    102: 'Ready',
+    205: 'Ready',
+  });
+  const [roomStatusNotice, setRoomStatusNotice] = useState('');
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
   const [handoverDraft, setHandoverDraft] = useState('');
   const [handoverImportant, setHandoverImportant] = useState(false);
@@ -897,6 +911,31 @@ export default function Home() {
     setTaskNote('');
     setReplyContext(null);
     setComposerOpen(false);
+  };
+
+  const markRoomReady = (room: number) => {
+    if (roomStatuses[room] === 'Ready') return;
+    const time = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
+    setMessages((current) => [
+      {
+        id: Date.now(),
+        from: 'Housekeeping',
+        to: 'Front of House',
+        text: `Room ${room} has been cleaned and is ready for the guest.`,
+        time,
+        unread: true,
+        urgent: false,
+      },
+      ...current,
+    ]);
+    setRoomStatusNotice(`Room ${room} sent to Front of House as ready.`);
+    if (gentleSounds) playPing(false);
+    window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
   const addAppointment = (event: FormEvent) => {
@@ -2037,6 +2076,44 @@ export default function Home() {
               </form>
             </div>
           </section>
+          {activeDepartment === 'Housekeeping' && (
+            <section className="housekeeping-rooms glass-panel dashboard-movable" style={{ order: tileOrder('handover') - 1 }} aria-labelledby="housekeeping-rooms-title">
+              <div className="section-heading housekeeping-rooms-heading">
+                <div>
+                  <span className="eyebrow"><BedDouble size={13} /> Room status</span>
+                  <h2 id="housekeeping-rooms-title">Rooms ready for reception</h2>
+                  <p>Tap a room when cleaning is complete. Front of House will receive a logged message.</p>
+                </div>
+                <span className="room-ready-count">{Object.values(roomStatuses).filter((status) => status === 'Ready').length} ready</span>
+              </div>
+              <div className="housekeeping-floor-tabs" aria-label="Choose hotel floor">
+                {[1, 2, 3].map((floor) => (
+                  <button key={floor} type="button" className={housekeepingFloor === floor ? 'active' : ''} onClick={() => setHousekeepingFloor(floor)}>
+                    Floor {floor}
+                  </button>
+                ))}
+              </div>
+              <div className="housekeeping-room-grid" aria-live="polite">
+                {housekeepingRooms.filter((room) => Math.floor(room / 100) === housekeepingFloor).map((room) => {
+                  const ready = roomStatuses[room] === 'Ready';
+                  return (
+                    <button
+                      key={room}
+                      type="button"
+                      className={ready ? 'ready' : ''}
+                      disabled={ready}
+                      onClick={() => markRoomReady(room)}
+                      aria-label={ready ? `Room ${room} is ready` : `Mark room ${room} clean and notify Front of House`}
+                    >
+                      <strong>{room}</strong>
+                      <span>{ready ? 'Ready' : 'Tap when clean'}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {roomStatusNotice && <div className="room-status-notice"><ShieldCheck size={15} /> {roomStatusNotice}</div>}
+            </section>
+          )}
           {canAccessGuestRequests && featuredGuestRequest && (
             <section className={`guest-request-alert glass-panel dashboard-movable ${featuredGuestRequest.urgent ? 'urgent' : ''}`} style={{ order: tileOrder('guest') }} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
               <span className="guest-request-alert-icon"><ConciergeBell size={17} /></span>
