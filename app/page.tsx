@@ -948,6 +948,14 @@ export default function Home() {
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
+  const undoRoomReady = (room: number) => {
+    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+    setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
+    setMessages((current) => [{ id: Date.now(), from: 'Housekeeping', to: 'Front of House', text: `Correction: room ${room} is not ready yet. Please wait for a new cleaning confirmation.`, time, unread: true, urgent: false }, ...current]);
+    setRoomStatusNotice(`Room ${room} returned to awaiting confirmation. Front of House notified.`);
+    window.setTimeout(() => setRoomStatusNotice(''), 4000);
+  };
+
   const markTableAway = (table: number) => {
     if (tableStatuses[table] === 'Away') return;
     const time = new Intl.DateTimeFormat('en-GB', {
@@ -970,6 +978,14 @@ export default function Home() {
     ]);
     setTableStatusNotice(`Table ${table} marked away and Kitchen notified.`);
     if (gentleSounds) playPing(false);
+    window.setTimeout(() => setTableStatusNotice(''), 4000);
+  };
+
+  const undoTableAway = (table: number) => {
+    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+    setTableStatuses((current) => ({ ...current, [table]: 'Waiting' }));
+    setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: food-away status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
+    setTableStatusNotice(`Table ${table} returned to waiting. Kitchen notified.`);
     window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
 
@@ -2129,17 +2145,12 @@ export default function Home() {
                 {housekeepingRooms.filter((room) => Math.floor(room / 100) === housekeepingFloor).map((room) => {
                   const ready = roomStatuses[room] === 'Ready';
                   return (
-                    <button
-                      key={room}
-                      type="button"
-                      className={ready ? 'ready' : ''}
-                      disabled={ready}
-                      onClick={() => markRoomReady(room)}
-                      aria-label={ready ? `Room ${room} is ready` : `Mark room ${room} clean and notify Front of House`}
-                    >
-                      <strong>{room}</strong>
-                      {ready && <span>Ready</span>}
-                    </button>
+                    <article className={`room-tile-wrap ${ready ? 'ready' : ''}`} key={room}>
+                      <button type="button" className={`room-tile ${ready ? 'ready' : ''}`} onClick={() => ready ? undoRoomReady(room) : markRoomReady(room)} aria-pressed={ready} aria-label={ready ? `Undo room ${room} ready status` : `Mark room ${room} clean and notify Front of House`}>
+                        <strong>{room}</strong>
+                        {ready && <span>Ready</span>}
+                      </button>
+                    </article>
                   );
                 })}
               </div>
@@ -2160,17 +2171,12 @@ export default function Home() {
                 {restaurantTables.map((table) => {
                   const away = tableStatuses[table] === 'Away';
                   return (
-                    <button
-                      key={table}
-                      type="button"
-                      className={away ? 'away' : ''}
-                      disabled={away}
-                      onClick={() => markTableAway(table)}
-                      aria-label={away ? `Table ${table} food is away` : `Mark food away for table ${table} and notify Kitchen`}
-                    >
-                      <strong>{table}</strong>
-                      {away && <span>Away</span>}
-                    </button>
+                    <article className={`table-tile-wrap ${away ? 'away' : ''}`} key={table}>
+                      <button type="button" className={`table-tile ${away ? 'away' : ''}`} onClick={() => away ? undoTableAway(table) : markTableAway(table)} aria-pressed={away} aria-label={away ? `Undo table ${table} food-away status` : `Mark food away for table ${table} and notify Kitchen`}>
+                        <strong>{table}</strong>
+                        {away && <span>Away</span>}
+                      </button>
+                    </article>
                   );
                 })}
               </div>
