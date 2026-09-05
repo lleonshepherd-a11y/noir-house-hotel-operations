@@ -2483,6 +2483,40 @@ export default function Home() {
             </div>
           </section>
           {activeDepartment === 'General Manager' && (
+            <section className="gm-status-overview glass-panel dashboard-movable" style={{ order: tileOrder('management') - 1 }} aria-labelledby="gm-status-overview-title">
+              <div className="section-heading">
+                <div>
+                  <span className="eyebrow">Live housekeeping &amp; restaurant status</span>
+                  <h2 id="gm-status-overview-title">Rooms &amp; tables overview</h2>
+                </div>
+              </div>
+              <div className="gm-status-overview-grid">
+                <div className="gm-status-column">
+                  <div className="gm-status-column-heading">
+                    <BedDouble size={15} />
+                    <span>Rooms cleaned</span>
+                    <strong>{housekeepingRooms.filter((room) => roomStatuses[room] === 'Ready').length} / {housekeepingRooms.length}</strong>
+                  </div>
+                  <div className="gm-status-chip-list">
+                    {housekeepingRooms.filter((room) => roomStatuses[room] === 'Ready').map((room) => <span key={room} className="gm-status-chip">{room}</span>)}
+                    {!housekeepingRooms.some((room) => roomStatuses[room] === 'Ready') && <p className="gm-empty">No rooms marked ready yet.</p>}
+                  </div>
+                </div>
+                <div className="gm-status-column">
+                  <div className="gm-status-column-heading">
+                    <UtensilsCrossed size={15} />
+                    <span>Tables cleared</span>
+                    <strong>{restaurantTables.filter((table) => tableStatuses[table] === 'Cleared').length} / {restaurantTables.length}</strong>
+                  </div>
+                  <div className="gm-status-chip-list">
+                    {restaurantTables.filter((table) => tableStatuses[table] === 'Cleared').map((table) => <span key={table} className="gm-status-chip">{table}</span>)}
+                    {!restaurantTables.some((table) => tableStatuses[table] === 'Cleared') && <p className="gm-empty">No tables marked cleared yet.</p>}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+          {activeDepartment === 'General Manager' && (
             <section className="gm-oversight glass-panel dashboard-movable" style={{ order: tileOrder('management') }} aria-labelledby="gm-oversight-title">
               <div className="gm-oversight-heading">
                 <div><span className="eyebrow">Permission-based hotel oversight</span><h2 id="gm-oversight-title">Management operations</h2><p>Every item opens its original thread and retains the complete history.</p></div>
