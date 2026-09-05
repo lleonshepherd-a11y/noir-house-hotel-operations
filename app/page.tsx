@@ -20,6 +20,7 @@ import {
   Martini,
   MessageSquareText,
   Mic,
+  Minus,
   NotebookPen,
   Paperclip,
   Pin,
@@ -132,7 +133,7 @@ const housekeepingRooms = [
   301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
 ];
 
-const restaurantTables = Array.from({ length: 20 }, (_, index) => index + 1);
+const defaultTableCount = 20;
 
 const defaultDashboardTileOrder: DashboardTileId[] = ['pinboard', 'guest', 'handover', 'management', 'operations', 'planner'];
 const dashboardTileLabels: Record<DashboardTileId, string> = {
@@ -478,6 +479,12 @@ export default function Home() {
   const [roomStatusNotice, setRoomStatusNotice] = useState('');
   const [tableStatuses, setTableStatuses] = useState<Record<number, 'Occupied' | 'Cleared'>>({});
   const [tableStatusNotice, setTableStatusNotice] = useState('');
+  const [tableCount, setTableCount] = useState(defaultTableCount);
+  const [editingTables, setEditingTables] = useState(false);
+  const restaurantTables = useMemo(
+    () => Array.from({ length: tableCount }, (_, index) => index + 1),
+    [tableCount],
+  );
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
   const [handoverDraft, setHandoverDraft] = useState('');
   const [handoverImportant, setHandoverImportant] = useState(false);
@@ -606,6 +613,36 @@ export default function Home() {
       /* The dashboard remains usable when local preferences are unavailable. */
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('noir-house-table-count');
+      if (stored) setTableCount(Math.max(1, Number(stored) || defaultTableCount));
+    } catch {
+      /* The dashboard remains usable when local preferences are unavailable. */
+    }
+  }, []);
+
+  const addTable = () => {
+    setTableCount((count) => {
+      const next = count + 1;
+      try { window.localStorage.setItem('noir-house-table-count', String(next)); } catch { /* Local preference storage may be blocked. */ }
+      return next;
+    });
+  };
+
+  const removeTable = () => {
+    setTableCount((count) => {
+      if (count <= 1) return count;
+      const next = count - 1;
+      setTableStatuses((current) => {
+        const { [count]: _removed, ...rest } = current;
+        return rest;
+      });
+      try { window.localStorage.setItem('noir-house-table-count', String(next)); } catch { /* Local preference storage may be blocked. */ }
+      return next;
+    });
+  };
 
   const activeTileOrder = departmentTileLayouts[activeDepartment] ?? defaultDashboardTileOrder;
   const tileOrder = (tile: DashboardTileId) => 10 + activeTileOrder.indexOf(tile);
@@ -2171,8 +2208,32 @@ export default function Home() {
                   <h2 id="restaurant-tables-title">Table cleared</h2>
                   <p>Restaurant team: tap a table when it&rsquo;s cleared. Kitchen is notified automatically.</p>
                 </div>
-                <span className="table-cleared-count">{Object.values(tableStatuses).filter((status) => status === 'Cleared').length} cleared</span>
+                <div className="restaurant-tables-controls">
+                  <span className="table-cleared-count">{Object.values(tableStatuses).filter((status) => status === 'Cleared').length} cleared</span>
+                  <button
+                    type="button"
+                    className={`table-edit-toggle ${editingTables ? 'active' : ''}`}
+                    onClick={() => setEditingTables((open) => !open)}
+                    aria-pressed={editingTables}
+                  >
+                    {editingTables ? 'Done' : 'Edit tables'}
+                  </button>
+                </div>
               </div>
+              {editingTables && (
+                <div className="table-count-editor">
+                  <span>Number of tables</span>
+                  <div className="table-count-stepper">
+                    <button type="button" onClick={removeTable} disabled={tableCount <= 1} aria-label="Remove a table">
+                      <Minus size={14} />
+                    </button>
+                    <strong>{tableCount}</strong>
+                    <button type="button" onClick={addTable} aria-label="Add a table">
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="restaurant-table-grid" aria-live="polite">
                 {restaurantTables.map((table) => {
                   const cleared = tableStatuses[table] === 'Cleared';
