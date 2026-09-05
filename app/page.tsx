@@ -132,6 +132,8 @@ const housekeepingRooms = [
   301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
 ];
 
+const restaurantTables = Array.from({ length: 20 }, (_, index) => index + 1);
+
 const defaultDashboardTileOrder: DashboardTileId[] = ['pinboard', 'guest', 'handover', 'management', 'operations', 'planner'];
 const dashboardTileLabels: Record<DashboardTileId, string> = {
   pinboard: 'Department pinboard', guest: 'Guest request alert', handover: 'Shift handover',
@@ -474,6 +476,8 @@ export default function Home() {
     205: 'Ready',
   });
   const [roomStatusNotice, setRoomStatusNotice] = useState('');
+  const [tableStatuses, setTableStatuses] = useState<Record<number, 'Waiting' | 'Away'>>({});
+  const [tableStatusNotice, setTableStatusNotice] = useState('');
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
   const [handoverDraft, setHandoverDraft] = useState('');
   const [handoverImportant, setHandoverImportant] = useState(false);
@@ -936,6 +940,31 @@ export default function Home() {
     setRoomStatusNotice(`Room ${room} sent to Front of House as ready.`);
     if (gentleSounds) playPing(false);
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
+  };
+
+  const markTableAway = (table: number) => {
+    if (tableStatuses[table] === 'Away') return;
+    const time = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    setTableStatuses((current) => ({ ...current, [table]: 'Away' }));
+    setMessages((current) => [
+      {
+        id: Date.now(),
+        from: 'Restaurant',
+        to: 'Kitchen',
+        text: `Food is away for table ${table}.`,
+        time,
+        unread: true,
+        urgent: false,
+      },
+      ...current,
+    ]);
+    setTableStatusNotice(`Table ${table} marked away and Kitchen notified.`);
+    if (gentleSounds) playPing(false);
+    window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
 
   const addAppointment = (event: FormEvent) => {
@@ -2114,6 +2143,37 @@ export default function Home() {
               {roomStatusNotice && <div className="room-status-notice"><ShieldCheck size={15} /> {roomStatusNotice}</div>}
             </section>
           )}
+          {activeDepartment === 'Restaurant' && (
+            <section className="restaurant-tables glass-panel dashboard-movable" style={{ order: tileOrder('handover') - 1 }} aria-labelledby="restaurant-tables-title">
+              <div className="section-heading restaurant-tables-heading">
+                <div>
+                  <span className="eyebrow"><UtensilsCrossed size={13} /> Table service</span>
+                  <h2 id="restaurant-tables-title">Food away</h2>
+                  <p>Tap the table number as the food leaves the kitchen. Kitchen receives a logged update.</p>
+                </div>
+                <span className="table-away-count">{Object.values(tableStatuses).filter((status) => status === 'Away').length} away</span>
+              </div>
+              <div className="restaurant-table-grid" aria-live="polite">
+                {restaurantTables.map((table) => {
+                  const away = tableStatuses[table] === 'Away';
+                  return (
+                    <button
+                      key={table}
+                      type="button"
+                      className={away ? 'away' : ''}
+                      disabled={away}
+                      onClick={() => markTableAway(table)}
+                      aria-label={away ? `Table ${table} food is away` : `Mark food away for table ${table} and notify Kitchen`}
+                    >
+                      <strong>{table}</strong>
+                      {away && <span>Away</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {tableStatusNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {tableStatusNotice}</div>}
+            </section>
+          )}
           {canAccessGuestRequests && featuredGuestRequest && (
             <section className={`guest-request-alert glass-panel dashboard-movable ${featuredGuestRequest.urgent ? 'urgent' : ''}`} style={{ order: tileOrder('guest') }} aria-live={featuredGuestRequest.urgent ? 'assertive' : 'polite'}>
               <span className="guest-request-alert-icon"><ConciergeBell size={17} /></span>
@@ -2818,6 +2878,12 @@ export default function Home() {
                     <X size={12} />
                   </button>
                 </div>
+              )}
+              {dictating && (
+                <p className="dictation-status" role="status" aria-live="polite">
+                  <span aria-hidden="true" />
+                  Voice to text is listening
+                </p>
               )}
               <div className="composer-footer">
                 <div className="composer-tools">
