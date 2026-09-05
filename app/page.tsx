@@ -175,7 +175,7 @@ const initialMessages: HotelMessage[] = [
     id: 3,
     from: 'Housekeeping',
     to: 'Front of House',
-    text: 'Room 235 is inspected and ready for the waiting guest.',
+    text: 'Room 235 has been cleaned and is ready for the waiting guest.',
     time: '19:35',
     unread: true,
     urgent: true,
