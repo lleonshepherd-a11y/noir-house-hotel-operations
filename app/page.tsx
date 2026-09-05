@@ -1085,18 +1085,21 @@ export default function Home() {
     setComposerOpen(false);
   };
 
-  const saveBoardStatus = async (type: 'housekeeping_room' | 'restaurant_table', itemNumber: number, status: 'pending' | 'ready' | 'away') => {
-    if (!staffSessionToken || connectedDepartment !== activeDepartment) {
-      throw new Error(`Connect the ${activeDepartment} department PIN to save this change.`);
-    }
-    const response = await fetch('/api/status-board', {
-      method: 'PUT',
-      headers: { authorization: `Bearer ${staffSessionToken}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ type, itemNumber, status }),
-    });
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({})) as { error?: string };
-      throw new Error(result.error || 'The change could not be saved. Please try again.');
+  const saveBoardStatus = async (type: 'housekeeping_room' | 'restaurant_table', itemNumber: number, status: 'pending' | 'ready' | 'away'): Promise<string | null> => {
+    if (!staffSessionToken || connectedDepartment !== activeDepartment) return null;
+    try {
+      const response = await fetch('/api/status-board', {
+        method: 'PUT',
+        headers: { authorization: `Bearer ${staffSessionToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ type, itemNumber, status }),
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({})) as { error?: string };
+        return result.error || 'the change was not saved to the shared board.';
+      }
+      return null;
+    } catch {
+      return 'the change was not saved to the shared board.';
     }
   };
 
@@ -1108,13 +1111,7 @@ export default function Home() {
       hour12: false,
     }).format(new Date());
     setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
-    try {
-      await saveBoardStatus('housekeeping_room', room, 'ready');
-    } catch (error) {
-      setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
-      setRoomStatusNotice(error instanceof Error ? error.message : 'Room status was not saved.');
-      return;
-    }
+    const saveError = await saveBoardStatus('housekeeping_room', room, 'ready');
     setMessages((current) => [
       {
         id: Date.now(),
@@ -1127,7 +1124,7 @@ export default function Home() {
       },
       ...current,
     ]);
-    setRoomStatusNotice(`Room ${room} sent to Front of House as ready.`);
+    setRoomStatusNotice(saveError ? `Room ${room} sent to Front of House as ready (${saveError})` : `Room ${room} sent to Front of House as ready.`);
     if (gentleSounds) playPing(false);
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
@@ -1135,15 +1132,9 @@ export default function Home() {
   const undoRoomReady = async (room: number) => {
     const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
     setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
-    try {
-      await saveBoardStatus('housekeeping_room', room, 'pending');
-    } catch (error) {
-      setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
-      setRoomStatusNotice(error instanceof Error ? error.message : 'The undo was not saved.');
-      return;
-    }
+    const saveError = await saveBoardStatus('housekeeping_room', room, 'pending');
     setMessages((current) => [{ id: Date.now(), from: 'Housekeeping', to: 'Front of House', text: `Correction: room ${room} is not ready yet. Please wait for a new cleaning confirmation.`, time, unread: true, urgent: false }, ...current]);
-    setRoomStatusNotice(`Room ${room} returned to awaiting confirmation. Front of House notified.`);
+    setRoomStatusNotice(saveError ? `Room ${room} returned to awaiting confirmation (${saveError})` : `Room ${room} returned to awaiting confirmation. Front of House notified.`);
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
@@ -1155,13 +1146,7 @@ export default function Home() {
       hour12: false,
     }).format(new Date());
     setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
-    try {
-      await saveBoardStatus('restaurant_table', table, 'away');
-    } catch (error) {
-      setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
-      setTableStatusNotice(error instanceof Error ? error.message : 'Table status was not saved.');
-      return;
-    }
+    const saveError = await saveBoardStatus('restaurant_table', table, 'away');
     setMessages((current) => [
       {
         id: Date.now(),
@@ -1174,7 +1159,7 @@ export default function Home() {
       },
       ...current,
     ]);
-    setTableStatusNotice(`Table ${table} marked cleared and Kitchen notified.`);
+    setTableStatusNotice(saveError ? `Table ${table} marked cleared and Kitchen notified (${saveError})` : `Table ${table} marked cleared and Kitchen notified.`);
     if (gentleSounds) playPing(false);
     window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
@@ -1182,15 +1167,9 @@ export default function Home() {
   const undoTableCleared = async (table: number) => {
     const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
     setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
-    try {
-      await saveBoardStatus('restaurant_table', table, 'pending');
-    } catch (error) {
-      setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
-      setTableStatusNotice(error instanceof Error ? error.message : 'The undo was not saved.');
-      return;
-    }
+    const saveError = await saveBoardStatus('restaurant_table', table, 'pending');
     setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: cleared status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
-    setTableStatusNotice(`Table ${table} returned to occupied. Kitchen notified.`);
+    setTableStatusNotice(saveError ? `Table ${table} returned to occupied (${saveError})` : `Table ${table} returned to occupied. Kitchen notified.`);
     window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
 
