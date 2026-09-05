@@ -191,7 +191,7 @@ const initialMessages: HotelMessage[] = [
   },
   { id: 5, from: 'Maintenance', to: 'Housekeeping', text: 'The third-floor linen-room dryer is repaired, tested and ready to use.', time: '19:27', unread: true, urgent: false },
   { id: 6, from: 'Concierge', to: 'Front of House', text: 'The airport car for room 408 has arrived at the main entrance.', time: '19:24', unread: true, urgent: false },
-  { id: 7, from: 'Restaurant', to: 'Kitchen', text: 'Food away for table 8. Two mains require the confirmed dairy-free garnish.', time: '19:20', unread: true, urgent: false },
+  { id: 7, from: 'Restaurant', to: 'Kitchen', text: 'Table 5 mains away.', time: '19:20', unread: true, urgent: false },
   { id: 201, from: 'Front of House', to: 'General Manager', text: 'Guest refund approval requested after a delayed room handover.', time: '18:58', unread: true, urgent: true },
   { id: 202, from: 'Reception', to: 'General Manager', text: 'Room upgrade decision needed for a service recovery.', time: '18:46', unread: true, urgent: false },
   { id: 203, from: 'Restaurant', to: 'General Manager', text: 'Please decide whether table 14 can be released for the waiting party.', time: '18:31', unread: true, urgent: false },
