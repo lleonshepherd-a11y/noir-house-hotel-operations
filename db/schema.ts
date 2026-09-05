@@ -58,6 +58,7 @@ export const schemaStatements = [
     urgency TEXT NOT NULL DEFAULT 'normal' CHECK(urgency IN ('normal','urgent','emergency')),
     message_type TEXT NOT NULL DEFAULT 'message' CHECK(message_type IN ('message','request','approval','decision','completion')),
     reply_to_message_id TEXT REFERENCES messages(id),
+    client_message_id TEXT,
     created_at TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS message_receipts (
@@ -195,7 +196,53 @@ export const schemaStatements = [
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS operational_statuses (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    board_type TEXT NOT NULL CHECK(board_type IN ('housekeeping_room','restaurant_table')),
+    item_number INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('pending','ready','away')),
+    changed_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE(hotel_id, department_id, board_type, item_number)
+  )`,
+  `CREATE TABLE IF NOT EXISTS message_deliveries (
+    message_id TEXT NOT NULL REFERENCES messages(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    state TEXT NOT NULL DEFAULT 'queued' CHECK(state IN ('queued','delivered','failed')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_attempt_at TEXT,
+    next_attempt_at TEXT,
+    last_error TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY(message_id, department_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS realtime_events (
+    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT REFERENCES departments(id),
+    event_type TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS urgent_escalations (
+    id TEXT PRIMARY KEY,
+    message_id TEXT NOT NULL REFERENCES messages(id),
+    recipient_department_id TEXT NOT NULL REFERENCES departments(id),
+    escalation_department_id TEXT NOT NULL REFERENCES departments(id),
+    due_at TEXT NOT NULL,
+    escalated_at TEXT,
+    cancelled_at TEXT,
+    created_at TEXT NOT NULL,
+    UNIQUE(message_id, recipient_department_id)
+  )`,
   `CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_sender_client_id ON messages(sender_staff_id, client_message_id) WHERE client_message_id IS NOT NULL`,
   `CREATE INDEX IF NOT EXISTS idx_receipts_department_viewed ON message_receipts(department_id, viewed_at)`,
   `CREATE INDEX IF NOT EXISTS idx_tasks_department_status ON tasks(assigned_department_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_pins_department_active ON department_pins(department_id, active, position)`,
@@ -206,6 +253,10 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_watchers_staff ON conversation_watchers(staff_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_decisions_status ON management_decisions(status, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_planner_hotel_start ON planner_entries(hotel_id, starts_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_operational_statuses_board ON operational_statuses(hotel_id, department_id, board_type, updated_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_message_deliveries_department_state ON message_deliveries(department_id, state, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_realtime_events_department_sequence ON realtime_events(hotel_id, department_id, sequence)`,
+  `CREATE INDEX IF NOT EXISTS idx_urgent_escalations_due ON urgent_escalations(due_at, escalated_at, cancelled_at)`,
 ] as const;
 
 export async function ensureSchema(db: D1Database) {

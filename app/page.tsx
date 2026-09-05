@@ -37,6 +37,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
 const departments = [
   { name: 'General Manager', icon: Crown, online: 1, accent: '#cdbb8c' },
@@ -108,6 +109,7 @@ type HotelMessage = {
   attachmentName?: string;
   voiceNoteUrl?: string;
   voiceNoteDuration?: number;
+  deliveryStatus?: 'Waiting offline' | 'Queued' | 'Delivered' | 'Failed';
 };
 
 type BrowserSpeechRecognition = {
@@ -146,7 +148,7 @@ const initialMessages: HotelMessage[] = [
     id: 101,
     from: 'General Manager',
     to: 'Kitchen',
-    text: "Prepare tomorrow's menu and send it back for approval.",
+    text: "Please send tomorrow's menu and allergen notes for approval before 21:00.",
     time: '19:44',
     unread: false,
     urgent: false,
@@ -155,7 +157,7 @@ const initialMessages: HotelMessage[] = [
     id: 1,
     from: 'Front of House',
     to: 'Restaurant',
-    text: 'The Carrington party has arrived — 6 guests, table 12.',
+    text: 'The Carrington party has arrived — six guests for table 12.',
     time: '19:42',
     unread: true,
     urgent: false,
@@ -164,16 +166,16 @@ const initialMessages: HotelMessage[] = [
     id: 2,
     from: 'Kitchen',
     to: 'Restaurant',
-    text: 'Sea bass special: 4 portions remaining for this evening.',
+    text: 'Sea bass special: four portions remain. Please confirm availability before taking another order.',
     time: '19:38',
     unread: true,
     urgent: false,
   },
   {
     id: 3,
-    from: 'Restaurant',
+    from: 'Housekeeping',
     to: 'Front of House',
-    text: 'Allergy confirmation needed for table 8 before mains.',
+    text: 'Room 235 is inspected and ready for the waiting guest.',
     time: '19:35',
     unread: true,
     urgent: true,
@@ -187,6 +189,9 @@ const initialMessages: HotelMessage[] = [
     unread: false,
     urgent: false,
   },
+  { id: 5, from: 'Maintenance', to: 'Housekeeping', text: 'The third-floor linen-room dryer is repaired, tested and ready to use.', time: '19:27', unread: true, urgent: false },
+  { id: 6, from: 'Concierge', to: 'Front of House', text: 'The airport car for room 408 has arrived at the main entrance.', time: '19:24', unread: true, urgent: false },
+  { id: 7, from: 'Restaurant', to: 'Kitchen', text: 'Food away for table 8. Two mains require the confirmed dairy-free garnish.', time: '19:20', unread: true, urgent: false },
   { id: 201, from: 'Front of House', to: 'General Manager', text: 'Guest refund approval requested after a delayed room handover.', time: '18:58', unread: true, urgent: true },
   { id: 202, from: 'Reception', to: 'General Manager', text: 'Room upgrade decision needed for a service recovery.', time: '18:46', unread: true, urgent: false },
   { id: 203, from: 'Restaurant', to: 'General Manager', text: 'Please decide whether table 14 can be released for the waiting party.', time: '18:31', unread: true, urgent: false },
@@ -440,6 +445,12 @@ export default function Home() {
   const [attachment, setAttachment] = useState('');
   const [attachmentPreview, setAttachmentPreview] = useState('');
   const [messageError, setMessageError] = useState('');
+  const [messageDeliveryNotice, setMessageDeliveryNotice] = useState('');
+  const [staffSessionToken, setStaffSessionToken] = useState('');
+  const [connectedDepartment, setConnectedDepartment] = useState('');
+  const [departmentDirectory, setDepartmentDirectory] = useState<Array<{ id: string; name: string }>>([]);
+  const [departmentPin, setDepartmentPin] = useState('');
+  const [departmentSessionStatus, setDepartmentSessionStatus] = useState('Not connected');
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [voiceNoteUrl, setVoiceNoteUrl] = useState('');
@@ -604,6 +615,41 @@ export default function Home() {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  const signInDepartment = async (event: FormEvent) => {
+    event.preventDefault();
+    setDepartmentSessionStatus('Checking PIN…');
+    try {
+      const response = await fetch('/api/staff-session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ department: activeDepartment, pin: departmentPin }),
+      });
+      const result = await response.json() as { token?: string; error?: string };
+      if (!response.ok || !result.token) throw new Error(result.error || 'Unable to connect');
+      window.sessionStorage.setItem('noir-house-staff-session', result.token);
+      setStaffSessionToken(result.token);
+      setConnectedDepartment(activeDepartment);
+      setDepartmentPin('');
+      setDepartmentSessionStatus(`${activeDepartment} connected`);
+      const departmentsResponse = await fetch('/api/departments', { headers: { authorization: `Bearer ${result.token}` } });
+      if (departmentsResponse.ok) {
+        const data = await departmentsResponse.json() as { departments: Array<{ id: string; name: string }> };
+        setDepartmentDirectory(data.departments);
+      }
+    } catch (error) {
+      setDepartmentSessionStatus(error instanceof Error ? error.message : 'Unable to connect');
+    }
+  };
+
+  const signOutDepartment = async () => {
+    if (staffSessionToken) await fetch('/api/staff-session', { method: 'DELETE', headers: { authorization: `Bearer ${staffSessionToken}` } }).catch(() => undefined);
+    window.sessionStorage.removeItem('noir-house-staff-session');
+    setStaffSessionToken('');
+    setConnectedDepartment('');
+    setDepartmentDirectory([]);
+    setDepartmentSessionStatus('Not connected');
+  };
 
   useEffect(() => {
     try {
@@ -897,7 +943,57 @@ export default function Home() {
     : 0;
   const staffEncouragement = encouragementOptions[encouragementSlot % encouragementOptions.length];
 
-  const sendMessage = (event: FormEvent) => {
+  useEffect(() => {
+    const token = window.sessionStorage.getItem('noir-house-staff-session') ?? '';
+    setStaffSessionToken(token);
+    if (!token) return;
+    const flush = () => void flushMessageQueue(token).then(({ remaining }) => setMessageDeliveryNotice(remaining ? `${remaining} message${remaining === 1 ? '' : 's'} waiting to send` : 'All queued messages sent'));
+    flush();
+    const stop = watchConnectivity(flush);
+    void fetch('/api/departments', { headers: { authorization: `Bearer ${token}` } })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data: { departments: Array<{ id: string; name: string }> }) => setDepartmentDirectory(data.departments))
+      .catch(() => setMessageDeliveryNotice('Department session needs renewing'));
+    void fetch('/api/staff-session', { headers: { authorization: `Bearer ${token}` } })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data: { departmentName?: string | null }) => {
+        if (data.departmentName) {
+          setConnectedDepartment(data.departmentName);
+          setDepartmentSessionStatus(`${data.departmentName} connected`);
+        }
+      })
+      .catch(() => setDepartmentSessionStatus('Department session needs renewing'));
+    return stop;
+  }, []);
+
+  useEffect(() => {
+    if (!staffSessionToken || connectedDepartment !== activeDepartment) return;
+    const type = activeDepartment === 'Housekeeping'
+      ? 'housekeeping_room'
+      : activeDepartment === 'Restaurant'
+        ? 'restaurant_table'
+        : null;
+    if (!type) return;
+    void fetch(`/api/status-board?type=${type}`, { headers: { authorization: `Bearer ${staffSessionToken}` } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load saved statuses');
+        return response.json() as Promise<{ results: Array<{ item_number: number; status: string }> }>;
+      })
+      .then(({ results }) => {
+        if (type === 'housekeeping_room') {
+          setRoomStatuses(Object.fromEntries(results.map((item) => [item.item_number, item.status === 'ready' ? 'Ready' : 'To clean'])));
+        } else {
+          setTableStatuses(Object.fromEntries(results.map((item) => [item.item_number, item.status === 'away' ? 'Cleared' : 'Occupied'])));
+        }
+      })
+      .catch(() => {
+        const notice = 'Saved statuses could not be loaded. Check the department connection.';
+        if (type === 'housekeeping_room') setRoomStatusNotice(notice);
+        else setTableStatusNotice(notice);
+      });
+  }, [activeDepartment, connectedDepartment, staffSessionToken]);
+
+  const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
     if (!draft.trim()) return;
     if (assignAsTask && recipient === 'All departments') {
@@ -912,7 +1008,7 @@ export default function Home() {
       );
       return;
     }
-    const next = {
+    const next: HotelMessage = {
       id: Date.now(),
       from: activeDepartment,
       to: recipient,
@@ -928,7 +1024,31 @@ export default function Home() {
       attachmentName: attachment || undefined,
       voiceNoteUrl: voiceNoteUrl || undefined,
       voiceNoteDuration: voiceNoteUrl ? voiceNoteDuration : undefined,
+      deliveryStatus: navigator.onLine ? 'Queued' as const : 'Waiting offline' as const,
     };
+    const recipientDepartmentIds = recipient === 'All departments'
+      ? departmentDirectory.filter((department) => department.name !== activeDepartment).map((department) => department.id)
+      : departmentDirectory.filter((department) => department.name === recipient).map((department) => department.id);
+    if (staffSessionToken && recipientDepartmentIds.length) {
+      await queueMessage({
+        recipientDepartmentIds,
+        subject: replyContext ? `Reply to ${replyContext.from}` : null,
+        message: draft.trim(),
+        urgency: urgent ? 'urgent' : 'normal',
+        messageType: assignAsTask ? 'request' : 'message',
+        kind: 'department',
+      });
+      try {
+        const result = await flushMessageQueue(staffSessionToken);
+        next.deliveryStatus = result.remaining ? 'Waiting offline' : 'Queued';
+        setMessageDeliveryNotice(result.remaining ? 'Saved safely — waiting for connection' : 'Message queued for delivery');
+      } catch {
+        next.deliveryStatus = 'Failed';
+        setMessageDeliveryNotice('Message not sent — please review it and try again');
+      }
+    } else {
+      setMessageDeliveryNotice('Demo message only — department PIN connection is still required');
+    }
     setMessages((current) => [next, ...current]);
     if (assignAsTask && recipient !== 'All departments') {
       setAssignedTasks((current) => [
@@ -965,7 +1085,22 @@ export default function Home() {
     setComposerOpen(false);
   };
 
-  const markRoomReady = (room: number) => {
+  const saveBoardStatus = async (type: 'housekeeping_room' | 'restaurant_table', itemNumber: number, status: 'pending' | 'ready' | 'away') => {
+    if (!staffSessionToken || connectedDepartment !== activeDepartment) {
+      throw new Error(`Connect the ${activeDepartment} department PIN to save this change.`);
+    }
+    const response = await fetch('/api/status-board', {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${staffSessionToken}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ type, itemNumber, status }),
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      throw new Error(result.error || 'The change could not be saved. Please try again.');
+    }
+  };
+
+  const markRoomReady = async (room: number) => {
     if (roomStatuses[room] === 'Ready') return;
     const time = new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
@@ -973,6 +1108,13 @@ export default function Home() {
       hour12: false,
     }).format(new Date());
     setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
+    try {
+      await saveBoardStatus('housekeeping_room', room, 'ready');
+    } catch (error) {
+      setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
+      setRoomStatusNotice(error instanceof Error ? error.message : 'Room status was not saved.');
+      return;
+    }
     setMessages((current) => [
       {
         id: Date.now(),
@@ -990,15 +1132,22 @@ export default function Home() {
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
-  const undoRoomReady = (room: number) => {
+  const undoRoomReady = async (room: number) => {
     const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
     setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
+    try {
+      await saveBoardStatus('housekeeping_room', room, 'pending');
+    } catch (error) {
+      setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
+      setRoomStatusNotice(error instanceof Error ? error.message : 'The undo was not saved.');
+      return;
+    }
     setMessages((current) => [{ id: Date.now(), from: 'Housekeeping', to: 'Front of House', text: `Correction: room ${room} is not ready yet. Please wait for a new cleaning confirmation.`, time, unread: true, urgent: false }, ...current]);
     setRoomStatusNotice(`Room ${room} returned to awaiting confirmation. Front of House notified.`);
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
-  const markTableCleared = (table: number) => {
+  const markTableCleared = async (table: number) => {
     if (tableStatuses[table] === 'Cleared') return;
     const time = new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
@@ -1006,6 +1155,13 @@ export default function Home() {
       hour12: false,
     }).format(new Date());
     setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
+    try {
+      await saveBoardStatus('restaurant_table', table, 'away');
+    } catch (error) {
+      setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
+      setTableStatusNotice(error instanceof Error ? error.message : 'Table status was not saved.');
+      return;
+    }
     setMessages((current) => [
       {
         id: Date.now(),
@@ -1023,9 +1179,16 @@ export default function Home() {
     window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
 
-  const undoTableCleared = (table: number) => {
+  const undoTableCleared = async (table: number) => {
     const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
     setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
+    try {
+      await saveBoardStatus('restaurant_table', table, 'pending');
+    } catch (error) {
+      setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
+      setTableStatusNotice(error instanceof Error ? error.message : 'The undo was not saved.');
+      return;
+    }
     setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: cleared status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
     setTableStatusNotice(`Table ${table} returned to occupied. Kitchen notified.`);
     window.setTimeout(() => setTableStatusNotice(''), 4000);
@@ -1584,12 +1747,20 @@ export default function Home() {
           {utilityPanel === 'security' && (
             <div className="security-summary">
               <article><ShieldCheck size={17} /><div><strong>Accountable activity</strong><span>Message and task opening times remain visible in their conversations.</span></div></article>
-              <article><KeyRound size={17} /><div><strong>PIN only when required</strong><span>The shared console stays active; a staff PIN is reserved for privileged actions.</span></div></article>
+              <article><KeyRound size={17} /><div><strong>Department PIN session</strong><span>Messages and privileged actions are attributed to the connected department console.</span></div></article>
               <article><ListChecks size={17} /><div><strong>No silent deletion</strong><span>Production records will be archived with a named audit event.</span></div></article>
             </div>
           )}
           {utilityPanel === 'settings' && (
             <div className="settings-list">
+              <form className="department-session-form" onSubmit={signInDepartment}>
+                <span><strong>Department connection</strong><small>{departmentSessionStatus}</small></span>
+                {staffSessionToken ? (
+                  <button type="button" onClick={signOutDepartment}>Disconnect</button>
+                ) : (
+                  <div><input type="password" inputMode="numeric" pattern="[0-9]{4,8}" value={departmentPin} onChange={(event) => setDepartmentPin(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder={`${activeDepartment} PIN`} aria-label={`${activeDepartment} PIN`} /><button type="submit" disabled={departmentPin.length < 4}>Connect</button></div>
+                )}
+              </form>
               <label><span><strong>Notification sounds</strong><small>Short chime normally · calm distinct pattern when urgent</small></span><input type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
               <label><span><strong>Calm interface motion</strong><small>Subtle visual movement and reminders</small></span><input type="checkbox" checked={calmMotion} onChange={(event) => setCalmMotion(event.target.checked)} /></label>
             </div>
@@ -2420,6 +2591,9 @@ export default function Home() {
                 </div>
                 <div className="message-list">
                   {messages.slice(0, 4).map((message) => {
+                    const senderDepartmentName = message.from === 'Reception' ? 'Front of House' : message.from;
+                    const senderDepartment = departments.find((department) => department.name === senderDepartmentName);
+                    const SenderDepartmentIcon = senderDepartment?.icon ?? MessageSquareText;
                     const task = assignedTasks.find((item) => item.id === message.id);
                     const taskIndex = task ? taskStatusOrder.indexOf(task.status) : -1;
                     const canAdvanceTask = Boolean(
@@ -2434,12 +2608,12 @@ export default function Home() {
                         className={`message-row ${message.urgent ? 'urgent' : ''} ${task ? 'task-message' : ''}`}
                         key={message.id}
                       >
-                        <span className="message-avatar">
-                          {message.from
-                            .split(' ')
-                            .map((word) => word[0])
-                            .join('')
-                            .slice(0, 2)}
+                        <span
+                          className="message-avatar department-message-icon"
+                          style={{ color: senderDepartment?.accent }}
+                          aria-label={`${senderDepartmentName} message`}
+                        >
+                          <SenderDepartmentIcon size={17} strokeWidth={1.8} aria-hidden="true" />
                         </span>
                         <div className="message-copy">
                           <div>
@@ -2459,6 +2633,11 @@ export default function Home() {
                               <audio controls preload="metadata" src={message.voiceNoteUrl}>Your browser cannot play this voice note.</audio>
                             </div>
                           ) : <p>{message.text}</p>}
+                          {message.deliveryStatus && message.from === activeDepartment && (
+                            <div className={`message-delivery-state ${message.deliveryStatus === 'Failed' ? 'failed' : ''}`}>
+                              <ShieldCheck size={12} /> {message.deliveryStatus}
+                            </div>
+                          )}
                           {!message.seenAt && message.to === activeDepartment && (
                             <button
                               type="button"
@@ -2852,7 +3031,7 @@ export default function Home() {
               }}><Plus size={15} /> Add entry for this day</button>}
             </section>
           )}
-          <footer className="product-credit" style={{ order: 100 }}>
+          <footer className="product-credit" data-deployment-check="github-main-20260905" style={{ order: 100 }}>
             <a href="https://freedomservices.uk/" target="_blank" rel="noopener noreferrer">
               Powered by Freedom Services Online
             </a>
@@ -2956,6 +3135,7 @@ export default function Home() {
                   <ShieldCheck size={13} /> {messageError}
                 </p>
               )}
+              {messageDeliveryNotice && <p className="message-delivery-notice" role="status" aria-live="polite"><ShieldCheck size={13} /> {messageDeliveryNotice}</p>}
               {attachment && (
                 <div className="attachment-chip">
                   <Paperclip size={13} />

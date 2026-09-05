@@ -51,8 +51,14 @@ export async function POST(request: Request) {
       messageType?: 'message' | 'request' | 'approval' | 'decision' | 'completion';
       replyToMessageId?: string;
       kind?: 'department' | 'direct' | 'approval';
+      clientMessageId?: string;
     };
     if (!body.message?.trim()) return Response.json({ error: 'Message is required' }, { status: 400 });
+    if (!body.clientMessageId?.trim()) return Response.json({ error: 'A client message ID is required for reliable delivery' }, { status: 400 });
+    const duplicate = await db.prepare(`SELECT id, conversation_id, created_at FROM messages
+      WHERE sender_staff_id = ? AND client_message_id = ?`).bind(identity.staffId, body.clientMessageId.trim())
+      .first<{ id: string; conversation_id: string; created_at: string }>();
+    if (duplicate) return Response.json({ conversationId: duplicate.conversation_id, messageId: duplicate.id, createdAt: duplicate.created_at, duplicate: true });
     const now = new Date().toISOString();
     const conversationId = body.conversationId ?? crypto.randomUUID();
     if (!body.conversationId) {
@@ -60,6 +66,7 @@ export async function POST(request: Request) {
       for (const departmentId of body.recipientDepartmentIds) {
         await assertDepartmentInHotel(db, departmentId, identity.hotelId);
       }
+      const members = [...new Set([identity.departmentId, ...body.recipientDepartmentIds])];
       await db.batch([
         db.prepare(`INSERT INTO conversations (id, hotel_id, kind, subject, status, created_by_staff_id, created_at, updated_at)
           VALUES (?, ?, ?, ?, 'open', ?, ?, ?)`).bind(
@@ -71,7 +78,7 @@ export async function POST(request: Request) {
           now,
           now,
         ),
-        ...body.recipientDepartmentIds.map((departmentId) =>
+        ...members.map((departmentId) =>
           db.prepare('INSERT INTO conversation_departments (conversation_id, department_id) VALUES (?, ?)').bind(conversationId, departmentId),
         ),
       ]);
@@ -86,21 +93,43 @@ export async function POST(request: Request) {
       }
     }
     const messageId = crypto.randomUUID();
-    await db
-      .prepare(`INSERT INTO messages (id, conversation_id, sender_staff_id, body, urgency, message_type, reply_to_message_id, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`) 
-      .bind(
+    const recipientDepartments = await db.prepare('SELECT department_id FROM conversation_departments WHERE conversation_id = ? AND department_id != ?')
+      .bind(conversationId, identity.departmentId).all<{ department_id: string }>();
+    const urgency = body.urgency ?? 'normal';
+    const eventPayload = JSON.stringify({ conversationId, urgency, senderDepartmentId: identity.departmentId });
+    const deliveryStatements = recipientDepartments.results.flatMap(({ department_id: departmentId }) => {
+      const statements = [
+        db.prepare(`INSERT INTO message_deliveries
+          (message_id, department_id, state, attempts, created_at, updated_at) VALUES (?, ?, 'queued', 0, ?, ?)`)
+          .bind(messageId, departmentId, now, now),
+        db.prepare(`INSERT INTO realtime_events
+          (hotel_id, department_id, event_type, entity_type, entity_id, payload_json, created_at)
+          VALUES (?, ?, 'message.queued', 'message', ?, ?, ?)`).bind(identity.hotelId, departmentId, messageId, eventPayload, now),
+      ];
+      if (urgency === 'urgent' || urgency === 'emergency') {
+        statements.push(db.prepare(`INSERT INTO urgent_escalations
+          (id, message_id, recipient_department_id, escalation_department_id, due_at, created_at)
+          SELECT ?, ?, ?, id, ?, ? FROM departments WHERE hotel_id = ? AND slug = 'general-manager'`)
+          .bind(crypto.randomUUID(), messageId, departmentId, new Date(Date.now() + (urgency === 'emergency' ? 60_000 : 5 * 60_000)).toISOString(), now, identity.hotelId));
+      }
+      return statements;
+    });
+    await db.batch([
+      db.prepare(`INSERT INTO messages (id, conversation_id, sender_staff_id, body, urgency, message_type, reply_to_message_id, created_at, client_message_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
         messageId,
         conversationId,
         identity.staffId,
         body.message.trim(),
-        body.urgency ?? 'normal',
+        urgency,
         body.messageType ?? 'message',
         body.replyToMessageId ?? null,
         now,
-      )
-      .run();
-    await db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').bind(now, conversationId).run();
+        body.clientMessageId.trim(),
+      ),
+      db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').bind(now, conversationId),
+      ...deliveryStatements,
+    ]);
     await appendAuditEvent(db, {
       hotelId: identity.hotelId,
       actorStaffId: identity.staffId,
@@ -108,9 +137,9 @@ export async function POST(request: Request) {
       action: 'message.sent',
       entityType: 'message',
       entityId: messageId,
-      metadata: { conversationId, urgency: body.urgency ?? 'normal' },
+      metadata: { conversationId, urgency, clientMessageId: body.clientMessageId.trim(), recipients: recipientDepartments.results.map((row) => row.department_id) },
     });
-    return Response.json({ conversationId, messageId, createdAt: now }, { status: 201 });
+    return Response.json({ conversationId, messageId, createdAt: now, delivery: 'queued' }, { status: 202 });
   } catch (error) {
     if (error instanceof Response) return error;
     return Response.json({ error: 'Unable to send message' }, { status: 500 });

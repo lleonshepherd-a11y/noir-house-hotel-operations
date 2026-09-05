@@ -45,6 +45,15 @@ export async function startStaffSession(db: D1Database, staffId: string, pin: st
   return { token, expiresAt, identity: toIdentity(staff) };
 }
 
+export async function startDepartmentSession(db: D1Database, departmentName: string, pin: string) {
+  const staff = await db.prepare(`SELECT s.id FROM staff s
+    JOIN departments d ON d.id = s.department_id
+    WHERE lower(d.name) = lower(?) AND s.active = 1
+    ORDER BY s.created_at ASC LIMIT 1`).bind(departmentName).first<{ id: string }>();
+  if (!staff) throw new Response('This department account has not been provisioned', { status: 401 });
+  return startStaffSession(db, staff.id, pin);
+}
+
 export async function requireStaffSession(db: D1Database, token: string | null): Promise<StaffIdentity> {
   if (!token) throw new Response('Staff PIN session required', { status: 401 });
   const tokenHash = await hashToken(token);

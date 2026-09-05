@@ -1,15 +1,13 @@
 import { env } from 'cloudflare:workers';
-import { ensureSchema } from '@/db/schema';
 
 interface HotelBindings {
   DB: D1Database;
   FILES: R2Bucket;
 }
 
-export async function getDatabase() {
+export function getDatabase() {
   const db = (env as unknown as HotelBindings).DB;
   if (!db) throw new Response('Database binding is unavailable', { status: 503 });
-  await ensureSchema(db);
   return db;
 }
 

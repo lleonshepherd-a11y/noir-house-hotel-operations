@@ -25,6 +25,11 @@ export async function POST(request: Request) {
     await db.prepare(`INSERT INTO message_receipts (message_id, department_id, ${column}, acted_by_staff_id)
       VALUES (?, ?, ?, ?) ON CONFLICT(message_id, department_id) DO UPDATE SET ${column} = excluded.${column}, acted_by_staff_id = excluded.acted_by_staff_id`)
       .bind(body.messageId, identity.departmentId, now, identity.staffId).run();
+    if (body.event === 'acknowledged') {
+      await db.prepare(`UPDATE urgent_escalations SET cancelled_at = ?
+        WHERE message_id = ? AND recipient_department_id = ? AND escalated_at IS NULL AND cancelled_at IS NULL`)
+        .bind(now, body.messageId, identity.departmentId).run();
+    }
     await appendAuditEvent(db, {
       hotelId: identity.hotelId,
       actorStaffId: identity.staffId,
