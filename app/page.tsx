@@ -2106,7 +2106,7 @@ export default function Home() {
                       aria-label={ready ? `Room ${room} is ready` : `Mark room ${room} clean and notify Front of House`}
                     >
                       <strong>{room}</strong>
-                      <span>{ready ? 'Ready' : 'Tap when clean'}</span>
+                      {ready && <span>Ready</span>}
                     </button>
                   );
                 })}
