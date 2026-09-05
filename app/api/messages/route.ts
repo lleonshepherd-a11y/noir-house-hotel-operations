@@ -1,5 +1,5 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
-import { assertAccess } from '@/lib/backend/policy';
+import { assertAccess, assertDepartmentInHotel } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
 import { isManagement } from '@/lib/backend/types';
@@ -57,6 +57,9 @@ export async function POST(request: Request) {
     const conversationId = body.conversationId ?? crypto.randomUUID();
     if (!body.conversationId) {
       if (!body.recipientDepartmentIds?.length) return Response.json({ error: 'Choose a recipient department' }, { status: 400 });
+      for (const departmentId of body.recipientDepartmentIds) {
+        await assertDepartmentInHotel(db, departmentId, identity.hotelId);
+      }
       await db.batch([
         db.prepare(`INSERT INTO conversations (id, hotel_id, kind, subject, status, created_by_staff_id, created_at, updated_at)
           VALUES (?, ?, ?, ?, 'open', ?, ?, ?)`).bind(

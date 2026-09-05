@@ -1,5 +1,5 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
-import { assertAccess } from '@/lib/backend/policy';
+import { assertAccess, assertDepartmentInHotel } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
 import type { Resource } from '@/lib/backend/types';
@@ -26,6 +26,7 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
     const identity = await requireStaffSession(db, bearerToken(request));
     const url = new URL(request.url);
     const departmentId = url.searchParams.get('departmentId') ?? identity.departmentId;
+    if (departmentId !== identity.departmentId) await assertDepartmentInHotel(db, departmentId, identity.hotelId);
     assertAccess(identity, 'read', resourcePolicy[name], { hotelId: identity.hotelId, departmentId });
     const rows = await listOperation(db, name, identity.hotelId, departmentId);
     return Response.json({ results: rows });
@@ -43,6 +44,7 @@ export async function POST(request: Request, context: { params: Promise<{ resour
     const identity = await requireStaffSession(db, bearerToken(request));
     const body = (await request.json()) as Record<string, unknown>;
     const departmentId = typeof body.departmentId === 'string' ? body.departmentId : identity.departmentId;
+    if (departmentId !== identity.departmentId) await assertDepartmentInHotel(db, departmentId, identity.hotelId);
     assertAccess(identity, 'create', resourcePolicy[name], { hotelId: identity.hotelId, departmentId });
     const created = await createOperation(db, name, identity, departmentId, body);
     await appendAuditEvent(db, {

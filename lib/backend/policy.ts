@@ -48,3 +48,11 @@ export function assertAccess(
     throw new Response('Forbidden', { status: 403 });
   }
 }
+
+export async function assertDepartmentInHotel(db: D1Database, departmentId: string, hotelId: string) {
+  const department = await db
+    .prepare('SELECT 1 FROM departments WHERE id = ? AND hotel_id = ?')
+    .bind(departmentId, hotelId)
+    .first();
+  if (!department) throw new Response('Forbidden', { status: 403 });
+}

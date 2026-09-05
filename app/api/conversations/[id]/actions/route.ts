@@ -1,4 +1,5 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
+import { assertDepartmentInHotel } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
 import { isManagement } from '@/lib/backend/types';
@@ -23,6 +24,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     else if (body.command === 'step_back') await db.prepare('UPDATE conversation_participation SET left_at = ? WHERE conversation_id = ? AND staff_id = ? AND left_at IS NULL').bind(now, conversationId, identity.staffId).run();
     else if (body.command === 'reassign') {
       if (!body.departmentId) return Response.json({ error: 'Department is required' }, { status: 400 });
+      await assertDepartmentInHotel(db, body.departmentId, identity.hotelId);
       await db.prepare('INSERT OR IGNORE INTO conversation_departments (conversation_id, department_id) VALUES (?, ?)').bind(conversationId, body.departmentId).run();
     } else if (body.command === 'decide') {
       if (!body.decisionId || !body.outcome) return Response.json({ error: 'Decision and outcome are required' }, { status: 400 });

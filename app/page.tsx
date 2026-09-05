@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   BellRing,
@@ -669,13 +669,18 @@ export default function Home() {
       .catch(() => undefined);
   }, []);
 
+  const isForActiveDepartment = useCallback(
+    (message: HotelMessage) =>
+      message.to === activeDepartment || message.to === 'All departments',
+    [activeDepartment],
+  );
   const unreadCount = useMemo(
-    () => messages.filter((message) => message.unread).length,
-    [messages],
+    () => messages.filter((message) => message.unread && isForActiveDepartment(message)).length,
+    [messages, isForActiveDepartment],
   );
   const activeNotification = useMemo(
-    () => messages.find((message) => message.unread),
-    [messages],
+    () => messages.find((message) => message.unread && isForActiveDepartment(message)),
+    [messages, isForActiveDepartment],
   );
   const activeNotificationDepartment = activeNotification?.from === 'Reception'
     ? 'Front of House'
@@ -684,8 +689,8 @@ export default function Home() {
     (department) => department.name === activeNotificationDepartment,
   )?.icon ?? MessageSquareText;
   const seenNotifications = useMemo(
-    () => messages.filter((message) => !message.unread),
-    [messages],
+    () => messages.filter((message) => !message.unread && isForActiveDepartment(message)),
+    [messages, isForActiveDepartment],
   );
   const attentionItems = useMemo(() => {
     const urgentMessages = messages
@@ -1172,6 +1177,7 @@ export default function Home() {
         setAttachment(
           `Voice note · ${Math.max(1, Math.round(voiceNote.size / 1024))} KB`,
         );
+        setAttachmentPreview('');
         stream.getTracks().forEach((track) => track.stop());
       };
       recorderRef.current = recorder;
@@ -2858,6 +2864,23 @@ export default function Home() {
                 placeholder="Write your message…"
                 autoFocus
               />
+              {spellCheckEnabled && spellingSuggestions.length > 0 && (
+                <div className="spelling-results has-suggestions">
+                  <ShieldCheck size={12} />
+                  <div>
+                    <span>Possible spelling:</span>
+                    {spellingSuggestions.map(({ word, correction }) => (
+                      <button
+                        type="button"
+                        key={word}
+                        onClick={() => applySpellingCorrection(word, correction)}
+                      >
+                        {word} → {correction}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {assignAsTask && (
                 <input
                   className="task-note-input"
@@ -2881,6 +2904,8 @@ export default function Home() {
                     onClick={() => {
                       setAttachment('');
                       setAttachmentPreview('');
+                      setVoiceNoteUrl('');
+                      setVoiceNoteDuration(0);
                     }}
                     aria-label="Remove attachment"
                   >
@@ -2898,6 +2923,20 @@ export default function Home() {
                 <div className="composer-tools">
                   <button type="button" className={`voice-to-text-button ${dictating ? 'active' : ''}`} onClick={toggleDictation} disabled={!dictationAvailable} aria-pressed={dictating} aria-label={dictationAvailable ? (dictating ? 'Stop voice to text' : 'Start voice to text') : 'Voice to text is unavailable in this browser'} title={dictationAvailable ? 'Voice to text' : 'Voice to text unavailable'}>
                     <Mic size={17} /><span>{dictating ? 'Listening…' : 'Voice to text'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`spellcheck-toggle ${spellCheckEnabled ? 'active' : ''}`}
+                    onClick={() => {
+                      const next = !spellCheckEnabled;
+                      setSpellCheckEnabled(next);
+                      setSpellCheckNotice(next ? 'Spell check on' : 'Spell check off');
+                    }}
+                    aria-pressed={spellCheckEnabled}
+                    aria-label={spellCheckEnabled ? 'Turn off spell check' : 'Turn on spell check'}
+                    title={spellCheckEnabled ? 'Spell check on' : 'Spell check off'}
+                  >
+                    <ShieldCheck size={17} /><span className={`spellcheck-status ${spellCheckEnabled ? 'active' : ''}`}>{spellCheckNotice}</span>
                   </button>
                   <button
                     type="button"
@@ -2924,6 +2963,7 @@ export default function Home() {
                     <Paperclip size={17} />
                     <input
                       type="file"
+                      key={attachment}
                       accept="image/*,.pdf,application/pdf"
                       onChange={(event) =>
                         {
@@ -2934,6 +2974,8 @@ export default function Home() {
                               ? URL.createObjectURL(file)
                               : '',
                           );
+                          setVoiceNoteUrl('');
+                          setVoiceNoteDuration(0);
                         }
                       }
                     />
