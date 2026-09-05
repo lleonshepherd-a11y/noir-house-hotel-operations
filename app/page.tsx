@@ -476,7 +476,7 @@ export default function Home() {
     205: 'Ready',
   });
   const [roomStatusNotice, setRoomStatusNotice] = useState('');
-  const [tableStatuses, setTableStatuses] = useState<Record<number, 'Waiting' | 'Away'>>({});
+  const [tableStatuses, setTableStatuses] = useState<Record<number, 'Occupied' | 'Cleared'>>({});
   const [tableStatusNotice, setTableStatusNotice] = useState('');
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
   const [handoverDraft, setHandoverDraft] = useState('');
@@ -961,36 +961,36 @@ export default function Home() {
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
-  const markTableAway = (table: number) => {
-    if (tableStatuses[table] === 'Away') return;
+  const markTableCleared = (table: number) => {
+    if (tableStatuses[table] === 'Cleared') return;
     const time = new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     }).format(new Date());
-    setTableStatuses((current) => ({ ...current, [table]: 'Away' }));
+    setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
     setMessages((current) => [
       {
         id: Date.now(),
         from: 'Restaurant',
         to: 'Kitchen',
-        text: `Food is away for table ${table}.`,
+        text: `Table ${table} has been cleared.`,
         time,
         unread: true,
         urgent: false,
       },
       ...current,
     ]);
-    setTableStatusNotice(`Table ${table} marked away and Kitchen notified.`);
+    setTableStatusNotice(`Table ${table} marked cleared and Kitchen notified.`);
     if (gentleSounds) playPing(false);
     window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
 
-  const undoTableAway = (table: number) => {
+  const undoTableCleared = (table: number) => {
     const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-    setTableStatuses((current) => ({ ...current, [table]: 'Waiting' }));
-    setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: food-away status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
-    setTableStatusNotice(`Table ${table} returned to waiting. Kitchen notified.`);
+    setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
+    setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: cleared status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
+    setTableStatusNotice(`Table ${table} returned to occupied. Kitchen notified.`);
     window.setTimeout(() => setTableStatusNotice(''), 4000);
   };
 
@@ -2168,19 +2168,19 @@ export default function Home() {
               <div className="section-heading restaurant-tables-heading">
                 <div>
                   <span className="eyebrow"><UtensilsCrossed size={13} /> Table service</span>
-                  <h2 id="restaurant-tables-title">Food away</h2>
-                  <p>Restaurant team: tap a table when its food goes out. Kitchen is notified automatically.</p>
+                  <h2 id="restaurant-tables-title">Table cleared</h2>
+                  <p>Restaurant team: tap a table when it&rsquo;s cleared. Kitchen is notified automatically.</p>
                 </div>
-                <span className="table-away-count">{Object.values(tableStatuses).filter((status) => status === 'Away').length} away</span>
+                <span className="table-cleared-count">{Object.values(tableStatuses).filter((status) => status === 'Cleared').length} cleared</span>
               </div>
               <div className="restaurant-table-grid" aria-live="polite">
                 {restaurantTables.map((table) => {
-                  const away = tableStatuses[table] === 'Away';
+                  const cleared = tableStatuses[table] === 'Cleared';
                   return (
-                    <article className={`table-tile-wrap ${away ? 'away' : ''}`} key={table}>
-                      <button type="button" className={`table-tile ${away ? 'away' : ''}`} onClick={() => away ? undoTableAway(table) : markTableAway(table)} aria-pressed={away} aria-label={away ? `Undo table ${table} food-away status` : `Mark food away for table ${table} and notify Kitchen`}>
+                    <article className={`table-tile-wrap ${cleared ? 'cleared' : ''}`} key={table}>
+                      <button type="button" className={`table-tile ${cleared ? 'cleared' : ''}`} onClick={() => cleared ? undoTableCleared(table) : markTableCleared(table)} aria-pressed={cleared} aria-label={cleared ? `Undo table ${table} cleared status` : `Mark table ${table} cleared and notify Kitchen`}>
                         <strong>{table}</strong>
-                        {away && <span>Away</span>}
+                        {cleared && <span>Cleared</span>}
                       </button>
                     </article>
                   );
