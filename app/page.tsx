@@ -677,6 +677,12 @@ export default function Home() {
     () => messages.find((message) => message.unread),
     [messages],
   );
+  const activeNotificationDepartment = activeNotification?.from === 'Reception'
+    ? 'Front of House'
+    : activeNotification?.from;
+  const ActiveNotificationIcon = departments.find(
+    (department) => department.name === activeNotificationDepartment,
+  )?.icon ?? MessageSquareText;
   const seenNotifications = useMemo(
     () => messages.filter((message) => !message.unread),
     [messages],
@@ -1267,14 +1273,11 @@ export default function Home() {
           aria-label="New notification"
         >
           <span className="live-notification-symbol">
-            {activeNotification.urgent ? (
-              <Zap size={18} />
-            ) : (
-              <BellRing size={18} />
-            )}
+            <ActiveNotificationIcon size={18} />
           </span>
           <div className="live-notification-copy">
             <span>
+              {activeNotification.urgent && <Zap size={12} aria-hidden="true" />}
               {activeNotification.urgent ? 'Urgent notification' : 'New notification'}
               <time>{activeNotification.time}</time>
             </span>
@@ -2149,7 +2152,7 @@ export default function Home() {
                 <div>
                   <span className="eyebrow"><UtensilsCrossed size={13} /> Table service</span>
                   <h2 id="restaurant-tables-title">Food away</h2>
-                  <p>Tap the table number as the food leaves the kitchen. Kitchen receives a logged update.</p>
+                  <p>Restaurant team: tap a table when its food goes out. Kitchen is notified automatically.</p>
                 </div>
                 <span className="table-away-count">{Object.values(tableStatuses).filter((status) => status === 'Away').length} away</span>
               </div>
