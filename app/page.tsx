@@ -2001,11 +2001,10 @@ export default function Home() {
           <div className="top-actions">
             <span
               className="console-active"
-              aria-label={`Shared console active · ${departments.reduce((total, department) => total + department.online, 0)} staff online`}
-              title="Staff online"
+              aria-label="Shared console active"
             >
               <i />
-              <strong>{departments.reduce((total, department) => total + department.online, 0)}</strong>
+              <strong>ON</strong>
             </span>
             <div className="notification-wrap top-notification guest-top-notification">
               <button
