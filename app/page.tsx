@@ -1613,6 +1613,24 @@ export default function Home() {
         </div>
       </aside>
 
+      {/* TEMP: empty tile-shape preview for element-by-element review. Remove when moving past this step. */}
+      <div className="tablet-preview" aria-hidden="true">
+        <div className="tablet-grid">
+          <div className="tablet tablet-hero" />
+          <div className="tablet" style={{ gridColumn: 'span 4', height: 120 }} />
+          <div className="tablet" style={{ gridColumn: 'span 4', height: 120 }} />
+          <div className="tablet" style={{ gridColumn: 'span 4', height: 120 }} />
+          <div className="tablet" style={{ gridColumn: 'span 8', height: 210 }} />
+          <div className="tablet" style={{ gridColumn: 'span 4', height: 210 }} />
+          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
+          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
+          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
+          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
+          <div className="tablet" style={{ gridColumn: 'span 6', height: 160 }} />
+          <div className="tablet" style={{ gridColumn: 'span 6', height: 160 }} />
+        </div>
+      </div>
+
       {utilityPanel && (
         <section
           className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`}
