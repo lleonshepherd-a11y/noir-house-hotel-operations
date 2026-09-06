@@ -40,7 +40,7 @@ import {
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
 const departments = [
-  { name: 'General Manager', icon: Crown, online: 1, accent: '#cdbb8c' },
+  { name: 'General Manager', icon: Crown, online: 1, accent: '#ef4d94' },
   { name: 'Front of House', icon: ConciergeBell, online: 6, accent: '#d5c195' },
   { name: 'Concierge', icon: BellRing, online: 3, accent: '#a9c8bc' },
   { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#c7af91' },
