@@ -88,7 +88,7 @@ h1,h2,h3,p{margin:0;}
 .profile-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;letter-spacing:.02em;color:var(--ink-dim);background:linear-gradient(150deg,#3a3a3d,#141416);border:1px solid var(--line);}
 
 /* ===== Utility panel (notes / guest / security / settings) ===== */
-.utility-panel{position:fixed;left:96px;top:20px;bottom:20px;z-index:75;width:min(380px,calc(100vw - 116px));overflow:auto;padding:20px;border-radius:var(--r-xl);}
+.utility-panel{position:fixed;left:96px;top:20px;bottom:20px;z-index:75;width:min(380px,calc(100vw - 116px));overflow:auto;padding:20px;border-radius:var(--r-xl);background:linear-gradient(165deg,rgba(42,42,46,.93),rgba(14,14,16,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 30px 65px rgba(0,0,0,.6);}
 .utility-panel.guest-requests-panel{width:min(980px,calc(100vw - 116px));}
 .calendar-heading{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--line-soft);}
 .calendar-heading>div{display:flex;flex-direction:column;gap:4px;}
@@ -122,7 +122,10 @@ h1,h2,h3,p{margin:0;}
 .settings-list label{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px;border:1px solid var(--line-soft);border-radius:var(--r-md);background:rgba(255,255,255,.02);}
 .settings-list strong{font-size:11.5px;}
 .settings-list small{display:block;margin-top:3px;color:var(--ink-faint);font-size:10.5px;line-height:1.45;}
-.settings-list input[type="checkbox"]{width:38px;height:22px;accent-color:#e7e7ea;flex:none;}
+.settings-list input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:42px;height:25px;flex:none;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid var(--line);position:relative;cursor:pointer;transition:.2s ease;}
+.settings-list input[type="checkbox"]::before{content:'';position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#c9c9ce;transition:.2s ease;}
+.settings-list input[type="checkbox"]:checked{background:#e9e9ec;border-color:transparent;}
+.settings-list input[type="checkbox"]:checked::before{transform:translateX(17px);background:#0c0c0d;}
 
 /* ===== Guest requests (staff view) ===== */
 .guest-requests-layout{padding-top:6px;}
@@ -165,7 +168,7 @@ h1,h2,h3,p{margin:0;}
 .calendar-reminder strong{font-size:11.5px;font-weight:620;}
 .calendar-reminder small{color:var(--ink-quiet);font-size:9.5px;}
 .calendar-reminder button{border:1px solid var(--line);border-radius:var(--r-sm);background:rgba(255,255,255,.06);color:var(--ink);padding:8px 12px;font-size:10px;font-weight:600;}
-.department-calendar{position:fixed;left:96px;top:20px;bottom:20px;z-index:76;width:min(380px,calc(100vw - 116px));overflow:auto;padding:20px;border-radius:var(--r-xl);}
+.department-calendar{position:fixed;left:96px;top:20px;bottom:20px;z-index:76;width:min(380px,calc(100vw - 116px));overflow:auto;padding:20px;border-radius:var(--r-xl);background:linear-gradient(165deg,rgba(42,42,46,.93),rgba(14,14,16,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 30px 65px rgba(0,0,0,.6);}
 .department-calendar form{display:grid;gap:11px;padding:16px 0;}
 .department-calendar label{display:grid;gap:6px;color:var(--ink-faint);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;}
 .department-calendar input,.department-calendar select{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);background:linear-gradient(160deg,var(--raise-a),var(--raise-b));color:var(--ink);padding:10px 12px;outline:none;color-scheme:dark;}
