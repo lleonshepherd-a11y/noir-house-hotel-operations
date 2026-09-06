@@ -1914,7 +1914,7 @@ export default function Home() {
                               ?.removeAttribute('open');
                           }}
                         >
-                          <DepartmentIcon size={14} style={{ color: department.accent }} />
+                          <DepartmentIcon size={15} />
                           <span>{department.name}</span>
                         </button>
                       );

@@ -733,9 +733,9 @@ h1,h2,h3,p{margin:0;}
   .attention-list{grid-template-columns:1fr;}
 }
 
-/* ===== TEMP: isolate sidebar for element-by-element review ===== */
+/* ===== TEMP: isolate sidebar + topbar for element-by-element review ===== */
 /* Remove this block to bring the rest of the dashboard back. */
-.workspace,.ambient,.live-notification,.calendar-reminder{display:none!important;}
+.content,.ambient,.live-notification,.calendar-reminder,.tablet-preview{display:none!important;}
 
 /* ===== TEMP: empty tile-shape preview ===== */
 .tablet-preview{flex:1;min-width:0;margin-left:118px;padding:24px 24px 60px;max-width:1560px;}
