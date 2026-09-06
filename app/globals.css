@@ -13,6 +13,15 @@
   --raise-b:rgba(255,255,255,.02);
   --accent:oklch(0.9 0.004 95);
   --accent-dim:rgba(245,245,247,.13);
+  --gold:oklch(0.56 0.115 58);
+  --gold-dim:oklch(0.56 0.115 58 / .12);
+  --card-ink:#17181b;
+  --card-ink-dim:rgba(23,24,27,.66);
+  --card-ink-faint:rgba(23,24,27,.44);
+  --card-ink-quiet:rgba(23,24,27,.28);
+  --card-line:rgba(23,24,27,.1);
+  --card-line-soft:rgba(23,24,27,.06);
+  --card-raise:rgba(23,24,27,.035);
   --success:oklch(0.72 0.11 150);
   --warning:oklch(0.72 0.11 80);
   --danger:oklch(0.72 0.11 25);
