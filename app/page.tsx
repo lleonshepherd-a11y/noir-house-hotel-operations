@@ -26,7 +26,6 @@ import {
   Pin,
   Plus,
   QrCode,
-  Search,
   Send,
   Settings,
   ShieldCheck,
@@ -2003,9 +2002,6 @@ export default function Home() {
             <span className="console-active" aria-label="Shared console active">
               <i /> Console active
             </span>
-            <button className="icon-button search-action" aria-label="Search">
-              <Search size={18} />
-            </button>
             <div className="notification-wrap top-notification guest-top-notification">
               <button
                 key={pendingGuestRequests.map((request) => request.id).join('-') || 'no-guest-alerts'}
