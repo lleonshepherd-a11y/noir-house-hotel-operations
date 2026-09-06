@@ -1931,10 +1931,37 @@ export default function Home() {
           >
             <div className={`weather-icon ${weather.kind}`}>
               {weather.kind === 'sun' ? (
-                <Sun size={27} />
+                <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                  <defs>
+                    <radialGradient id="wx-sun" cx="50%" cy="42%" r="62%">
+                      <stop offset="0%" stopColor="#fff6d6" />
+                      <stop offset="55%" stopColor="#f4c454" />
+                      <stop offset="100%" stopColor="#dd9d2c" />
+                    </radialGradient>
+                  </defs>
+                  <g stroke="#f0c869" strokeWidth="1.7" strokeLinecap="round" opacity="0.9">
+                    <line x1="20" y1="1.5" x2="20" y2="6.5" />
+                    <line x1="20" y1="33.5" x2="20" y2="38.5" />
+                    <line x1="1.5" y1="20" x2="6.5" y2="20" />
+                    <line x1="33.5" y1="20" x2="38.5" y2="20" />
+                    <line x1="7" y1="7" x2="10.5" y2="10.5" />
+                    <line x1="29.5" y1="29.5" x2="33" y2="33" />
+                    <line x1="7" y1="33" x2="10.5" y2="29.5" />
+                    <line x1="29.5" y1="10.5" x2="33" y2="7" />
+                  </g>
+                  <circle cx="20" cy="20" r="10.5" fill="url(#wx-sun)" />
+                </svg>
               ) : weather.kind === 'rain' ? (
                 <>
-                  <CloudRain size={27} />
+                  <svg width="34" height="26" viewBox="0 0 48 30" fill="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="wx-rain-cloud" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#aebac7" />
+                        <stop offset="100%" stopColor="#6c7c8f" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M13 24a8 8 0 0 1-1-15.9A10 10 0 0 1 31 6a7 7 0 0 1-1 18H13Z" fill="url(#wx-rain-cloud)" />
+                  </svg>
                   <span className="rain-drops" aria-hidden="true">
                     <i />
                     <i />
@@ -1942,7 +1969,20 @@ export default function Home() {
                   </span>
                 </>
               ) : (
-                <CloudSun size={27} />
+                <svg width="34" height="30" viewBox="0 0 48 36" fill="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="wx-cloud" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="100%" stopColor="#c9cfd8" />
+                    </linearGradient>
+                    <radialGradient id="wx-cloud-sun" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#fff6d6" />
+                      <stop offset="100%" stopColor="#e6b64d" />
+                    </radialGradient>
+                  </defs>
+                  <circle cx="34" cy="10" r="7" fill="url(#wx-cloud-sun)" opacity="0.92" />
+                  <path d="M13 30a8 8 0 0 1-1-15.9A10 10 0 0 1 31 12a7 7 0 0 1-1 18H13Z" fill="url(#wx-cloud)" />
+                </svg>
               )}
             </div>
             <div>
