@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   BellRing,
@@ -40,14 +40,14 @@ import {
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
 const departments = [
-  { name: 'General Manager', icon: Crown, online: 1, accent: '#ef4d94' },
-  { name: 'Front of House', icon: ConciergeBell, online: 6, accent: '#d5c195' },
-  { name: 'Concierge', icon: BellRing, online: 3, accent: '#a9c8bc' },
-  { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#c7af91' },
-  { name: 'Kitchen', icon: ChefHat, online: 7, accent: '#d2aa86' },
-  { name: 'Bar', icon: Martini, online: 4, accent: '#b9acd5' },
-  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: '#9eb9c5' },
-  { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a7b59b' },
+  { name: 'General Manager', icon: Crown, online: 1, accent: '#e0b563' },
+  { name: 'Front of House', icon: ConciergeBell, online: 6, accent: '#e2748a' },
+  { name: 'Concierge', icon: BellRing, online: 3, accent: '#45b8a0' },
+  { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#dd8a52' },
+  { name: 'Kitchen', icon: ChefHat, online: 7, accent: '#d4614a' },
+  { name: 'Bar', icon: Martini, online: 4, accent: '#b072d6' },
+  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: '#63b86a' },
+  { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a5a35a' },
 ];
 
 const staffEncouragementMessages: Record<string, { morning: string[]; afternoon: string[]; night: string[] }> = {
@@ -1617,17 +1617,17 @@ export default function Home() {
       <div className="tablet-preview" aria-hidden="true">
         <div className="tablet-grid">
           <div className="tablet tablet-hero" />
-          <div className="tablet" style={{ gridColumn: 'span 4', height: 120 }} />
-          <div className="tablet" style={{ gridColumn: 'span 4', height: 120 }} />
-          <div className="tablet" style={{ gridColumn: 'span 4', height: 120 }} />
-          <div className="tablet" style={{ gridColumn: 'span 8', height: 210 }} />
-          <div className="tablet" style={{ gridColumn: 'span 4', height: 210 }} />
-          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
-          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
-          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
-          <div className="tablet" style={{ gridColumn: 'span 3', height: 100 }} />
-          <div className="tablet" style={{ gridColumn: 'span 6', height: 160 }} />
-          <div className="tablet" style={{ gridColumn: 'span 6', height: 160 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 4', height: 130 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 4', height: 130 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 4', height: 130 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 7', height: 220 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 5', height: 220 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 6', height: 170 }} />
+          <div className="tablet tablet-pop" style={{ gridColumn: 'span 6', height: 170 }} />
         </div>
       </div>
 
@@ -1914,7 +1914,9 @@ export default function Home() {
                               ?.removeAttribute('open');
                           }}
                         >
-                          <DepartmentIcon size={15} />
+                          <span className="dept-menu-icon" style={{ '--dept-color': department.accent } as CSSProperties}>
+                            <DepartmentIcon size={14} />
+                          </span>
                           <span>{department.name}</span>
                         </button>
                       );
