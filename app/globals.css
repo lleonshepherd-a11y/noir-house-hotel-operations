@@ -742,7 +742,7 @@ h1,h2,h3,p{margin:0;}
 .content,.ambient,.live-notification,.calendar-reminder{display:none!important;}
 
 /* ===== TEMP: empty tile-shape preview ===== */
-.tablet-preview{position:fixed;top:120px;left:118px;right:24px;bottom:20px;overflow-y:auto;padding:0 4px 40px;}
+.tablet-preview{position:fixed;top:148px;left:118px;right:24px;bottom:20px;overflow-y:auto;padding:0 4px 40px;}
 .tablet-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:30px;}
 .tablet{
   border-radius:28px;
