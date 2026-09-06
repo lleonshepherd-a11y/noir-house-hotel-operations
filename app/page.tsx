@@ -2276,34 +2276,6 @@ export default function Home() {
         </header>
 
         <div className="content">
-          <section className="department-switch glass-panel" style={{ order: -1 }} aria-label="Switch active department">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow"><LayoutDashboard size={13} /> Departments</span>
-                <h2>Switch department</h2>
-              </div>
-              <div className="live-tag"><i /> {departments.reduce((total, department) => total + department.online, 0)} staff online</div>
-            </div>
-            <div className="department-grid">
-              {departments.map((department) => {
-                const DepartmentIcon = department.icon;
-                const isActive = department.name === activeDepartment;
-                return (
-                  <button
-                    type="button"
-                    key={department.name}
-                    className={`department-tile ${isActive ? 'active' : ''}`}
-                    onClick={() => setActiveDepartment(department.name)}
-                    aria-pressed={isActive}
-                  >
-                    <span className="department-tile-icon"><DepartmentIcon size={19} /></span>
-                    <span className="department-tile-name">{department.name}</span>
-                    <span className="department-tile-online"><i />{department.online} online</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
           <section className="management-announcement glass-panel" style={{ order: 0 }}>
             <BellRing size={18} />
             <div>
