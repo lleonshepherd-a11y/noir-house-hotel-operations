@@ -1874,7 +1874,7 @@ export default function Home() {
           <div className="property-heading">
             <p>NOIR HOUSE · LONDON</p>
             <div className="department-greeting">
-              <span>Good evening,</span>
+              <span>Good morning,</span>
               <details className="department-switcher">
                 <summary
                   className="department-switcher-trigger"
