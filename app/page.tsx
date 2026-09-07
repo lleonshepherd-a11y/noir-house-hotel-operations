@@ -2284,6 +2284,42 @@ export default function Home() {
               </div>
             </section>
 
+            <section className="card messages-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">Live conversation</span><h2>Recent messages</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <div className="messages-list">
+                {messages.length === 0 && <p className="messages-empty">No messages yet.</p>}
+                {messages.slice(0, 5).map((message) => {
+                  const senderDepartmentName = message.from === 'Reception' ? 'Front of House' : message.from;
+                  const senderDepartment = departments.find((department) => department.name === senderDepartmentName);
+                  const SenderIcon = senderDepartment?.icon ?? Mail;
+                  return (
+                    <button
+                      type="button"
+                      key={message.id}
+                      className={`message-row-new ${message.urgent ? 'urgent' : ''}`}
+                      onClick={() => markMessageOpened(message.id)}
+                    >
+                      <span className="message-row-icon" style={{ '--dept-color': senderDepartment?.accent } as CSSProperties}>
+                        <SenderIcon size={15} />
+                      </span>
+                      <div className="message-row-body">
+                        <div className="message-row-top">
+                          <strong>{message.from}</strong>
+                          {message.urgent && <span className="message-row-urgent">Urgent</span>}
+                          <time>{message.time}</time>
+                        </div>
+                        <p>{message.text}</p>
+                      </div>
+                      {message.unread && <span className="message-row-dot" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
             <section className="revenue-card glass-panel">
               <div className="card-head">
                 <div><span className="eyebrow">{activeDepartment}</span><h2>Weekly guest volume</h2></div>
