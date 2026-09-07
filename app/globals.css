@@ -296,9 +296,7 @@ h1,h2,h3,p{margin:0;}
 .stat-card{padding:18px;}
 .stat-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
 .stat-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;}
-.stat-ic.pink{background:color-mix(in oklch,var(--danger) 16%,transparent);color:var(--danger);}
-.stat-ic.blue{background:color-mix(in oklch,var(--accent) 16%,transparent);color:var(--accent);}
-.stat-ic.green{background:color-mix(in oklch,var(--success) 16%,transparent);color:var(--success);}
+.stat-ic.pink,.stat-ic.blue,.stat-ic.green{background:rgba(26,29,41,.06);color:var(--ink-dim);}
 .stat-card strong{display:block;font-size:22px;font-weight:750;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
 .stat-card span{font-size:11.5px;color:var(--ink-faint);}
 
