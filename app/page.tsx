@@ -40,6 +40,8 @@ import {
   BarChart3,
   ArrowUpRight,
   Users,
+  Mail,
+  Camera,
 } from 'lucide-react';
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
@@ -1548,7 +1550,7 @@ export default function Home() {
               setUtilityPanel(null);
             }}
           >
-            <MessageSquareText size={20} />
+            <Mail size={20} />
             <span className="nav-dot" />
           </button>
           <button
@@ -2487,6 +2489,27 @@ export default function Home() {
                               ? URL.createObjectURL(file)
                               : '',
                           );
+                          setVoiceNoteUrl('');
+                          setVoiceNoteDuration(0);
+                        }
+                      }
+                    />
+                  </label>
+                  <label
+                    className="attach-button camera-button"
+                    aria-label="Take a photo"
+                  >
+                    <Camera size={17} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(event) =>
+                        {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          setAttachment(file.name ?? '');
+                          setAttachmentPreview(URL.createObjectURL(file));
                           setVoiceNoteUrl('');
                           setVoiceNoteDuration(0);
                         }
