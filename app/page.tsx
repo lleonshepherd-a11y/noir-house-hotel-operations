@@ -46,14 +46,14 @@ import {
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
 const departments = [
-  { name: 'General Manager', icon: Crown, online: 1, accent: '#c9a227' },
-  { name: 'Front of House', icon: ConciergeBell, online: 6, accent: '#4f6d8c' },
-  { name: 'Concierge', icon: BellRing, online: 3, accent: '#3fa791' },
-  { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#a97b52' },
-  { name: 'Kitchen', icon: ChefHat, online: 7, accent: '#9aa0ab' },
-  { name: 'Bar', icon: Martini, online: 4, accent: '#6f5a8c' },
-  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: '#5f9a68' },
-  { name: 'Maintenance', icon: Wrench, online: 2, accent: '#4a7fc4' },
+  { name: 'General Manager', icon: Crown, online: 1, accent: 'oklch(0.64 0.09 85)' },
+  { name: 'Front of House', icon: ConciergeBell, online: 6, accent: 'oklch(0.62 0.07 215)' },
+  { name: 'Concierge', icon: BellRing, online: 3, accent: 'oklch(0.62 0.08 190)' },
+  { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: 'oklch(0.62 0.08 55)' },
+  { name: 'Kitchen', icon: ChefHat, online: 7, accent: 'oklch(0.68 0.02 240)' },
+  { name: 'Bar', icon: Martini, online: 4, accent: 'oklch(0.60 0.07 285)' },
+  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: 'oklch(0.62 0.08 150)' },
+  { name: 'Maintenance', icon: Wrench, online: 2, accent: 'oklch(0.60 0.09 255)' },
 ];
 
 const staffEncouragementMessages: Record<string, { morning: string[]; afternoon: string[]; night: string[] }> = {
