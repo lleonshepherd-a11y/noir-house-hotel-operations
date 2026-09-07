@@ -2357,8 +2357,9 @@ export default function Home() {
                       className={recipient === department.name ? 'active' : ''}
                       onClick={() => setRecipient(department.name)}
                       key={department.name}
+                      style={{ '--dept-color': department.accent } as CSSProperties}
                     >
-                      <Icon size={13} /> {department.name}
+                      <span className="recipient-dept-icon"><Icon size={13} /></span> {department.name}
                     </button>
                   );
                 })}
