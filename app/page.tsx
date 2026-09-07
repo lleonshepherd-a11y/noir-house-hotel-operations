@@ -2278,7 +2278,7 @@ export default function Home() {
                 </span>
                 <div><span>{weather.label}</span><strong>{weather.temperature}&deg;</strong></div>
               </div>
-              <div className="tw-item">
+              <div className="tw-item tw-clock">
                 <Clock3 size={17} />
                 <div><span>Local time</span><strong>{time}</strong></div>
               </div>
