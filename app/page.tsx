@@ -46,14 +46,14 @@ import {
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
 const departments = [
-  { name: 'General Manager', icon: Crown, online: 1, accent: '#e0b563' },
-  { name: 'Front of House', icon: ConciergeBell, online: 6, accent: '#e2748a' },
-  { name: 'Concierge', icon: BellRing, online: 3, accent: '#45b8a0' },
-  { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#dd8a52' },
-  { name: 'Kitchen', icon: ChefHat, online: 7, accent: '#d4614a' },
-  { name: 'Bar', icon: Martini, online: 4, accent: '#b072d6' },
-  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: '#63b86a' },
-  { name: 'Maintenance', icon: Wrench, online: 2, accent: '#a5a35a' },
+  { name: 'General Manager', icon: Crown, online: 1, accent: '#c9a227' },
+  { name: 'Front of House', icon: ConciergeBell, online: 6, accent: '#4f6d8c' },
+  { name: 'Concierge', icon: BellRing, online: 3, accent: '#3fa791' },
+  { name: 'Restaurant', icon: UtensilsCrossed, online: 9, accent: '#a97b52' },
+  { name: 'Kitchen', icon: ChefHat, online: 7, accent: '#9aa0ab' },
+  { name: 'Bar', icon: Martini, online: 4, accent: '#6f5a8c' },
+  { name: 'Housekeeping', icon: BedDouble, online: 11, accent: '#5f9a68' },
+  { name: 'Maintenance', icon: Wrench, online: 2, accent: '#4a7fc4' },
 ];
 
 const staffEncouragementMessages: Record<string, { morning: string[]; afternoon: string[]; night: string[] }> = {

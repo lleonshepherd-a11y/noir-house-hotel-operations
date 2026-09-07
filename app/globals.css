@@ -740,7 +740,7 @@ h1,h2,h3,p{margin:0;}
 .voice-to-text-button,.spellcheck-toggle,.task-icon-toggle,.urgent-toggle,.attach-button,.voice-button{border:0;background:transparent;color:var(--ink-faint);width:33px;height:33px;border-radius:10px;display:grid;place-items:center;position:relative;cursor:pointer;flex:none;}
 .voice-to-text-button span{font-size:9.5px;display:none;}
 .voice-to-text-button:hover:not(:disabled),.spellcheck-toggle:hover,.task-icon-toggle:hover:not(:disabled),.urgent-toggle:hover,.attach-button:hover,.voice-button:hover{color:var(--ink);background:rgba(26,29,41,.07);}
-.voice-to-text-button.active{color:#ff5245;background:rgba(255,82,69,.16);}
+.voice-to-text-button.active{color:#ff5245;background:rgba(255,82,69,.16);animation:shake 1.2s ease-in-out infinite;}
 .voice-to-text-button:disabled,.task-icon-toggle:disabled{opacity:.3;cursor:not-allowed;}
 .spellcheck-toggle.active{color:color-mix(in oklch,var(--success) 80%,white);}
 .spellcheck-status{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--ink-quiet);white-space:nowrap;opacity:0;}
@@ -750,8 +750,7 @@ h1,h2,h3,p{margin:0;}
 .attach-button{cursor:pointer;color:#3e82f0;}
 .attach-button input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
 .camera-button{color:#2fa86a;}
-.voice-button{color:#b072d6;}
-.voice-button.recording{color:#ff5245;background:rgba(255,82,69,.16);animation:pulse 1.2s ease-in-out infinite;}
+.voice-button.recording{color:#ff5245;background:rgba(255,82,69,.16);animation:shake 1.2s ease-in-out infinite;}
 .voice-live-indicator{display:flex;align-items:center;gap:7px;margin-left:4px;color:color-mix(in oklch,var(--danger) 82%,white);font-size:10px;font-variant-numeric:tabular-nums;}
 .voice-wave{display:flex;align-items:center;gap:2px;height:12px;}
 .voice-wave i{width:2px;background:currentColor;border-radius:1px;animation:wave 1s ease-in-out infinite;}
@@ -789,9 +788,10 @@ h1,h2,h3,p{margin:0;}
 .composer .urgent-toggle:hover,
 .composer .attach-button:hover,
 .composer .voice-button:hover{background:rgba(255,255,255,.1);}
-.composer .send-button{background:#fff;color:#15151a;}
-.composer .send-button:hover{filter:none;background:#f0f0f2;}
+.composer .send-button{background:#3e6df0;color:#fff;}
+.composer .send-button:hover{filter:brightness(1.08);background:#3e6df0;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-2px);}40%{transform:translateX(2px);}60%{transform:translateX(-1.5px);}80%{transform:translateX(1.5px);}}
 @keyframes wave{0%,100%{height:4px;}50%{height:12px;}}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes iconFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
