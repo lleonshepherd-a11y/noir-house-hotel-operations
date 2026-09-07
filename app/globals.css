@@ -308,7 +308,7 @@ h1,h2,h3,p{margin:0;}
 .hero-stat{display:flex;flex-direction:column;padding:22px 26px;margin:0 0 16px;}
 .time-weather-tab{flex-direction:row;align-items:center;justify-content:space-between;padding:16px 22px;border:1.5px solid #15151a;}
 .tw-item{display:flex;align-items:center;gap:12px;}
-.tw-item>svg{color:var(--accent);flex:none;}
+.tw-item>svg{color:#fff;flex:none;}
 .tw-item>div{display:flex;flex-direction:column;}
 .tw-item span{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
 .tw-item strong{font-size:15px;font-weight:650;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums;}
