@@ -717,7 +717,7 @@ h1,h2,h3,p{margin:0;}
 .recipient-picker button{min-width:0;height:36px;border-radius:var(--r-sm);border:1px solid var(--line);background:rgba(26,29,41,.03);color:var(--ink-faint);padding:0 10px;display:flex;align-items:center;gap:6px;font-size:10.5px;}
 .recipient-picker button:first-child{grid-column:1/-1;justify-content:center;}
 .recipient-picker button.active{background:rgba(26,29,41,.12);border-color:rgba(255,255,255,.26);color:var(--ink);}
-.recipient-dept-icon{display:grid;place-items:center;color:var(--dept-color);flex:none;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--dept-color) 45%,transparent));}
+.recipient-dept-icon{display:grid;place-items:center;color:inherit;flex:none;}
 .composer textarea{width:100%;flex:none;height:88px;resize:none;border:1px solid var(--line);border-radius:var(--r-lg);background:rgba(26,29,41,.025);color:var(--ink);margin-top:14px;padding:15px;outline:none;font-size:12.5px;line-height:1.6;}
 .composer textarea:focus{border-color:rgba(255,255,255,.26);}
 .composer textarea::placeholder{color:var(--ink-quiet);}
