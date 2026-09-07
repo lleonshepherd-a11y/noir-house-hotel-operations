@@ -1401,6 +1401,8 @@ export default function Home() {
   const openTaskCount = assignedTasks.filter((task) => task.to === activeDepartment && task.status !== 'Complete').length;
   const outstandingHandoverCount = shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length;
   const todayAllClear = guestRequests.every((request) => request.status !== 'New') && openTaskCount === 0 && outstandingHandoverCount === 0;
+  const completedTaskCount = assignedTasks.filter((task) => task.status === 'Complete').length;
+  const heroTaskPercent = assignedTasks.length ? Math.round((completedTaskCount / assignedTasks.length) * 100) : 100;
   const managementDecisionIds = new Set([201, 202, 203, 204, 205]);
   const internalManagementIssues = messages.map((message) => {
     const linkedTask = assignedTasks.find((task) => task.id === message.id);
@@ -2262,6 +2264,51 @@ export default function Home() {
             </button>
           </div>
         </header>
+
+        <section className="hero-stat glass-panel" aria-label="Today's task completion">
+          <div className="hero-stat-top">
+            <strong>{heroTaskPercent}%</strong>
+            <span>of today&rsquo;s tasks complete</span>
+            <em>{heroTaskPercent >= 75 ? 'On track' : heroTaskPercent >= 40 ? 'In progress' : 'Needs attention'}</em>
+          </div>
+          <div className="hero-bar-wrap">
+            <span className="hero-marker" style={{ left: `${heroTaskPercent}%` }} />
+            <div className="hero-bar-track">
+              <div className="hero-bar-fill" style={{ width: `${heroTaskPercent}%` }} />
+            </div>
+          </div>
+          <div className="hero-scale">
+            <span>0%</span>
+            <span>25%</span>
+            <span>50%</span>
+            <span>75%</span>
+            <span>100%</span>
+          </div>
+        </section>
+
+        <div className="stat-trio">
+          <div className="stat-card glass-panel">
+            <div className="stat-card-top">
+              <span className="stat-ic pink"><ConciergeBell size={16} /></span>
+            </div>
+            <strong>{pendingGuestRequests.length}</strong>
+            <span>Guest requests open</span>
+          </div>
+          <div className="stat-card glass-panel">
+            <div className="stat-card-top">
+              <span className="stat-ic blue"><ListChecks size={16} /></span>
+            </div>
+            <strong>{openTaskCount}</strong>
+            <span>Tasks in progress</span>
+          </div>
+          <div className="stat-card glass-panel">
+            <div className="stat-card-top">
+              <span className="stat-ic green"><NotebookPen size={16} /></span>
+            </div>
+            <strong>{outstandingHandoverCount}</strong>
+            <span>Handovers outstanding</span>
+          </div>
+        </div>
 
         <div className="content">
           <section className="management-announcement glass-panel" style={{ order: 0 }}>
