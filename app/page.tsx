@@ -42,6 +42,7 @@ import {
   Users,
   Mail,
   Camera,
+  Clock3,
 } from 'lucide-react';
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
@@ -933,6 +934,15 @@ export default function Home() {
         hour12: false,
       }).format(now)
     : '--:--:--';
+  const currentHour = now?.getHours() ?? 9;
+  const timeGreeting =
+    currentHour >= 5 && currentHour < 12
+      ? 'Good morning'
+      : currentHour >= 12 && currentHour < 17
+        ? 'Good afternoon'
+        : currentHour >= 17 && currentHour < 21
+          ? 'Good evening'
+          : 'Good night';
   const encouragementHour = now?.getHours() ?? 9;
   const encouragementMinuteOfDay = now ? now.getHours() * 60 + now.getMinutes() : 8 * 60;
   const isStaffMorningGreeting = encouragementMinuteOfDay >= 7 * 60 + 30 && encouragementMinuteOfDay < 9 * 60 + 30;
@@ -2198,32 +2208,81 @@ export default function Home() {
         <div className="greeting-row">
           <div className="greeting">
             <p>Hello, {activeDepartment} team</p>
-            <h1>Welcome to Dashboard</h1>
+            <h1>{timeGreeting}</h1>
           </div>
         </div>
 
         <div className="dash-grid">
           <div className="dash-stack">
-            <section className="hero-stat glass-panel" aria-label="Today's task completion">
-          <div className="hero-stat-top">
-            <strong>{heroTaskPercent}%</strong>
-            <span>of today&rsquo;s tasks complete</span>
-            <em>{heroTaskPercent >= 75 ? 'On track' : heroTaskPercent >= 40 ? 'In progress' : 'Needs attention'}</em>
-          </div>
-          <div className="hero-bar-wrap">
-            <span className="hero-marker" style={{ left: `${heroTaskPercent}%` }} />
-            <div className="hero-bar-track">
-              <div className="hero-bar-fill" style={{ width: `${heroTaskPercent}%` }} />
-            </div>
-          </div>
-          <div className="hero-scale">
-            <span>0%</span>
-            <span>25%</span>
-            <span>50%</span>
-            <span>75%</span>
-            <span>100%</span>
-          </div>
-        </section>
+            <section className="hero-stat glass-panel time-weather-tab" aria-label="Date, weather and local time">
+              <div className="tw-item">
+                <CalendarDays size={17} />
+                <div><span>Today</span><strong>{date}</strong></div>
+              </div>
+              <div className="tw-item tw-weather">
+                <span className={`weather-icon ${weather.kind}`}>
+                  {weather.kind === 'sun' ? (
+                    <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                      <defs>
+                        <radialGradient id="wx-sun" cx="50%" cy="42%" r="62%">
+                          <stop offset="0%" stopColor="#fff6d6" />
+                          <stop offset="55%" stopColor="#f4c454" />
+                          <stop offset="100%" stopColor="#dd9d2c" />
+                        </radialGradient>
+                      </defs>
+                      <g stroke="#f0c869" strokeWidth="1.7" strokeLinecap="round" opacity="0.9">
+                        <line x1="20" y1="1.5" x2="20" y2="6.5" />
+                        <line x1="20" y1="33.5" x2="20" y2="38.5" />
+                        <line x1="1.5" y1="20" x2="6.5" y2="20" />
+                        <line x1="33.5" y1="20" x2="38.5" y2="20" />
+                        <line x1="7" y1="7" x2="10.5" y2="10.5" />
+                        <line x1="29.5" y1="29.5" x2="33" y2="33" />
+                        <line x1="7" y1="33" x2="10.5" y2="29.5" />
+                        <line x1="29.5" y1="10.5" x2="33" y2="7" />
+                      </g>
+                      <circle cx="20" cy="20" r="10.5" fill="url(#wx-sun)" />
+                    </svg>
+                  ) : weather.kind === 'rain' ? (
+                    <>
+                      <svg width="34" height="26" viewBox="0 0 48 30" fill="none" aria-hidden="true">
+                        <defs>
+                          <linearGradient id="wx-rain-cloud" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#aebac7" />
+                            <stop offset="100%" stopColor="#6c7c8f" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M13 24a8 8 0 0 1-1-15.9A10 10 0 0 1 31 6a7 7 0 0 1-1 18H13Z" fill="url(#wx-rain-cloud)" />
+                      </svg>
+                      <span className="rain-drops" aria-hidden="true">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    </>
+                  ) : (
+                    <svg width="34" height="30" viewBox="0 0 48 36" fill="none" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="wx-cloud" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ffffff" />
+                          <stop offset="100%" stopColor="#c9cfd8" />
+                        </linearGradient>
+                        <radialGradient id="wx-cloud-sun" cx="50%" cy="50%" r="50%">
+                          <stop offset="0%" stopColor="#fff6d6" />
+                          <stop offset="100%" stopColor="#e6b64d" />
+                        </radialGradient>
+                      </defs>
+                      <circle cx="34" cy="10" r="7" fill="url(#wx-cloud-sun)" opacity="0.92" />
+                      <path d="M13 30a8 8 0 0 1-1-15.9A10 10 0 0 1 31 12a7 7 0 0 1-1 18H13Z" fill="url(#wx-cloud)" />
+                    </svg>
+                  )}
+                </span>
+                <div><span>{weather.label}</span><strong>{weather.temperature}&deg;</strong></div>
+              </div>
+              <div className="tw-item">
+                <Clock3 size={17} />
+                <div><span>Local time</span><strong>{time}</strong></div>
+              </div>
+            </section>
 
             <section className="revenue-card glass-panel">
               <div className="card-head">
