@@ -2188,7 +2188,7 @@ export default function Home() {
                 setComposerOpen((open) => !open);
               }}
             >
-              <Plus size={18} />
+              <Mail size={18} />
               <span>New message</span>
               <ChevronDown size={15} />
             </button>
@@ -2253,9 +2253,6 @@ export default function Home() {
           <div className="dash-side">
             <div className="controls-row">
               <span className="control-pill"><SelectedDepartmentIcon size={14} />{activeDepartment}</span>
-              <button className="primary-btn-black" onClick={() => { setReplyContext(null); setComposerOpen(true); }}>
-                <Plus size={15} />New message
-              </button>
             </div>
 
             <div className="stat-trio">

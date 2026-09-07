@@ -275,8 +275,8 @@ h1,h2,h3,p{margin:0;}
 .guest-alert-count{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:linear-gradient(150deg,#f0c869,var(--warning));color:#241a04;font-size:8.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg);}
 .guest-alert-count.urgent{background:linear-gradient(150deg,#ff8f86,var(--danger));color:#2a0704;}
 .shift-alert-count{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:linear-gradient(150deg,color-mix(in oklch,var(--calendar) 70%,white),var(--calendar));color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg),0 0 8px color-mix(in oklch,var(--calendar) 45%,transparent);}
-.compose-button{height:42px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:var(--btn-black);display:flex;align-items:center;gap:8px;padding:0 17px;color:#fff;font-size:12.5px;font-weight:680;box-shadow:0 12px 26px rgba(26,29,41,.35);transition:.18s;}
-.compose-button:hover{transform:translateY(-1px);box-shadow:0 16px 32px rgba(26,29,41,.4);}
+.compose-button{height:42px;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:#3e6df0;display:flex;align-items:center;gap:8px;padding:0 17px;color:#fff;font-size:12.5px;font-weight:680;box-shadow:0 12px 26px rgba(62,109,240,.4);transition:.18s;}
+.compose-button:hover{transform:translateY(-1px);box-shadow:0 16px 32px rgba(62,109,240,.45);background:#3763dd;}
 .compose-button svg{color:#fff;}
 
 /* ===== Hero stat + stat trio ===== */
