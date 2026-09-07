@@ -1,6 +1,7 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
+import { isManagement } from '@/lib/backend/types';
 
 type BoardType = 'housekeeping_room' | 'restaurant_table';
 type BoardStatus = 'pending' | 'ready' | 'away';
@@ -21,10 +22,15 @@ export async function GET(request: Request) {
     const type = boardType(new URL(request.url).searchParams.get('type'));
     if (!type) return Response.json({ error: 'A valid board type is required' }, { status: 400 });
 
-    const rows = await db.prepare(`SELECT item_number, status, updated_at
-      FROM operational_statuses
-      WHERE hotel_id = ? AND department_id = ? AND board_type = ?
-      ORDER BY item_number`).bind(identity.hotelId, identity.departmentId, type).all();
+    // Management can see every department's board (e.g. the GM overview needs
+    // both Housekeeping's rooms and Restaurant's tables); everyone else only
+    // ever sees their own department's board.
+    const rows = isManagement(identity)
+      ? await db.prepare(`SELECT item_number, status, updated_at FROM operational_statuses
+          WHERE hotel_id = ? AND board_type = ? ORDER BY item_number`).bind(identity.hotelId, type).all()
+      : await db.prepare(`SELECT item_number, status, updated_at FROM operational_statuses
+          WHERE hotel_id = ? AND department_id = ? AND board_type = ? ORDER BY item_number`)
+          .bind(identity.hotelId, identity.departmentId, type).all();
     return Response.json({ results: rows.results });
   } catch (error) {
     if (error instanceof Response) return error;

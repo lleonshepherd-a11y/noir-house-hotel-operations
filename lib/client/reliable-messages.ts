@@ -20,9 +20,10 @@ export async function queueMessage(payload: Record<string, unknown>) {
 }
 
 export async function flushMessageQueue(token: string) {
-  if (!navigator.onLine) return { sent: 0, remaining: await count() };
+  if (!navigator.onLine) return { sent: 0, failed: 0, remaining: await count() };
   const items = await all();
   let sent = 0;
+  let failed = 0;
   for (const item of items) {
     try {
       const response = await fetch('/api/messages', {
@@ -30,27 +31,30 @@ export async function flushMessageQueue(token: string) {
         headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
         body: JSON.stringify({ ...item.payload, clientMessageId: item.clientMessageId }),
       });
-      if (!response.ok) {
-        if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) throw new PermanentDeliveryError();
-        await put({ ...item, attempts: item.attempts + 1 });
+      if (response.ok) {
+        await remove(item.clientMessageId);
+        sent += 1;
         continue;
       }
-      await remove(item.clientMessageId);
-      sent += 1;
-    } catch (error) {
-      if (error instanceof PermanentDeliveryError) throw error;
+      if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) {
+        // Permanently rejected (bad request, forbidden, etc.) — discard it so
+        // one bad message can't jam every future flush of the whole outbox.
+        await remove(item.clientMessageId);
+        failed += 1;
+        continue;
+      }
+      await put({ ...item, attempts: item.attempts + 1 });
+    } catch {
       await put({ ...item, attempts: item.attempts + 1 });
     }
   }
-  return { sent, remaining: await count() };
+  return { sent, failed, remaining: await count() };
 }
 
 export function watchConnectivity(onOnline: () => void) {
   window.addEventListener('online', onOnline);
   return () => window.removeEventListener('online', onOnline);
 }
-
-class PermanentDeliveryError extends Error {}
 
 function openDatabase() {
   return new Promise<IDBDatabase>((resolve, reject) => {
@@ -63,12 +67,16 @@ function openDatabase() {
 
 async function transact<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore, resolve: (value: T) => void, reject: (reason?: unknown) => void) => void) {
   const db = await openDatabase();
-  return new Promise<T>((resolve, reject) => {
-    const transaction = db.transaction(STORE, mode);
-    action(transaction.objectStore(STORE), resolve, reject);
-    transaction.oncomplete = () => db.close();
-    transaction.onerror = () => reject(transaction.error);
-  });
+  try {
+    return await new Promise<T>((resolve, reject) => {
+      const transaction = db.transaction(STORE, mode);
+      action(transaction.objectStore(STORE), resolve, reject);
+      transaction.onabort = () => reject(transaction.error);
+      transaction.onerror = () => reject(transaction.error);
+    });
+  } finally {
+    db.close();
+  }
 }
 
 function put(item: QueuedMessage) { return transact<void>('readwrite', (store, resolve, reject) => { const request = store.put(item); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }

@@ -460,6 +460,9 @@ export default function Home() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const recordingChunks = useRef<Blob[]>([]);
+  const isSendingMessageRef = useRef(false);
+  const pendingRoomTogglesRef = useRef<Set<number>>(new Set());
+  const pendingTableTogglesRef = useRef<Set<number>>(new Set());
   const [noteDraft, setNoteDraft] = useState('');
   const [pinnedNotes, setPinnedNotes] = useState([
     {
@@ -946,10 +949,20 @@ export default function Home() {
   useEffect(() => {
     const token = window.sessionStorage.getItem('noir-house-staff-session') ?? '';
     setStaffSessionToken(token);
-    if (!token) return;
-    const flush = () => void flushMessageQueue(token).then(({ remaining }) => setMessageDeliveryNotice(remaining ? `${remaining} message${remaining === 1 ? '' : 's'} waiting to send` : 'All queued messages sent'));
-    flush();
+    // Read the token fresh on every call (rather than closing over the value
+    // above) so a login that happens after this effect's initial mount is
+    // still picked up when connectivity returns.
+    const flush = () => {
+      const currentToken = window.sessionStorage.getItem('noir-house-staff-session');
+      if (!currentToken) return;
+      void flushMessageQueue(currentToken).then(({ remaining, failed }) => setMessageDeliveryNotice(
+        failed ? `${failed} message${failed === 1 ? '' : 's'} could not be delivered` :
+        remaining ? `${remaining} message${remaining === 1 ? '' : 's'} waiting to send` : 'All queued messages sent',
+      ));
+    };
     const stop = watchConnectivity(flush);
+    if (!token) return stop;
+    flush();
     void fetch('/api/departments', { headers: { authorization: `Bearer ${token}` } })
       .then((response) => response.ok ? response.json() : Promise.reject())
       .then((data: { departments: Array<{ id: string; name: string }> }) => setDepartmentDirectory(data.departments))
@@ -968,34 +981,45 @@ export default function Home() {
 
   useEffect(() => {
     if (!staffSessionToken || connectedDepartment !== activeDepartment) return;
-    const type = activeDepartment === 'Housekeeping'
-      ? 'housekeeping_room'
-      : activeDepartment === 'Restaurant'
-        ? 'restaurant_table'
-        : null;
-    if (!type) return;
-    void fetch(`/api/status-board?type=${type}`, { headers: { authorization: `Bearer ${staffSessionToken}` } })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Unable to load saved statuses');
-        return response.json() as Promise<{ results: Array<{ item_number: number; status: string }> }>;
-      })
-      .then(({ results }) => {
-        if (type === 'housekeeping_room') {
-          setRoomStatuses(Object.fromEntries(results.map((item) => [item.item_number, item.status === 'ready' ? 'Ready' : 'To clean'])));
-        } else {
-          setTableStatuses(Object.fromEntries(results.map((item) => [item.item_number, item.status === 'away' ? 'Cleared' : 'Occupied'])));
-        }
-      })
-      .catch(() => {
-        const notice = 'Saved statuses could not be loaded. Check the department connection.';
-        if (type === 'housekeeping_room') setRoomStatusNotice(notice);
-        else setTableStatusNotice(notice);
-      });
+    const types: Array<'housekeeping_room' | 'restaurant_table'> =
+      activeDepartment === 'Housekeeping' ? ['housekeeping_room']
+      : activeDepartment === 'Restaurant' ? ['restaurant_table']
+      : activeDepartment === 'General Manager' ? ['housekeeping_room', 'restaurant_table']
+      : [];
+    types.forEach((type) => {
+      void fetch(`/api/status-board?type=${type}`, { headers: { authorization: `Bearer ${staffSessionToken}` } })
+        .then(async (response) => {
+          if (!response.ok) throw new Error('Unable to load saved statuses');
+          return response.json() as Promise<{ results: Array<{ item_number: number; status: string }> }>;
+        })
+        .then(({ results }) => {
+          if (type === 'housekeeping_room') {
+            setRoomStatuses(Object.fromEntries(results.map((item) => [item.item_number, item.status === 'ready' ? 'Ready' : 'To clean'])));
+          } else {
+            setTableStatuses(Object.fromEntries(results.map((item) => [item.item_number, item.status === 'away' ? 'Cleared' : 'Occupied'])));
+          }
+        })
+        .catch(() => {
+          const notice = 'Saved statuses could not be loaded. Check the department connection.';
+          if (type === 'housekeeping_room') setRoomStatusNotice(notice);
+          else setTableStatusNotice(notice);
+        });
+    });
   }, [activeDepartment, connectedDepartment, staffSessionToken]);
 
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
     if (!draft.trim()) return;
+    if (isSendingMessageRef.current) return;
+    isSendingMessageRef.current = true;
+    try {
+      await sendMessageInternal();
+    } finally {
+      isSendingMessageRef.current = false;
+    }
+  };
+
+  const sendMessageInternal = async () => {
     if (assignAsTask && recipient === 'All departments') {
       setMessageError('Choose one department so the task has a clear owner.');
       return;
@@ -1040,12 +1064,18 @@ export default function Home() {
       });
       try {
         const result = await flushMessageQueue(staffSessionToken);
-        next.deliveryStatus = result.remaining ? 'Waiting offline' : 'Queued';
-        setMessageDeliveryNotice(result.remaining ? 'Saved safely — waiting for connection' : 'Message queued for delivery');
+        next.deliveryStatus = result.failed ? 'Failed' : result.remaining ? 'Waiting offline' : 'Queued';
+        setMessageDeliveryNotice(
+          result.failed ? 'Message not sent — please review it and try again' :
+          result.remaining ? 'Saved safely — waiting for connection' : 'Message queued for delivery',
+        );
       } catch {
         next.deliveryStatus = 'Failed';
         setMessageDeliveryNotice('Message not sent — please review it and try again');
       }
+    } else if (staffSessionToken) {
+      next.deliveryStatus = 'Failed';
+      setMessageDeliveryNotice('Recipient department not found yet — please try sending again in a moment');
     } else {
       setMessageDeliveryNotice('Demo message only — department PIN connection is still required');
     }
@@ -1086,7 +1116,7 @@ export default function Home() {
   };
 
   const saveBoardStatus = async (type: 'housekeeping_room' | 'restaurant_table', itemNumber: number, status: 'pending' | 'ready' | 'away'): Promise<string | null> => {
-    if (!staffSessionToken || connectedDepartment !== activeDepartment) return null;
+    if (!staffSessionToken || connectedDepartment !== activeDepartment) return 'saved on this device only — connect the department PIN to notify the other team';
     try {
       const response = await fetch('/api/status-board', {
         method: 'PUT',
@@ -1104,73 +1134,95 @@ export default function Home() {
   };
 
   const markRoomReady = async (room: number) => {
-    if (roomStatuses[room] === 'Ready') return;
-    const time = new Intl.DateTimeFormat('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date());
-    setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
-    const saveError = await saveBoardStatus('housekeeping_room', room, 'ready');
-    setMessages((current) => [
-      {
-        id: Date.now(),
-        from: 'Housekeeping',
-        to: 'Front of House',
-        text: `Room ${room} has been cleaned and is ready for the guest.`,
-        time,
-        unread: true,
-        urgent: false,
-      },
-      ...current,
-    ]);
-    setRoomStatusNotice(saveError ? `Room ${room} sent to Front of House as ready (${saveError})` : `Room ${room} sent to Front of House as ready.`);
-    if (gentleSounds) playPing(false);
-    window.setTimeout(() => setRoomStatusNotice(''), 4000);
+    if (roomStatuses[room] === 'Ready' || pendingRoomTogglesRef.current.has(room)) return;
+    pendingRoomTogglesRef.current.add(room);
+    try {
+      const time = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date());
+      setRoomStatuses((current) => ({ ...current, [room]: 'Ready' }));
+      const saveError = await saveBoardStatus('housekeeping_room', room, 'ready');
+      setMessages((current) => [
+        {
+          id: Date.now(),
+          from: 'Housekeeping',
+          to: 'Front of House',
+          text: `Room ${room} has been cleaned and is ready for the guest.`,
+          time,
+          unread: true,
+          urgent: false,
+        },
+        ...current,
+      ]);
+      setRoomStatusNotice(saveError ? `Room ${room} sent to Front of House as ready (${saveError})` : `Room ${room} sent to Front of House as ready.`);
+      if (gentleSounds) playPing(false);
+      window.setTimeout(() => setRoomStatusNotice(''), 4000);
+    } finally {
+      pendingRoomTogglesRef.current.delete(room);
+    }
   };
 
   const undoRoomReady = async (room: number) => {
-    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-    setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
-    const saveError = await saveBoardStatus('housekeeping_room', room, 'pending');
-    setMessages((current) => [{ id: Date.now(), from: 'Housekeeping', to: 'Front of House', text: `Correction: room ${room} is not ready yet. Please wait for a new cleaning confirmation.`, time, unread: true, urgent: false }, ...current]);
-    setRoomStatusNotice(saveError ? `Room ${room} returned to awaiting confirmation (${saveError})` : `Room ${room} returned to awaiting confirmation. Front of House notified.`);
-    window.setTimeout(() => setRoomStatusNotice(''), 4000);
+    if (pendingRoomTogglesRef.current.has(room)) return;
+    pendingRoomTogglesRef.current.add(room);
+    try {
+      const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      setRoomStatuses((current) => ({ ...current, [room]: 'To clean' }));
+      const saveError = await saveBoardStatus('housekeeping_room', room, 'pending');
+      setMessages((current) => [{ id: Date.now(), from: 'Housekeeping', to: 'Front of House', text: `Correction: room ${room} is not ready yet. Please wait for a new cleaning confirmation.`, time, unread: true, urgent: false }, ...current]);
+      setRoomStatusNotice(saveError ? `Room ${room} returned to awaiting confirmation (${saveError})` : `Room ${room} returned to awaiting confirmation. Front of House notified.`);
+      window.setTimeout(() => setRoomStatusNotice(''), 4000);
+    } finally {
+      pendingRoomTogglesRef.current.delete(room);
+    }
   };
 
   const markTableCleared = async (table: number) => {
-    if (tableStatuses[table] === 'Cleared') return;
-    const time = new Intl.DateTimeFormat('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date());
-    setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
-    const saveError = await saveBoardStatus('restaurant_table', table, 'away');
-    setMessages((current) => [
-      {
-        id: Date.now(),
-        from: 'Restaurant',
-        to: 'Kitchen',
-        text: `Table ${table} has been cleared.`,
-        time,
-        unread: true,
-        urgent: false,
-      },
-      ...current,
-    ]);
-    setTableStatusNotice(saveError ? `Table ${table} marked cleared and Kitchen notified (${saveError})` : `Table ${table} marked cleared and Kitchen notified.`);
-    if (gentleSounds) playPing(false);
-    window.setTimeout(() => setTableStatusNotice(''), 4000);
+    if (tableStatuses[table] === 'Cleared' || pendingTableTogglesRef.current.has(table)) return;
+    pendingTableTogglesRef.current.add(table);
+    try {
+      const time = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date());
+      setTableStatuses((current) => ({ ...current, [table]: 'Cleared' }));
+      const saveError = await saveBoardStatus('restaurant_table', table, 'away');
+      setMessages((current) => [
+        {
+          id: Date.now(),
+          from: 'Restaurant',
+          to: 'Kitchen',
+          text: `Table ${table} has been cleared.`,
+          time,
+          unread: true,
+          urgent: false,
+        },
+        ...current,
+      ]);
+      setTableStatusNotice(saveError ? `Table ${table} marked cleared and Kitchen notified (${saveError})` : `Table ${table} marked cleared and Kitchen notified.`);
+      if (gentleSounds) playPing(false);
+      window.setTimeout(() => setTableStatusNotice(''), 4000);
+    } finally {
+      pendingTableTogglesRef.current.delete(table);
+    }
   };
 
   const undoTableCleared = async (table: number) => {
-    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-    setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
-    const saveError = await saveBoardStatus('restaurant_table', table, 'pending');
-    setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: cleared status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
-    setTableStatusNotice(saveError ? `Table ${table} returned to occupied (${saveError})` : `Table ${table} returned to occupied. Kitchen notified.`);
-    window.setTimeout(() => setTableStatusNotice(''), 4000);
+    if (pendingTableTogglesRef.current.has(table)) return;
+    pendingTableTogglesRef.current.add(table);
+    try {
+      const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      setTableStatuses((current) => ({ ...current, [table]: 'Occupied' }));
+      const saveError = await saveBoardStatus('restaurant_table', table, 'pending');
+      setMessages((current) => [{ id: Date.now(), from: 'Restaurant', to: 'Kitchen', text: `Correction: cleared status for table ${table} was withdrawn.`, time, unread: true, urgent: false }, ...current]);
+      setTableStatusNotice(saveError ? `Table ${table} returned to occupied (${saveError})` : `Table ${table} returned to occupied. Kitchen notified.`);
+      window.setTimeout(() => setTableStatusNotice(''), 4000);
+    } finally {
+      pendingTableTogglesRef.current.delete(table);
+    }
   };
 
   const addAppointment = (event: FormEvent) => {
@@ -1449,7 +1501,7 @@ export default function Home() {
     setAnnouncementAcknowledged(false);
     setAnnouncementStatus('Announcement published across every department dashboard.');
     setAnnouncementEditorOpen(false);
-    const token = window.sessionStorage.getItem('hotel_staff_session');
+    const token = window.sessionStorage.getItem('noir-house-staff-session');
     if (!token) return;
     try {
       const response = await fetch('/api/operations/announcements', {
@@ -1874,7 +1926,7 @@ export default function Home() {
           <div className="property-heading">
             <p>NOIR HOUSE · LONDON</p>
             <div className="department-greeting">
-              <span>Good morning,</span>
+              <span>Good {encouragementPeriod === 'night' ? 'evening' : encouragementPeriod},</span>
               <details className="department-switcher">
                 <summary
                   className="department-switcher-trigger"
@@ -2879,64 +2931,6 @@ export default function Home() {
                     </article>
                   );
                 })}
-              </section>
-              <section className="attention-card glass-panel sidebar-secondary">
-                <div className="section-heading">
-                  <div>
-                    <span className="eyebrow">Owned actions</span>
-                    <h2>Action log</h2>
-                  </div>
-                  <span className="request-count">3</span>
-                </div>
-                <div className="request">
-                  <span className="priority high" />
-                  <div>
-                    <strong>Allergy confirmation</strong>
-                    <p>Owned by Restaurant · Due now</p>
-                  </div>
-                  <ChevronDown size={15} />
-                </div>
-                <div className="request">
-                  <span className="priority medium" />
-                  <div>
-                    <strong>Late room service</strong>
-                    <p>Owned by Kitchen · Due 20:10</p>
-                  </div>
-                  <ChevronDown size={15} />
-                </div>
-                <div className="request">
-                  <span className="priority low" />
-                  <div>
-                    <strong>Guest transport</strong>
-                    <p>Owned by Front of House · Due 20:30</p>
-                  </div>
-                  <ChevronDown size={15} />
-                </div>
-                <div className="handover-signoff">
-                  <ShieldCheck size={14} />
-                  <div>
-                    <strong>Shift handover accepted</strong>
-                    <span>Jordan M. · Front of House · 19:00</span>
-                  </div>
-                </div>
-              </section>
-              <section className="today-glance glass-panel sidebar-secondary" aria-labelledby="today-glance-sidebar-title">
-                <div className="section-heading">
-                  <div>
-                    <span className="eyebrow">Operational summary</span>
-                    <h2 id="today-glance-sidebar-title">Today at a glance</h2>
-                  </div>
-                  <ShieldCheck size={18} />
-                </div>
-                <div className="today-glance-stats">
-                  <div><strong>{answeredGuestRequestCount}</strong><span>Guest requests answered</span></div>
-                  <div><strong>{openTaskCount}</strong><span>Open tasks</span></div>
-                  <div><strong>{outstandingHandoverCount}</strong><span>Handovers outstanding</span></div>
-                </div>
-                <div className={`today-glance-state ${todayAllClear ? 'clear' : ''}`}>
-                  <ShieldCheck size={14} />
-                  <span>{todayAllClear ? 'You’re on top of it' : 'Keep the handover moving'}</span>
-                </div>
               </section>
             </aside>
           </section>
