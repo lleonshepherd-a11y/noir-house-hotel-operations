@@ -7,7 +7,7 @@
 | `DB` | Cloudflare D1 binding | Permanent operational records and audit history |
 | `FILES` | Cloudflare R2 binding | Photos, PDFs, voice notes, and other attachments |
 
-These are bindings, not API keys. They are declared in `.openai/hosting.json` and connected by the hosting platform. For a direct Cloudflare deployment, bind `FILES` to the `hotel-files` bucket and bind `DB` to the chosen D1 database in the Worker configuration.
+These are bindings, not API keys. They are declared in `wrangler.json` at the project root — see "Deploying to your own Cloudflare account" in [README.md](README.md) for how to create the D1 database and R2 bucket and connect them.
 
 ## Optional browser environment variables
 
@@ -24,8 +24,8 @@ The build configuration may set `WRANGLER_WRITE_LOGS`, `WRANGLER_LOG_PATH`, and 
 
 ## API keys
 
-- No OpenAI API key is currently required.
+- No OpenAI API key is required by this project.
 - Do not add Cloudflare account IDs, R2 access key IDs, or R2 secret keys to browser-facing `VITE_` variables.
-- If deploying through OpenAI Sites, configure D1 and R2 as platform bindings rather than storing raw Cloudflare credentials in the repository.
-- If deploying outside Sites with an S3-compatible R2 client, keep `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` only in server-side secret storage. The current Worker-binding implementation does not need those three values.
+- D1 and R2 are configured as Worker bindings in `wrangler.json`, not raw credentials — nothing Cloudflare-secret needs to live in the repository.
+- If you ever access R2 through an S3-compatible client instead of the Worker binding, keep `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` only in server-side secret storage. The current Worker-binding implementation does not need those three values.
 

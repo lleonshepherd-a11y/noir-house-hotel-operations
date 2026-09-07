@@ -50,14 +50,54 @@ npm run start
 
 ## Cloud resources
 
-The application expects these Cloudflare bindings:
+The application expects these Cloudflare bindings, declared in `wrangler.json` at the project root:
 
 - `DB`: a D1 database for messages, tasks, receipts, sessions, pins, handovers, announcements, management decisions, and audit events.
 - `FILES`: an R2 bucket for uploaded photographs, PDFs, and voice recordings.
 
-They are declared in `.openai/hosting.json`. The logical binding `FILES` must be connected to the intended production bucket (for example, `hotel-files`) in the hosting environment. Do not put an R2 access key or secret key in frontend code.
+Do not put an R2 access key or secret key in frontend code.
 
 Database migrations are in `drizzle/` and must be applied in numerical order when provisioning a new database.
+
+## Deploying to your own Cloudflare account
+
+This project deploys as a standard Cloudflare Worker, entirely through the `wrangler` CLI and your own Cloudflare account — no third-party hosting service is involved.
+
+1. Log in to your Cloudflare account from the terminal:
+
+   ```bash
+   npx wrangler login
+   ```
+
+2. Create your own D1 database and R2 bucket (one-time setup):
+
+   ```bash
+   npx wrangler d1 create noir-house-db
+   npx wrangler r2 bucket create noir-house-files
+   ```
+
+   The `d1 create` command prints a `database_id`. Copy it into `wrangler.json`, replacing `REPLACE_WITH_YOUR_D1_DATABASE_ID`. If you name your D1 database or R2 bucket something other than `noir-house-db` / `noir-house-files`, update `database_name` / `bucket_name` in `wrangler.json` to match.
+
+3. Apply the database schema to your new D1 database, running each file in `drizzle/` in order:
+
+   ```bash
+   npx wrangler d1 execute noir-house-db --remote --file=drizzle/0001_accountability_foundation.sql
+   npx wrangler d1 execute noir-house-db --remote --file=drizzle/0002_management_oversight.sql
+   npx wrangler d1 execute noir-house-db --remote --file=drizzle/0003_status_boards.sql
+   npx wrangler d1 execute noir-house-db --remote --file=drizzle/0004_reliable_delivery.sql
+   ```
+
+   (If later migrations are added, run those too, in numerical order.)
+
+4. Build and deploy:
+
+   ```bash
+   npm run deploy
+   ```
+
+   This builds the app and runs `wrangler deploy` against the config in `wrangler.json`. Wrangler prints the live `*.workers.dev` URL when it finishes.
+
+To publish a future change, repeat step 4 — `npm run deploy` always builds fresh from the current code and pushes it live.
 
 ## Environment configuration
 
@@ -75,5 +115,5 @@ The visual dashboard is deployable, and the repository contains the backend data
 - `drizzle/` — D1 migrations
 - `components/` — reusable interface components
 - `public/` — public assets and service worker
-- `.openai/hosting.json` — Sites/Cloudflare resource declarations
+- `wrangler.json` — Cloudflare Worker config (bindings, D1 database, R2 bucket)
 

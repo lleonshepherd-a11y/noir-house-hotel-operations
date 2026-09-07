@@ -25,7 +25,6 @@
 ## Development and deployment
 
 - npm and `package-lock.json` for reproducible dependency installation
-- Wrangler for local Cloudflare Worker execution
-- OpenAI Sites Vite plugin for build and hosting integration
+- Wrangler for local Cloudflare Worker execution and deployment (`npm run deploy`)
 - Oxlint and Oxfmt for code quality and formatting
 
