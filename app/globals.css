@@ -700,7 +700,7 @@ h1,h2,h3,p{margin:0;}
 .product-credit a:hover{color:var(--ink-faint);}
 
 /* ===== Composer ===== */
-.composer{position:fixed;right:20px;top:20px;bottom:20px;z-index:95;width:min(440px,calc(100vw - 40px));padding:22px;border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;}
+.composer{position:fixed;right:20px;top:20px;max-height:min(620px,calc(100vh - 40px));z-index:95;width:min(440px,calc(100vw - 40px));padding:22px;border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;}
 .composer-heading{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:16px;}
 .composer-heading div{display:flex;flex-direction:column;gap:3px;}
 .composer-heading span{font-size:15px;font-weight:620;}
@@ -719,7 +719,7 @@ h1,h2,h3,p{margin:0;}
 .recipient-picker button{min-width:0;height:36px;border-radius:var(--r-sm);border:1px solid var(--line);background:rgba(26,29,41,.03);color:var(--ink-faint);padding:0 10px;display:flex;align-items:center;gap:6px;font-size:10.5px;}
 .recipient-picker button:first-child{grid-column:1/-1;justify-content:center;}
 .recipient-picker button.active{background:rgba(26,29,41,.12);border-color:rgba(255,255,255,.26);color:var(--ink);}
-.composer textarea{width:100%;flex:1;min-height:150px;resize:none;border:1px solid var(--line);border-radius:var(--r-lg);background:rgba(26,29,41,.025);color:var(--ink);margin-top:14px;padding:15px;outline:none;font-size:12.5px;line-height:1.6;}
+.composer textarea{width:100%;flex:none;height:88px;resize:none;border:1px solid var(--line);border-radius:var(--r-lg);background:rgba(26,29,41,.025);color:var(--ink);margin-top:14px;padding:15px;outline:none;font-size:12.5px;line-height:1.6;}
 .composer textarea:focus{border-color:rgba(255,255,255,.26);}
 .composer textarea::placeholder{color:var(--ink-quiet);}
 .spelling-results{display:flex;align-items:flex-start;gap:8px;margin-top:9px;padding:9px 10px;border:1px solid color-mix(in oklch,var(--success) 22%,var(--line-soft));border-radius:var(--r-sm);background:color-mix(in oklch,var(--success) 6%,transparent);color:color-mix(in oklch,var(--success) 78%,white);font-size:10px;}
