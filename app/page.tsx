@@ -1612,25 +1612,9 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* TEMP: empty tile-shape preview for element-by-element review. Remove when moving past this step. */}
-      <div className="tablet-preview" aria-hidden="true">
-        <div className="tablet-grid">
-          <div className="tablet tablet-hero" />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 4', height: 130 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 4', height: 130 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 4', height: 130 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 7', height: 220 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 5', height: 220 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 3', height: 110 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 6', height: 170 }} />
-          <div className="tablet tablet-pop" style={{ gridColumn: 'span 6', height: 170 }} />
-        </div>
-      </div>
-
       {utilityPanel && (
+        <>
+        <div className="panel-scrim" aria-hidden="true" onClick={() => setUtilityPanel(null)} />
         <section
           className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`}
           aria-label={`${utilityPanel} panel`}
@@ -1759,6 +1743,7 @@ export default function Home() {
             </div>
           )}
         </section>
+        </>
       )}
 
       {currentAppointment && (
@@ -1792,6 +1777,8 @@ export default function Home() {
       )}
 
       {calendarOpen && (
+        <>
+        <div className="panel-scrim" aria-hidden="true" onClick={() => setCalendarOpen(false)} />
         <section className="department-calendar glass-panel" aria-label={`${activeDepartment} calendar panel`}>
           <div className="calendar-heading">
             <div>
@@ -1881,6 +1868,7 @@ export default function Home() {
             )}
           </div>
         </section>
+        </>
       )}
 
       <section className="workspace">
@@ -2617,6 +2605,8 @@ export default function Home() {
             </section>
           )}
           {activeDepartment === 'General Manager' && selectedManagementIssue && (
+            <>
+            <div className="panel-scrim" aria-hidden="true" onClick={() => setSelectedManagementThreadId(null)} />
             <section className="gm-thread-panel" role="dialog" aria-modal="true" aria-labelledby="gm-thread-title">
               <button className="gm-thread-close" onClick={() => setSelectedManagementThreadId(null)} aria-label="Close management thread"><X size={18} /></button>
               <span className="eyebrow">Original thread · {selectedManagementIssue.department}</span>
@@ -2645,6 +2635,7 @@ export default function Home() {
                 </div>
               )}
             </section>
+            </>
           )}
           <section className="dashboard-grid dashboard-movable" style={{ order: tileOrder('operations') }}>
             <div className="main-column">
@@ -3069,6 +3060,8 @@ export default function Home() {
           </div>
           </section>
           {selectedPlannerDay && (
+            <>
+            <div className="panel-scrim" aria-hidden="true" onClick={() => { setSelectedPlannerDay(null); setPlannerEntryMode(null); setPlannerEditingId(null); }} />
             <section className="planner-day-panel" role="dialog" aria-modal="true" aria-labelledby="planner-day-title">
               <button className="planner-day-close" type="button" onClick={() => { setSelectedPlannerDay(null); setPlannerEntryMode(null); setPlannerEditingId(null); }} aria-label="Close Ops Planner day details"><X size={18} /></button>
               <span className="eyebrow">Ops Planner · {activeDepartment}</span>
@@ -3099,6 +3092,7 @@ export default function Home() {
                 setPlannerEntryTime('09:00');
               }}><Plus size={15} /> Add entry for this day</button>}
             </section>
+            </>
           )}
           <footer className="product-credit" style={{ order: 100 }}>
             <a href="https://freedomservices.uk/" target="_blank" rel="noopener noreferrer">
@@ -3108,6 +3102,8 @@ export default function Home() {
         </div>
 
         {composerOpen && (
+          <>
+          <div className="panel-scrim" aria-hidden="true" onClick={() => setComposerOpen(false)} />
           <div
             className="composer glass-panel"
             role="dialog"
@@ -3313,6 +3309,7 @@ export default function Home() {
               </div>
             </form>
           </div>
+          </>
         )}
       </section>
     </main>
