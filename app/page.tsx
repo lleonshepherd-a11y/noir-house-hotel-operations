@@ -35,6 +35,11 @@ import {
   Wrench,
   X,
   Zap,
+  Home as HomeIcon,
+  FolderKanban,
+  BarChart3,
+  ArrowUpRight,
+  Users,
 } from 'lucide-react';
 import { flushMessageQueue, queueMessage, watchConnectivity } from '@/lib/client/reliable-messages';
 
@@ -1874,128 +1879,17 @@ export default function Home() {
       )}
 
       <section className="workspace">
-        <header className="topbar glass-panel">
-          <div className="property-heading">
-            <div className="department-greeting">
-              <span>Good morning,</span>
-              <details className="department-switcher">
-                <summary
-                  className="department-switcher-trigger"
-                  aria-label="Active department"
-                >
-                  <SelectedDepartmentIcon size={14} />
-                  <span>{selectedDepartment.name}</span>
-                  <ChevronDown size={12} />
-                </summary>
-                <div className="department-switcher-menu" role="menu">
-                    {departments.map((department) => {
-                      const DepartmentIcon = department.icon;
-                      return (
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className={department.name === activeDepartment ? 'selected' : ''}
-                          key={department.name}
-                          onClick={(event) => {
-                            setActiveDepartment(department.name);
-                            event.currentTarget
-                              .closest('details')
-                              ?.removeAttribute('open');
-                          }}
-                        >
-                          <span className="dept-menu-icon" style={{ '--dept-color': department.accent } as CSSProperties}>
-                            <DepartmentIcon size={14} />
-                          </span>
-                          <span>{department.name}</span>
-                        </button>
-                      );
-                    })}
-                </div>
-              </details>
-            </div>
+        <nav className="pill-topnav glass-panel">
+          <div className="pill-topnav-mark">N</div>
+          <div className="pill-tabs">
+            <span className="pill-tab active"><HomeIcon size={15} />Home</span>
+            <span className="pill-tab"><LayoutDashboard size={15} />Dashboard</span>
+            <span className="pill-tab"><FolderKanban size={15} />Projects</span>
+            <span className="pill-tab"><ListChecks size={15} />Tasks</span>
+            <span className="pill-tab"><BarChart3 size={15} />Reporting</span>
+            <span className="pill-tab"><Users size={15} />Users</span>
           </div>
-          <div
-            className="weather"
-            aria-label={`London weather: ${weather.label}, ${weather.temperature} degrees`}
-          >
-            <div className={`weather-icon ${weather.kind}`}>
-              {weather.kind === 'sun' ? (
-                <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                  <defs>
-                    <radialGradient id="wx-sun" cx="50%" cy="42%" r="62%">
-                      <stop offset="0%" stopColor="#fff6d6" />
-                      <stop offset="55%" stopColor="#f4c454" />
-                      <stop offset="100%" stopColor="#dd9d2c" />
-                    </radialGradient>
-                  </defs>
-                  <g stroke="#f0c869" strokeWidth="1.7" strokeLinecap="round" opacity="0.9">
-                    <line x1="20" y1="1.5" x2="20" y2="6.5" />
-                    <line x1="20" y1="33.5" x2="20" y2="38.5" />
-                    <line x1="1.5" y1="20" x2="6.5" y2="20" />
-                    <line x1="33.5" y1="20" x2="38.5" y2="20" />
-                    <line x1="7" y1="7" x2="10.5" y2="10.5" />
-                    <line x1="29.5" y1="29.5" x2="33" y2="33" />
-                    <line x1="7" y1="33" x2="10.5" y2="29.5" />
-                    <line x1="29.5" y1="10.5" x2="33" y2="7" />
-                  </g>
-                  <circle cx="20" cy="20" r="10.5" fill="url(#wx-sun)" />
-                </svg>
-              ) : weather.kind === 'rain' ? (
-                <>
-                  <svg width="34" height="26" viewBox="0 0 48 30" fill="none" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="wx-rain-cloud" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#aebac7" />
-                        <stop offset="100%" stopColor="#6c7c8f" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M13 24a8 8 0 0 1-1-15.9A10 10 0 0 1 31 6a7 7 0 0 1-1 18H13Z" fill="url(#wx-rain-cloud)" />
-                  </svg>
-                  <span className="rain-drops" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                </>
-              ) : (
-                <svg width="34" height="30" viewBox="0 0 48 36" fill="none" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="wx-cloud" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ffffff" />
-                      <stop offset="100%" stopColor="#c9cfd8" />
-                    </linearGradient>
-                    <radialGradient id="wx-cloud-sun" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#fff6d6" />
-                      <stop offset="100%" stopColor="#e6b64d" />
-                    </radialGradient>
-                  </defs>
-                  <circle cx="34" cy="10" r="7" fill="url(#wx-cloud-sun)" opacity="0.92" />
-                  <path d="M13 30a8 8 0 0 1-1-15.9A10 10 0 0 1 31 12a7 7 0 0 1-1 18H13Z" fill="url(#wx-cloud)" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <strong>{weather.temperature}°</strong>
-              <span>{weather.label}</span>
-            </div>
-          </div>
-          <div className="date-time">
-            <div>
-              <span>{date}</span>
-              <strong>{time}</strong>
-              <p className="staff-encouragement" key={`${activeDepartment}-${encouragementSlot}`}>
-                {staffEncouragement}
-              </p>
-            </div>
-          </div>
-          <div className="top-actions">
-            <span
-              className="console-active"
-              aria-label="Shared console active"
-            >
-              <i />
-              <strong>ON</strong>
-            </span>
+          <div className="pill-topnav-right">
             <div className="notification-wrap top-notification guest-top-notification">
               <button
                 key={pendingGuestRequests.map((request) => request.id).join('-') || 'no-guest-alerts'}
@@ -2263,9 +2157,52 @@ export default function Home() {
               <ChevronDown size={15} />
             </button>
           </div>
-        </header>
+        </nav>
 
-        <section className="hero-stat glass-panel" aria-label="Today's task completion">
+        <div className="greeting-row">
+          <div className="greeting">
+            <p>Hello, {activeDepartment} team</p>
+            <h1>Welcome to Dashboard</h1>
+          </div>
+          <details className="department-switcher">
+            <summary
+              className="department-switcher-trigger dept-pill"
+              aria-label="Active department"
+            >
+              <SelectedDepartmentIcon size={14} />
+              <span>{selectedDepartment.name}</span>
+              <ChevronDown size={12} />
+            </summary>
+            <div className="department-switcher-menu" role="menu">
+              {departments.map((department) => {
+                const DepartmentIcon = department.icon;
+                return (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={department.name === activeDepartment ? 'selected' : ''}
+                    key={department.name}
+                    onClick={(event) => {
+                      setActiveDepartment(department.name);
+                      event.currentTarget
+                        .closest('details')
+                        ?.removeAttribute('open');
+                    }}
+                  >
+                    <span className="dept-menu-icon" style={{ '--dept-color': department.accent } as CSSProperties}>
+                      <DepartmentIcon size={14} />
+                    </span>
+                    <span>{department.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </details>
+        </div>
+
+        <div className="dash-grid">
+          <div className="dash-stack">
+            <section className="hero-stat glass-panel" aria-label="Today's task completion">
           <div className="hero-stat-top">
             <strong>{heroTaskPercent}%</strong>
             <span>of today&rsquo;s tasks complete</span>
@@ -2286,27 +2223,84 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="stat-trio">
-          <div className="stat-card glass-panel">
-            <div className="stat-card-top">
-              <span className="stat-ic pink"><ConciergeBell size={16} /></span>
-            </div>
-            <strong>{pendingGuestRequests.length}</strong>
-            <span>Guest requests open</span>
+            <section className="revenue-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">{activeDepartment}</span><h2>Weekly guest volume</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <strong className="revenue-figure">{guestRequests.length}<em>total requests logged</em></strong>
+              <svg className="mini-chart" viewBox="0 0 220 60" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="0,45 40,30 80,38 120,18 160,26 220,8" fill="none" stroke="#22c3a6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mini-chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Today</span></div>
+            </section>
+
+            <section className="employees-card glass-panel">
+              <div className="card-head">
+                <div><h2>Departments</h2><span className="eyebrow">On this console</span></div>
+              </div>
+              {departments.slice(0, 3).map((department) => (
+                <div className="employee-row" key={department.name}>
+                  <span className="employee-avatar" style={{ '--dept-color': department.accent } as CSSProperties}><department.icon size={15} /></span>
+                  <div><strong>{department.name}</strong><span>Department console</span></div>
+                </div>
+              ))}
+            </section>
           </div>
-          <div className="stat-card glass-panel">
-            <div className="stat-card-top">
-              <span className="stat-ic blue"><ListChecks size={16} /></span>
+
+          <div className="dash-side">
+            <div className="controls-row">
+              <span className="control-pill"><SelectedDepartmentIcon size={14} />{activeDepartment}</span>
+              <button className="primary-btn-black" onClick={() => { setReplyContext(null); setComposerOpen(true); }}>
+                <Plus size={15} />New message
+              </button>
             </div>
-            <strong>{openTaskCount}</strong>
-            <span>Tasks in progress</span>
-          </div>
-          <div className="stat-card glass-panel">
-            <div className="stat-card-top">
-              <span className="stat-ic green"><NotebookPen size={16} /></span>
+
+            <div className="stat-trio">
+              <div className="stat-card glass-panel">
+                <div className="stat-card-top">
+                  <span className="stat-ic pink"><ConciergeBell size={16} /></span>
+                  <span className="expand"><ArrowUpRight size={12} /></span>
+                </div>
+                <strong>{pendingGuestRequests.length}</strong>
+                <span>Guest requests open</span>
+              </div>
+              <div className="stat-card glass-panel">
+                <div className="stat-card-top">
+                  <span className="stat-ic blue"><ListChecks size={16} /></span>
+                  <span className="expand"><ArrowUpRight size={12} /></span>
+                </div>
+                <strong>{openTaskCount}</strong>
+                <span>Tasks in progress</span>
+              </div>
+              <div className="stat-card glass-panel">
+                <div className="stat-card-top">
+                  <span className="stat-ic green"><NotebookPen size={16} /></span>
+                  <span className="expand"><ArrowUpRight size={12} /></span>
+                </div>
+                <strong>{outstandingHandoverCount}</strong>
+                <span>Handovers outstanding</span>
+              </div>
             </div>
-            <strong>{outstandingHandoverCount}</strong>
-            <span>Handovers outstanding</span>
+
+            <section className="task-summary-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">Accountability</span><h2>Task Management Summary</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <strong className="task-summary-count">{assignedTasks.length} Task{assignedTasks.length === 1 ? '' : 's'}</strong>
+              <svg className="mini-area-chart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="taskAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon points="0,60 45,40 90,55 135,25 180,45 225,20 270,38 320,15 320,90 0,90" fill="url(#taskAreaFill)" opacity="0.18" />
+                <polyline points="0,60 45,40 90,55 135,25 180,45 225,20 270,38 320,15" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mini-chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            </section>
           </div>
         </div>
 
