@@ -195,6 +195,8 @@ h1,h2,h3,p{margin:0;}
 /* ===== Pill top nav (base build) ===== */
 .pill-topnav{display:flex;align-items:center;gap:22px;padding:9px 18px;border-radius:999px;margin-bottom:24px;position:relative;z-index:22;background:linear-gradient(165deg,rgba(22,22,26,.92),rgba(6,6,8,.88));border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 20px 44px rgba(0,0,0,.35);backdrop-filter:blur(30px) saturate(160%);-webkit-backdrop-filter:blur(30px) saturate(160%);--ink:#fff;--ink-dim:rgba(255,255,255,.72);--ink-faint:rgba(255,255,255,.5);--ink-quiet:rgba(255,255,255,.32);--line:rgba(255,255,255,.14);--line-soft:rgba(255,255,255,.08);}
 .pill-topnav .pill-tab.active{background:#fff;color:#15151a;}
+.pill-topnav .icon-button{color:#fff;}
+.pill-topnav .icon-button.guest-urgent{color:#fff;}
 .pill-topnav .icon-button:hover{background:rgba(255,255,255,.1);}
 .pill-topnav .department-switcher-trigger{background:rgba(255,255,255,.08);}
 .pill-topnav-mark{width:32px;height:32px;flex:none;border-radius:9px;background:linear-gradient(150deg,var(--accent),#3e82f0);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700;box-shadow:0 8px 16px rgba(99,87,224,.32);}
@@ -274,10 +276,10 @@ h1,h2,h3,p{margin:0;}
 .icon-button:hover{color:var(--ink);background:rgba(26,29,41,.06);border-radius:11px;transform:translateY(-1px);}
 .icon-button.has-alert{color:var(--ink);}
 .icon-button.guest-urgent{color:color-mix(in oklch,var(--danger) 80%,var(--ink));}
-.count-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:50%;background:linear-gradient(150deg,#ff8f86,var(--danger));color:#2a0704;font-size:9px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 3px var(--bg),0 2px 6px rgba(26,29,41,.25);}
-.guest-alert-count{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:linear-gradient(150deg,#f0c869,var(--warning));color:#241a04;font-size:8.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg);}
-.guest-alert-count.urgent{background:linear-gradient(150deg,#ff8f86,var(--danger));color:#2a0704;}
-.shift-alert-count{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:linear-gradient(150deg,color-mix(in oklch,var(--calendar) 70%,white),var(--calendar));color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg),0 0 8px color-mix(in oklch,var(--calendar) 45%,transparent);}
+.count-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:9px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 3px rgba(8,8,10,.9),0 2px 6px rgba(0,0,0,.3);}
+.guest-alert-count{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(8,8,10,.9);}
+.guest-alert-count.urgent{background:rgba(255,82,69,.35);border-color:rgba(255,130,120,.6);}
+.shift-alert-count{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(8,8,10,.9);}
 .compose-button{height:42px;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:#3e6df0;display:flex;align-items:center;gap:8px;padding:0 17px;color:#fff;font-size:12.5px;font-weight:680;box-shadow:0 12px 26px rgba(62,109,240,.4);transition:.18s;}
 .compose-button:hover{transform:translateY(-1px);box-shadow:0 16px 32px rgba(62,109,240,.45);background:#3763dd;}
 .compose-button svg{color:#fff;}
