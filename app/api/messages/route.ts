@@ -1,8 +1,22 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
-import { assertAccess, assertDepartmentInHotel } from '@/lib/backend/policy';
+import { assertAccess, canAccessGuestRequestByRole } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
-import { isManagement } from '@/lib/backend/types';
+import { isManagement, type StaffIdentity } from '@/lib/backend/types';
+
+const creatableConversationKinds = new Set(['department', 'direct', 'approval']);
+
+async function assertConversationMembership(db: D1Database, conversationId: string, departmentId: string) {
+  const membership = await db.prepare(`SELECT 1 AS allowed FROM conversation_departments
+    WHERE conversation_id = ? AND department_id = ?`).bind(conversationId, departmentId).first();
+  if (!membership) throw new Response('Forbidden', { status: 403 });
+}
+
+async function assertGuestRequestAccess(db: D1Database, identity: StaffIdentity, conversationId: string, hotelId: string) {
+  assertAccess(identity, 'read', 'guest_request', { hotelId });
+  if (isManagement(identity) || canAccessGuestRequestByRole(identity)) return;
+  await assertConversationMembership(db, conversationId, identity.departmentId);
+}
 
 export async function GET(request: Request) {
   try {
@@ -17,11 +31,9 @@ export async function GET(request: Request) {
       .first<{ id: string; hotel_id: string; kind: string }>();
     if (!conversation || conversation.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
     if (conversation.kind === 'guest_request') {
-      assertAccess(identity, 'read', 'guest_request', { hotelId: conversation.hotel_id });
+      await assertGuestRequestAccess(db, identity, conversationId, conversation.hotel_id);
     } else if (!isManagement(identity)) {
-      const membership = await db.prepare(`SELECT 1 AS allowed FROM conversation_departments
-        WHERE conversation_id = ? AND department_id = ?`).bind(conversationId, identity.departmentId).first();
-      if (!membership) return new Response('Forbidden', { status: 403 });
+      await assertConversationMembership(db, conversationId, identity.departmentId);
     }
     const messages = await db
       .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.reply_to_message_id, m.created_at,
@@ -59,14 +71,19 @@ export async function POST(request: Request) {
       WHERE sender_staff_id = ? AND client_message_id = ?`).bind(identity.staffId, body.clientMessageId.trim())
       .first<{ id: string; conversation_id: string; created_at: string }>();
     if (duplicate) return Response.json({ conversationId: duplicate.conversation_id, messageId: duplicate.id, createdAt: duplicate.created_at, duplicate: true });
+    if (body.kind && !creatableConversationKinds.has(body.kind)) {
+      return Response.json({ error: 'Invalid conversation kind' }, { status: 400 });
+    }
     const now = new Date().toISOString();
     const conversationId = body.conversationId ?? crypto.randomUUID();
     if (!body.conversationId) {
       if (!body.recipientDepartmentIds?.length) return Response.json({ error: 'Choose a recipient department' }, { status: 400 });
-      for (const departmentId of body.recipientDepartmentIds) {
-        await assertDepartmentInHotel(db, departmentId, identity.hotelId);
-      }
-      const members = [...new Set([identity.departmentId, ...body.recipientDepartmentIds])];
+      const uniqueRecipients = [...new Set(body.recipientDepartmentIds)];
+      const placeholders = uniqueRecipients.map(() => '?').join(',');
+      const validRecipients = await db.prepare(`SELECT id FROM departments WHERE hotel_id = ? AND id IN (${placeholders})`)
+        .bind(identity.hotelId, ...uniqueRecipients).all<{ id: string }>();
+      if (validRecipients.results.length !== uniqueRecipients.length) throw new Response('Forbidden', { status: 403 });
+      const members = [...new Set([identity.departmentId, ...uniqueRecipients])];
       await db.batch([
         db.prepare(`INSERT INTO conversations (id, hotel_id, kind, subject, status, created_by_staff_id, created_at, updated_at)
           VALUES (?, ?, ?, ?, 'open', ?, ?, ?)`).bind(
@@ -85,11 +102,13 @@ export async function POST(request: Request) {
     } else {
       const conversation = await db.prepare('SELECT hotel_id, kind FROM conversations WHERE id = ?').bind(conversationId).first<{ hotel_id: string; kind: string }>();
       if (!conversation || conversation.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
-      if (conversation.kind === 'guest_request') assertAccess(identity, 'update', 'guest_request', { hotelId: conversation.hotel_id });
-      else if (!isManagement(identity)) {
-        const membership = await db.prepare(`SELECT 1 AS allowed FROM conversation_departments
-          WHERE conversation_id = ? AND department_id = ?`).bind(conversationId, identity.departmentId).first();
-        if (!membership) return new Response('Forbidden', { status: 403 });
+      if (conversation.kind === 'guest_request') await assertGuestRequestAccess(db, identity, conversationId, conversation.hotel_id);
+      else if (!isManagement(identity)) await assertConversationMembership(db, conversationId, identity.departmentId);
+    }
+    if (body.replyToMessageId) {
+      const replyTarget = await db.prepare('SELECT conversation_id FROM messages WHERE id = ?').bind(body.replyToMessageId).first<{ conversation_id: string }>();
+      if (!replyTarget || replyTarget.conversation_id !== conversationId) {
+        return Response.json({ error: 'Invalid reply target' }, { status: 400 });
       }
     }
     const messageId = crypto.randomUUID();

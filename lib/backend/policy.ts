@@ -3,6 +3,10 @@ import type { Action, Resource, ResourceScope, StaffIdentity } from './types';
 const managementRoles = new Set(['duty_manager', 'general_manager', 'admin']);
 const guestRequestRoles = new Set(['front_of_house', 'duty_manager', 'general_manager', 'admin']);
 
+export function canAccessGuestRequestByRole(identity: StaffIdentity): boolean {
+  return guestRequestRoles.has(identity.role);
+}
+
 export function canAccess(
   identity: StaffIdentity,
   action: Action,

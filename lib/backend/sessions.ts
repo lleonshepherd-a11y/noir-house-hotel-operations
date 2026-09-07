@@ -46,12 +46,21 @@ export async function startStaffSession(db: D1Database, staffId: string, pin: st
 }
 
 export async function startDepartmentSession(db: D1Database, departmentName: string, pin: string) {
-  const staff = await db.prepare(`SELECT s.id FROM staff s
+  const matches = await db.prepare(`SELECT s.id, s.hotel_id FROM staff s
     JOIN departments d ON d.id = s.department_id
     WHERE lower(d.name) = lower(?) AND s.active = 1
-    ORDER BY s.created_at ASC LIMIT 1`).bind(departmentName).first<{ id: string }>();
-  if (!staff) throw new Response('This department account has not been provisioned', { status: 401 });
-  return startStaffSession(db, staff.id, pin);
+    ORDER BY s.created_at ASC`).bind(departmentName).all<{ id: string; hotel_id: string }>();
+  if (!matches.results.length) throw new Response('This department account has not been provisioned', { status: 401 });
+  // A department name is only guaranteed unique within one hotel. If staff in
+  // more than one hotel share this department name, picking one arbitrarily
+  // would risk authenticating into the wrong hotel's tenant, so refuse rather
+  // than guess — this deployment needs staff-ID login (or a hotel-scoped
+  // department login) until departments carry a globally-unique identifier.
+  const distinctHotels = new Set(matches.results.map((row) => row.hotel_id));
+  if (distinctHotels.size > 1) {
+    throw new Response('This department name exists in more than one hotel; sign in with a staff PIN instead', { status: 409 });
+  }
+  return startStaffSession(db, matches.results[0].id, pin);
 }
 
 export async function requireStaffSession(db: D1Database, token: string | null): Promise<StaffIdentity> {
@@ -65,7 +74,10 @@ export async function requireStaffSession(db: D1Database, token: string | null):
     .bind(tokenHash, new Date().toISOString())
     .first<StaffRow & { session_id: string }>();
   if (!row) throw new Response('Staff PIN session has expired', { status: 401 });
-  await db.prepare('UPDATE staff_sessions SET last_seen_at = ? WHERE id = ?').bind(new Date().toISOString(), row.session_id).run();
+  const now = new Date();
+  const slidingExpiry = new Date(now.getTime() + SESSION_MINUTES * 60_000).toISOString();
+  await db.prepare('UPDATE staff_sessions SET last_seen_at = ?, expires_at = ? WHERE id = ?')
+    .bind(now.toISOString(), slidingExpiry, row.session_id).run();
   return toIdentity(row);
 }
 

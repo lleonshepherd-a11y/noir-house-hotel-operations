@@ -250,6 +250,7 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_guest_requests_hotel_status ON guest_requests(hotel_id, status, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_hotel_created ON audit_events(hotel_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_events(entity_type, entity_id, created_at)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_events_hotel_previous_hash ON audit_events(hotel_id, previous_event_hash)`,
   `CREATE INDEX IF NOT EXISTS idx_watchers_staff ON conversation_watchers(staff_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_decisions_status ON management_decisions(status, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_planner_hotel_start ON planner_entries(hotel_id, starts_at)`,

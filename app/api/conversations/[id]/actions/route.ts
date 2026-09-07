@@ -5,6 +5,7 @@ import { requireStaffSession } from '@/lib/backend/sessions';
 import { isManagement } from '@/lib/backend/types';
 
 type Command = 'watch' | 'unwatch' | 'step_in' | 'step_back' | 'comment' | 'request_update' | 'thank' | 'reassign' | 'decide' | 'resolve';
+const knownCommands: ReadonlySet<Command> = new Set(['watch', 'unwatch', 'step_in', 'step_back', 'comment', 'request_update', 'thank', 'reassign', 'decide', 'resolve']);
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -16,6 +17,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (!conversation || conversation.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
     const body = await request.json() as { command?: Command; note?: string; departmentId?: string; decisionId?: string; outcome?: 'approved'|'declined'|'more_information'|'resolved' };
     if (!body.command) return Response.json({ error: 'Command is required' }, { status: 400 });
+    if (!knownCommands.has(body.command)) return Response.json({ error: 'Unknown command' }, { status: 400 });
     const now = new Date().toISOString();
     let messageId: string | null = null;
     if (body.command === 'watch') await db.prepare('INSERT OR IGNORE INTO conversation_watchers (conversation_id, staff_id, created_at) VALUES (?, ?, ?)').bind(conversationId, identity.staffId, now).run();
@@ -28,8 +30,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       await db.prepare('INSERT OR IGNORE INTO conversation_departments (conversation_id, department_id) VALUES (?, ?)').bind(conversationId, body.departmentId).run();
     } else if (body.command === 'decide') {
       if (!body.decisionId || !body.outcome) return Response.json({ error: 'Decision and outcome are required' }, { status: 400 });
-      await db.prepare(`UPDATE management_decisions SET status = ?, decision_note = ?, decided_by_staff_id = ?, updated_at = ?, resolved_at = CASE WHEN ? IN ('approved','declined','resolved') THEN ? ELSE NULL END WHERE id = ? AND conversation_id = ?`)
+      const decided = await db.prepare(`UPDATE management_decisions SET status = ?, decision_note = ?, decided_by_staff_id = ?, updated_at = ?, resolved_at = CASE WHEN ? IN ('approved','declined','resolved') THEN ? ELSE NULL END WHERE id = ? AND conversation_id = ?`)
         .bind(body.outcome, body.note?.trim() || null, identity.staffId, now, body.outcome, now, body.decisionId, conversationId).run();
+      if (!decided.meta.changes) return Response.json({ error: 'Decision not found' }, { status: 404 });
     } else {
       const text = body.note?.trim() || (body.command === 'request_update' ? 'Management requested an update.' : body.command === 'thank' ? 'Management thanked the team.' : body.command === 'resolve' ? 'Management resolved this issue.' : 'Management commented.');
       messageId = crypto.randomUUID();

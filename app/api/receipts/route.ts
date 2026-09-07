@@ -20,6 +20,10 @@ export async function POST(request: Request) {
     const message = await db.prepare(`SELECT c.hotel_id FROM messages m JOIN conversations c ON c.id = m.conversation_id
       WHERE m.id = ?`).bind(body.messageId).first<{ hotel_id: string }>();
     if (!message || message.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
+    const isRecipient = await db.prepare(`SELECT 1 FROM messages m
+      JOIN conversation_departments cd ON cd.conversation_id = m.conversation_id
+      WHERE m.id = ? AND cd.department_id = ?`).bind(body.messageId, identity.departmentId).first();
+    if (!isRecipient) return new Response('Forbidden', { status: 403 });
     const now = new Date().toISOString();
     const column = receiptColumns[body.event];
     await db.prepare(`INSERT INTO message_receipts (message_id, department_id, ${column}, acted_by_staff_id)
