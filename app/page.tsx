@@ -2395,11 +2395,100 @@ export default function Home() {
               </svg>
               <div className="mini-chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
             </section>
-          </div>
-        </div>
 
-        <div className="content">
-          {/* Old tiles removed — rebuilding section by section on the new base. */}
+            <section className="task-summary-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">Handover</span><h2>Shift Handover</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <strong className="task-summary-count">{outstandingHandoverCount} Outstanding</strong>
+              <svg className="mini-area-chart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="handoverAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon points="0,70 45,55 90,60 135,35 180,50 225,30 270,45 320,25 320,90 0,90" fill="url(#handoverAreaFill)" opacity="0.18" />
+                <polyline points="0,70 45,55 90,60 135,35 180,50 225,30 270,45 320,25" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mini-chart-labels">
+                {shiftHandovers.filter((item) => item.department === activeDepartment).slice(0, 2).map((item) => (
+                  <span key={item.id} className={item.complete ? '' : 'mini-chart-label-pending'}>{item.author}</span>
+                ))}
+                {shiftHandovers.filter((item) => item.department === activeDepartment).length === 0 && <span>All handed over</span>}
+              </div>
+            </section>
+
+            <section className="task-summary-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">Pinboard</span><h2>Pinned Notes</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <strong className="task-summary-count">
+                {pinnedNotes.filter((note) => note.department === activeDepartment).length} Pinned
+              </strong>
+              <svg className="mini-area-chart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="pinboardAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon points="0,55 45,65 90,40 135,50 180,28 225,42 270,20 320,35 320,90 0,90" fill="url(#pinboardAreaFill)" opacity="0.18" />
+                <polyline points="0,55 45,65 90,40 135,50 180,28 225,42 270,20 320,35" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mini-chart-labels">
+                {pinnedNotes.filter((note) => note.department === activeDepartment).some((note) => note.urgent) ? (
+                  <span className="mini-chart-label-pending">Urgent note pinned</span>
+                ) : (
+                  <span>No urgent pins</span>
+                )}
+              </div>
+            </section>
+
+            <section className="task-summary-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">Guest Services</span><h2>Guest Requests</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <strong className="task-summary-count">{pendingGuestRequests.length} Request{pendingGuestRequests.length === 1 ? '' : 's'}</strong>
+              <svg className="mini-area-chart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="guestAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon points="0,50 45,60 90,42 135,58 180,38 225,52 270,30 320,44 320,90 0,90" fill="url(#guestAreaFill)" opacity="0.18" />
+                <polyline points="0,50 45,60 90,42 135,58 180,38 225,52 270,30 320,44" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mini-chart-labels">
+                <span>{pendingGuestRequests.some((request) => request.urgent) ? 'Urgent request waiting' : 'No urgent requests'}</span>
+              </div>
+            </section>
+
+            <section className="task-summary-card glass-panel">
+              <div className="card-head">
+                <div><span className="eyebrow">Staffing</span><h2>Team on Shift</h2></div>
+                <span className="expand"><ArrowUpRight size={13} /></span>
+              </div>
+              <strong className="task-summary-count">{departments.reduce((total, department) => total + department.online, 0)} Online</strong>
+              <svg className="mini-area-chart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="staffAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon points="0,58 45,48 90,52 135,32 180,44 225,24 270,38 320,18 320,90 0,90" fill="url(#staffAreaFill)" opacity="0.18" />
+                <polyline points="0,58 45,48 90,52 135,32 180,44 225,24 270,38 320,18" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mini-chart-labels">
+                <span>{departments.find((department) => department.name === activeDepartment)?.online ?? 0} in {activeDepartment}</span>
+              </div>
+            </section>
+          </div>
         </div>
 
         {composerOpen && (

@@ -251,6 +251,7 @@ h1,h2,h3,p{margin:0;}
 .mini-area-chart{width:100%;height:90px;margin-top:14px;display:block;}
 .mini-chart-labels{display:flex;justify-content:space-between;margin-top:6px;}
 .mini-chart-labels span{font-size:9.5px;color:var(--ink-faint);}
+.mini-chart-labels span.mini-chart-label-pending{color:var(--danger);font-weight:650;}
 .employee-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--line);}
 .employee-row:first-of-type{border-top:none;padding-top:0;}
 .employee-avatar{width:32px;height:32px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--dept-color);background:color-mix(in srgb,var(--dept-color) 16%,transparent);}
