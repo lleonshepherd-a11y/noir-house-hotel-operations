@@ -1883,6 +1883,40 @@ export default function Home() {
       <section className="workspace">
         <nav className="pill-topnav glass-panel">
           <div className="pill-topnav-mark">N</div>
+          <details className="department-switcher">
+            <summary
+              className="department-switcher-trigger dept-pill"
+              aria-label="Active department"
+            >
+              <SelectedDepartmentIcon size={14} />
+              <span>{selectedDepartment.name}</span>
+              <ChevronDown size={12} />
+            </summary>
+            <div className="department-switcher-menu" role="menu">
+              {departments.map((department) => {
+                const DepartmentIcon = department.icon;
+                return (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={department.name === activeDepartment ? 'selected' : ''}
+                    key={department.name}
+                    onClick={(event) => {
+                      setActiveDepartment(department.name);
+                      event.currentTarget
+                        .closest('details')
+                        ?.removeAttribute('open');
+                    }}
+                  >
+                    <span className="dept-menu-icon" style={{ '--dept-color': department.accent } as CSSProperties}>
+                      <DepartmentIcon size={14} />
+                    </span>
+                    <span>{department.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </details>
           <div className="pill-tabs">
             <span className="pill-tab active"><HomeIcon size={15} />Home</span>
             <span className="pill-tab"><LayoutDashboard size={15} />Dashboard</span>
@@ -2166,40 +2200,6 @@ export default function Home() {
             <p>Hello, {activeDepartment} team</p>
             <h1>Welcome to Dashboard</h1>
           </div>
-          <details className="department-switcher">
-            <summary
-              className="department-switcher-trigger dept-pill"
-              aria-label="Active department"
-            >
-              <SelectedDepartmentIcon size={14} />
-              <span>{selectedDepartment.name}</span>
-              <ChevronDown size={12} />
-            </summary>
-            <div className="department-switcher-menu" role="menu">
-              {departments.map((department) => {
-                const DepartmentIcon = department.icon;
-                return (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={department.name === activeDepartment ? 'selected' : ''}
-                    key={department.name}
-                    onClick={(event) => {
-                      setActiveDepartment(department.name);
-                      event.currentTarget
-                        .closest('details')
-                        ?.removeAttribute('open');
-                    }}
-                  >
-                    <span className="dept-menu-icon" style={{ '--dept-color': department.accent } as CSSProperties}>
-                      <DepartmentIcon size={14} />
-                    </span>
-                    <span>{department.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </details>
         </div>
 
         <div className="dash-grid">
