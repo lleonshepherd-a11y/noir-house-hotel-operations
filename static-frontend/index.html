@@ -60,22 +60,26 @@
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
   .ntoast{pointer-events:auto;width:100%;box-sizing:border-box;padding:12px 16px;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.16),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
   .ntoast.leaving{animation:urgent-card-out .25s ease forwards}
-  .ntoast-head{display:flex;align-items:center;gap:6px}
-  .ntoast-icon{width:14px;height:14px;flex:0 0 auto;color:var(--blue)}
-  .ntoast-label{font-size:12.5px;font-weight:700;color:var(--blue)}
+  .ntoast-head{display:flex;align-items:center;gap:8px}
+  .ntoast-icon-box{flex:0 0 auto;width:28px;height:28px;border-radius:9px;background:var(--blue-wash);color:var(--blue);display:flex;align-items:center;justify-content:center}
+  .ntoast-icon-box svg{width:14px;height:14px}
+  .ntoast-label{font-size:13px;font-weight:800;color:var(--ink)}
   .ntoast-dot{color:var(--ink-dim);font-size:12px}
   .ntoast-time{font-size:12px;color:var(--ink-dim)}
   .ntoast-chevron{margin-left:auto;flex:0 0 auto;width:24px;height:24px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
   .ntoast-chevron svg{width:15px;height:15px;transition:transform .18s ease}
   .ntoast-chevron.open svg{transform:rotate(180deg)}
   .ntoast-chevron:hover{background:var(--page)}
-  .ntoast-row{margin-top:6px}
+  .ntoast-row{margin-top:10px}
   .ntoast-body{display:block}
   .ntoast-dept{font-size:14px;font-weight:800;color:var(--ink)}
   .ntoast-preview{display:block;font-size:13px;color:var(--ink-dim);margin-top:2px;line-height:1.4}
-  .ntoast-actions{display:flex;gap:18px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-  .ntoast-action{border:0;background:none;color:var(--blue);font-family:inherit;font-size:11.5px;font-weight:800;letter-spacing:.04em;cursor:pointer;padding:2px 0}
-  .ntoast-action:hover{text-decoration:underline}
+  .ntoast-actions{display:flex;gap:10px;margin-top:14px}
+  .ntoast-btn{flex:1 1 0;height:40px;border:0;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .ntoast-btn-primary{background:var(--blue);color:#fff}
+  .ntoast-btn-primary:hover{background:#2f4de0}
+  .ntoast-btn-ghost{background:var(--page);color:var(--ink-mid)}
+  .ntoast-btn-ghost:hover{background:var(--blue-soft)}
   @keyframes urgent-card-in{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
   @keyframes urgent-card-out{to{opacity:0;transform:translateY(-12px)}}
   .topbar .greet strong{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em}
@@ -6400,7 +6404,7 @@
       el.className = 'ntoast';
       el.innerHTML =
         '<div class="ntoast-head">' +
-        '<svg class="ntoast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 3v3h6V3"/><path d="m8.5 13 2 2 4-4.5"/></svg>' +
+        '<span class="ntoast-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 3v3h6V3"/><path d="m8.5 13 2 2 4-4.5"/></svg></span>' +
         '<span class="ntoast-label">Urgent Task</span><span class="ntoast-dot">&middot;</span><span class="ntoast-time">' + formatRelativeTime(minutesOpen(task)) + '</span>' +
         '<button type="button" class="ntoast-chevron" aria-label="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>' +
         '</div>' +
@@ -6411,8 +6415,8 @@
         '</div>' +
         '</div>' +
         '<div class="ntoast-actions" hidden>' +
-        '<button type="button" class="ntoast-action ntoast-review">REVIEW</button>' +
-        '<button type="button" class="ntoast-action ntoast-dismiss">DISMISS</button>' +
+        '<button type="button" class="ntoast-btn ntoast-btn-primary ntoast-review">Review</button>' +
+        '<button type="button" class="ntoast-btn ntoast-btn-ghost ntoast-dismiss">Dismiss</button>' +
         '</div>';
       stack.prepend(el);
 
