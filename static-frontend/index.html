@@ -322,6 +322,8 @@
   .login-powered-by img[hidden]{display:none}
   .account-signout-btn{width:100%;height:44px;border:0;border-radius:10px;background:#c0392b;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
   .account-signout-btn:hover{background:#a5301f}
+  .account-signin-btn{width:100%;height:44px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+  .account-signin-btn:hover{background:#2f4de0}
 </style>
 
 <div id="loginGate" class="login-gate">
@@ -2055,6 +2057,7 @@
       <div><strong>Signed in as</strong><p id="accountDeptName">&mdash;</p></div>
     </div>
     <button type="button" id="confirmSignOutBtn" class="account-signout-btn">Sign out</button>
+    <button type="button" id="accountSignInBtn" class="account-signin-btn">Sign in</button>
   </div>
 </aside>
 
@@ -3521,6 +3524,11 @@
       { id: -7, title: 'Approve replacement budget for Room 512 mattress', messageDept: 'General Manager', sender: 'Housekeeping', assignee: 'General Manager', status: 'completed', pinned: false, time: '13:50' }
     ];
     var taskIdSeq = 1;
+    // tasks/taskIdSeq live in this closure only; the database-sync module
+    // further down the script is a separate top-level block and has no
+    // direct access to either, so it reaches them through these instead.
+    window.getLocalTasks = function () { return tasks; };
+    window.nextLocalTaskId = function () { return taskIdSeq++; };
     previewOrder.forEach(function (d) { unreadDepts[d] = true; });
     threads['General Manager'][0].badge = 'Urgent';
 
@@ -3954,6 +3962,7 @@
           };
           tasks.push(task);
           entry.taskId = task.id;
+          if (window.createTaskOnServer) window.createTaskOnServer(task, currentConvDept);
         }
         threads[currentConvDept].push(entry);
         convReplyInput.value = '';
@@ -4082,6 +4091,7 @@
         if (typeof window.renderActivityFeed === 'function') window.renderActivityFeed();
         if (typeof window.renderDeptActivity === 'function') window.renderDeptActivity();
       }
+      window.renderAllTaskFeeds = renderAllTaskFeeds;
       function renderTasksList() { renderAllTaskFeeds(); }
 
       function openTasksDrawer(taskId, replyOnly) {
@@ -4191,6 +4201,7 @@
           var t = tasks.filter(function (t2) { return t2.id === taskDetailId; })[0];
           if (t) {
             t.status = NEXT_STATUS[t.status];
+            if (window.syncTaskStatusToServer) window.syncTaskStatusToServer(t);
             renderTaskDetail();
             renderAllTaskFeeds();
             if (currentConvDept === t.messageDept) renderThread(t.messageDept);
@@ -4245,6 +4256,7 @@
           var sTask = tasks.filter(function (t) { return t.id === sId; })[0];
           if (sTask) {
             sTask.status = NEXT_STATUS[sTask.status];
+            if (window.syncTaskStatusToServer) window.syncTaskStatusToServer(sTask);
             renderAllTaskFeeds();
             if (currentConvDept === sTask.messageDept) renderThread(sTask.messageDept);
           }
@@ -5997,12 +6009,15 @@
     var accountClose = document.getElementById('accountClose');
     var accountDeptName = document.getElementById('accountDeptName');
     var confirmSignOutBtn = document.getElementById('confirmSignOutBtn');
+    var accountSignInBtn = document.getElementById('accountSignInBtn');
     var railSignInBtn = document.getElementById('railSignInBtn');
 
     function openAccountDrawer() {
+      var hasRealSession = !!sessionStorage.getItem(TOKEN_KEY);
       var currentDept = sessionStorage.getItem(DEPT_KEY);
-      accountDeptName.textContent = currentDept || 'Not signed in';
-      confirmSignOutBtn.hidden = !currentDept;
+      accountDeptName.textContent = hasRealSession && currentDept ? currentDept : 'Not signed in';
+      confirmSignOutBtn.hidden = !hasRealSession;
+      accountSignInBtn.hidden = hasRealSession;
       accountDrawer.classList.add('open');
       accountBackdrop.classList.add('open');
     }
@@ -6014,6 +6029,12 @@
     if (railSignInBtn) railSignInBtn.addEventListener('click', openAccountDrawer);
     if (accountClose) accountClose.addEventListener('click', closeAccountDrawer);
     if (accountBackdrop) accountBackdrop.addEventListener('click', closeAccountDrawer);
+    if (accountSignInBtn) {
+      accountSignInBtn.addEventListener('click', function () {
+        closeAccountDrawer();
+        showGate();
+      });
+    }
 
     if (confirmSignOutBtn) {
       confirmSignOutBtn.addEventListener('click', function () {
@@ -6029,6 +6050,135 @@
     window.getStaffToken = function () { return sessionStorage.getItem(TOKEN_KEY); };
 
     attemptResume();
+  })();
+
+  // Bridges the mockup's local `tasks` array to the real backend. Local task
+  // IDs stay numeric (everything else in the app assumes that, right down to
+  // Number(dataset.taskId) reads), so a task synced from the server keeps its
+  // local numeric id and carries the real one separately as _serverId for
+  // any follow-up create/update calls. A task with no _server flag is still
+  // pure local demo data and is never sent anywhere - this only reaches the
+  // network for tasks that came from, or were created against, a real session.
+  (function () {
+    var deptNameToId = null;
+    var deptFetchPromise = null;
+
+    function authHeaders() {
+      var token = window.getStaffToken ? window.getStaffToken() : null;
+      return token ? { Authorization: 'Bearer ' + token } : null;
+    }
+
+    function ensureDepartments() {
+      var headers = authHeaders();
+      if (!headers) return Promise.resolve(null);
+      if (deptNameToId) return Promise.resolve(deptNameToId);
+      if (deptFetchPromise) return deptFetchPromise;
+      deptFetchPromise = fetch('/api/departments', { headers: headers })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data.departments) return null;
+          deptNameToId = {};
+          data.departments.forEach(function (d) { deptNameToId[d.name] = d.id; });
+          return deptNameToId;
+        })
+        .catch(function () { return null; });
+      deptFetchPromise.then(function () { deptFetchPromise = null; });
+      return deptFetchPromise;
+    }
+
+    var BACKEND_TO_LOCAL_STATUS = { open: 'acknowledged', in_progress: 'in-progress', completed: 'completed' };
+    var LOCAL_TO_BACKEND_STATUS = { acknowledged: 'open', 'in-progress': 'in_progress', completed: 'completed' };
+
+    function formatTime(iso) {
+      try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }); }
+      catch (e) { return '00:00'; }
+    }
+
+    function syncTasksForDepartment(deptName) {
+      if (!authHeaders()) return;
+      ensureDepartments().then(function (map) {
+        var headers = authHeaders();
+        if (!map || !headers || !map[deptName]) return;
+        fetch('/api/operations/tasks?departmentId=' + encodeURIComponent(map[deptName]), { headers: headers })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            var tasks = window.getLocalTasks ? window.getLocalTasks() : null;
+            if (!data || !data.results || !tasks) return;
+            for (var i = tasks.length - 1; i >= 0; i--) {
+              if (tasks[i]._server && tasks[i].messageDept === deptName) tasks.splice(i, 1);
+            }
+            data.results.forEach(function (row) {
+              if (row.status === 'cancelled') return;
+              tasks.push({
+                id: window.nextLocalTaskId(),
+                title: row.title,
+                details: row.details || '',
+                messageDept: deptName,
+                sender: deptName,
+                assignee: 'Unassigned',
+                status: BACKEND_TO_LOCAL_STATUS[row.status] || 'acknowledged',
+                pinned: false,
+                time: formatTime(row.created_at),
+                priority: row.priority === 'urgent' ? 'Urgent' : undefined,
+                _server: true,
+                _serverId: row.id,
+              });
+            });
+            if (typeof window.renderAllTaskFeeds === 'function') window.renderAllTaskFeeds();
+          })
+          .catch(function () {});
+      });
+    }
+    window.syncTasksForDepartment = syncTasksForDepartment;
+
+    window.createTaskOnServer = function (localTask, deptName) {
+      var headers = authHeaders();
+      if (!headers) return;
+      ensureDepartments().then(function (map) {
+        if (!map || !map[deptName]) return;
+        var postHeaders = { Authorization: headers.Authorization, 'Content-Type': 'application/json' };
+        fetch('/api/operations/tasks', {
+          method: 'POST',
+          headers: postHeaders,
+          body: JSON.stringify({
+            departmentId: map[deptName],
+            title: localTask.title,
+            details: localTask.details,
+            priority: localTask.priority === 'Urgent' ? 'urgent' : 'normal',
+          }),
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (data && data.id) { localTask._server = true; localTask._serverId = data.id; }
+          })
+          .catch(function () {});
+      });
+    };
+
+    window.syncTaskStatusToServer = function (localTask) {
+      if (!localTask || !localTask._server || !localTask._serverId) return;
+      var headers = authHeaders();
+      var backendStatus = LOCAL_TO_BACKEND_STATUS[localTask.status];
+      if (!headers || !backendStatus) return;
+      fetch('/api/operations/tasks', {
+        method: 'PATCH',
+        headers: { Authorization: headers.Authorization, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: localTask._serverId, status: backendStatus }),
+      }).catch(function () {});
+    };
+
+    var originalSwitchDashboard = window.switchDashboard;
+    if (typeof originalSwitchDashboard === 'function') {
+      window.switchDashboard = function (dept) {
+        originalSwitchDashboard(dept);
+        if (dept && dept !== 'All departments') syncTasksForDepartment(dept);
+      };
+    }
+    // The very first switchDashboard call (from page load / login resume) can
+    // happen before this IIFE finishes wrapping it, so catch up here once for
+    // whichever department is already showing.
+    var alreadyShown = document.querySelector('.dash-panel:not([hidden])');
+    if (alreadyShown && alreadyShown.dataset.dash) syncTasksForDepartment(alreadyShown.dataset.dash);
   })();
 
   (function () {

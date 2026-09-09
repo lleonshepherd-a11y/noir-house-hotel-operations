@@ -63,6 +63,48 @@ export async function POST(request: Request, context: { params: Promise<{ resour
   }
 }
 
+const TASK_STATUSES = ['open', 'in_progress', 'completed', 'cancelled'];
+
+// Only tasks support an update today: a status change is the one thing the
+// dashboard needs to do to an existing record after creating it (mark
+// acknowledged/in-progress/complete). Handovers, pins and announcements are
+// append-only and archived rather than edited in place.
+export async function PATCH(request: Request, context: { params: Promise<{ resource: string }> }) {
+  try {
+    const name = operationName((await context.params).resource);
+    if (name !== 'tasks') return new Response('Not found', { status: 404 });
+    const db = await getDatabase();
+    const identity = await requireStaffSession(db, bearerToken(request));
+    const body = (await request.json()) as { id?: string; status?: string };
+    if (!body.id) return Response.json({ error: 'id is required' }, { status: 400 });
+    if (!body.status || !TASK_STATUSES.includes(body.status)) {
+      return Response.json({ error: 'A valid status is required' }, { status: 400 });
+    }
+    const task = await db.prepare('SELECT hotel_id, assigned_department_id FROM tasks WHERE id = ?')
+      .bind(body.id).first<{ hotel_id: string; assigned_department_id: string }>();
+    if (!task || task.hotel_id !== identity.hotelId) return new Response('Not found', { status: 404 });
+    assertAccess(identity, 'update', 'task', { hotelId: identity.hotelId, departmentId: task.assigned_department_id });
+    const now = new Date().toISOString();
+    const completedAt = body.status === 'completed' ? now : null;
+    const completedBy = body.status === 'completed' ? identity.staffId : null;
+    await db.prepare('UPDATE tasks SET status = ?, completed_at = ?, completed_by_staff_id = ?, updated_at = ? WHERE id = ?')
+      .bind(body.status, completedAt, completedBy, now, body.id).run();
+    await appendAuditEvent(db, {
+      hotelId: identity.hotelId,
+      actorStaffId: identity.staffId,
+      actorDepartmentId: identity.departmentId,
+      action: 'tasks.updated',
+      entityType: 'task',
+      entityId: body.id,
+      metadata: { status: body.status },
+    });
+    return Response.json({ id: body.id, status: body.status, updatedAt: now });
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return Response.json({ error: 'Unable to update record' }, { status: 500 });
+  }
+}
+
 async function listOperation(db: D1Database, name: OperationName, hotelId: string, departmentId: string) {
   if (name === 'tasks') {
     return (await db.prepare(`SELECT * FROM tasks WHERE hotel_id = ? AND assigned_department_id = ?
