@@ -5013,6 +5013,10 @@
             el.querySelector('.ho-item-text').textContent = text || (pendingAttachment ? pendingAttachment.label : '');
             el.querySelector('.ho-item-meta').textContent = 'Logged ' + time + ' · You';
             list.appendChild(el);
+            if (window.createHandoverOnServer) {
+              var panel = card.closest('.dash-panel');
+              if (panel) window.createHandoverOnServer(panel.dataset.dash, text || (pendingAttachment ? pendingAttachment.label : ''), el);
+            }
             input.value = '';
             clearAttachmentPreview();
           }
@@ -6224,6 +6228,72 @@
       });
     };
 
+    // Handovers have no local data array to merge into (each is a plain DOM
+    // node appended straight into a .ho-list), so synced ones are inserted
+    // directly, tagged with a data attribute so a repeat sync can find and
+    // replace them instead of duplicating.
+    function handoverCardForDept(deptName) {
+      var panel = document.querySelector('.dash-panel[data-dash="' + deptName + '"]');
+      return panel ? panel.querySelector('.handover-card') : null;
+    }
+
+    function syncHandoversForDepartment(deptName) {
+      if (!authHeaders()) return;
+      ensureDepartments().then(function (map) {
+        var headers = authHeaders();
+        var card = handoverCardForDept(deptName);
+        if (!map || !headers || !map[deptName] || !card) return;
+        var list = card.querySelector('.ho-list');
+        if (!list) return;
+        fetch('/api/operations/handovers?departmentId=' + encodeURIComponent(map[deptName]), { headers: headers })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (!data || !data.results) return;
+            Array.prototype.forEach.call(list.querySelectorAll('[data-server-handover]'), function (el) { el.remove(); });
+            data.results.forEach(function (row) {
+              var el = document.createElement('div');
+              el.className = 'ho-item';
+              el.dataset.serverHandover = row.id;
+              var textEl = document.createElement('p');
+              textEl.className = 'ho-item-text';
+              textEl.textContent = row.body;
+              var metaEl = document.createElement('span');
+              metaEl.className = 'ho-item-meta';
+              metaEl.textContent = 'Logged ' + formatTime(row.created_at);
+              var body = document.createElement('div');
+              body.className = 'ho-item-body';
+              body.appendChild(textEl);
+              body.appendChild(metaEl);
+              el.appendChild(body);
+              list.insertBefore(el, list.firstChild);
+            });
+          })
+          .catch(function () {});
+      });
+    }
+    window.syncHandoversForDepartment = syncHandoversForDepartment;
+
+    window.createHandoverOnServer = function (deptName, body, localEl) {
+      var headers = authHeaders();
+      if (!headers || !body) return;
+      ensureDepartments().then(function (map) {
+        if (!map || !map[deptName]) return;
+        fetch('/api/operations/handovers', {
+          method: 'POST',
+          headers: { Authorization: headers.Authorization, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ departmentId: map[deptName], body: body, shiftDate: new Date().toISOString().slice(0, 10) }),
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            // Tag the note that's already on screen with its real id, so the
+            // next sync recognises and replaces this exact element instead of
+            // treating the server copy as a separate, new one.
+            if (data && data.id && localEl) localEl.dataset.serverHandover = data.id;
+          })
+          .catch(function () {});
+      });
+    };
+
     var originalSwitchDashboard = window.switchDashboard;
     if (typeof originalSwitchDashboard === 'function') {
       window.switchDashboard = function (dept) {
@@ -6231,6 +6301,7 @@
         if (dept && dept !== 'All departments') {
           syncTasksForDepartment(dept);
           syncMessagesForDepartment(dept);
+          syncHandoversForDepartment(dept);
         }
       };
     }
@@ -6241,6 +6312,7 @@
     if (alreadyShown && alreadyShown.dataset.dash) {
       syncTasksForDepartment(alreadyShown.dataset.dash);
       syncMessagesForDepartment(alreadyShown.dataset.dash);
+      syncHandoversForDepartment(alreadyShown.dataset.dash);
     }
   })();
 
