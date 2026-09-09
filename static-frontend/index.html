@@ -419,7 +419,7 @@
       <div class="glance-head gm-compact-head">
         <div class="glance-head-title-group">
           <div class="glance-head-text">
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated <span id="glanceUpdated">just now</span></div>
+            <div class="glance-sub">Live &middot; updated <span id="glanceUpdated">just now</span></div>
           </div>
         </div>
         <div class="gm-compact-meta">
@@ -718,7 +718,7 @@
           <div class="glance-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-7h6v7"/></svg></div>
           <div class="glance-head-text">
             <div class="glance-title">Front of House</div>
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated <span id="fhStatusUpdated">just now</span></div>
+            <div class="glance-sub">Live &middot; updated <span id="fhStatusUpdated">just now</span></div>
           </div>
         </div>
       </div>
@@ -934,7 +934,7 @@
           <div class="glance-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></div>
           <div class="glance-head-text">
             <div class="glance-title">Concierge</div>
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated just now</div>
+            <div class="glance-sub">Live &middot; updated just now</div>
           </div>
         </div>
       </div>
@@ -1129,7 +1129,7 @@
           <div class="glance-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg></div>
           <div class="glance-head-text">
             <div class="glance-title">Restaurant</div>
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated just now</div>
+            <div class="glance-sub">Live &middot; updated just now</div>
           </div>
         </div>
       </div>
@@ -1329,7 +1329,7 @@
           <div class="glance-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7"/></svg></div>
           <div class="glance-head-text">
             <div class="glance-title">Kitchen</div>
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated just now</div>
+            <div class="glance-sub">Live &middot; updated just now</div>
           </div>
         </div>
       </div>
@@ -1520,7 +1520,7 @@
           <div class="glance-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/></svg></div>
           <div class="glance-head-text">
             <div class="glance-title">Housekeeping</div>
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated just now</div>
+            <div class="glance-sub">Live &middot; updated just now</div>
           </div>
         </div>
       </div>
@@ -1731,7 +1731,7 @@
           <div class="glance-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.1-3.1a6 6 0 0 1-7.94 7.94l-6.16 6.16a2.12 2.12 0 0 1-3-3l6.16-6.16a6 6 0 0 1 7.94-7.94Z"/></svg></div>
           <div class="glance-head-text">
             <div class="glance-title">Maintenance</div>
-            <div class="glance-sub"><i class="glance-live-dot"></i>Live &middot; updated just now</div>
+            <div class="glance-sub">Live &middot; updated just now</div>
           </div>
         </div>
       </div>
@@ -3344,6 +3344,7 @@
         { from: 'Maintenance', text: 'Room 118 leak has been isolated, engineer on site now.', time: '19:50' }
       ]
     };
+    window.getLocalThreads = function () { return threads; };
 
     // Same icon + colour per department everywhere it appears: this drawer, the
     // Messages view, and any other notification list.
@@ -3740,6 +3741,7 @@
       if (typeof window.renderFhActivity === 'function') window.renderFhActivity();
       if (typeof window.renderDeptActivity === 'function') window.renderDeptActivity();
     }
+    window.renderMainMessagesList = renderMainMessagesList;
 
     (function () {
       var convDrawer = document.getElementById('convDrawer');
@@ -3965,6 +3967,7 @@
           if (window.createTaskOnServer) window.createTaskOnServer(task, currentConvDept);
         }
         threads[currentConvDept].push(entry);
+        if (window.createMessageOnServer) window.createMessageOnServer(currentConvDept, text, convPriority.value === 'Urgent');
         convReplyInput.value = '';
         convReplyTitle.value = '';
         convAttachments = [];
@@ -5789,6 +5792,7 @@
         threads[dept].push(entry);
       }
       showToast(dept, fullText, entry.urgent);
+      if (window.createMessageOnServer) window.createMessageOnServer(dept, fullText, entry.urgent);
       input.value = '';
       input.style.height = 'auto';
       attachments = [];
@@ -6167,18 +6171,77 @@
       }).catch(function () {});
     };
 
+    function syncMessagesForDepartment(deptName) {
+      if (!authHeaders()) return;
+      ensureDepartments().then(function (map) {
+        var headers = authHeaders();
+        if (!map || !headers || !map[deptName]) return;
+        fetch('/api/messages?departmentId=' + encodeURIComponent(map[deptName]), { headers: headers })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            var threads = window.getLocalThreads ? window.getLocalThreads() : null;
+            if (!data || !data.messages || !threads) return;
+            if (!threads[deptName]) threads[deptName] = [];
+            var list = threads[deptName];
+            for (var i = list.length - 1; i >= 0; i--) {
+              if (list[i]._server) list.splice(i, 1);
+            }
+            data.messages.slice().reverse().forEach(function (row) {
+              list.push({
+                from: row.sender_department,
+                text: row.body,
+                time: formatTime(row.created_at),
+                urgent: row.urgency === 'urgent' || row.urgency === 'emergency',
+                _server: true,
+                _serverId: row.id,
+              });
+            });
+            if (typeof window.renderMainMessagesList === 'function') window.renderMainMessagesList();
+          })
+          .catch(function () {});
+      });
+    }
+    window.syncMessagesForDepartment = syncMessagesForDepartment;
+
+    window.createMessageOnServer = function (deptNames, body, urgency) {
+      var headers = authHeaders();
+      if (!headers) return;
+      ensureDepartments().then(function (map) {
+        if (!map) return;
+        var names = deptNames === 'All departments' ? Object.keys(map) : [deptNames];
+        var ids = names.map(function (n) { return map[n]; }).filter(Boolean);
+        if (!ids.length) return;
+        fetch('/api/messages', {
+          method: 'POST',
+          headers: { Authorization: headers.Authorization, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientDepartmentIds: ids,
+            message: body,
+            urgency: urgency ? 'urgent' : 'normal',
+            clientMessageId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+          }),
+        }).catch(function () {});
+      });
+    };
+
     var originalSwitchDashboard = window.switchDashboard;
     if (typeof originalSwitchDashboard === 'function') {
       window.switchDashboard = function (dept) {
         originalSwitchDashboard(dept);
-        if (dept && dept !== 'All departments') syncTasksForDepartment(dept);
+        if (dept && dept !== 'All departments') {
+          syncTasksForDepartment(dept);
+          syncMessagesForDepartment(dept);
+        }
       };
     }
     // The very first switchDashboard call (from page load / login resume) can
     // happen before this IIFE finishes wrapping it, so catch up here once for
     // whichever department is already showing.
     var alreadyShown = document.querySelector('.dash-panel:not([hidden])');
-    if (alreadyShown && alreadyShown.dataset.dash) syncTasksForDepartment(alreadyShown.dataset.dash);
+    if (alreadyShown && alreadyShown.dataset.dash) {
+      syncTasksForDepartment(alreadyShown.dataset.dash);
+      syncMessagesForDepartment(alreadyShown.dataset.dash);
+    }
   })();
 
   (function () {

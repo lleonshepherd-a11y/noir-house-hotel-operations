@@ -1,5 +1,5 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
-import { assertAccess, canAccessGuestRequestByRole } from '@/lib/backend/policy';
+import { assertAccess, assertDepartmentInHotel, canAccessGuestRequestByRole } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
 import { isManagement, type StaffIdentity } from '@/lib/backend/types';
@@ -18,13 +18,38 @@ async function assertGuestRequestAccess(db: D1Database, identity: StaffIdentity,
   await assertConversationMembership(db, conversationId, identity.departmentId);
 }
 
+// A flat, most-recent-first feed across every conversation a department
+// belongs to - what a department's message panel actually shows, since it
+// displays "everything involving us" rather than one conversation at a time.
+// Management can pass departmentId to view another department's feed; a
+// regular department account is fixed to its own.
+async function departmentFeed(db: D1Database, identity: StaffIdentity, requestedDepartmentId: string | null) {
+  const departmentId = requestedDepartmentId ?? identity.departmentId;
+  if (departmentId !== identity.departmentId) {
+    if (!isManagement(identity)) throw new Response('Forbidden', { status: 403 });
+    await assertDepartmentInHotel(db, departmentId, identity.hotelId);
+  }
+  const messages = await db
+    .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.created_at, m.conversation_id,
+        s.display_name AS sender_name, d.name AS sender_department
+      FROM messages m
+      JOIN conversation_departments cd ON cd.conversation_id = m.conversation_id
+      JOIN staff s ON s.id = m.sender_staff_id
+      JOIN departments d ON d.id = s.department_id
+      WHERE cd.department_id = ?
+      ORDER BY m.created_at DESC LIMIT 100`)
+    .bind(departmentId)
+    .all();
+  return Response.json({ messages: messages.results });
+}
+
 export async function GET(request: Request) {
   try {
     const db = await getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const url = new URL(request.url);
     const conversationId = url.searchParams.get('conversationId');
-    if (!conversationId) return Response.json({ error: 'Conversation is required' }, { status: 400 });
+    if (!conversationId) return departmentFeed(db, identity, url.searchParams.get('departmentId'));
     const conversation = await db
       .prepare('SELECT id, hotel_id, kind, subject, status, created_at, updated_at FROM conversations WHERE id = ?')
       .bind(conversationId)
