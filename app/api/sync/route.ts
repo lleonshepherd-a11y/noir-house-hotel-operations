@@ -1,4 +1,4 @@
-import { appendAuditEvent } from '@/lib/backend/audit';
+import { escalateOverdueMessages } from '@/lib/backend/escalation';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
 
@@ -41,35 +41,6 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof Response) return error;
     return Response.json({ error: 'Unable to synchronise messages' }, { status: 500 });
-  }
-}
-
-async function escalateOverdueMessages(db: D1Database, hotelId: string, now: string) {
-  const overdue = await db.prepare(`SELECT ue.id, ue.message_id, ue.escalation_department_id, m.conversation_id, m.urgency
-    FROM urgent_escalations ue
-    JOIN messages m ON m.id = ue.message_id
-    JOIN conversations c ON c.id = m.conversation_id
-    WHERE c.hotel_id = ? AND ue.due_at <= ? AND ue.escalated_at IS NULL AND ue.cancelled_at IS NULL
-    LIMIT 50`).bind(hotelId, now).all<{ id: string; message_id: string; escalation_department_id: string; conversation_id: string; urgency: string }>();
-  for (const item of overdue.results) {
-    const update = await db.prepare(`UPDATE urgent_escalations SET escalated_at = ?
-      WHERE id = ? AND escalated_at IS NULL AND cancelled_at IS NULL`).bind(now, item.id).run();
-    if (!update.meta.changes) continue;
-    await db.prepare(`INSERT INTO realtime_events
-      (hotel_id, department_id, event_type, entity_type, entity_id, payload_json, created_at)
-      VALUES (?, ?, 'message.escalated', 'message', ?, ?, ?)`).bind(
-        hotelId, item.escalation_department_id, item.message_id,
-        JSON.stringify({ conversationId: item.conversation_id, urgency: item.urgency, reason: 'Unacknowledged urgent message' }), now,
-      ).run();
-    await appendAuditEvent(db, {
-      hotelId,
-      actorStaffId: null,
-      actorDepartmentId: null,
-      action: 'message.escalated',
-      entityType: 'message',
-      entityId: item.message_id,
-      metadata: { conversationId: item.conversation_id, reason: 'unacknowledged' },
-    });
   }
 }
 
