@@ -1,3 +1,4 @@
+<meta charset="UTF-8">
 <title>Freedom Services</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5860,6 +5861,8 @@
       if (topRowEl) topRowEl.hidden = true;
       if (topbarNewMsgBtnEl) topbarNewMsgBtnEl.hidden = dept === 'General Manager';
       if (announceComposeBtnEl) announceComposeBtnEl.hidden = dept !== 'General Manager';
+      var guestQBtnEl = document.getElementById('guestQBtn');
+      if (guestQBtnEl) guestQBtnEl.hidden = dept !== 'Front of House';
       if (window.updateGreeting) window.updateGreeting(dept === 'All departments' ? null : dept);
     }
     window.switchDashboard = switchDashboard;
