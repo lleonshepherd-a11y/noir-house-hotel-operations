@@ -58,24 +58,24 @@
   .main{margin-left:108px;padding:26px 34px 50px}
   .main-inner{max-width:none;margin:0 auto;position:relative}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-  .ntoast{pointer-events:auto;width:100%;box-sizing:border-box;padding:12px 16px;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.16),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
+  .ntoast{pointer-events:auto;width:100%;box-sizing:border-box;padding:9px 14px;border-radius:12px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.16),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
   .ntoast.leaving{animation:urgent-card-out .25s ease forwards}
-  .ntoast-head{display:flex;align-items:center;gap:8px}
-  .ntoast-icon-box{flex:0 0 auto;width:28px;height:28px;border-radius:9px;background:var(--blue-wash);color:var(--blue);display:flex;align-items:center;justify-content:center}
-  .ntoast-icon-box svg{width:14px;height:14px}
-  .ntoast-label{font-size:13px;font-weight:800;color:var(--ink)}
-  .ntoast-dot{color:var(--ink-dim);font-size:12px}
-  .ntoast-time{font-size:12px;color:var(--ink-dim)}
-  .ntoast-chevron{margin-left:auto;flex:0 0 auto;width:24px;height:24px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
-  .ntoast-chevron svg{width:15px;height:15px;transition:transform .18s ease}
+  .ntoast-head{display:flex;align-items:center;gap:7px}
+  .ntoast-icon-box{flex:0 0 auto;width:22px;height:22px;border-radius:7px;background:var(--blue-wash);color:var(--blue);display:flex;align-items:center;justify-content:center}
+  .ntoast-icon-box svg{width:11px;height:11px}
+  .ntoast-label{font-size:12px;font-weight:800;color:var(--ink)}
+  .ntoast-dot{color:var(--ink-dim);font-size:11px}
+  .ntoast-time{font-size:11px;color:var(--ink-dim)}
+  .ntoast-chevron{margin-left:auto;flex:0 0 auto;width:20px;height:20px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
+  .ntoast-chevron svg{width:13px;height:13px;transition:transform .18s ease}
   .ntoast-chevron.open svg{transform:rotate(180deg)}
   .ntoast-chevron:hover{background:var(--page)}
-  .ntoast-row{margin-top:10px}
+  .ntoast-row{margin-top:6px}
   .ntoast-body{display:block}
-  .ntoast-dept{font-size:14px;font-weight:800;color:var(--ink)}
-  .ntoast-preview{display:block;font-size:13px;color:var(--ink-dim);margin-top:2px;line-height:1.4}
-  .ntoast-actions{display:flex;gap:10px;margin-top:14px}
-  .ntoast-btn{flex:1 1 0;height:40px;border:0;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .ntoast-dept{font-size:13px;font-weight:800;color:var(--ink)}
+  .ntoast-preview{display:block;font-size:12px;color:var(--ink-dim);margin-top:1px;line-height:1.3}
+  .ntoast-actions{display:flex;gap:6px;margin-top:8px}
+  .ntoast-btn{flex:0 0 auto;height:32px;padding:0 16px;border:0;border-radius:100px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
   .ntoast-btn-primary{background:var(--blue);color:#fff}
   .ntoast-btn-primary:hover{background:#2f4de0}
   .ntoast-btn-ghost{background:var(--page);color:var(--ink-mid)}
@@ -2081,13 +2081,17 @@
 
 <div class="drawer-backdrop" id="notifBackdrop"></div>
 <aside class="drawer" id="notifDrawer">
-  <div class="drawer-head">
-    <div class="drawer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg>Notifications</div>
-    <button type="button" class="notif-clear-btn" id="notifClearBtn" title="Clear all" aria-label="Clear all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg></button>
+  <div class="drawer-head notif-head-v2">
+    <div class="notif-head-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+    <div class="notif-head-text">
+      <div class="notif-head-title">Notifications</div>
+      <div class="notif-head-count" id="notifNewCount">0 new</div>
+    </div>
+    <button type="button" id="notifMarkAllBtn" class="notif-head-markall">Mark all read</button>
     <button class="drawer-close" id="notifClose" aria-label="Close">&times;</button>
   </div>
   <div class="drawer-body" id="notifList"></div>
-  <div class="notif-footer" id="notifMarkAllRow" hidden><button type="button" id="notifMarkAllBtn">Mark all as read</button></div>
+  <button type="button" class="notif-footer-link" id="notifSeeAllBtn">See all activity <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
 </aside>
 
 <div class="drawer-backdrop" id="convBackdrop"></div>
@@ -2328,23 +2332,30 @@
   #notifDrawer .drawer-head{border-bottom:1px solid var(--line);position:relative;gap:8px}
   #notifDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
   #notifDrawer .drawer-title svg{color:var(--ink)}
-  #notifDrawer .drawer-body{padding:0;overflow:hidden;border-radius:0 0 28px 28px}
-  .notif-clear-btn{flex:0 0 auto;width:30px;height:30px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;margin-left:auto}
-  .notif-clear-btn svg{width:16px;height:16px}
-  .notif-clear-btn:hover{background:var(--page);color:var(--ink)}
-  .notif-row{display:flex;align-items:flex-start;gap:10px;padding:13px 20px;border-top:1px solid var(--line);border-left:3px solid transparent}
+  #notifDrawer .drawer-body{padding:0;overflow:hidden}
+  .notif-head-v2{align-items:flex-start;gap:10px}
+  .notif-head-icon-box{flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--blue-wash);color:var(--blue);display:flex;align-items:center;justify-content:center}
+  .notif-head-icon-box svg{width:17px;height:17px}
+  .notif-head-text{flex:1 1 auto;min-width:0}
+  .notif-head-title{font-size:16px;font-weight:800;color:var(--ink)}
+  .notif-head-count{font-size:12px;color:var(--ink-dim);margin-top:1px}
+  .notif-head-markall{flex:0 0 auto;border:0;background:none;color:var(--blue);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 6px;margin-top:2px}
+  .notif-head-markall:hover{text-decoration:underline}
+  .notif-row{display:flex;align-items:flex-start;gap:10px;padding:13px 20px;border-top:1px solid var(--line)}
   .notif-row:first-child{border-top:0}
-  .notif-row.unread{border-left-color:var(--blue);background:var(--blue-wash)}
+  .notif-row-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--blue);margin-top:6px;visibility:hidden}
+  .notif-row.unread .notif-row-dot{visibility:visible}
   .notif-row-main{min-width:0;flex:1 1 auto}
   .notif-row-top{display:flex;align-items:baseline;gap:8px}
-  .notif-row-dept{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .notif-row-dept{font-size:13.5px;font-weight:800;color:var(--ink-dim)}
+  .notif-row.unread .notif-row-dept{color:var(--ink)}
   .notif-urgent-tag{flex:0 0 auto;font-size:9px;font-weight:800;letter-spacing:.04em;color:#c8412f;background:#fbe4e1;padding:2px 7px;border-radius:100px}
   .notif-row-sub{font-size:11.5px;color:var(--ink-dim);margin-top:1px}
   .notif-row-text{font-size:13px;color:var(--ink);margin-top:4px;line-height:1.4}
   .notif-row-time{flex:1 1 auto;text-align:right;font-size:11px;color:var(--ink-dim);white-space:nowrap}
-  .notif-footer{border-top:1px solid var(--line);padding:12px;text-align:center;flex:0 0 auto}
-  #notifMarkAllBtn{border:0;background:none;color:var(--blue);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 10px}
-  #notifMarkAllBtn:hover{text-decoration:underline}
+  .notif-footer-link{width:100%;border:0;border-top:1px solid var(--line);background:none;padding:13px;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;flex:0 0 auto}
+  .notif-footer-link svg{width:14px;height:14px}
+  .notif-footer-link:hover{background:var(--page)}
   #calendarDrawer .drawer-head{border-bottom:1px solid var(--line)}
   #calendarDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
   #calendarDrawer .drawer-title svg{color:var(--blue)}
@@ -6415,8 +6426,8 @@
         '</div>' +
         '</div>' +
         '<div class="ntoast-actions" hidden>' +
-        '<button type="button" class="ntoast-btn ntoast-btn-primary ntoast-review">Review</button>' +
-        '<button type="button" class="ntoast-btn ntoast-btn-ghost ntoast-dismiss">Dismiss</button>' +
+        '<button type="button" class="ntoast-btn ntoast-btn-primary ntoast-review">Reply</button>' +
+        '<button type="button" class="ntoast-btn ntoast-btn-ghost ntoast-dismiss">Archive</button>' +
         '</div>';
       stack.prepend(el);
 
@@ -6772,26 +6783,29 @@
   (function () {
     var log = [];
     var list = document.getElementById('notifList');
-    var clearBtn = document.getElementById('notifClearBtn');
     var bell = document.getElementById('notifBellBtn');
     var drawer = document.getElementById('notifDrawer');
     var backdrop = document.getElementById('notifBackdrop');
-    var markAllRow = document.getElementById('notifMarkAllRow');
+    var countEl = document.getElementById('notifNewCount');
     var markAllBtn = document.getElementById('notifMarkAllBtn');
+    var seeAllBtn = document.getElementById('notifSeeAllBtn');
 
     function escapeHtml(s) {
       return s.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
     }
 
     function render() {
+      var unreadCount = log.filter(function (n) { return !n.read; }).length;
+      countEl.textContent = unreadCount + ' new';
+      markAllBtn.hidden = unreadCount === 0;
       if (!log.length) {
         list.innerHTML = '<div class="gq-empty">No notifications yet.</div>';
-        markAllRow.hidden = true;
         return;
       }
       list.innerHTML = log.map(function (n) {
         var urgentTag = n.urgent ? '<span class="notif-urgent-tag">Urgent</span>' : '';
         return '<div class="notif-row' + (n.read ? '' : ' unread') + '">' +
+          '<span class="notif-row-dot"></span>' +
           '<div class="notif-row-main">' +
           '<div class="notif-row-top">' + urgentTag + '<span class="notif-row-dept">' + escapeHtml(n.dept) + '</span><span class="notif-row-time">' + n.time + '</span></div>' +
           '<div class="notif-row-sub">' + escapeHtml(n.sub) + '</div>' +
@@ -6799,7 +6813,6 @@
           '</div>' +
           '</div>';
       }).join('');
-      markAllRow.hidden = !log.some(function (n) { return !n.read; });
     }
 
     window.pushNotification = function (dept, sub, text, urgent) {
@@ -6827,10 +6840,10 @@
       backdrop.classList.remove('open');
       log.forEach(function (n) { n.read = true; });
     }
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function () {
-        log.length = 0;
-        render();
+    if (seeAllBtn) {
+      seeAllBtn.addEventListener('click', function () {
+        closeNotif();
+        if (window.openTasksDrawer) window.openTasksDrawer();
       });
     }
     if (markAllBtn) {
