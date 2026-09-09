@@ -58,24 +58,25 @@
   .main{margin-left:108px;padding:26px 34px 50px}
   .main-inner{max-width:none;margin:0 auto;position:relative}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-  .urgent-card{width:fit-content;max-width:100%;box-sizing:border-box;display:flex;align-items:center;gap:14px;margin:-10px auto 18px;padding:12px 16px;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.12),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
-  .urgent-card[hidden]{display:none}
+  .urgent-card{pointer-events:auto;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.16),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
+  .urgent-card.leaving{animation:urgent-card-out .25s ease forwards}
   .urgent-card-icon{width:40px;height:40px;flex:0 0 auto;border-radius:12px;background:#fbe4e1;display:flex;align-items:center;justify-content:center}
   .urgent-card-icon svg{width:19px;height:19px}
   .urgent-card-body{min-width:0}
   .urgent-card-label{display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:2px}
   .urgent-card-urgent{font-weight:800;letter-spacing:.04em;color:#c8412f}
   .urgent-card-dot{color:var(--ink-dim)}
-  #urgentFloatEyebrow{color:var(--ink-dim);font-weight:600}
+  .urgent-card-eyebrow{color:var(--ink-dim);font-weight:600}
   .urgent-card-title{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #urgentFloatSub{color:var(--ink-dim);font-weight:500}
+  .urgent-card-sub{color:var(--ink-dim);font-weight:500}
   .urgent-card-review{flex:0 0 auto;height:36px;padding:0 18px;border:0;border-radius:100px;background:var(--blue);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
   .urgent-card-review:hover{background:#2f4de0}
   .urgent-card-close{flex:0 0 auto;width:28px;height:28px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
   .urgent-card-close svg{width:15px;height:15px}
   .urgent-card-close:hover{background:var(--page);color:var(--ink)}
-  @keyframes urgent-card-in{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
-  @media (max-width:640px){.urgent-card{max-width:100%}.urgent-card-title{max-width:180px}}
+  @keyframes urgent-card-in{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes urgent-card-out{to{opacity:0;transform:translateY(-12px)}}
+  @media (max-width:640px){.urgent-card-title{max-width:180px}}
   .topbar .greet strong{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
@@ -409,15 +410,6 @@
       <button class="cta" id="newMessageBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>New message</button>
     </div>
 
-    <div class="urgent-card" id="urgentFloat" hidden>
-      <div class="urgent-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z" stroke="#c8412f" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v4" stroke="#c8412f" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1" fill="#c8412f"/></svg></div>
-      <div class="urgent-card-body">
-        <div class="urgent-card-label"><span class="urgent-card-urgent">URGENT</span><span class="urgent-card-dot">&middot;</span><span id="urgentFloatEyebrow"></span></div>
-        <div class="urgent-card-title"><span id="urgentFloatTitle"></span><span id="urgentFloatSub"></span></div>
-      </div>
-      <button type="button" class="urgent-card-review" id="urgentFloatReview">Review</button>
-      <button type="button" class="urgent-card-close" id="urgentFloatClose" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
-    </div>
 
     <section class="view" id="view-home">
     <div class="top-row" hidden>
@@ -2325,6 +2317,15 @@
   .drawer-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:#fff}
   .drawer-title svg{width:20px;height:20px;color:#fff}
   #calendarDrawer{background:#fff;border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 30px 70px rgba(20,21,28,.24),0 0 0 1px rgba(20,21,28,.02)}
+  #notifDrawer{background:#fff;border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 30px 70px rgba(20,21,28,.24),0 0 0 1px rgba(20,21,28,.02)}
+  #notifDrawer .drawer-head{border-bottom:1px solid var(--line)}
+  #notifDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
+  #notifDrawer .drawer-title svg{color:var(--ink)}
+  #notifDrawer .msg-row{border-top-color:var(--line)}
+  #notifDrawer .msg-row strong{color:var(--ink)}
+  #notifDrawer .msg-row span{color:var(--ink-dim)}
+  #notifDrawer .msg-row time{color:var(--ink-dim)}
+  .msg-row strong .notif-urgent-tag{display:inline-block!important;width:auto;font-size:9.5px;font-weight:800;letter-spacing:.04em;color:#c8412f;background:#fbe4e1;padding:2px 7px;border-radius:100px;margin:0 7px 0 0;vertical-align:middle}
   #calendarDrawer .drawer-head{border-bottom:1px solid var(--line)}
   #calendarDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
   #calendarDrawer .drawer-title svg{color:var(--blue)}
@@ -6340,20 +6341,15 @@
     }
   })();
 
-  // Free-floating urgent-item indicator in the topbar: surfaces the
-  // longest-open unresolved urgent task for whoever is looking (their own
-  // department, or every department for the General Manager), with a ring
-  // that fills up as it stays open and a one-tap way into the task itself.
+  // Urgent-task alerts: a short-lived toast per newly-seen urgent task
+  // (dropping in at the top, stacking above any other toast already showing),
+  // gone on its own after a few seconds - it leaves the notification bell
+  // badged so the alert isn't lost, just no longer taking up screen space.
   (function () {
-    var floatEl = document.getElementById('urgentFloat');
-    var eyebrowEl = document.getElementById('urgentFloatEyebrow');
-    var titleEl = document.getElementById('urgentFloatTitle');
-    var subEl = document.getElementById('urgentFloatSub');
-    var reviewBtn = document.getElementById('urgentFloatReview');
-    var closeBtn = document.getElementById('urgentFloatClose');
-    if (!floatEl) return;
-    var currentTaskId = null;
-    var dismissedIds = {};
+    var stack = document.getElementById('toastStack');
+    if (!stack) return;
+    var TOAST_LIFETIME_MS = 5500;
+    var announcedIds = {};
 
     function minutesOpen(t) {
       var start;
@@ -6374,51 +6370,68 @@
       return el ? el.textContent.trim() : null;
     }
 
-    function findMostUrgent() {
-      var tasks = window.getLocalTasks ? window.getLocalTasks() : null;
-      if (!tasks) return null;
-      var dept = currentDeptName();
-      var candidates = tasks.filter(function (t) {
-        return t.priority === 'Urgent' && t.status !== 'completed' && !dismissedIds[t.id]
-          && (dept === 'General Manager' || t.messageDept === dept);
-      });
-      if (!candidates.length) return null;
-      candidates.sort(function (a, b) { return minutesOpen(b) - minutesOpen(a); });
-      return candidates[0];
-    }
-
     function formatRelativeTime(mins) {
       if (mins < 1) return 'just now';
       if (mins < 60) return mins + 'm ago';
-      var hours = Math.floor(mins / 60);
-      return hours + 'h ago';
+      return Math.floor(mins / 60) + 'h ago';
     }
 
-    function render() {
-      var task = findMostUrgent();
-      if (!task) { floatEl.hidden = true; currentTaskId = null; return; }
-      currentTaskId = task.id;
-      var mins = minutesOpen(task);
-      eyebrowEl.textContent = formatRelativeTime(mins);
-      titleEl.textContent = task.title;
-      subEl.textContent = currentDeptName() === 'General Manager' && task.messageDept ? ', ' + task.messageDept : '';
-      floatEl.hidden = false;
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
     }
 
-    function openCurrent() {
-      if (currentTaskId != null && window.openTaskDetail) window.openTaskDetail(currentTaskId);
+    function showToastFor(task) {
+      var el = document.createElement('div');
+      el.className = 'urgent-card';
+      var sub = currentDeptName() === 'General Manager' && task.messageDept ? ', ' + escapeHtml(task.messageDept) : '';
+      el.innerHTML =
+        '<div class="urgent-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z" stroke="#c8412f" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v4" stroke="#c8412f" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1" fill="#c8412f"/></svg></div>' +
+        '<div class="urgent-card-body">' +
+        '<div class="urgent-card-label"><span class="urgent-card-urgent">URGENT</span><span class="urgent-card-dot">&middot;</span><span class="urgent-card-eyebrow">' + formatRelativeTime(minutesOpen(task)) + '</span></div>' +
+        '<div class="urgent-card-title">' + escapeHtml(task.title) + '<span class="urgent-card-sub">' + sub + '</span></div>' +
+        '</div>' +
+        '<button type="button" class="urgent-card-review">Review</button>' +
+        '<button type="button" class="urgent-card-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>';
+      stack.prepend(el);
+
+      function remove() {
+        if (!el.parentNode) return;
+        el.classList.add('leaving');
+        setTimeout(function () { el.remove(); }, 250);
+      }
+      var timer = setTimeout(remove, TOAST_LIFETIME_MS);
+      el.querySelector('.urgent-card-review').addEventListener('click', function () {
+        clearTimeout(timer);
+        remove();
+        if (window.openTaskDetail) window.openTaskDetail(task.id);
+      });
+      el.querySelector('.urgent-card-close').addEventListener('click', function () {
+        clearTimeout(timer);
+        remove();
+      });
+
+      if (window.pushNotification) window.pushNotification(task.title, task.messageDept || '', true);
     }
-    if (reviewBtn) reviewBtn.addEventListener('click', openCurrent);
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function () {
-        if (currentTaskId != null) dismissedIds[currentTaskId] = true;
-        render();
+
+    function checkForNewUrgentTasks() {
+      var tasks = window.getLocalTasks ? window.getLocalTasks() : null;
+      if (!tasks) return;
+      var dept = currentDeptName();
+      tasks.forEach(function (t) {
+        if (t.priority !== 'Urgent' || t.status === 'completed' || announcedIds[t.id]) return;
+        if (dept !== 'General Manager' && t.messageDept !== dept) return;
+        announcedIds[t.id] = true;
+        showToastFor(t);
       });
     }
 
-    window.renderUrgentFloat = render;
-    render();
-    setInterval(render, 30000);
+    window.renderUrgentFloat = checkForNewUrgentTasks;
+    // Deferred rather than called straight away: window.pushNotification is
+    // defined by a later script block, so calling this in the same
+    // synchronous pass (as page load does) would silently skip badging the
+    // bell for whatever's already urgent at load time.
+    setTimeout(checkForNewUrgentTasks, 0);
+    setInterval(checkForNewUrgentTasks, 30000);
   })();
 
   (function () {
@@ -6742,14 +6755,16 @@
         return;
       }
       list.innerHTML = log.map(function (n) {
-        return '<div class="msg-row"><div><strong>' + escapeHtml(n.title) + '</strong><span>' + escapeHtml(n.text) + '</span></div><time>' + n.time + '</time></div>';
+        var urgentTag = n.urgent ? '<span class="notif-urgent-tag">Urgent</span>' : '';
+        return '<div class="msg-row"><div><strong>' + urgentTag + escapeHtml(n.title) + '</strong><span>' + escapeHtml(n.text) + '</span></div><time>' + n.time + '</time></div>';
       }).join('');
     }
 
-    window.pushNotification = function (title, text) {
+    window.pushNotification = function (title, text, urgent) {
       log.unshift({
         title: title,
         text: text,
+        urgent: !!urgent,
         time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
       });
       if (log.length > 50) log.length = 50;
