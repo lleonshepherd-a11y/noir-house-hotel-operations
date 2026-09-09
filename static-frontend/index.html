@@ -403,14 +403,13 @@
       <button class="cta" id="newMessageBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>New message</button>
     </div>
 
-    <button type="button" class="urgent-bar" id="urgentFloat" hidden>
-      <svg class="urgent-bar-icon" viewBox="0 0 24 24" fill="none"><path d="M12 3 2 20h20L12 3Z" stroke="#c8412f" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4" stroke="#c8412f" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#c8412f"/></svg>
-      <span class="urgent-bar-title" id="urgentFloatTitle"></span>
-      <span class="urgent-bar-sub" id="urgentFloatSub"></span>
-      <span class="urgent-bar-spacer"></span>
-      <span class="urgent-bar-time" id="urgentFloatEyebrow"></span>
-      <svg class="urgent-bar-chev" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
+    <!-- Urgent notification bar removed for now, pending a new design.
+         The task-escalation logic underneath (lib/backend/escalation.ts,
+         the 5-minute cron) is untouched - only this bar's own markup was
+         taken out. Its ids (urgentFloat, urgentFloatTitle, etc.) still exist
+         in the JS below (harmless no-op via the `if (!floatEl) return;`
+         guard), so dropping this same block back in is enough to bring it
+         back. -->
 
     <section class="view" id="view-home">
     <div class="top-row" hidden>
