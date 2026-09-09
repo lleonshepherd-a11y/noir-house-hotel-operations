@@ -1,5 +1,9 @@
 const encoder = new TextEncoder();
-const PIN_ITERATIONS = 210_000;
+// Cloudflare Workers' WebCrypto implementation rejects PBKDF2 derivations
+// above 100,000 iterations (NotSupportedError), unlike Node or a browser
+// which allow much higher counts. This must stay at or below that cap or
+// every PIN hash and verification throws at runtime in production.
+const PIN_ITERATIONS = 100_000;
 
 function toHex(bytes: ArrayBuffer | Uint8Array) {
   return Array.from(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes))

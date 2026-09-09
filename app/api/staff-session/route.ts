@@ -25,8 +25,10 @@ export async function POST(request: Request) {
       : await startStaffSession(db, body.staffId!, body.pin));
   } catch (error) {
     if (error instanceof Response) return error;
+    console.error('staff-session error', error instanceof Error ? error.stack : error);
     return Response.json({ error: 'Unable to start staff session' }, { status: 500 });
   }
+
 }
 
 export async function DELETE(request: Request) {
