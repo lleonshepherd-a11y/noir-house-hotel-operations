@@ -2,7 +2,13 @@ import { appendAuditEvent } from './audit';
 import { createSessionToken, hashToken, verifyPin } from './security';
 import type { StaffIdentity, StaffRole } from './types';
 
-const SESSION_MINUTES = 30;
+// Department consoles stay signed in on a shared screen for a whole shift (or
+// longer) rather than a personal account timing out after a short idle gap,
+// so this is deliberately long rather than a typical 30-minute session. Every
+// authenticated request still slides the expiry forward (see
+// requireStaffSession below), so an in-use console effectively never expires;
+// this cap only matters for a console left completely untouched.
+const SESSION_MINUTES = 60 * 24 * 30;
 
 interface StaffRow {
   id: string;

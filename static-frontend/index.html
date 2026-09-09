@@ -288,7 +288,7 @@
   .ring3 svg{transform:rotate(-90deg)}
   .ring3 .num{font-size:13px;font-weight:800;margin-top:-46px;margin-bottom:26px}
   .ring3 p{font-size:10.5px;color:var(--ink-dim);line-height:1.3}
-  .login-gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--page,#f4f4f6)}
+  .login-gate{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--page,#f4f4f6)}
   .login-gate[hidden]{display:none}
   .login-card{width:340px;max-width:90vw;background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px 28px;box-shadow:0 20px 50px rgba(20,21,28,.10);display:flex;flex-direction:column;gap:14px}
   .login-mark{width:38px;height:38px;border-radius:10px;background:var(--ink,#14151c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
@@ -309,9 +309,11 @@
   #loginSubmit{height:44px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
   #loginSubmit:hover{background:#2f4de0}
   #loginSubmit:disabled{opacity:.6;cursor:default}
-  .login-powered-by{margin-top:16px;font-size:11.5px;color:var(--ink-dim);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+  .login-powered-by{font-size:11.5px;color:var(--ink-dim);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
   .login-powered-by img{height:16px;width:auto;display:block}
   .login-powered-by img[hidden]{display:none}
+  .account-signout-btn{width:100%;height:44px;border:0;border-radius:10px;background:#c0392b;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+  .account-signout-btn:hover{background:#a5301f}
 </style>
 
 <div id="loginGate" class="login-gate">
@@ -350,6 +352,7 @@
     <button data-view="security" title="Accountability and security"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></button>
     <button data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 3v3h6V3"/><path d="m8.5 13 2 2 4-4.5"/></svg></button>
     <button type="button" id="announceComposeBtn" title="Write GM announcement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2.5 5h2l-1.2-5H12l7 4V5l-7 4H5a2 2 0 0 0-2 2Z"/></svg></button>
+    <button type="button" id="railSignInBtn" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>
   </nav>
 
   <main class="main"><div class="main-inner">
@@ -371,7 +374,7 @@
           <button class="dept-dd-item" data-dept="Maintenance">Maintenance</button>
         </div>
       </div>
-      <button class="icon-btn" id="signOutBtn" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
+      <button class="icon-btn" id="signOutBtn" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>
       <div class="spacer"></div>
       <button class="icon-btn has-dot" id="guestQBtn" title="Guest questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></button>
       <button class="icon-btn" id="notifBellBtn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg></button>
@@ -2031,6 +2034,20 @@
       <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3.5" y1="7" x2="13.5" y2="7"/><line x1="3.5" y1="12" x2="13.5" y2="12"/><line x1="3.5" y1="17" x2="13.5" y2="17"/><path d="M16.5 12.5 18.5 14.5 22 10.5"/></svg></div>
       <div><strong>No silent deletion</strong><p>Production records will be archived with a named audit event.</p></div>
     </div>
+  </div>
+</aside>
+
+<div class="drawer-backdrop" id="accountBackdrop"></div>
+<aside class="drawer drawer-left" id="accountDrawer">
+  <div class="drawer-head">
+    <div class="drawer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Account</div>
+    <button class="drawer-close" id="accountClose" aria-label="Close">&times;</button>
+  </div>
+  <div class="drawer-body">
+    <div class="sec-item">
+      <div><strong>Signed in as</strong><p id="accountDeptName">&mdash;</p></div>
+    </div>
+    <button type="button" id="confirmSignOutBtn" class="account-signout-btn">Sign out</button>
   </div>
 </aside>
 
@@ -5966,12 +5983,36 @@
         });
     });
 
-    if (signOutBtn) {
-      signOutBtn.addEventListener('click', function () {
+    var accountDrawer = document.getElementById('accountDrawer');
+    var accountBackdrop = document.getElementById('accountBackdrop');
+    var accountClose = document.getElementById('accountClose');
+    var accountDeptName = document.getElementById('accountDeptName');
+    var confirmSignOutBtn = document.getElementById('confirmSignOutBtn');
+    var railSignInBtn = document.getElementById('railSignInBtn');
+
+    function openAccountDrawer() {
+      var currentDept = sessionStorage.getItem(DEPT_KEY);
+      accountDeptName.textContent = currentDept || 'Not signed in';
+      confirmSignOutBtn.hidden = !currentDept;
+      accountDrawer.classList.add('open');
+      accountBackdrop.classList.add('open');
+    }
+    function closeAccountDrawer() {
+      accountDrawer.classList.remove('open');
+      accountBackdrop.classList.remove('open');
+    }
+    if (signOutBtn) signOutBtn.addEventListener('click', openAccountDrawer);
+    if (railSignInBtn) railSignInBtn.addEventListener('click', openAccountDrawer);
+    if (accountClose) accountClose.addEventListener('click', closeAccountDrawer);
+    if (accountBackdrop) accountBackdrop.addEventListener('click', closeAccountDrawer);
+
+    if (confirmSignOutBtn) {
+      confirmSignOutBtn.addEventListener('click', function () {
         var token = sessionStorage.getItem(TOKEN_KEY);
         sessionStorage.removeItem(TOKEN_KEY);
         sessionStorage.removeItem(DEPT_KEY);
         if (token) fetch('/api/staff-session', { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }).catch(function () {});
+        closeAccountDrawer();
         showGate();
       });
     }
