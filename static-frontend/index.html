@@ -58,19 +58,18 @@
   .main{margin-left:108px;padding:26px 34px 50px}
   .main-inner{max-width:none;margin:0 auto;position:relative}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-  .urgent-float{position:fixed;top:88px;right:32px;z-index:60;display:flex;align-items:center;gap:16px;animation:urgent-float-in .45s cubic-bezier(.22,1,.36,1)}
-  .urgent-float[hidden]{display:none}
-  .urgent-float-text{text-align:right;max-width:220px}
-  .urgent-float-eyebrow{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:#e2564a}
-  .urgent-float-title{font-size:14.5px;font-weight:800;color:var(--ink);margin-top:2px;line-height:1.3}
-  .urgent-float-sub{font-size:11px;color:var(--ink-dim);margin-top:1px}
-  .urgent-float-ring{position:relative;width:60px;height:60px;flex:none;border:0;background:none;padding:0;cursor:pointer}
-  .urgent-float-ring-pulse{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;width:38px;height:38px;margin:auto;border-radius:50%;background:#fff;box-shadow:0 6px 16px rgba(20,22,30,.14);animation:urgent-breathe 2.4s ease-in-out infinite}
-  .urgent-float-action{width:34px;height:34px;border-radius:50%;border:0;background:linear-gradient(165deg,#5f69ec,#4249d8);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 8px 18px rgba(74,85,232,.32);cursor:pointer}
-  .urgent-float-action:hover{filter:brightness(1.08)}
-  @keyframes urgent-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-  @keyframes urgent-float-in{from{opacity:0;transform:translateY(-64px)}to{opacity:1;transform:translateY(0)}}
-  @media (max-width:720px){.urgent-float{position:static;margin:-10px 0 18px;justify-content:flex-end}}
+  .urgent-bar{width:100%;box-sizing:border-box;display:flex;align-items:center;gap:9px;height:38px;padding:0 16px;margin:-10px 0 18px;border:1px solid #f6c9c2;border-radius:10px;background:#fff6f5;cursor:pointer;text-align:left;font-family:inherit;animation:urgent-bar-in .4s cubic-bezier(.22,1,.36,1)}
+  .urgent-bar[hidden]{display:none}
+  .urgent-bar:hover{border-color:#f0aa9f}
+  .urgent-bar-icon{width:14px;height:14px;flex:0 0 auto;animation:urgent-breathe 2.2s ease-in-out infinite}
+  .urgent-bar-title{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .urgent-bar-sub{font-size:12px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .urgent-bar-spacer{flex:1 1 auto;min-width:8px}
+  .urgent-bar-time{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#c8412f;flex:0 0 auto}
+  .urgent-bar-chev{width:14px;height:14px;color:#c8412f;flex:0 0 auto}
+  @keyframes urgent-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  @keyframes urgent-bar-in{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:640px){.urgent-bar-sub{display:none}}
   .topbar .greet strong{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
@@ -404,26 +403,14 @@
       <button class="cta" id="newMessageBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>New message</button>
     </div>
 
-    <div class="urgent-float" id="urgentFloat" hidden>
-      <div class="urgent-float-text">
-        <div class="urgent-float-eyebrow" id="urgentFloatEyebrow"></div>
-        <div class="urgent-float-title" id="urgentFloatTitle"></div>
-        <div class="urgent-float-sub" id="urgentFloatSub"></div>
-      </div>
-      <button type="button" class="urgent-float-ring" id="urgentFloatRing" aria-label="Open urgent item">
-        <svg width="60" height="60" viewBox="0 0 60 60" style="transform:rotate(-90deg)">
-          <circle cx="30" cy="30" r="25" fill="none" stroke="#fbdedb" stroke-width="5"/>
-          <circle cx="30" cy="30" r="25" fill="none" stroke="url(#urgentRingGrad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="157" id="urgentFloatRingProgress"/>
-          <defs><linearGradient id="urgentRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0776a"/><stop offset="100%" stop-color="#c8412f"/></linearGradient></defs>
-        </svg>
-        <span class="urgent-float-ring-pulse">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3 2 20h20L12 3Z" stroke="#d0503f" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4" stroke="#d0503f" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#d0503f"/></svg>
-        </span>
-      </button>
-      <button type="button" class="urgent-float-action" id="urgentFloatAction" aria-label="Open">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
+    <button type="button" class="urgent-bar" id="urgentFloat" hidden>
+      <svg class="urgent-bar-icon" viewBox="0 0 24 24" fill="none"><path d="M12 3 2 20h20L12 3Z" stroke="#c8412f" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4" stroke="#c8412f" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#c8412f"/></svg>
+      <span class="urgent-bar-title" id="urgentFloatTitle"></span>
+      <span class="urgent-bar-sub" id="urgentFloatSub"></span>
+      <span class="urgent-bar-spacer"></span>
+      <span class="urgent-bar-time" id="urgentFloatEyebrow"></span>
+      <svg class="urgent-bar-chev" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
 
     <section class="view" id="view-home">
     <div class="top-row" hidden>
@@ -6355,11 +6342,7 @@
     var eyebrowEl = document.getElementById('urgentFloatEyebrow');
     var titleEl = document.getElementById('urgentFloatTitle');
     var subEl = document.getElementById('urgentFloatSub');
-    var ringProgressEl = document.getElementById('urgentFloatRingProgress');
-    var ringBtn = document.getElementById('urgentFloatRing');
-    var actionBtn = document.getElementById('urgentFloatAction');
     if (!floatEl) return;
-    var RING_CIRCUMFERENCE = 157;
     var currentTaskId = null;
 
     function minutesOpen(t) {
@@ -6393,24 +6376,26 @@
       return candidates[0];
     }
 
+    function formatMinutesOpen(mins) {
+      if (mins < 60) return mins + 'M OPEN';
+      var hours = Math.floor(mins / 60);
+      return hours + 'H ' + (mins % 60) + 'M OPEN';
+    }
+
     function render() {
       var task = findMostUrgent();
       if (!task) { floatEl.hidden = true; currentTaskId = null; return; }
       currentTaskId = task.id;
       var mins = minutesOpen(task);
-      eyebrowEl.textContent = mins + ' MIN OPEN';
+      eyebrowEl.textContent = formatMinutesOpen(mins);
       titleEl.textContent = task.title;
-      subEl.textContent = (task.messageDept || '') + (task.assignee && task.assignee !== 'Unassigned' ? ' · ' + task.assignee + ' assigned' : '');
-      var pct = Math.min(mins / 60, 1);
-      if (ringProgressEl) ringProgressEl.setAttribute('stroke-dashoffset', String(RING_CIRCUMFERENCE * (1 - pct)));
+      subEl.textContent = task.messageDept ? '· ' + task.messageDept : '';
       floatEl.hidden = false;
     }
 
-    function openCurrent() {
+    floatEl.addEventListener('click', function () {
       if (currentTaskId != null && window.openTaskDetail) window.openTaskDetail(currentTaskId);
-    }
-    if (ringBtn) ringBtn.addEventListener('click', openCurrent);
-    if (actionBtn) actionBtn.addEventListener('click', openCurrent);
+    });
 
     window.renderUrgentFloat = render;
     render();
