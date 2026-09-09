@@ -37,6 +37,43 @@ export async function escalateOverdueMessages(db: D1Database, hotelId: string, n
   return overdue.results.length;
 }
 
+const TASK_OVERDUE_MS = 2 * 24 * 3600 * 1000;
+
+// A task with no explicit due date that's sat open for more than two days
+// (the default staff actually asked for), or one that's simply past its own
+// due_at, gets promoted to urgent priority. That single write is the whole
+// mechanism: urgent tasks already surface in the topbar notification ring
+// and sort to the top of every task feed, so nothing else needs to know this
+// promotion happened for the alert to actually show up somewhere.
+export async function escalateOverdueTasks(db: D1Database, hotelId: string, now: string) {
+  const cutoff = new Date(new Date(now).getTime() - TASK_OVERDUE_MS).toISOString();
+  const overdue = await db.prepare(`SELECT id, assigned_department_id, title FROM tasks
+    WHERE hotel_id = ? AND status NOT IN ('completed', 'cancelled') AND priority != 'urgent'
+      AND ((due_at IS NOT NULL AND due_at <= ?) OR (due_at IS NULL AND created_at <= ?))
+    LIMIT 50`).bind(hotelId, now, cutoff).all<{ id: string; assigned_department_id: string; title: string }>();
+  for (const item of overdue.results) {
+    const update = await db.prepare(`UPDATE tasks SET priority = 'urgent', updated_at = ?
+      WHERE id = ? AND priority != 'urgent'`).bind(now, item.id).run();
+    if (!update.meta.changes) continue;
+    await db.prepare(`INSERT INTO realtime_events
+      (hotel_id, department_id, event_type, entity_type, entity_id, payload_json, created_at)
+      VALUES (?, ?, 'task.escalated', 'task', ?, ?, ?)`).bind(
+        hotelId, item.assigned_department_id, item.id,
+        JSON.stringify({ title: item.title, reason: 'Open for more than 2 days with no due date, or past its due date' }), now,
+      ).run();
+    await appendAuditEvent(db, {
+      hotelId,
+      actorStaffId: null,
+      actorDepartmentId: item.assigned_department_id,
+      action: 'task.escalated',
+      entityType: 'task',
+      entityId: item.id,
+      metadata: { reason: 'overdue', title: item.title },
+    });
+  }
+  return overdue.results.length;
+}
+
 // Escalation rows are per-hotel-scoped by joining through conversations, but
 // there's no cheap "distinct hotel ids with any pending escalation" index -
 // with a small number of hotels this direct scan is simpler and fine.
@@ -45,6 +82,7 @@ export async function escalateAllHotels(db: D1Database, now: string) {
   let total = 0;
   for (const hotel of hotels.results) {
     total += await escalateOverdueMessages(db, hotel.id, now);
+    total += await escalateOverdueTasks(db, hotel.id, now);
   }
   return total;
 }

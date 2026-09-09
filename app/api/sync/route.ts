@@ -1,4 +1,4 @@
-import { escalateOverdueMessages } from '@/lib/backend/escalation';
+import { escalateOverdueMessages, escalateOverdueTasks } from '@/lib/backend/escalation';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
 
@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const now = new Date().toISOString();
 
     await escalateOverdueMessages(db, identity.hotelId, now);
+    await escalateOverdueTasks(db, identity.hotelId, now);
     const events = await db.prepare(`SELECT sequence, event_type, entity_type, entity_id, payload_json, created_at
       FROM realtime_events
       WHERE hotel_id = ? AND sequence > ? AND (department_id = ? OR department_id IS NULL)
