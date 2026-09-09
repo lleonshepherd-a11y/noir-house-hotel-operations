@@ -12,5 +12,8 @@
   "r2_buckets": [
     { "binding": "FILES", "bucket_name": "noir-house-files" }
   ],
+  "routes": [
+    { "pattern": "dashboard.freedomservices.online", "custom_domain": true }
+  ],
   "observability": { "enabled": true }
 }
