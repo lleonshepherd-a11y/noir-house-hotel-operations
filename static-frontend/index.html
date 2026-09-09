@@ -58,6 +58,19 @@
   .main{margin-left:108px;padding:26px 34px 50px}
   .main-inner{max-width:none;margin:0 auto;position:relative}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+  .urgent-float{position:fixed;top:88px;right:32px;z-index:60;display:flex;align-items:center;gap:16px;animation:urgent-float-in .45s cubic-bezier(.22,1,.36,1)}
+  .urgent-float[hidden]{display:none}
+  .urgent-float-text{text-align:right;max-width:220px}
+  .urgent-float-eyebrow{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:#e2564a}
+  .urgent-float-title{font-size:14.5px;font-weight:800;color:var(--ink);margin-top:2px;line-height:1.3}
+  .urgent-float-sub{font-size:11px;color:var(--ink-dim);margin-top:1px}
+  .urgent-float-ring{position:relative;width:60px;height:60px;flex:none;border:0;background:none;padding:0;cursor:pointer}
+  .urgent-float-ring-pulse{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;width:38px;height:38px;margin:auto;border-radius:50%;background:#fff;box-shadow:0 6px 16px rgba(20,22,30,.14);animation:urgent-breathe 2.4s ease-in-out infinite}
+  .urgent-float-action{width:34px;height:34px;border-radius:50%;border:0;background:linear-gradient(165deg,#5f69ec,#4249d8);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 8px 18px rgba(74,85,232,.32);cursor:pointer}
+  .urgent-float-action:hover{filter:brightness(1.08)}
+  @keyframes urgent-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  @keyframes urgent-float-in{from{opacity:0;transform:translateY(-64px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:720px){.urgent-float{position:static;margin:-10px 0 18px;justify-content:flex-end}}
   .topbar .greet strong{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
@@ -389,6 +402,27 @@
       <button class="icon-btn" id="notifBellBtn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg></button>
       <button class="icon-btn" id="topbarCalendarBtn" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v2.6"/><path d="M16 3v2.6"/><rect x="3.5" y="4.8" width="17" height="16" rx="3.2"/><path d="M3.5 9.6h17"/><circle cx="8.2" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="14" r=".9" fill="currentColor" stroke="none"/></svg></button>
       <button class="cta" id="newMessageBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>New message</button>
+    </div>
+
+    <div class="urgent-float" id="urgentFloat" hidden>
+      <div class="urgent-float-text">
+        <div class="urgent-float-eyebrow" id="urgentFloatEyebrow"></div>
+        <div class="urgent-float-title" id="urgentFloatTitle"></div>
+        <div class="urgent-float-sub" id="urgentFloatSub"></div>
+      </div>
+      <button type="button" class="urgent-float-ring" id="urgentFloatRing" aria-label="Open urgent item">
+        <svg width="60" height="60" viewBox="0 0 60 60" style="transform:rotate(-90deg)">
+          <circle cx="30" cy="30" r="25" fill="none" stroke="#fbdedb" stroke-width="5"/>
+          <circle cx="30" cy="30" r="25" fill="none" stroke="url(#urgentRingGrad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="157" id="urgentFloatRingProgress"/>
+          <defs><linearGradient id="urgentRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0776a"/><stop offset="100%" stop-color="#c8412f"/></linearGradient></defs>
+        </svg>
+        <span class="urgent-float-ring-pulse">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3 2 20h20L12 3Z" stroke="#d0503f" stroke-width="1.9" stroke-linejoin="round"/><path d="M12 10v4" stroke="#d0503f" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#d0503f"/></svg>
+        </span>
+      </button>
+      <button type="button" class="urgent-float-action" id="urgentFloatAction" aria-label="Open">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
 
     <section class="view" id="view-home">
@@ -5880,7 +5914,7 @@
       Array.prototype.forEach.call(dropdown.querySelectorAll('.dept-dd-item'), function (i) { i.classList.remove('on'); });
       item.classList.add('on');
       label.textContent = item.dataset.dept;
-      switchDashboard(item.dataset.dept);
+      window.switchDashboard(item.dataset.dept);
       closeDropdown();
     });
     document.addEventListener('click', function (e) {
@@ -6123,9 +6157,11 @@
                 priority: row.priority === 'urgent' ? 'Urgent' : undefined,
                 _server: true,
                 _serverId: row.id,
+                _createdAt: row.created_at,
               });
             });
             if (typeof window.renderAllTaskFeeds === 'function') window.renderAllTaskFeeds();
+            if (window.renderUrgentFloat) window.renderUrgentFloat();
           })
           .catch(function () {});
       });
@@ -6296,6 +6332,7 @@
           syncMessagesForDepartment(dept);
           syncHandoversForDepartment(dept);
         }
+        if (window.renderUrgentFloat) window.renderUrgentFloat();
       };
     }
     // The very first switchDashboard call (from page load / login resume) can
@@ -6307,6 +6344,77 @@
       syncMessagesForDepartment(alreadyShown.dataset.dash);
       syncHandoversForDepartment(alreadyShown.dataset.dash);
     }
+  })();
+
+  // Free-floating urgent-item indicator in the topbar: surfaces the
+  // longest-open unresolved urgent task for whoever is looking (their own
+  // department, or every department for the General Manager), with a ring
+  // that fills up as it stays open and a one-tap way into the task itself.
+  (function () {
+    var floatEl = document.getElementById('urgentFloat');
+    var eyebrowEl = document.getElementById('urgentFloatEyebrow');
+    var titleEl = document.getElementById('urgentFloatTitle');
+    var subEl = document.getElementById('urgentFloatSub');
+    var ringProgressEl = document.getElementById('urgentFloatRingProgress');
+    var ringBtn = document.getElementById('urgentFloatRing');
+    var actionBtn = document.getElementById('urgentFloatAction');
+    if (!floatEl) return;
+    var RING_CIRCUMFERENCE = 157;
+    var currentTaskId = null;
+
+    function minutesOpen(t) {
+      var start;
+      if (t._createdAt) {
+        start = new Date(t._createdAt).getTime();
+      } else {
+        var parts = (t.time || '00:00').split(':');
+        var d = new Date();
+        d.setHours(Number(parts[0]) || 0, Number(parts[1]) || 0, 0, 0);
+        start = d.getTime();
+        if (start > Date.now()) start -= 24 * 3600000;
+      }
+      return Math.max(0, Math.round((Date.now() - start) / 60000));
+    }
+
+    function currentDeptName() {
+      var el = document.getElementById('deptSelectLabel');
+      return el ? el.textContent.trim() : null;
+    }
+
+    function findMostUrgent() {
+      var tasks = window.getLocalTasks ? window.getLocalTasks() : null;
+      if (!tasks) return null;
+      var dept = currentDeptName();
+      var candidates = tasks.filter(function (t) {
+        return t.priority === 'Urgent' && t.status !== 'completed' && (dept === 'General Manager' || t.messageDept === dept);
+      });
+      if (!candidates.length) return null;
+      candidates.sort(function (a, b) { return minutesOpen(b) - minutesOpen(a); });
+      return candidates[0];
+    }
+
+    function render() {
+      var task = findMostUrgent();
+      if (!task) { floatEl.hidden = true; currentTaskId = null; return; }
+      currentTaskId = task.id;
+      var mins = minutesOpen(task);
+      eyebrowEl.textContent = mins + ' MIN OPEN';
+      titleEl.textContent = task.title;
+      subEl.textContent = (task.messageDept || '') + (task.assignee && task.assignee !== 'Unassigned' ? ' · ' + task.assignee + ' assigned' : '');
+      var pct = Math.min(mins / 60, 1);
+      if (ringProgressEl) ringProgressEl.setAttribute('stroke-dashoffset', String(RING_CIRCUMFERENCE * (1 - pct)));
+      floatEl.hidden = false;
+    }
+
+    function openCurrent() {
+      if (currentTaskId != null && window.openTaskDetail) window.openTaskDetail(currentTaskId);
+    }
+    if (ringBtn) ringBtn.addEventListener('click', openCurrent);
+    if (actionBtn) actionBtn.addEventListener('click', openCurrent);
+
+    window.renderUrgentFloat = render;
+    render();
+    setInterval(render, 30000);
   })();
 
   (function () {
