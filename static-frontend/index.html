@@ -1953,17 +1953,15 @@
   <div class="composer">
     <div class="compose-to" id="composeTo">To <strong>All departments</strong></div>
     <div class="attach-row" id="attachRow" hidden></div>
-    <div class="ho-compose-box msg-compose-box">
-      <textarea id="composeInput" rows="1" placeholder="Write your message&hellip;"></textarea>
-      <div class="msg-compose-icons">
-        <button type="button" class="ho-attach-btn" id="fileBtn" title="Attach file" aria-label="Attach file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.48"/></svg></button>
-        <button type="button" class="ho-attach-btn" id="photoBtn" title="Attach photo" aria-label="Attach photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
-        <button type="button" class="ho-mic-btn" id="micBtn" title="Voice to text" aria-label="Voice to text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
-        <button type="button" class="ho-attach-btn" id="noteBtn" title="Text note" aria-label="Text note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3"/></svg></button>
-      </div>
-    </div>
+    <textarea id="composeInput" rows="1" placeholder="Write your message&hellip;"></textarea>
     <div class="composer-tools">
-      <button class="tool-btn urgent-btn" id="urgentBtn" title="Mark urgent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Urgent</button>
+      <div class="tool-icons">
+        <button class="tool-btn" id="micBtn" title="Voice to text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
+        <button class="tool-btn" id="noteBtn" title="Text note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3"/></svg></button>
+        <button class="tool-btn urgent-btn" id="urgentBtn" title="Mark urgent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Urgent</button>
+        <button class="tool-btn" id="fileBtn" title="Attach file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.48"/></svg></button>
+        <button class="tool-btn" id="photoBtn" title="Attach photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+      </div>
       <button class="send-btn" id="sendBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Send</button>
     </div>
     <input type="file" id="fileInput" hidden>
@@ -2441,10 +2439,6 @@
   .composer textarea:focus{outline:none;background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,91,253,.14)}
   .composer-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
   .tool-icons{display:flex;align-items:center;gap:2px;min-width:0}
-  .msg-compose-box{height:auto;flex-direction:column;align-items:stretch;border-radius:16px;padding:6px}
-  .msg-compose-box textarea{border:0!important;background:none!important;min-height:36px;padding:8px 6px 2px;box-shadow:none!important}
-  .msg-compose-box textarea:focus{box-shadow:none!important}
-  .msg-compose-icons{display:flex;align-items:center;gap:2px}
   .tool-btn{position:relative;width:30px;height:30px;border:0;background:transparent;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:color .15s,filter .15s}
   .tool-btn svg{width:15px;height:15px}
   .tool-btn:hover{color:var(--ink)}
