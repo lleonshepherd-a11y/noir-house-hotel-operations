@@ -58,18 +58,24 @@
   .main{margin-left:108px;padding:26px 34px 50px}
   .main-inner{max-width:none;margin:0 auto;position:relative}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-  .urgent-bar{width:100%;box-sizing:border-box;display:flex;align-items:center;gap:9px;height:38px;padding:0 16px;margin:-10px 0 18px;border:1px solid #f6c9c2;border-radius:10px;background:#fff6f5;cursor:pointer;text-align:left;font-family:inherit;animation:urgent-bar-in .4s cubic-bezier(.22,1,.36,1)}
-  .urgent-bar[hidden]{display:none}
-  .urgent-bar:hover{border-color:#f0aa9f}
-  .urgent-bar-icon{width:14px;height:14px;flex:0 0 auto;animation:urgent-breathe 2.2s ease-in-out infinite}
-  .urgent-bar-title{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .urgent-bar-sub{font-size:12px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .urgent-bar-spacer{flex:1 1 auto;min-width:8px}
-  .urgent-bar-time{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#c8412f;flex:0 0 auto}
-  .urgent-bar-chev{width:14px;height:14px;color:#c8412f;flex:0 0 auto}
-  @keyframes urgent-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
-  @keyframes urgent-bar-in{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
-  @media (max-width:640px){.urgent-bar-sub{display:none}}
+  .urgent-card{width:fit-content;max-width:100%;box-sizing:border-box;display:flex;align-items:center;gap:14px;margin:-10px auto 18px;padding:12px 16px;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.12),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
+  .urgent-card[hidden]{display:none}
+  .urgent-card-icon{width:40px;height:40px;flex:0 0 auto;border-radius:12px;background:#fbe4e1;display:flex;align-items:center;justify-content:center}
+  .urgent-card-icon svg{width:19px;height:19px}
+  .urgent-card-body{min-width:0}
+  .urgent-card-label{display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:2px}
+  .urgent-card-urgent{font-weight:800;letter-spacing:.04em;color:#c8412f}
+  .urgent-card-dot{color:var(--ink-dim)}
+  #urgentFloatEyebrow{color:var(--ink-dim);font-weight:600}
+  .urgent-card-title{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #urgentFloatSub{color:var(--ink-dim);font-weight:500}
+  .urgent-card-review{flex:0 0 auto;height:36px;padding:0 18px;border:0;border-radius:100px;background:var(--blue);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .urgent-card-review:hover{background:#2f4de0}
+  .urgent-card-close{flex:0 0 auto;width:28px;height:28px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
+  .urgent-card-close svg{width:15px;height:15px}
+  .urgent-card-close:hover{background:var(--page);color:var(--ink)}
+  @keyframes urgent-card-in{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:640px){.urgent-card{max-width:100%}.urgent-card-title{max-width:180px}}
   .topbar .greet strong{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
@@ -403,13 +409,15 @@
       <button class="cta" id="newMessageBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>New message</button>
     </div>
 
-    <!-- Urgent notification bar removed for now, pending a new design.
-         The task-escalation logic underneath (lib/backend/escalation.ts,
-         the 5-minute cron) is untouched - only this bar's own markup was
-         taken out. Its ids (urgentFloat, urgentFloatTitle, etc.) still exist
-         in the JS below (harmless no-op via the `if (!floatEl) return;`
-         guard), so dropping this same block back in is enough to bring it
-         back. -->
+    <div class="urgent-card" id="urgentFloat" hidden>
+      <div class="urgent-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z" stroke="#c8412f" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v4" stroke="#c8412f" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1" fill="#c8412f"/></svg></div>
+      <div class="urgent-card-body">
+        <div class="urgent-card-label"><span class="urgent-card-urgent">URGENT</span><span class="urgent-card-dot">&middot;</span><span id="urgentFloatEyebrow"></span></div>
+        <div class="urgent-card-title"><span id="urgentFloatTitle"></span><span id="urgentFloatSub"></span></div>
+      </div>
+      <button type="button" class="urgent-card-review" id="urgentFloatReview">Review</button>
+      <button type="button" class="urgent-card-close" id="urgentFloatClose" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+    </div>
 
     <section class="view" id="view-home">
     <div class="top-row" hidden>
@@ -6341,8 +6349,11 @@
     var eyebrowEl = document.getElementById('urgentFloatEyebrow');
     var titleEl = document.getElementById('urgentFloatTitle');
     var subEl = document.getElementById('urgentFloatSub');
+    var reviewBtn = document.getElementById('urgentFloatReview');
+    var closeBtn = document.getElementById('urgentFloatClose');
     if (!floatEl) return;
     var currentTaskId = null;
+    var dismissedIds = {};
 
     function minutesOpen(t) {
       var start;
@@ -6368,17 +6379,19 @@
       if (!tasks) return null;
       var dept = currentDeptName();
       var candidates = tasks.filter(function (t) {
-        return t.priority === 'Urgent' && t.status !== 'completed' && (dept === 'General Manager' || t.messageDept === dept);
+        return t.priority === 'Urgent' && t.status !== 'completed' && !dismissedIds[t.id]
+          && (dept === 'General Manager' || t.messageDept === dept);
       });
       if (!candidates.length) return null;
       candidates.sort(function (a, b) { return minutesOpen(b) - minutesOpen(a); });
       return candidates[0];
     }
 
-    function formatMinutesOpen(mins) {
-      if (mins < 60) return mins + 'M OPEN';
+    function formatRelativeTime(mins) {
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
       var hours = Math.floor(mins / 60);
-      return hours + 'H ' + (mins % 60) + 'M OPEN';
+      return hours + 'h ago';
     }
 
     function render() {
@@ -6386,15 +6399,22 @@
       if (!task) { floatEl.hidden = true; currentTaskId = null; return; }
       currentTaskId = task.id;
       var mins = minutesOpen(task);
-      eyebrowEl.textContent = formatMinutesOpen(mins);
+      eyebrowEl.textContent = formatRelativeTime(mins);
       titleEl.textContent = task.title;
-      subEl.textContent = task.messageDept ? '· ' + task.messageDept : '';
+      subEl.textContent = currentDeptName() === 'General Manager' && task.messageDept ? ', ' + task.messageDept : '';
       floatEl.hidden = false;
     }
 
-    floatEl.addEventListener('click', function () {
+    function openCurrent() {
       if (currentTaskId != null && window.openTaskDetail) window.openTaskDetail(currentTaskId);
-    });
+    }
+    if (reviewBtn) reviewBtn.addEventListener('click', openCurrent);
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        if (currentTaskId != null) dismissedIds[currentTaskId] = true;
+        render();
+      });
+    }
 
     window.renderUrgentFloat = render;
     render();
