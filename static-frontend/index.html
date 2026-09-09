@@ -2078,6 +2078,7 @@
 <aside class="drawer" id="notifDrawer">
   <div class="drawer-head">
     <div class="drawer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg>Notifications</div>
+    <button type="button" class="notif-clear-btn" id="notifClearBtn" title="Clear all" aria-label="Clear all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg></button>
     <button class="drawer-close" id="notifClose" aria-label="Close">&times;</button>
   </div>
   <div class="drawer-body" id="notifList"></div>
@@ -2318,14 +2319,18 @@
   .drawer-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:#fff}
   .drawer-title svg{width:20px;height:20px;color:#fff}
   #calendarDrawer{background:#fff;border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 30px 70px rgba(20,21,28,.24),0 0 0 1px rgba(20,21,28,.02)}
-  #notifDrawer{background:#fff;border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 30px 70px rgba(20,21,28,.24),0 0 0 1px rgba(20,21,28,.02)}
-  #notifDrawer .drawer-head{border-bottom:1px solid var(--line)}
+  #notifDrawer{background:#fff;border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 30px 70px rgba(20,21,28,.24),0 0 0 1px rgba(20,21,28,.02);overflow:visible!important}
+  #notifDrawer .drawer-head{border-bottom:1px solid var(--line);position:relative;gap:8px}
   #notifDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
   #notifDrawer .drawer-title svg{color:var(--ink)}
-  #notifDrawer .drawer-body{padding:0}
+  #notifDrawer .drawer-body{padding:0;overflow:hidden;border-radius:0 0 28px 28px}
+  .notif-clear-btn{flex:0 0 auto;width:30px;height:30px;border:0;background:none;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;margin-left:auto}
+  .notif-clear-btn svg{width:16px;height:16px}
+  .notif-clear-btn:hover{background:var(--page);color:var(--ink)}
   .notif-row{display:flex;align-items:flex-start;gap:10px;padding:13px 20px;border-top:1px solid var(--line);border-left:3px solid transparent}
   .notif-row:first-child{border-top:0}
   .notif-row.unread{border-left-color:var(--blue);background:var(--blue-wash)}
+  .notif-row-avatar{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800}
   .notif-row-main{min-width:0;flex:1 1 auto}
   .notif-row-top{display:flex;align-items:baseline;gap:8px}
   .notif-row-dept{font-size:13.5px;font-weight:800;color:var(--ink-dim)}
@@ -6391,18 +6396,42 @@
       return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
     }
 
+    function deptInitials(dept) {
+      var known = window.DEPT_ICONS && window.DEPT_ICONS[dept];
+      if (known && known.initials) return known.initials;
+      var words = (dept || '?').split(' ').filter(Boolean);
+      if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+      return (dept || '?').slice(0, 2).toUpperCase();
+    }
+
+    function deptGradient(dept) {
+      var known = window.DEPT_ICONS && window.DEPT_ICONS[dept];
+      return known ? known.grad : '#5a5c68,#8a8c98';
+    }
+
     function showToastFor(task) {
       var el = document.createElement('div');
-      el.className = 'urgent-card';
-      var sub = currentDeptName() === 'General Manager' && task.messageDept ? ', ' + escapeHtml(task.messageDept) : '';
+      el.className = 'ntoast';
       el.innerHTML =
-        '<div class="urgent-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z" stroke="#c8412f" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v4" stroke="#c8412f" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1" fill="#c8412f"/></svg></div>' +
-        '<div class="urgent-card-body">' +
-        '<div class="urgent-card-label"><span class="urgent-card-urgent">URGENT</span><span class="urgent-card-dot">&middot;</span><span class="urgent-card-eyebrow">' + formatRelativeTime(minutesOpen(task)) + '</span></div>' +
-        '<div class="urgent-card-title">' + escapeHtml(task.title) + '<span class="urgent-card-sub">' + sub + '</span></div>' +
+        '<div class="ntoast-head">' +
+        '<svg class="ntoast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 3v3h6V3"/><path d="m8.5 13 2 2 4-4.5"/></svg>' +
+        '<span class="ntoast-label">Urgent Task</span><span class="ntoast-dot">&middot;</span><span class="ntoast-time">' + formatRelativeTime(minutesOpen(task)) + '</span>' +
+        '<button type="button" class="ntoast-chevron" aria-label="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>' +
         '</div>' +
-        '<button type="button" class="urgent-card-review">Review</button>' +
-        '<button type="button" class="urgent-card-close" aria-label="Dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>';
+        '<div class="ntoast-row">' +
+        '<div class="ntoast-body">' +
+        '<div class="ntoast-dept">' + escapeHtml(task.messageDept || 'Task') + '</div>' +
+        '<div class="ntoast-preview">' + escapeHtml(task.title) + '</div>' +
+        '</div>' +
+        '<div class="ntoast-avatar-wrap">' +
+        '<div class="ntoast-avatar" style="background:linear-gradient(155deg,' + deptGradient(task.messageDept) + ')">' + deptInitials(task.messageDept) + '</div>' +
+        '<button type="button" class="ntoast-avatar-action" aria-label="Review"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6-6 6 6 6"/><path d="M3 12h13a5 5 0 0 0 5-5V6"/></svg></button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="ntoast-actions" hidden>' +
+        '<button type="button" class="ntoast-action ntoast-review">REVIEW</button>' +
+        '<button type="button" class="ntoast-action ntoast-dismiss">DISMISS</button>' +
+        '</div>';
       stack.prepend(el);
 
       function remove() {
@@ -6411,15 +6440,25 @@
         setTimeout(function () { el.remove(); }, 250);
       }
       var timer = setTimeout(remove, TOAST_LIFETIME_MS);
-      el.querySelector('.urgent-card-review').addEventListener('click', function () {
-        clearTimeout(timer);
+      function pauseTimer() { clearTimeout(timer); }
+      var actionsRow = el.querySelector('.ntoast-actions');
+      var chevron = el.querySelector('.ntoast-chevron');
+      chevron.addEventListener('click', function () {
+        pauseTimer();
+        var expanded = !actionsRow.hidden;
+        actionsRow.hidden = expanded;
+        chevron.classList.toggle('open', !expanded);
+      });
+      el.querySelector('.ntoast-avatar-action').addEventListener('click', function () {
+        pauseTimer();
         remove();
         if (window.openTaskDetail) window.openTaskDetail(task.id);
       });
-      el.querySelector('.urgent-card-close').addEventListener('click', function () {
-        clearTimeout(timer);
+      el.querySelector('.ntoast-review').addEventListener('click', function () {
         remove();
+        if (window.openTaskDetail) window.openTaskDetail(task.id);
       });
+      el.querySelector('.ntoast-dismiss').addEventListener('click', remove);
 
       if (window.pushNotification) window.pushNotification(task.messageDept || 'Task', 'Urgent task', task.title, true);
     }
@@ -6752,6 +6791,7 @@
   (function () {
     var log = [];
     var list = document.getElementById('notifList');
+    var clearBtn = document.getElementById('notifClearBtn');
     var bell = document.getElementById('notifBellBtn');
     var drawer = document.getElementById('notifDrawer');
     var backdrop = document.getElementById('notifBackdrop');
@@ -6760,6 +6800,19 @@
 
     function escapeHtml(s) {
       return s.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
+    }
+
+    function deptInitials(dept) {
+      var known = window.DEPT_ICONS && window.DEPT_ICONS[dept];
+      if (known && known.initials) return known.initials;
+      var words = (dept || '?').split(' ').filter(Boolean);
+      if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+      return (dept || '?').slice(0, 2).toUpperCase();
+    }
+
+    function deptGradient(dept) {
+      var known = window.DEPT_ICONS && window.DEPT_ICONS[dept];
+      return known ? known.grad : '#5a5c68,#8a8c98';
     }
 
     function render() {
@@ -6771,6 +6824,7 @@
       list.innerHTML = log.map(function (n) {
         var urgentTag = n.urgent ? '<span class="notif-urgent-tag">Urgent</span>' : '';
         return '<div class="notif-row' + (n.read ? '' : ' unread') + '">' +
+          '<div class="notif-row-avatar" style="background:linear-gradient(155deg,' + deptGradient(n.dept) + ')">' + deptInitials(n.dept) + '</div>' +
           '<div class="notif-row-main">' +
           '<div class="notif-row-top">' + urgentTag + '<span class="notif-row-dept">' + escapeHtml(n.dept) + '</span></div>' +
           '<div class="notif-row-sub">' + escapeHtml(n.sub) + '</div>' +
@@ -6806,6 +6860,12 @@
       drawer.classList.remove('open');
       backdrop.classList.remove('open');
       log.forEach(function (n) { n.read = true; });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        log.length = 0;
+        render();
+      });
     }
     if (markAllBtn) {
       markAllBtn.addEventListener('click', function () {
