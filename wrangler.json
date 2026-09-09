@@ -5,7 +5,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "no_bundle": true,
   "rules": [{ "type": "ESModule", "globs": ["**/*.js", "**/*.mjs"] }],
-  "assets": { "directory": "dist/client" },
+  "assets": { "directory": "static-frontend" },
   "d1_databases": [
     { "binding": "DB", "database_name": "noir-house-db", "database_id": "e20a018c-4228-4343-856f-9c80bf3cc8dd" }
   ],
