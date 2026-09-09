@@ -2081,6 +2081,7 @@
     <button class="drawer-close" id="notifClose" aria-label="Close">&times;</button>
   </div>
   <div class="drawer-body" id="notifList"></div>
+  <div class="notif-footer" id="notifMarkAllRow" hidden><button type="button" id="notifMarkAllBtn">Mark all as read</button></div>
 </aside>
 
 <div class="drawer-backdrop" id="convBackdrop"></div>
@@ -2321,11 +2322,21 @@
   #notifDrawer .drawer-head{border-bottom:1px solid var(--line)}
   #notifDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
   #notifDrawer .drawer-title svg{color:var(--ink)}
-  #notifDrawer .msg-row{border-top-color:var(--line)}
-  #notifDrawer .msg-row strong{color:var(--ink)}
-  #notifDrawer .msg-row span{color:var(--ink-dim)}
-  #notifDrawer .msg-row time{color:var(--ink-dim)}
-  .msg-row strong .notif-urgent-tag{display:inline-block!important;width:auto;font-size:9.5px;font-weight:800;letter-spacing:.04em;color:#c8412f;background:#fbe4e1;padding:2px 7px;border-radius:100px;margin:0 7px 0 0;vertical-align:middle}
+  #notifDrawer .drawer-body{padding:0}
+  .notif-row{display:flex;align-items:flex-start;gap:10px;padding:13px 20px;border-top:1px solid var(--line);border-left:3px solid transparent}
+  .notif-row:first-child{border-top:0}
+  .notif-row.unread{border-left-color:var(--blue);background:var(--blue-wash)}
+  .notif-row-main{min-width:0;flex:1 1 auto}
+  .notif-row-top{display:flex;align-items:baseline;gap:8px}
+  .notif-row-dept{font-size:13.5px;font-weight:800;color:var(--ink-dim)}
+  .notif-row.unread .notif-row-dept{color:var(--blue)}
+  .notif-urgent-tag{flex:0 0 auto;font-size:9px;font-weight:800;letter-spacing:.04em;color:#c8412f;background:#fbe4e1;padding:2px 7px;border-radius:100px}
+  .notif-row-sub{font-size:11.5px;color:var(--ink-dim);margin-top:1px}
+  .notif-row-text{font-size:13px;color:var(--ink);margin-top:4px;line-height:1.4}
+  .notif-row-time{flex:0 0 auto;font-size:11px;color:var(--ink-dim);white-space:nowrap;margin-left:8px}
+  .notif-footer{border-top:1px solid var(--line);padding:12px;text-align:center;flex:0 0 auto}
+  #notifMarkAllBtn{border:0;background:none;color:var(--blue);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 10px}
+  #notifMarkAllBtn:hover{text-decoration:underline}
   #calendarDrawer .drawer-head{border-bottom:1px solid var(--line)}
   #calendarDrawer .drawer-title{color:var(--ink);font-size:16px;font-weight:700}
   #calendarDrawer .drawer-title svg{color:var(--blue)}
@@ -3439,7 +3450,7 @@
     }
 
     function showToast(dept, text, urgent) {
-      if (window.pushNotification) window.pushNotification(dept, text);
+      if (window.pushNotification) window.pushNotification(dept, urgent ? 'Urgent message' : 'New message', text, urgent);
       var stack = document.getElementById('toastStack');
       var preview = text.length > 64 ? text.slice(0, 64) + '…' : text;
       var el = document.createElement('div');
@@ -6410,7 +6421,7 @@
         remove();
       });
 
-      if (window.pushNotification) window.pushNotification(task.title, task.messageDept || '', true);
+      if (window.pushNotification) window.pushNotification(task.messageDept || 'Task', 'Urgent task', task.title, true);
     }
 
     function checkForNewUrgentTasks() {
@@ -6702,7 +6713,7 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeGuestQ(); });
 
     function notifyNewQuestion(q) {
-      if (window.pushNotification) window.pushNotification('Room ' + q.room + ' asked a question', q.question);
+      if (window.pushNotification) window.pushNotification('Room ' + q.room, 'Asked a question', q.question);
       var stack = document.getElementById('toastStack');
       var el = document.createElement('div');
       el.className = 'toast';
@@ -6744,6 +6755,8 @@
     var bell = document.getElementById('notifBellBtn');
     var drawer = document.getElementById('notifDrawer');
     var backdrop = document.getElementById('notifBackdrop');
+    var markAllRow = document.getElementById('notifMarkAllRow');
+    var markAllBtn = document.getElementById('notifMarkAllBtn');
 
     function escapeHtml(s) {
       return s.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
@@ -6752,19 +6765,30 @@
     function render() {
       if (!log.length) {
         list.innerHTML = '<div class="gq-empty">No notifications yet.</div>';
+        markAllRow.hidden = true;
         return;
       }
       list.innerHTML = log.map(function (n) {
         var urgentTag = n.urgent ? '<span class="notif-urgent-tag">Urgent</span>' : '';
-        return '<div class="msg-row"><div><strong>' + urgentTag + escapeHtml(n.title) + '</strong><span>' + escapeHtml(n.text) + '</span></div><time>' + n.time + '</time></div>';
+        return '<div class="notif-row' + (n.read ? '' : ' unread') + '">' +
+          '<div class="notif-row-main">' +
+          '<div class="notif-row-top">' + urgentTag + '<span class="notif-row-dept">' + escapeHtml(n.dept) + '</span></div>' +
+          '<div class="notif-row-sub">' + escapeHtml(n.sub) + '</div>' +
+          '<div class="notif-row-text">' + escapeHtml(n.text) + '</div>' +
+          '</div>' +
+          '<span class="notif-row-time">' + n.time + '</span>' +
+          '</div>';
       }).join('');
+      markAllRow.hidden = !log.some(function (n) { return !n.read; });
     }
 
-    window.pushNotification = function (title, text, urgent) {
+    window.pushNotification = function (dept, sub, text, urgent) {
       log.unshift({
-        title: title,
+        dept: dept,
+        sub: sub,
         text: text,
         urgent: !!urgent,
+        read: false,
         time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
       });
       if (log.length > 50) log.length = 50;
@@ -6781,6 +6805,13 @@
     function closeNotif() {
       drawer.classList.remove('open');
       backdrop.classList.remove('open');
+      log.forEach(function (n) { n.read = true; });
+    }
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', function () {
+        log.forEach(function (n) { n.read = true; });
+        render();
+      });
     }
     bell.addEventListener('click', openNotif);
     document.getElementById('notifClose').addEventListener('click', closeNotif);
