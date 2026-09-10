@@ -46,7 +46,8 @@
     border:1.5px solid rgba(255,255,255,.4);border-radius:32px;
     box-shadow:0 24px 50px rgba(0,0,0,.4),0 0 24px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.14);
     display:flex;flex-direction:column;align-items:center;padding:22px 0;gap:14px}
-  .rail .mark{width:42px;height:42px;border-radius:14px;background:#1c1e26;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;margin-bottom:8px}
+  .rail .mark{width:42px;height:42px;border-radius:14px;background:#1c1e26;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;margin-bottom:8px;overflow:hidden}
+  .rail .mark img{width:100%;height:100%;object-fit:cover;display:block}
   .rail-spacer{flex:1 1 auto}
   .rail button{width:46px;height:46px;border-radius:15px;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
   .rail button[hidden]{display:none}
@@ -388,7 +389,7 @@
 <div class="shell" id="appShell" hidden>
   <div class="mesh"><span class="b1"></span><span class="b2"></span><span class="b3"></span><span class="b4"></span></div>
   <nav class="rail">
-    <div class="mark">N</div>
+    <div class="mark" id="brandMark"><img id="brandLogo" alt="" hidden><span id="brandLetter">N</span></div>
     <button class="on" data-view="home" title="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></button>
     <button data-view="messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></button>
     <button type="button" id="guestNavBtn" data-view="guest" title="Guest requests" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1Z"/><path d="M20 16a8 8 0 1 0-16 0"/><path d="M12 4v4"/><path d="M10 4h4"/></svg></button>
@@ -4738,9 +4739,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         sortBtn.title = state.sortPriority ? 'Sort by most recent' : 'Sort by priority';
         render();
       });
-      composeBtn.addEventListener('click', function () {
+      composeBtn.addEventListener('click', function (e) {
         if (scope) { if (window.openConversation) window.openConversation(scope); }
-        else document.getElementById('newMessageBtn').click();
+        else if (window.triggerNewMessage) window.triggerNewMessage(e);
       });
       footerBtn.addEventListener('click', function () {
         state.filter = 'all';
@@ -6187,7 +6188,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           menu.hidden = true;
           btn.setAttribute('aria-expanded', 'false');
         }
-        btn.addEventListener('click', function (e) {
+        // Shared by the topbar button's own click and by every other
+        // "open new message" entry point (the rail icon, footer buttons,
+        // etc.) - those used to proxy in via newMessageBtn.click(), but a
+        // synthetic click's bubble phase resolves before the real click that
+        // triggered it finishes bubbling to document, so the "close menu on
+        // an outside click" listener below immediately closed the menu this
+        // same click had just opened. Calling this directly instead avoids
+        // that synthetic-event ordering trap entirely.
+        function triggerNewMessage(e) {
           // Only the GM can broadcast to every department, so only the GM
           // gets a choice here - everyone else just goes straight to their
           // own department's compose drawer, same as before.
@@ -6195,9 +6204,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             if (window.openMessageDrawer) window.openMessageDrawer();
             return;
           }
-          e.stopPropagation();
+          if (e) e.stopPropagation();
           if (menu.hidden) openMenu(); else closeMenu();
-        });
+        }
+        window.triggerNewMessage = triggerNewMessage;
+        btn.addEventListener('click', triggerNewMessage);
         deptItem.addEventListener('click', function () {
           closeMenu();
           if (window.openMessageDrawer) window.openMessageDrawer();
@@ -7120,6 +7131,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     // their own PINs, so those features are live.
     var SKIP_LOGIN_WHILE_EDITING = true;
 
+    function applyHotelBrand(data) {
+      var logoImg = document.getElementById('brandLogo');
+      var letter = document.getElementById('brandLetter');
+      if (!logoImg || !letter) return;
+      if (data && data.hasLogo && data.identity && data.identity.hotelId) {
+        logoImg.src = '/api/hotel-logo?hotelId=' + encodeURIComponent(data.identity.hotelId) + '&t=' + Date.now();
+        logoImg.hidden = false;
+        letter.hidden = true;
+      } else {
+        logoImg.hidden = true;
+        letter.hidden = false;
+        letter.textContent = (data && data.hotelName ? data.hotelName.trim().charAt(0).toUpperCase() : 'N') || 'N';
+      }
+    }
+
     function attemptResume() {
       if (SKIP_LOGIN_WHILE_EDITING && !sessionStorage.getItem(TOKEN_KEY)) {
         showShell(sessionStorage.getItem(DEPT_KEY) || 'General Manager');
@@ -7130,6 +7156,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       fetch('/api/staff-session', { headers: { Authorization: 'Bearer ' + token } })
         .then(function (r) { if (!r.ok) throw new Error('expired'); return r.json(); })
         .then(function (data) {
+          applyHotelBrand(data);
           showShell(data.departmentName || sessionStorage.getItem(DEPT_KEY) || 'General Manager');
         })
         .catch(function () {
@@ -7165,6 +7192,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           sessionStorage.setItem(DEPT_KEY, department);
           pinInput.value = '';
           showShell(department);
+          fetch('/api/staff-session', { headers: { Authorization: 'Bearer ' + result.data.token } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) { if (data) applyHotelBrand(data); });
         })
         .catch(function (err) {
           errorEl.textContent = err.message;
@@ -7651,8 +7681,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var buttons = Array.prototype.slice.call(document.querySelectorAll('.rail button[data-view]'));
     buttons.forEach(function (button) {
       if (button.dataset.view === 'messages') {
-        button.addEventListener('click', function () {
-          document.getElementById('newMessageBtn').click();
+        button.addEventListener('click', function (e) {
+          if (window.triggerNewMessage) window.triggerNewMessage(e);
         });
         return;
       }

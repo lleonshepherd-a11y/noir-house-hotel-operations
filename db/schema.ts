@@ -20,6 +20,7 @@ export const schemaStatements = [
     name TEXT NOT NULL,
     timezone TEXT NOT NULL DEFAULT 'Europe/London',
     owner_id TEXT REFERENCES owners(id),
+    logo_object_key TEXT,
     created_at TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS departments (

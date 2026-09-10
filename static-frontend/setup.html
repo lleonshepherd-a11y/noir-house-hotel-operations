@@ -46,6 +46,13 @@
   .setup-header h1{margin:0}
   .setup-header .sub{margin:4px 0 0}
   .signout{border:0;background:transparent;color:var(--ink-dim);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer}
+  .setup-header-brand{display:flex;align-items:center;gap:14px}
+  .hotel-logo-wrap{width:48px;height:48px;border-radius:12px;background:var(--page);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+  .hotel-logo-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+  #hotelLogoFallback{font-weight:800;font-size:18px;color:var(--ink-dim)}
+  .profile-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px}
+  .profile-row:last-of-type{margin-bottom:0}
+  .logo-actions{display:flex;gap:8px}
 
   .progress{display:flex;gap:8px;margin-bottom:26px}
   .progress span{flex:1;height:4px;border-radius:99px;background:var(--line)}
@@ -122,14 +129,42 @@
   <div class="app" id="appCard">
     <div class="card">
       <div class="setup-header">
-        <div>
-          <h1 id="hotelNameHeading">Your hotel</h1>
-          <p class="sub">Add departments, then add staff to them.</p>
+        <div class="setup-header-brand">
+          <div class="hotel-logo-wrap" id="hotelLogoWrap">
+            <img id="hotelLogoImg" alt="" hidden>
+            <span id="hotelLogoFallback">H</span>
+          </div>
+          <div>
+            <h1 id="hotelNameHeading">Your hotel</h1>
+            <p class="sub">Add departments, then add staff to them.</p>
+          </div>
         </div>
         <button type="button" class="signout" id="signOutBtn">Sign out</button>
       </div>
 
       <div class="progress"><span id="progressDept"></span><span id="progressStaff"></span></div>
+
+      <div class="section">
+        <div class="section-label">Hotel profile</div>
+        <div class="profile-row">
+          <div class="field">
+            <label for="hotelNameInput">Hotel name</label>
+            <input type="text" id="hotelNameInput">
+          </div>
+          <button type="button" class="btn btn-small btn-secondary" id="saveHotelNameBtn">Save name</button>
+        </div>
+        <div class="profile-row">
+          <div class="field">
+            <label>Logo</label>
+            <div class="logo-actions">
+              <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+              <button type="button" class="btn btn-small btn-secondary" id="uploadLogoBtn">Upload logo</button>
+              <button type="button" class="btn btn-small btn-secondary" id="removeLogoBtn" hidden>Remove logo</button>
+            </div>
+          </div>
+        </div>
+        <p class="error" id="profileError" hidden></p>
+      </div>
 
       <div class="section">
         <div class="section-label">Departments</div>
@@ -222,8 +257,11 @@
     appCard.classList.add('on');
     document.getElementById('hotelNameHeading').textContent = hotelName;
     document.getElementById('doneHotelName').textContent = hotelName;
+    document.getElementById('hotelNameInput').value = hotelName;
+    document.getElementById('hotelLogoFallback').textContent = (hotelName || 'H').trim().charAt(0).toUpperCase();
     loadDepartments();
     loadStaff();
+    loadHotelProfile();
   }
 
   signupForm.addEventListener('submit', function (event) {
@@ -392,6 +430,69 @@
       btn.textContent = 'Copied';
       setTimeout(function () { btn.textContent = original; }, 1500);
     }).catch(function () {});
+  });
+
+  var profileError = document.getElementById('profileError');
+  var hotelLogoImg = document.getElementById('hotelLogoImg');
+  var hotelLogoFallback = document.getElementById('hotelLogoFallback');
+  var removeLogoBtn = document.getElementById('removeLogoBtn');
+
+  function setLogoDisplay(hasLogo) {
+    hotelLogoImg.hidden = !hasLogo;
+    hotelLogoFallback.hidden = hasLogo;
+    removeLogoBtn.hidden = !hasLogo;
+  }
+
+  function loadHotelProfile() {
+    fetch('/api/owner/hotel', { headers: authHeaders() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        document.getElementById('hotelNameInput').value = data.name;
+        document.getElementById('hotelNameHeading').textContent = data.name;
+        document.getElementById('doneHotelName').textContent = data.name;
+        hotelLogoFallback.textContent = (data.name || 'H').trim().charAt(0).toUpperCase();
+        if (data.hasLogo) hotelLogoImg.src = '/api/hotel-logo?hotelId=' + encodeURIComponent(data.hotelId) + '&t=' + Date.now();
+        setLogoDisplay(!!data.hasLogo);
+      });
+  }
+
+  document.getElementById('saveHotelNameBtn').addEventListener('click', function () {
+    profileError.hidden = true;
+    var name = document.getElementById('hotelNameInput').value.trim();
+    if (!name) return;
+    fetch('/api/owner/hotel', {
+      method: 'PATCH',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+      body: JSON.stringify({ name: name }),
+    }).then(parseResponse).then(function (result) {
+      if (!result.ok) { showError(profileError, (result.data && result.data.error) || 'Could not save that name.'); return; }
+      document.getElementById('hotelNameHeading').textContent = name;
+      document.getElementById('doneHotelName').textContent = name;
+      hotelLogoFallback.textContent = name.trim().charAt(0).toUpperCase();
+    });
+  });
+
+  document.getElementById('uploadLogoBtn').addEventListener('click', function () {
+    document.getElementById('logoFileInput').click();
+  });
+  document.getElementById('logoFileInput').addEventListener('change', function (event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    profileError.hidden = true;
+    var formData = new FormData();
+    formData.append('file', file);
+    fetch('/api/owner/logo', { method: 'POST', headers: authHeaders(), body: formData })
+      .then(parseResponse)
+      .then(function (result) {
+        event.target.value = '';
+        if (!result.ok) { showError(profileError, (result.data && result.data.error) || 'Could not upload that logo.'); return; }
+        loadHotelProfile();
+      });
+  });
+  removeLogoBtn.addEventListener('click', function () {
+    fetch('/api/owner/logo', { method: 'DELETE', headers: authHeaders() })
+      .then(function () { loadHotelProfile(); });
   });
 
   // Resume an existing owner session on reload, same idea as the staff

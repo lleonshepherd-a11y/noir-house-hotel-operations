@@ -8,7 +8,14 @@ export async function GET(request: Request) {
     const department = await db.prepare('SELECT name FROM departments WHERE id = ? AND hotel_id = ?')
       .bind(identity.departmentId, identity.hotelId)
       .first<{ name: string }>();
-    return Response.json({ identity, departmentName: department?.name ?? null });
+    const hotel = await db.prepare('SELECT name, logo_object_key FROM hotels WHERE id = ?')
+      .bind(identity.hotelId).first<{ name: string; logo_object_key: string | null }>();
+    return Response.json({
+      identity,
+      departmentName: department?.name ?? null,
+      hotelName: hotel?.name ?? null,
+      hasLogo: !!hotel?.logo_object_key,
+    });
   } catch (error) {
     if (error instanceof Response) return error;
     return Response.json({ error: 'Unable to read staff session' }, { status: 500 });
