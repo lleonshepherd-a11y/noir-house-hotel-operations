@@ -349,7 +349,10 @@
                 '<button type="button" class="chip-remove" data-remove-dept="' + d.id + '" aria-label="Remove ' + escapeHtml(d.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>';
             }).join('')
           : '<span class="chip-empty">No departments yet.</span>';
-        newStaffDept.innerHTML = departmentsCache.map(function (d) { return '<option value="' + d.id + '">' + escapeHtml(d.name) + '</option>'; }).join('');
+        newStaffDept.disabled = !departmentsCache.length;
+        newStaffDept.innerHTML = departmentsCache.length
+          ? departmentsCache.map(function (d) { return '<option value="' + d.id + '">' + escapeHtml(d.name) + '</option>'; }).join('')
+          : '<option value="">Add a department first</option>';
         updateProgressAndBanner();
       });
   }
