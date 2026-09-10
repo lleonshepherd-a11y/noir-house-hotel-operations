@@ -1,8 +1,25 @@
 export const schemaStatements = [
+  `CREATE TABLE IF NOT EXISTS owners (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    password_salt TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS owner_sessions (
+    id TEXT PRIMARY KEY,
+    owner_id TEXT NOT NULL REFERENCES owners(id),
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL,
+    ended_at TEXT,
+    created_at TEXT NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS hotels (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     timezone TEXT NOT NULL DEFAULT 'Europe/London',
+    owner_id TEXT REFERENCES owners(id),
     created_at TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS departments (

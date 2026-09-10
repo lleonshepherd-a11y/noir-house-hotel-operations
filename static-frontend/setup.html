@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel setup</title>
+<style>
+  :root{
+    --page:#eef0f4; --card:#ffffff; --line:#e5e7ec;
+    --ink:#1c1e26; --ink-dim:#8b8d98; --ink-mid:#5a5c68;
+    --blue:#3b5bfd; --blue-dark:#1e2f8c; --blue-wash:#eef1ff;
+    --good:#1a9c68; --good-wash:#e7f8f0;
+    --danger:#d70015; --danger-wash:#fdeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .shell{max-width:640px;margin:0 auto;padding:48px 20px 80px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2c2c2e,#000);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+  .brand-name{font-size:14px;font-weight:700;color:var(--ink-mid)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 1px 3px rgba(20,22,30,.05),0 20px 50px rgba(20,22,30,.06);padding:28px}
+  h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:-.02em}
+  .sub{margin:0 0 24px;color:var(--ink-dim);font-size:13.5px;line-height:1.5}
+
+  .tabs{display:flex;gap:2px;background:var(--page);border-radius:11px;padding:3px;margin-bottom:22px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--ink-mid);font:inherit;font-size:13px;font-weight:650;padding:9px 10px;border-radius:8px;cursor:pointer}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,21,28,.14)}
+
+  label{display:block;font-size:11px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px}
+  label:first-child{margin-top:0}
+  input,select{width:100%;font:inherit;font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:#fafbfd}
+  input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px;background:#fff}
+
+  .btn{width:100%;margin-top:22px;height:44px;border:0;border-radius:12px;background:linear-gradient(135deg,#3396ff,var(--blue-dark));color:#fff;font:inherit;font-weight:750;font-size:14px;cursor:pointer;box-shadow:0 10px 20px rgba(10,132,255,.24)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn-secondary{background:#f0f0f2;color:var(--ink-mid);box-shadow:none}
+  .btn-small{width:auto;margin-top:0;height:38px;padding:0 16px;font-size:13px}
+
+  .error{margin-top:14px;padding:11px 13px;border-radius:11px;background:var(--danger-wash);color:var(--danger);font-size:13px;font-weight:600}
+  .error[hidden]{display:none}
+
+  .app{display:none}
+  .app.on{display:block}
+  .setup-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .setup-header h1{margin:0}
+  .setup-header .sub{margin:4px 0 0}
+  .signout{border:0;background:transparent;color:var(--ink-dim);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer}
+
+  .progress{display:flex;gap:8px;margin-bottom:26px}
+  .progress span{flex:1;height:4px;border-radius:99px;background:var(--line)}
+  .progress span.done{background:var(--good)}
+
+  .section{margin-bottom:24px}
+  .section-label{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .chip{display:flex;align-items:center;gap:6px;background:var(--page);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:650;color:var(--ink)}
+  .chip-empty{color:var(--ink-dim);font-size:13px}
+
+  .add-row{display:flex;gap:8px;align-items:flex-end}
+  .add-row .field{flex:1}
+  .add-row label{margin-top:0}
+
+  .staff-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+  .staff-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--page);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+  .staff-row strong{font-size:13.5px;font-weight:700}
+  .staff-row span{font-size:12px;color:var(--ink-dim);display:block;margin-top:1px}
+
+  .staff-form{display:grid;grid-template-columns:1.2fr 1fr .8fr auto;gap:8px;align-items:end}
+  .staff-form label{margin-top:0}
+
+  .done-banner{background:var(--good-wash);border:1px solid transparent;border-radius:14px;padding:16px 18px;margin-top:26px}
+  .done-banner h3{margin:0 0 6px;font-size:14px;color:var(--good)}
+  .done-banner p{margin:0 0 10px;font-size:13px;color:var(--ink-mid);line-height:1.5}
+  .done-banner .link-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .done-banner .link-row code{flex:1;font-size:12.5px;color:var(--ink);overflow-x:auto;white-space:nowrap}
+  .done-banner .link-row button{border:0;background:var(--blue-wash);color:var(--blue);font:inherit;font-size:11.5px;font-weight:700;border-radius:8px;padding:6px 10px;cursor:pointer}
+
+  @media(max-width:520px){
+    .staff-form{grid-template-columns:1fr 1fr}
+    .staff-form button{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="brand"><span class="brand-mark">N</span><span class="brand-name">Freedom Services</span></div>
+
+  <div class="card" id="authCard">
+    <h1>Set up your hotel</h1>
+    <p class="sub">Create your hotel, add departments, add staff. Takes a few minutes, then your team signs in on the same simple screen they already use.</p>
+    <div class="tabs">
+      <button type="button" class="on" data-tab="signup">Create hotel</button>
+      <button type="button" data-tab="login">Sign in</button>
+    </div>
+
+    <form id="signupForm">
+      <label for="signupHotelName">Hotel name</label>
+      <input type="text" id="signupHotelName" placeholder="e.g. Whitfield Manor" required>
+      <label for="signupEmail">Your email</label>
+      <input type="email" id="signupEmail" placeholder="you@yourhotel.com" required>
+      <label for="signupPassword">Password</label>
+      <input type="password" id="signupPassword" placeholder="At least 8 characters" required>
+      <button type="submit" class="btn">Create my hotel</button>
+    </form>
+
+    <form id="loginForm" style="display:none">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="you@yourhotel.com" required>
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="Your password" required>
+      <button type="submit" class="btn">Sign in</button>
+    </form>
+
+    <p class="error" id="authError" hidden></p>
+  </div>
+
+  <div class="app" id="appCard">
+    <div class="card">
+      <div class="setup-header">
+        <div>
+          <h1 id="hotelNameHeading">Your hotel</h1>
+          <p class="sub">Add departments, then add staff to them.</p>
+        </div>
+        <button type="button" class="signout" id="signOutBtn">Sign out</button>
+      </div>
+
+      <div class="progress"><span id="progressDept"></span><span id="progressStaff"></span></div>
+
+      <div class="section">
+        <div class="section-label">Departments</div>
+        <div class="chip-row" id="deptChipRow"><span class="chip-empty">No departments yet.</span></div>
+        <div class="add-row">
+          <div class="field">
+            <label for="newDeptName">Add a department</label>
+            <input type="text" id="newDeptName" placeholder="e.g. Kitchen">
+          </div>
+          <button type="button" class="btn btn-small" id="addDeptBtn">Add</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Staff</div>
+        <div class="staff-list" id="staffList"><p class="chip-empty">No staff yet.</p></div>
+        <div class="staff-form">
+          <div class="field">
+            <label for="newStaffName">Name</label>
+            <input type="text" id="newStaffName" placeholder="e.g. Kitchen Team">
+          </div>
+          <div class="field">
+            <label for="newStaffDept">Department</label>
+            <select id="newStaffDept"></select>
+          </div>
+          <div class="field">
+            <label for="newStaffPin">PIN</label>
+            <input type="text" id="newStaffPin" inputmode="numeric" placeholder="4-8 digits">
+          </div>
+          <button type="button" class="btn btn-small" id="addStaffBtn">Add</button>
+        </div>
+        <p class="error" id="staffError" hidden></p>
+      </div>
+
+      <div class="done-banner" id="doneBanner" hidden>
+        <h3>You're set up</h3>
+        <p>Staff sign in at the link below, choose <strong id="doneHotelName"></strong>, then their department and PIN.</p>
+        <div class="link-row">
+          <code id="loginUrl">dashboard.freedomservices.online</code>
+          <button type="button" id="copyLinkBtn">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var TOKEN_KEY = 'freedomServicesOwnerToken';
+
+  var authCard = document.getElementById('authCard');
+  var appCard = document.getElementById('appCard');
+  var authError = document.getElementById('authError');
+  var tabs = document.querySelectorAll('.tabs button');
+  var signupForm = document.getElementById('signupForm');
+  var loginForm = document.getElementById('loginForm');
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.toggle('on', t === tab); });
+      signupForm.style.display = tab.dataset.tab === 'signup' ? 'block' : 'none';
+      loginForm.style.display = tab.dataset.tab === 'login' ? 'block' : 'none';
+      authError.hidden = true;
+    });
+  });
+
+  function showError(el, message) {
+    el.textContent = message;
+    el.hidden = false;
+  }
+
+  function authHeaders() {
+    var token = sessionStorage.getItem(TOKEN_KEY);
+    return token ? { Authorization: 'Bearer ' + token } : null;
+  }
+
+  function showApp(hotelName) {
+    authCard.style.display = 'none';
+    appCard.classList.add('on');
+    document.getElementById('hotelNameHeading').textContent = hotelName;
+    document.getElementById('doneHotelName').textContent = hotelName;
+    loadDepartments();
+    loadStaff();
+  }
+
+  signupForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    authError.hidden = true;
+    var submitBtn = signupForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    fetch('/api/owner-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'signup',
+        hotelName: document.getElementById('signupHotelName').value,
+        email: document.getElementById('signupEmail').value,
+        password: document.getElementById('signupPassword').value,
+      }),
+    }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (result) {
+        submitBtn.disabled = false;
+        if (!result.ok) { showError(authError, result.data.error || 'Could not create your hotel.'); return; }
+        sessionStorage.setItem(TOKEN_KEY, result.data.token);
+        showApp(result.data.hotelName);
+      })
+      .catch(function () { submitBtn.disabled = false; showError(authError, 'Could not reach the server. Try again.'); });
+  });
+
+  loginForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    authError.hidden = true;
+    var submitBtn = loginForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    fetch('/api/owner-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'login',
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPassword').value,
+      }),
+    }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (result) {
+        submitBtn.disabled = false;
+        if (!result.ok) { showError(authError, result.data.error || 'Invalid email or password.'); return; }
+        sessionStorage.setItem(TOKEN_KEY, result.data.token);
+        showApp(result.data.hotelName);
+      })
+      .catch(function () { submitBtn.disabled = false; showError(authError, 'Could not reach the server. Try again.'); });
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', function () {
+    var headers = authHeaders();
+    if (headers) fetch('/api/owner-session', { method: 'DELETE', headers: headers });
+    sessionStorage.removeItem(TOKEN_KEY);
+    location.reload();
+  });
+
+  var deptChipRow = document.getElementById('deptChipRow');
+  var newStaffDept = document.getElementById('newStaffDept');
+  var progressDept = document.getElementById('progressDept');
+  var progressStaff = document.getElementById('progressStaff');
+  var doneBanner = document.getElementById('doneBanner');
+  var departmentsCache = [];
+  var staffCache = [];
+
+  function escapeHtml(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+
+  function updateProgressAndBanner() {
+    progressDept.classList.toggle('done', departmentsCache.length > 0);
+    progressStaff.classList.toggle('done', staffCache.length > 0);
+    doneBanner.hidden = !(departmentsCache.length > 0 && staffCache.length > 0);
+    if (!doneBanner.hidden) document.getElementById('loginUrl').textContent = location.origin;
+  }
+
+  function loadDepartments() {
+    fetch('/api/owner/departments', { headers: authHeaders() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        departmentsCache = data.departments;
+        deptChipRow.innerHTML = departmentsCache.length
+          ? departmentsCache.map(function (d) { return '<span class="chip">' + escapeHtml(d.name) + '</span>'; }).join('')
+          : '<span class="chip-empty">No departments yet.</span>';
+        newStaffDept.innerHTML = departmentsCache.map(function (d) { return '<option value="' + d.id + '">' + escapeHtml(d.name) + '</option>'; }).join('');
+        updateProgressAndBanner();
+      });
+  }
+
+  document.getElementById('addDeptBtn').addEventListener('click', function () {
+    var input = document.getElementById('newDeptName');
+    var name = input.value.trim();
+    if (!name) return;
+    fetch('/api/owner/departments', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+      body: JSON.stringify({ name: name }),
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data) { input.value = ''; loadDepartments(); } });
+  });
+  document.getElementById('newDeptName').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addDeptBtn').click(); }
+  });
+
+  var staffList = document.getElementById('staffList');
+  var staffError = document.getElementById('staffError');
+
+  function loadStaff() {
+    fetch('/api/owner/staff', { headers: authHeaders() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        staffCache = data.staff;
+        staffList.innerHTML = staffCache.length
+          ? staffCache.map(function (s) {
+              return '<div class="staff-row"><div><strong>' + escapeHtml(s.displayName) + '</strong><span>' + escapeHtml(s.department) + '</span></div></div>';
+            }).join('')
+          : '<p class="chip-empty">No staff yet.</p>';
+        updateProgressAndBanner();
+      });
+  }
+
+  document.getElementById('addStaffBtn').addEventListener('click', function () {
+    staffError.hidden = true;
+    var nameInput = document.getElementById('newStaffName');
+    var pinInput = document.getElementById('newStaffPin');
+    var name = nameInput.value.trim();
+    var pin = pinInput.value.trim();
+    var departmentId = newStaffDept.value;
+    if (!name || !pin || !departmentId) { showError(staffError, 'Add a department first, then a name and PIN.'); return; }
+    fetch('/api/owner/staff', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+      body: JSON.stringify({ displayName: name, departmentId: departmentId, pin: pin }),
+    }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (result) {
+        if (!result.ok) { showError(staffError, result.data.error || 'Could not add that staff member.'); return; }
+        nameInput.value = '';
+        pinInput.value = '';
+        loadStaff();
+      });
+  });
+
+  document.getElementById('copyLinkBtn').addEventListener('click', function () {
+    var text = document.getElementById('loginUrl').textContent;
+    if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+  });
+
+  // Resume an existing owner session on reload, same idea as the staff
+  // dashboard's own session resume.
+  var existingToken = sessionStorage.getItem(TOKEN_KEY);
+  if (existingToken) {
+    fetch('/api/owner-session', { headers: { Authorization: 'Bearer ' + existingToken } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data) showApp(data.hotelName);
+        else sessionStorage.removeItem(TOKEN_KEY);
+      });
+  }
+})();
+</script>
+</body>
+</html>

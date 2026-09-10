@@ -30,6 +30,14 @@ export interface StaffIdentity {
   role: StaffRole;
 }
 
+// A hotel's own admin, not a shared department PIN console - the identity
+// that can create departments and issue staff PINs during self-service
+// onboarding.
+export interface OwnerIdentity {
+  ownerId: string;
+  hotelId: string;
+}
+
 export interface ResourceScope {
   hotelId: string;
   departmentId?: string | null;

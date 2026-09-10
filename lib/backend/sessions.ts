@@ -82,22 +82,26 @@ export async function startStaffSession(db: D1Database, staffId: string, pin: st
   return { token, expiresAt, identity: toIdentity(staff) };
 }
 
-export async function startDepartmentSession(db: D1Database, departmentName: string, pin: string) {
-  const identifier = `dept:${departmentName.trim().toLowerCase()}`;
+export async function startDepartmentSession(db: D1Database, departmentName: string, pin: string, hotelId?: string) {
+  const identifier = `dept:${hotelId ?? 'any'}:${departmentName.trim().toLowerCase()}`;
   await assertNotLockedOut(db, identifier);
-  const matches = await db.prepare(`SELECT s.id, s.hotel_id, s.pin_hash, s.pin_salt FROM staff s
-    JOIN departments d ON d.id = s.department_id
-    WHERE lower(d.name) = lower(?) AND s.active = 1
-    ORDER BY s.created_at ASC`).bind(departmentName).all<{ id: string; hotel_id: string; pin_hash: string; pin_salt: string }>();
+  const matches = hotelId
+    ? await db.prepare(`SELECT s.id, s.hotel_id, s.pin_hash, s.pin_salt FROM staff s
+        JOIN departments d ON d.id = s.department_id
+        WHERE lower(d.name) = lower(?) AND s.hotel_id = ? AND s.active = 1
+        ORDER BY s.created_at ASC`).bind(departmentName, hotelId).all<{ id: string; hotel_id: string; pin_hash: string; pin_salt: string }>()
+    : await db.prepare(`SELECT s.id, s.hotel_id, s.pin_hash, s.pin_salt FROM staff s
+        JOIN departments d ON d.id = s.department_id
+        WHERE lower(d.name) = lower(?) AND s.active = 1
+        ORDER BY s.created_at ASC`).bind(departmentName).all<{ id: string; hotel_id: string; pin_hash: string; pin_salt: string }>();
   if (!matches.results.length) throw new Response('This department account has not been provisioned', { status: 401 });
-  // A department name is only guaranteed unique within one hotel. If staff in
-  // more than one hotel share this department name, picking one arbitrarily
-  // would risk authenticating into the wrong hotel's tenant, so refuse rather
-  // than guess — this deployment needs staff-ID login (or a hotel-scoped
-  // department login) until departments carry a globally-unique identifier.
+  // A department name is only guaranteed unique within one hotel. If the
+  // caller didn't say which hotel and staff in more than one hotel share
+  // this department name, picking one arbitrarily would risk authenticating
+  // into the wrong hotel's tenant, so refuse rather than guess.
   const distinctHotels = new Set(matches.results.map((row) => row.hotel_id));
-  if (distinctHotels.size > 1) {
-    throw new Response('This department name exists in more than one hotel; sign in with a staff PIN instead', { status: 409 });
+  if (!hotelId && distinctHotels.size > 1) {
+    throw new Response('This department name exists in more than one hotel; choose your hotel first', { status: 409 });
   }
   // A department can have several staff sharing the one PIN-gated login, and
   // each of them has their own PIN, so check every staff member in it rather

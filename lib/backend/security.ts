@@ -43,6 +43,33 @@ export async function verifyPin(pin: string, expectedHash: string, salt: string)
   return difference === 0;
 }
 
+export function validatePassword(password: string) {
+  return typeof password === 'string' && password.length >= 8 && password.length <= 200;
+}
+
+export async function hashPassword(password: string, suppliedSalt?: string) {
+  if (!validatePassword(password)) throw new Error('Password must be at least 8 characters');
+  const salt = suppliedSalt ? fromHex(suppliedSalt) : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: PIN_ITERATIONS },
+    key,
+    256,
+  );
+  return { hash: toHex(bits), salt: toHex(salt) };
+}
+
+export async function verifyPassword(password: string, expectedHash: string, salt: string) {
+  if (!validatePassword(password)) return false;
+  const candidate = await hashPassword(password, salt);
+  const left = fromHex(candidate.hash);
+  const right = fromHex(expectedHash);
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left[index] ^ right[index];
+  return difference === 0;
+}
+
 export function createSessionToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return toHex(bytes);

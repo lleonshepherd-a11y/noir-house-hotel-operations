@@ -17,11 +17,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { staffId?: string; department?: string; pin?: string };
+    const body = (await request.json()) as { staffId?: string; department?: string; pin?: string; hotelId?: string };
     if (!body.pin || (!body.staffId && !body.department)) return Response.json({ error: 'Department and PIN are required' }, { status: 400 });
     const db = getDatabase();
     return Response.json(body.department
-      ? await startDepartmentSession(db, body.department, body.pin)
+      ? await startDepartmentSession(db, body.department, body.pin, body.hotelId)
       : await startStaffSession(db, body.staffId!, body.pin));
   } catch (error) {
     if (error instanceof Response) return error;
