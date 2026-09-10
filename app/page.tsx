@@ -691,6 +691,9 @@ export default function Home() {
   useEffect(() => {
     if (!canAccessGuestRequests && utilityPanel === 'guest') setUtilityPanel(null);
   }, [canAccessGuestRequests, utilityPanel]);
+  useEffect(() => {
+    if (activeDepartment !== 'Kitchen' && utilityPanel === 'foodTemps') setUtilityPanel(null);
+  }, [activeDepartment, utilityPanel]);
   const pendingGuestRequests = guestRequests.filter((request) => request.status === 'New');
   const featuredGuestRequest =
     pendingGuestRequests.find((request) => request.urgent) ?? pendingGuestRequests[0];
@@ -1866,18 +1869,20 @@ export default function Home() {
           >
             <ShieldCheck size={20} />
           </button>
-          <button
-            className={`nav-button ${utilityPanel === 'foodTemps' ? 'active' : ''}`}
-            aria-label="Food temperature log"
-            title="Food temperature log"
-            onClick={() => {
-              setUtilityPanel((panel) => (panel === 'foodTemps' ? null : 'foodTemps'));
-              setCalendarOpen(false);
-              setComposerOpen(false);
-            }}
-          >
-            <CookingPot size={20} />
-          </button>
+          {activeDepartment === 'Kitchen' && (
+            <button
+              className={`nav-button ${utilityPanel === 'foodTemps' ? 'active' : ''}`}
+              aria-label="Food temperature log"
+              title="Food temperature log"
+              onClick={() => {
+                setUtilityPanel((panel) => (panel === 'foodTemps' ? null : 'foodTemps'));
+                setCalendarOpen(false);
+                setComposerOpen(false);
+              }}
+            >
+              <CookingPot size={20} />
+            </button>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <button
