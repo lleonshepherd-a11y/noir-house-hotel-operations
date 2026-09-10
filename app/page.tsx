@@ -1,11 +1,12 @@
 'use client';
 
-import { FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   BellRing,
   BedDouble,
   CalendarClock,
+  Check,
   CalendarDays,
   ChefHat,
   ChevronDown,
@@ -30,6 +31,7 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  CookingPot,
   Sparkles,
   Sun,
   UtensilsCrossed,
@@ -128,6 +130,52 @@ type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 type DashboardTileId = 'pinboard' | 'guest' | 'handover' | 'management' | 'operations' | 'planner';
 
 type RoomStatus = 'To clean' | 'Ready';
+
+type ChecklistGroup = 'Opening' | 'Service prep' | 'Closing';
+
+type ChecklistItem = {
+  key: string;
+  label: string;
+  group: ChecklistGroup;
+  done: boolean;
+  completedAt: string | null;
+  completedByName: string | null;
+};
+
+type FoodCheckType = 'cooking' | 'hot_holding' | 'cold_display' | 'delivery_chilled' | 'delivery_frozen';
+
+type FoodTempLimit = { label: string; compare: 'min' | 'max'; limitC: number };
+
+type FoodTempEntry = {
+  id: string;
+  checkType: FoodCheckType;
+  itemName: string;
+  supplier: string | null;
+  readingC: number;
+  inRange: boolean;
+  packagingOk: boolean | null;
+  useByOk: boolean | null;
+  quantityOk: boolean | null;
+  correctiveAction: string | null;
+  loggedAt: string;
+  loggedByName: string;
+};
+
+const FOOD_TEMP_TYPE_LABELS: Record<FoodCheckType, string> = {
+  cooking: 'Cooking / reheating',
+  hot_holding: 'Hot holding',
+  cold_display: 'Cold food',
+  delivery_chilled: 'Chilled delivery',
+  delivery_frozen: 'Frozen delivery',
+};
+
+const FOOD_TEMP_IS_DELIVERY: Record<FoodCheckType, boolean> = {
+  cooking: false,
+  hot_holding: false,
+  cold_display: false,
+  delivery_chilled: true,
+  delivery_frozen: true,
+};
 
 const housekeepingRooms = [
   101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
@@ -298,6 +346,40 @@ function urlBase64ToUint8Array(value: string) {
   return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
 }
 
+const CHECKLIST_GROUP_CLASS: Record<ChecklistGroup, string> = {
+  Opening: 'g-open',
+  'Service prep': 'g-service',
+  Closing: 'g-close',
+};
+
+function checklistWedgePath(index: number, total: number, outer: number, inner: number, cx: number, cy: number) {
+  const gapDeg = 4;
+  const wedgeDeg = (360 - total * gapDeg) / total;
+  const start = index * (wedgeDeg + gapDeg);
+  const end = start + wedgeDeg;
+  const point = (radius: number, deg: number) => {
+    const rad = (deg * Math.PI) / 180;
+    return [cx + radius * Math.sin(rad), cy - radius * Math.cos(rad)];
+  };
+  const [ox1, oy1] = point(outer, start);
+  const [ox2, oy2] = point(outer, end);
+  const [ix2, iy2] = point(inner, end);
+  const [ix1, iy1] = point(inner, start);
+  const large = wedgeDeg > 180 ? 1 : 0;
+  return `M ${ox1.toFixed(2)} ${oy1.toFixed(2)} A ${outer} ${outer} 0 ${large} 1 ${ox2.toFixed(2)} ${oy2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${inner} ${inner} 0 ${large} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`;
+}
+
+function formatChecklistTime(iso: string | null) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function foodReadingWithinLimit(checkType: FoodCheckType, readingC: number, limits: Partial<Record<FoodCheckType, FoodTempLimit>>) {
+  const limit = limits[checkType];
+  if (!limit) return true;
+  return limit.compare === 'min' ? readingC >= limit.limitC : readingC <= limit.limitC;
+}
+
 function playPing(urgent = false) {
   try {
     const AudioContextClass =
@@ -359,7 +441,7 @@ export default function Home() {
   const [guestNotificationsOpen, setGuestNotificationsOpen] = useState(false);
   const [shiftNotificationsOpen, setShiftNotificationsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'guest' | 'security' | 'settings' | null>(null);
+  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'guest' | 'security' | 'settings' | 'foodTemps' | null>(null);
   const [gentleSounds, setGentleSounds] = useState(true);
   const [calmMotion, setCalmMotion] = useState(true);
   const [appointmentTitle, setAppointmentTitle] = useState('');
@@ -453,6 +535,7 @@ export default function Home() {
   const [departmentSessionStatus, setDepartmentSessionStatus] = useState('Not connected');
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [voiceWavePeaks, setVoiceWavePeaks] = useState<number[]>([]);
   const [voiceNoteUrl, setVoiceNoteUrl] = useState('');
   const [voiceNoteDuration, setVoiceNoteDuration] = useState(0);
   const [dictating, setDictating] = useState(false);
@@ -499,6 +582,23 @@ export default function Home() {
     () => Array.from({ length: tableCount }, (_, index) => index + 1),
     [tableCount],
   );
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [checklistDoneCount, setChecklistDoneCount] = useState(0);
+  const [checklistNotice, setChecklistNotice] = useState('');
+  const pendingChecklistTogglesRef = useRef<Set<string>>(new Set());
+  const [foodTempEntries, setFoodTempEntries] = useState<FoodTempEntry[]>([]);
+  const [foodTempLimits, setFoodTempLimits] = useState<Partial<Record<FoodCheckType, FoodTempLimit>>>({});
+  const [foodTempNotice, setFoodTempNotice] = useState('');
+  const [foodTempShowHistory, setFoodTempShowHistory] = useState(false);
+  const [foodTempSubmitting, setFoodTempSubmitting] = useState(false);
+  const [foodTempCheckType, setFoodTempCheckType] = useState<FoodCheckType>('cooking');
+  const [foodTempItemName, setFoodTempItemName] = useState('');
+  const [foodTempSupplier, setFoodTempSupplier] = useState('');
+  const [foodTempReading, setFoodTempReading] = useState('');
+  const [foodTempPackagingOk, setFoodTempPackagingOk] = useState(true);
+  const [foodTempUseByOk, setFoodTempUseByOk] = useState(true);
+  const [foodTempQuantityOk, setFoodTempQuantityOk] = useState(true);
+  const [foodTempCorrectiveAction, setFoodTempCorrectiveAction] = useState('');
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
   const [handoverDraft, setHandoverDraft] = useState('');
   const [handoverImportant, setHandoverImportant] = useState(false);
@@ -591,6 +691,9 @@ export default function Home() {
   useEffect(() => {
     if (!canAccessGuestRequests && utilityPanel === 'guest') setUtilityPanel(null);
   }, [canAccessGuestRequests, utilityPanel]);
+  useEffect(() => {
+    if (activeDepartment !== 'Kitchen' && utilityPanel === 'foodTemps') setUtilityPanel(null);
+  }, [activeDepartment, utilityPanel]);
   const pendingGuestRequests = guestRequests.filter((request) => request.status === 'New');
   const featuredGuestRequest =
     pendingGuestRequests.find((request) => request.urgent) ?? pendingGuestRequests[0];
@@ -1007,6 +1110,120 @@ export default function Home() {
     });
   }, [activeDepartment, connectedDepartment, staffSessionToken]);
 
+  const loadChecklist = useCallback(() => {
+    if (!staffSessionToken || connectedDepartment !== 'Restaurant') return;
+    void fetch('/api/checklist', { headers: { authorization: `Bearer ${staffSessionToken}` } })
+      .then((response) => (response.ok ? response.json() : Promise.reject()) as Promise<{ items: ChecklistItem[]; doneCount: number }>)
+      .then((data) => {
+        setChecklistItems(data.items);
+        setChecklistDoneCount(data.doneCount);
+      })
+      .catch(() => setChecklistNotice('Checklist could not be loaded. Check the department connection.'));
+  }, [staffSessionToken, connectedDepartment]);
+
+  useEffect(() => {
+    if (activeDepartment !== 'Restaurant') return;
+    loadChecklist();
+  }, [activeDepartment, loadChecklist]);
+
+  const toggleChecklistItem = async (item: ChecklistItem) => {
+    if (pendingChecklistTogglesRef.current.has(item.key)) return;
+    if (!staffSessionToken || connectedDepartment !== 'Restaurant') {
+      setChecklistNotice('Connect the Restaurant department PIN to check off tasks.');
+      window.setTimeout(() => setChecklistNotice(''), 4000);
+      return;
+    }
+    pendingChecklistTogglesRef.current.add(item.key);
+    const wasDone = item.done;
+    setChecklistItems((current) => current.map((candidate) => (candidate.key === item.key ? { ...candidate, done: !wasDone } : candidate)));
+    setChecklistDoneCount((current) => current + (wasDone ? -1 : 1));
+    try {
+      const response = wasDone
+        ? await fetch(`/api/checklist?itemKey=${encodeURIComponent(item.key)}`, {
+            method: 'DELETE',
+            headers: { authorization: `Bearer ${staffSessionToken}` },
+          })
+        : await fetch('/api/checklist', {
+            method: 'POST',
+            headers: { authorization: `Bearer ${staffSessionToken}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ itemKey: item.key }),
+          });
+      if (!response.ok) throw new Error();
+      loadChecklist();
+    } catch {
+      setChecklistItems((current) => current.map((candidate) => (candidate.key === item.key ? { ...candidate, done: wasDone } : candidate)));
+      setChecklistDoneCount((current) => current + (wasDone ? 1 : -1));
+      setChecklistNotice('That change did not save — please try again.');
+      window.setTimeout(() => setChecklistNotice(''), 4000);
+    } finally {
+      pendingChecklistTogglesRef.current.delete(item.key);
+    }
+  };
+
+  const loadFoodTemps = useCallback(() => {
+    if (!staffSessionToken || connectedDepartment !== 'Kitchen') return;
+    void fetch('/api/food-temps', { headers: { authorization: `Bearer ${staffSessionToken}` } })
+      .then((response) => (response.ok ? response.json() : Promise.reject()) as Promise<{ entries: FoodTempEntry[]; limits: Record<FoodCheckType, FoodTempLimit> }>)
+      .then((data) => {
+        setFoodTempEntries(data.entries);
+        setFoodTempLimits(data.limits);
+      })
+      .catch(() => setFoodTempNotice('Food temperature log could not be loaded. Check the department connection.'));
+  }, [staffSessionToken, connectedDepartment]);
+
+  useEffect(() => {
+    if (utilityPanel !== 'foodTemps') return;
+    loadFoodTemps();
+  }, [utilityPanel, loadFoodTemps]);
+
+  const submitFoodTemp = async (event: FormEvent) => {
+    event.preventDefault();
+    if (foodTempSubmitting) return;
+    if (!staffSessionToken || connectedDepartment !== 'Kitchen') {
+      setFoodTempNotice('Connect the Kitchen department PIN to log a reading.');
+      window.setTimeout(() => setFoodTempNotice(''), 4000);
+      return;
+    }
+    const readingC = Number(foodTempReading);
+    if (!foodTempItemName.trim() || Number.isNaN(readingC)) {
+      setFoodTempNotice('Enter an item name and a numeric reading.');
+      window.setTimeout(() => setFoodTempNotice(''), 4000);
+      return;
+    }
+    const isDelivery = FOOD_TEMP_IS_DELIVERY[foodTempCheckType];
+    setFoodTempSubmitting(true);
+    try {
+      const response = await fetch('/api/food-temps', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${staffSessionToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          checkType: foodTempCheckType,
+          itemName: foodTempItemName.trim(),
+          supplier: isDelivery ? foodTempSupplier.trim() : undefined,
+          readingC,
+          packagingOk: isDelivery ? foodTempPackagingOk : undefined,
+          useByOk: isDelivery ? foodTempUseByOk : undefined,
+          quantityOk: isDelivery ? foodTempQuantityOk : undefined,
+          correctiveAction: foodTempCorrectiveAction.trim() || undefined,
+        }),
+      });
+      if (!response.ok) throw new Error();
+      setFoodTempItemName('');
+      setFoodTempSupplier('');
+      setFoodTempReading('');
+      setFoodTempPackagingOk(true);
+      setFoodTempUseByOk(true);
+      setFoodTempQuantityOk(true);
+      setFoodTempCorrectiveAction('');
+      loadFoodTemps();
+    } catch {
+      setFoodTempNotice('That reading did not save — please try again.');
+      window.setTimeout(() => setFoodTempNotice(''), 4000);
+    } finally {
+      setFoodTempSubmitting(false);
+    }
+  };
+
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
     if (!draft.trim()) return;
@@ -1414,6 +1631,7 @@ export default function Home() {
       recorderRef.current = recorder;
       recorder.start();
       setRecordingSeconds(0);
+      setVoiceWavePeaks(Array.from({ length: 34 }, () => 22 + Math.random() * 68));
       setRecording(true);
     } catch {
       setMessageError('Microphone access is needed to record a voice note.');
@@ -1651,6 +1869,20 @@ export default function Home() {
           >
             <ShieldCheck size={20} />
           </button>
+          {activeDepartment === 'Kitchen' && (
+            <button
+              className={`nav-button ${utilityPanel === 'foodTemps' ? 'active' : ''}`}
+              aria-label="Food temperature log"
+              title="Food temperature log"
+              onClick={() => {
+                setUtilityPanel((panel) => (panel === 'foodTemps' ? null : 'foodTemps'));
+                setCalendarOpen(false);
+                setComposerOpen(false);
+              }}
+            >
+              <CookingPot size={20} />
+            </button>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <button
@@ -1689,8 +1921,8 @@ export default function Home() {
         >
           <div className="calendar-heading">
             <div>
-              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
-              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'guest' ? 'Guest requests' : utilityPanel === 'security' ? 'Security & audit' : 'Settings'}</strong>
+              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : utilityPanel === 'foodTemps' ? 'Kitchen · food safety' : 'Dashboard'}</span>
+              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'guest' ? 'Guest requests' : utilityPanel === 'security' ? 'Security & audit' : utilityPanel === 'foodTemps' ? 'Food temperature log' : 'Settings'}</strong>
             </div>
             <button onClick={() => setUtilityPanel(null)} aria-label={`Close ${utilityPanel}`}><X size={17} /></button>
           </div>
@@ -1794,6 +2026,84 @@ export default function Home() {
               </form>
               <label><span><strong>Notification sounds</strong><small>Short chime normally · calm distinct pattern when urgent</small></span><input type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
               <label><span><strong>Calm interface motion</strong><small>Subtle visual movement and reminders</small></span><input type="checkbox" checked={calmMotion} onChange={(event) => setCalmMotion(event.target.checked)} /></label>
+            </div>
+          )}
+          {utilityPanel === 'foodTemps' && (
+            <div className="food-temp-panel">
+              {connectedDepartment !== 'Kitchen' && (
+                <div className="table-status-notice"><ShieldCheck size={15} /> Connect the Kitchen department PIN to log or view readings.</div>
+              )}
+              <form className="food-temp-form" onSubmit={submitFoodTemp}>
+                <label>
+                  Check type
+                  <select value={foodTempCheckType} onChange={(event) => setFoodTempCheckType(event.target.value as FoodCheckType)}>
+                    {(Object.keys(FOOD_TEMP_TYPE_LABELS) as FoodCheckType[]).map((type) => (
+                      <option key={type} value={type}>{FOOD_TEMP_TYPE_LABELS[type]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {FOOD_TEMP_IS_DELIVERY[foodTempCheckType] ? 'Delivery / item' : 'Food item'}
+                  <input value={foodTempItemName} onChange={(event) => setFoodTempItemName(event.target.value)} placeholder="e.g. Chicken breast" />
+                </label>
+                {FOOD_TEMP_IS_DELIVERY[foodTempCheckType] && (
+                  <label>
+                    Supplier
+                    <input value={foodTempSupplier} onChange={(event) => setFoodTempSupplier(event.target.value)} placeholder="e.g. Fresh Foods Ltd" />
+                  </label>
+                )}
+                <label>
+                  Reading (°C)
+                  <input type="number" step="0.1" inputMode="decimal" value={foodTempReading} onChange={(event) => setFoodTempReading(event.target.value)} placeholder="0.0" />
+                </label>
+                {foodTempReading !== '' && !Number.isNaN(Number(foodTempReading)) && (
+                  <small className={`food-temp-preview ${foodReadingWithinLimit(foodTempCheckType, Number(foodTempReading), foodTempLimits) ? 'in-range' : 'out-of-range'}`}>
+                    {foodReadingWithinLimit(foodTempCheckType, Number(foodTempReading), foodTempLimits) ? 'Within limit' : 'Out of limit — record a corrective action'}
+                  </small>
+                )}
+                {FOOD_TEMP_IS_DELIVERY[foodTempCheckType] && (
+                  <div className="food-temp-checks">
+                    <label><input type="checkbox" checked={foodTempPackagingOk} onChange={(event) => setFoodTempPackagingOk(event.target.checked)} /> Packaging intact</label>
+                    <label><input type="checkbox" checked={foodTempUseByOk} onChange={(event) => setFoodTempUseByOk(event.target.checked)} /> Use-by dates OK</label>
+                    <label><input type="checkbox" checked={foodTempQuantityOk} onChange={(event) => setFoodTempQuantityOk(event.target.checked)} /> Quantity matches order</label>
+                  </div>
+                )}
+                <label>
+                  Corrective action (if out of limit)
+                  <input value={foodTempCorrectiveAction} onChange={(event) => setFoodTempCorrectiveAction(event.target.value)} placeholder="Optional" />
+                </label>
+                <button type="submit" disabled={foodTempSubmitting || !foodTempItemName.trim() || foodTempReading === ''}>
+                  <CookingPot size={14} /> Log reading
+                </button>
+              </form>
+              {foodTempNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {foodTempNotice}</div>}
+              <div className="food-temp-list-heading">
+                <span>{foodTempShowHistory ? 'All records' : "Today's records"}</span>
+                <button type="button" onClick={() => setFoodTempShowHistory((value) => !value)}>
+                  {foodTempShowHistory ? 'Show today only' : 'View history'}
+                </button>
+              </div>
+              <div className="food-temp-list">
+                {foodTempEntries
+                  .filter((entry) => foodTempShowHistory || entry.loggedAt.slice(0, 10) === new Date().toISOString().slice(0, 10))
+                  .map((entry) => (
+                    <article key={entry.id} className={entry.inRange ? 'in-range' : 'out-of-range'}>
+                      <div>
+                        <strong>{entry.itemName}</strong>
+                        <span>{FOOD_TEMP_TYPE_LABELS[entry.checkType]}{entry.supplier ? ` · ${entry.supplier}` : ''}</span>
+                      </div>
+                      <div className="food-temp-reading">
+                        <span>{entry.readingC}°C</span>
+                        <small>{entry.inRange ? 'OK' : 'Out of limit'}</small>
+                      </div>
+                      <small className="food-temp-meta">
+                        {new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(entry.loggedAt))} · {entry.loggedByName}
+                      </small>
+                      {entry.correctiveAction && <small className="food-temp-meta">Action: {entry.correctiveAction}</small>}
+                    </article>
+                  ))}
+                {foodTempEntries.length === 0 && <p className="food-temp-empty">No readings logged yet.</p>}
+              </div>
             </div>
           )}
         </section>
@@ -2450,6 +2760,78 @@ export default function Home() {
                 })}
               </div>
               {tableStatusNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {tableStatusNotice}</div>}
+            </section>
+          )}
+          {activeDepartment === 'Restaurant' && checklistItems.length > 0 && (
+            <section className="restaurant-checklist glass-panel dashboard-movable" style={{ order: tileOrder('handover') - 1 }} aria-labelledby="restaurant-checklist-title">
+              <div className="section-heading restaurant-checklist-heading">
+                <div>
+                  <span className="eyebrow"><ListChecks size={13} /> Daily checklist</span>
+                  <h2 id="restaurant-checklist-title">Today&rsquo;s board</h2>
+                  <p>Tap a task as you finish it — it fills in a piece of the board. Resets fresh at midnight.</p>
+                </div>
+              </div>
+              <div className="checklist-layout">
+                <div className="checklist-board-card">
+                  <div className="checklist-board-wrap">
+                    <svg viewBox="0 0 300 300">
+                      {checklistItems.map((item, index) => (
+                        <path
+                          key={item.key}
+                          className={`checklist-wedge ${item.done ? 'done' : ''} ${CHECKLIST_GROUP_CLASS[item.group]}`}
+                          d={checklistWedgePath(index, checklistItems.length, 128, 64, 150, 150)}
+                        />
+                      ))}
+                    </svg>
+                    <div className="checklist-board-center">
+                      <div className="num">{checklistDoneCount}</div>
+                      <div className="of">of {checklistItems.length} done</div>
+                    </div>
+                  </div>
+                  <div className="checklist-legend">
+                    <div className="item"><span className="dot g-open" /> Opening</div>
+                    <div className="item"><span className="dot g-service" /> Service prep</div>
+                    <div className="item"><span className="dot g-close" /> Closing</div>
+                  </div>
+                  <div className="checklist-note">
+                    {checklistItems.length - checklistDoneCount === 0
+                      ? 'Board complete — nice work.'
+                      : `${checklistItems.length - checklistDoneCount} piece${checklistItems.length - checklistDoneCount === 1 ? '' : 's'} left — the board fills in as your shift finishes.`}
+                  </div>
+                </div>
+                <div className="checklist-list-stack">
+                  {(['Opening', 'Service prep', 'Closing'] as ChecklistGroup[]).map((group) => {
+                    const groupItems = checklistItems.filter((item) => item.group === group);
+                    if (!groupItems.length) return null;
+                    const groupDone = groupItems.filter((item) => item.done).length;
+                    return (
+                      <div className="checklist-section" key={group}>
+                        <div className="checklist-section-head">
+                          <span className={`dot ${CHECKLIST_GROUP_CLASS[group]}`} />
+                          <h3>{group}</h3>
+                          <span>{groupDone} of {groupItems.length}</span>
+                        </div>
+                        {groupItems.map((item) => (
+                          <button
+                            type="button"
+                            key={item.key}
+                            className={`checklist-row ${item.done ? 'done' : ''} ${CHECKLIST_GROUP_CLASS[item.group]}`}
+                            onClick={() => toggleChecklistItem(item)}
+                            aria-pressed={item.done}
+                          >
+                            <span className="checklist-check"><Check size={13} /></span>
+                            <span className="label">{item.label}</span>
+                            {item.done && (
+                              <span className="meta">{formatChecklistTime(item.completedAt)}{item.completedByName ? ` · ${item.completedByName}` : ''}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {checklistNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {checklistNotice}</div>}
             </section>
           )}
           {canAccessGuestRequests && featuredGuestRequest && (
@@ -3168,66 +3550,70 @@ export default function Home() {
                 </p>
               )}
               <div className="composer-footer">
-                <div className="composer-tools">
-                  <button type="button" className={`voice-to-text-button ${dictating ? 'active' : ''}`} onClick={toggleDictation} disabled={!dictationAvailable} aria-pressed={dictating} aria-label={dictationAvailable ? (dictating ? 'Stop voice to text' : 'Start voice to text') : 'Voice to text is unavailable in this browser'} title={dictationAvailable ? 'Voice to text' : 'Voice to text unavailable'}>
-                    <Mic size={17} /><span>{dictating ? 'Listening…' : 'Voice to text'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`spellcheck-toggle ${spellCheckEnabled ? 'active' : ''}`}
-                    onClick={() => {
-                      const next = !spellCheckEnabled;
-                      setSpellCheckEnabled(next);
-                      setSpellCheckNotice(next ? 'Spell check on' : 'Spell check off');
-                    }}
-                    aria-pressed={spellCheckEnabled}
-                    aria-label={spellCheckEnabled ? 'Turn off spell check' : 'Turn on spell check'}
-                    title={spellCheckEnabled ? 'Spell check on' : 'Spell check off'}
-                  >
-                    <ShieldCheck size={17} /><span className={`spellcheck-status ${spellCheckEnabled ? 'active' : ''}`}>{spellCheckNotice}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
-                    onClick={() => setAssignAsTask((value) => !value)}
-                    aria-label={assignAsTask ? 'Send as a normal message' : 'Create a task from this message'}
-                    title={assignAsTask ? 'Task selected' : 'Create task'}
-                  >
-                    <ListChecks size={18} />
-                  </button>
-                  <button
-                    type="button"
-                    className={`urgent-toggle ${urgent ? 'active' : ''}`}
-                    onClick={() => setUrgent((value) => !value)}
-                    aria-label={urgent ? 'Remove urgent priority' : 'Mark message urgent'}
-                    title={urgent ? 'Urgent priority selected' : 'Mark as urgent'}
-                  >
-                    <Zap size={17} />
-                  </button>
-                  <label
-                    className="attach-button"
-                    aria-label="Attach a photo or PDF"
-                  >
-                    <Paperclip size={17} />
-                    <input
-                      type="file"
-                      key={attachment}
-                      accept="image/*,.pdf,application/pdf"
-                      onChange={(event) =>
-                        {
-                          const file = event.target.files?.[0];
-                          setAttachment(file?.name ?? '');
-                          setAttachmentPreview(
-                            file?.type.startsWith('image/')
-                              ? URL.createObjectURL(file)
-                              : '',
-                          );
-                          setVoiceNoteUrl('');
-                          setVoiceNoteDuration(0);
-                        }
-                      }
-                    />
-                  </label>
+                <div className={`composer-tools ${recording ? 'recording' : ''}`}>
+                  {!recording && (
+                    <>
+                      <button type="button" className={`voice-to-text-button ${dictating ? 'active' : ''}`} onClick={toggleDictation} disabled={!dictationAvailable} aria-pressed={dictating} aria-label={dictationAvailable ? (dictating ? 'Stop voice to text' : 'Start voice to text') : 'Voice to text is unavailable in this browser'} title={dictationAvailable ? 'Voice to text' : 'Voice to text unavailable'}>
+                        <Mic size={17} /><span>{dictating ? 'Listening…' : 'Voice to text'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`spellcheck-toggle ${spellCheckEnabled ? 'active' : ''}`}
+                        onClick={() => {
+                          const next = !spellCheckEnabled;
+                          setSpellCheckEnabled(next);
+                          setSpellCheckNotice(next ? 'Spell check on' : 'Spell check off');
+                        }}
+                        aria-pressed={spellCheckEnabled}
+                        aria-label={spellCheckEnabled ? 'Turn off spell check' : 'Turn on spell check'}
+                        title={spellCheckEnabled ? 'Spell check on' : 'Spell check off'}
+                      >
+                        <ShieldCheck size={17} /><span className={`spellcheck-status ${spellCheckEnabled ? 'active' : ''}`}>{spellCheckNotice}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`task-icon-toggle ${assignAsTask ? 'active' : ''}`}
+                        onClick={() => setAssignAsTask((value) => !value)}
+                        aria-label={assignAsTask ? 'Send as a normal message' : 'Create a task from this message'}
+                        title={assignAsTask ? 'Task selected' : 'Create task'}
+                      >
+                        <ListChecks size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`urgent-toggle ${urgent ? 'active' : ''}`}
+                        onClick={() => setUrgent((value) => !value)}
+                        aria-label={urgent ? 'Remove urgent priority' : 'Mark message urgent'}
+                        title={urgent ? 'Urgent priority selected' : 'Mark as urgent'}
+                      >
+                        <Zap size={17} />
+                      </button>
+                      <label
+                        className="attach-button"
+                        aria-label="Attach a photo or PDF"
+                      >
+                        <Paperclip size={17} />
+                        <input
+                          type="file"
+                          key={attachment}
+                          accept="image/*,.pdf,application/pdf"
+                          onChange={(event) =>
+                            {
+                              const file = event.target.files?.[0];
+                              setAttachment(file?.name ?? '');
+                              setAttachmentPreview(
+                                file?.type.startsWith('image/')
+                                  ? URL.createObjectURL(file)
+                                  : '',
+                              );
+                              setVoiceNoteUrl('');
+                              setVoiceNoteDuration(0);
+                            }
+                          }
+                        />
+                      </label>
+                    </>
+                  )}
                   <button
                     type="button"
                     aria-label={
@@ -3240,7 +3626,18 @@ export default function Home() {
                   </button>
                   {recording && (
                     <span className="voice-live-indicator" aria-live="polite">
-                      <span className="voice-wave" aria-hidden="true"><i /><i /><i /></span>
+                      <span className="voice-wave" aria-hidden="true">
+                        {voiceWavePeaks.map((peak, index) => (
+                          <i
+                            key={index}
+                            style={{
+                              '--peak': `${peak}%`,
+                              animationDelay: `${(index % 9) * 0.07}s`,
+                              animationDuration: `${0.7 + (index % 5) * 0.09}s`,
+                            } as CSSProperties}
+                          />
+                        ))}
+                      </span>
                       <time>{String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:{String(recordingSeconds % 60).padStart(2, '0')}</time>
                     </span>
                   )}
