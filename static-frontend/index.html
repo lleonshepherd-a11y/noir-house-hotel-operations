@@ -4047,6 +4047,15 @@
     .fh-stat-body strong{font-size:16px}
     .composer{padding:14px 16px 16px}
     .task-feed-embed .task-feed-list,.feed-scroll>.messages-feed-list{height:auto;max-height:340px}
+
+    /* The compose menu (Message a department / Announcement) is positioned
+       right:0 relative to its own small trigger button, which sits fine
+       inside a full-width topbar - but the button that actually opens it
+       here is the rail's Messages icon, over on the opposite side of the
+       screen at this width. Anchoring to the viewport instead of the
+       trigger keeps it fully on-screen regardless of which button opened
+       it. */
+    .compose-menu{position:fixed!important;left:12px!important;right:12px!important;top:auto!important;bottom:76px!important;width:auto!important}
   }
 
   /* ==== Liquid Glass concept pass: ambient mesh backdrop, frosted rail and
