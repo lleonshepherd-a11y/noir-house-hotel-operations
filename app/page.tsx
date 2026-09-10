@@ -1629,18 +1629,6 @@ export default function Home() {
             )}
           </button>}
           <button
-            className={`nav-button ${calendarOpen ? 'active' : ''}`}
-            aria-label={`${activeDepartment} calendar`}
-            title={`${activeDepartment} calendar`}
-            onClick={() => {
-              setCalendarOpen((open) => !open);
-              setUtilityPanel(null);
-            }}
-          >
-            <CalendarDays size={20} />
-            {departmentAppointments.length > 0 && <span className="calendar-nav-dot">{departmentAppointments.length}</span>}
-          </button>
-          <button
             className={`nav-button ${utilityPanel === 'security' ? 'active' : ''}`}
             aria-label="Accountability and security"
             title="Accountability and security"
@@ -2069,7 +2057,7 @@ export default function Home() {
             </div>
             <div className="notification-wrap">
               <button
-                className={`icon-button ${unreadCount ? 'has-alert' : ''}`}
+                className={`icon-button notification-bell-button ${unreadCount ? 'has-alert' : ''}`}
                 aria-label={`${unreadCount} unread internal messages`}
                 onClick={() => {
                   setNotificationsOpen((open) => !open);
@@ -2077,7 +2065,7 @@ export default function Home() {
                   setShiftNotificationsOpen(false);
                 }}
               >
-                <Bell size={18} />
+                <Bell size={21} />
                 {unreadCount > 0 && (
                   <span className="count-badge">{unreadCount}</span>
                 )}
@@ -2168,7 +2156,7 @@ export default function Home() {
             </div>
             <div className="notification-wrap top-notification shift-top-notification">
               <button
-                className="icon-button"
+                className="icon-button calendar-top-button"
                 aria-label={`${departmentAppointments.length} calendar entries and ${shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length} outstanding handovers`}
                 onClick={() => {
                   setShiftNotificationsOpen((open) => !open);
@@ -2176,7 +2164,7 @@ export default function Home() {
                   setGuestNotificationsOpen(false);
                 }}
               >
-                <CalendarDays size={18} />
+                <CalendarDays size={21} />
                 {(departmentAppointments.length + shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length) > 0 && (
                   <span className="shift-alert-count">
                     {departmentAppointments.length + shiftHandovers.filter((item) => item.department === activeDepartment && !item.complete).length}
