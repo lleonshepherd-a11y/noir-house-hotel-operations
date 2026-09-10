@@ -7079,14 +7079,30 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var TOKEN_KEY = 'noirHouseStaffToken';
     var DEPT_KEY = 'noirHouseStaffDept';
 
-    ['General Manager', 'Front of House', 'Concierge', 'Restaurant', 'Kitchen', 'Housekeeping', 'Maintenance'].forEach(function (name) {
-      var opt = document.createElement('button');
-      opt.type = 'button';
-      opt.className = 'login-dept-option';
-      opt.dataset.dept = name;
-      opt.textContent = name;
-      deptDropdown.appendChild(opt);
-    });
+    function populateDeptDropdown(names) {
+      deptDropdown.innerHTML = '';
+      names.forEach(function (name) {
+        var opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'login-dept-option';
+        opt.dataset.dept = name;
+        opt.textContent = name;
+        deptDropdown.appendChild(opt);
+      });
+    }
+    // The real, current list of departments - whichever hotels have
+    // actually been set up - rather than a fixed guess at what a hotel's
+    // departments are called.
+    fetch('/api/departments-public')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        populateDeptDropdown((data && data.departments && data.departments.length)
+          ? data.departments
+          : ['General Manager', 'Front of House', 'Concierge', 'Restaurant', 'Kitchen', 'Housekeeping', 'Maintenance']);
+      })
+      .catch(function () {
+        populateDeptDropdown(['General Manager', 'Front of House', 'Concierge', 'Restaurant', 'Kitchen', 'Housekeeping', 'Maintenance']);
+      });
     function closeDeptDropdown() { deptDropdown.hidden = true; }
     deptTrigger.addEventListener('click', function (e) {
       e.stopPropagation();
