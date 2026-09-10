@@ -251,17 +251,6 @@ export const schemaStatements = [
     completed_at TEXT NOT NULL,
     UNIQUE(department_id, item_key, checklist_date)
   )`,
-  `CREATE TABLE IF NOT EXISTS fridge_temperature_logs (
-    id TEXT PRIMARY KEY,
-    hotel_id TEXT NOT NULL REFERENCES hotels(id),
-    department_id TEXT NOT NULL REFERENCES departments(id),
-    unit_key TEXT NOT NULL,
-    reading_c REAL NOT NULL,
-    in_range INTEGER NOT NULL,
-    corrective_action TEXT,
-    logged_by_staff_id TEXT NOT NULL REFERENCES staff(id),
-    logged_at TEXT NOT NULL
-  )`,
   `CREATE TABLE IF NOT EXISTS food_temperature_logs (
     id TEXT PRIMARY KEY,
     hotel_id TEXT NOT NULL REFERENCES hotels(id),
@@ -296,7 +285,6 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_realtime_events_department_sequence ON realtime_events(hotel_id, department_id, sequence)`,
   `CREATE INDEX IF NOT EXISTS idx_urgent_escalations_due ON urgent_escalations(due_at, escalated_at, cancelled_at)`,
   `CREATE INDEX IF NOT EXISTS idx_checklist_completions_department_date ON checklist_completions(department_id, checklist_date)`,
-  `CREATE INDEX IF NOT EXISTS idx_fridge_temperature_logs_department_logged ON fridge_temperature_logs(department_id, logged_at)`,
   `CREATE INDEX IF NOT EXISTS idx_food_temperature_logs_department_logged ON food_temperature_logs(department_id, logged_at)`,
 ] as const;
 

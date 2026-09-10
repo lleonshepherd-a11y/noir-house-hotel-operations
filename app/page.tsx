@@ -31,9 +31,9 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  CookingPot,
   Sparkles,
   Sun,
-  Thermometer,
   UtensilsCrossed,
   Wrench,
   X,
@@ -1876,7 +1876,7 @@ export default function Home() {
               setComposerOpen(false);
             }}
           >
-            <Thermometer size={20} />
+            <CookingPot size={20} />
           </button>
         </nav>
         <div className="sidebar-bottom">
@@ -2068,7 +2068,7 @@ export default function Home() {
                   <input value={foodTempCorrectiveAction} onChange={(event) => setFoodTempCorrectiveAction(event.target.value)} placeholder="Optional" />
                 </label>
                 <button type="submit" disabled={foodTempSubmitting || !foodTempItemName.trim() || foodTempReading === ''}>
-                  <Thermometer size={14} /> Log reading
+                  <CookingPot size={14} /> Log reading
                 </button>
               </form>
               {foodTempNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {foodTempNotice}</div>}

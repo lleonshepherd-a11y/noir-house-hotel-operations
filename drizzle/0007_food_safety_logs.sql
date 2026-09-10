@@ -1,15 +1,3 @@
-CREATE TABLE fridge_temperature_logs (
-  id TEXT PRIMARY KEY,
-  hotel_id TEXT NOT NULL REFERENCES hotels(id),
-  department_id TEXT NOT NULL REFERENCES departments(id),
-  unit_key TEXT NOT NULL,
-  reading_c REAL NOT NULL,
-  in_range INTEGER NOT NULL,
-  corrective_action TEXT,
-  logged_by_staff_id TEXT NOT NULL REFERENCES staff(id),
-  logged_at TEXT NOT NULL
-);
-
 CREATE TABLE food_temperature_logs (
   id TEXT PRIMARY KEY,
   hotel_id TEXT NOT NULL REFERENCES hotels(id),
@@ -26,9 +14,6 @@ CREATE TABLE food_temperature_logs (
   logged_by_staff_id TEXT NOT NULL REFERENCES staff(id),
   logged_at TEXT NOT NULL
 );
-
-CREATE INDEX idx_fridge_temperature_logs_department_logged
-ON fridge_temperature_logs(department_id, logged_at);
 
 CREATE INDEX idx_food_temperature_logs_department_logged
 ON food_temperature_logs(department_id, logged_at);
