@@ -82,9 +82,7 @@
   .done-banner{background:var(--good-wash);border:1px solid transparent;border-radius:14px;padding:16px 18px;margin-top:26px}
   .done-banner h3{margin:0 0 6px;font-size:14px;color:var(--good)}
   .done-banner p{margin:0 0 14px;font-size:13px;color:var(--ink-mid);line-height:1.5}
-  .login-link-btn{display:block;width:100%;margin-top:0;text-align:center;text-decoration:none;line-height:22px}
-  .copy-link-btn{display:block;width:100%;margin-top:8px;border:0;background:transparent;color:var(--ink-dim);font:inherit;font-size:12px;font-weight:650;padding:6px;cursor:pointer;text-align:center}
-  .copy-link-btn:hover{color:var(--ink)}
+  .login-link-btn{display:block;width:fit-content;margin:0 auto;padding:0 26px;text-align:center;text-decoration:none;line-height:44px;background:#1c1e26;box-shadow:none}
 
   @media(max-width:520px){
     .staff-form{grid-template-columns:1fr 1fr}
@@ -203,8 +201,7 @@
       <div class="done-banner" id="doneBanner" hidden>
         <h3>You're set up</h3>
         <p>Staff sign in below, choose <strong id="doneHotelName"></strong>, then their department and PIN.</p>
-        <a class="btn login-link-btn" id="loginLinkBtn" href="#" target="_blank" rel="noopener">Open staff sign-in</a>
-        <button type="button" class="copy-link-btn" id="copyLinkBtn">Copy link</button>
+        <a class="btn login-link-btn" id="loginLinkBtn" href="#" target="_blank" rel="noopener">Sign in</a>
       </div>
     </div>
   </div>
@@ -422,17 +419,6 @@
         pinInput.value = '';
         loadStaff();
       });
-  });
-
-  document.getElementById('copyLinkBtn').addEventListener('click', function (event) {
-    var btn = event.currentTarget;
-    var text = document.getElementById('loginLinkBtn').href;
-    if (!navigator.clipboard) return;
-    navigator.clipboard.writeText(text).then(function () {
-      var original = btn.textContent;
-      btn.textContent = 'Copied';
-      setTimeout(function () { btn.textContent = original; }, 1500);
-    }).catch(function () {});
   });
 
   var profileError = document.getElementById('profileError');
