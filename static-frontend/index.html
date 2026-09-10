@@ -3912,12 +3912,13 @@
   .opscal-legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 2px 14px}
   .opscal-legend-chip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--oc-mid);background:#fff;border:1px solid var(--oc-line);border-radius:999px;padding:5px 8px 5px 10px}
   .opscal-legend-chip i{width:9px;height:9px;border-radius:3px;flex:none;display:block}
-  .opscal-legend-chip-actions{display:flex;align-items:center;gap:2px;max-width:0;overflow:hidden;opacity:0;transition:max-width .15s ease,opacity .15s ease}
-  .opscal-legend-chip:hover .opscal-legend-chip-actions{max-width:50px;opacity:1}
-  .opscal-legend-edit,.opscal-legend-remove{width:18px;height:18px;border:0;background:transparent;color:var(--oc-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;flex:none}
-  .opscal-legend-edit:hover{color:var(--blue);background:var(--oc-wash)}
-  .opscal-legend-remove:hover{color:#d70015;background:#fdeaea}
-  .opscal-legend-edit svg,.opscal-legend-remove svg{width:11px;height:11px}
+  .opscal-legend-chip-actions{display:flex;align-items:center;gap:8px;margin-left:2px}
+  .opscal-legend-edit,.opscal-legend-remove{width:22px;height:22px;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;flex:none}
+  .opscal-legend-edit{color:var(--blue);background:var(--oc-wash)}
+  .opscal-legend-edit:hover{background:#dde4ff}
+  .opscal-legend-remove{color:#d70015;background:#fdeaea}
+  .opscal-legend-remove:hover{background:#fad8d8}
+  .opscal-legend-edit svg,.opscal-legend-remove svg{width:12px;height:12px}
   .opscal-legend-add{display:flex;align-items:center;gap:5px;border:1px dashed var(--oc-line);background:transparent;color:var(--blue);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px 6px 9px;cursor:pointer}
   .opscal-legend-add svg{width:13px;height:13px}
   .opscal-grid-card{background:#fff;border:1px solid var(--oc-line);border-radius:18px;box-shadow:0 1px 3px rgba(20,22,30,.05);overflow:hidden}
@@ -3955,7 +3956,7 @@
   .opscal-dept-field{grid-column:1/-1;display:flex;flex-direction:column;gap:8px}
   .opscal-dept-label{font-size:10.5px;font-weight:700;color:var(--oc-dim);text-transform:uppercase;letter-spacing:.03em}
   .opscal-dept-checks{display:flex;flex-wrap:wrap;gap:8px 18px}
-  .opscal-dept-checks label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;cursor:pointer}
+  .opscal-dept-checks label{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;cursor:pointer}
   .opscal-add-form button{grid-column:1/-1;justify-self:end;height:38px;padding:0 16px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
   .opscal-add-form button:hover{background:#2f4de0}
 
