@@ -6,6 +6,7 @@ import {
   BellRing,
   BedDouble,
   CalendarClock,
+  Check,
   CalendarDays,
   ChefHat,
   ChevronDown,
@@ -128,6 +129,17 @@ type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 type DashboardTileId = 'pinboard' | 'guest' | 'handover' | 'management' | 'operations' | 'planner';
 
 type RoomStatus = 'To clean' | 'Ready';
+
+type ChecklistGroup = 'Opening' | 'Service prep' | 'Closing';
+
+type ChecklistItem = {
+  key: string;
+  label: string;
+  group: ChecklistGroup;
+  done: boolean;
+  completedAt: string | null;
+  completedByName: string | null;
+};
 
 const housekeepingRooms = [
   101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
@@ -296,6 +308,34 @@ function urlBase64ToUint8Array(value: string) {
   const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
   const decoded = window.atob(base64);
   return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+}
+
+const CHECKLIST_GROUP_CLASS: Record<ChecklistGroup, string> = {
+  Opening: 'g-open',
+  'Service prep': 'g-service',
+  Closing: 'g-close',
+};
+
+function checklistWedgePath(index: number, total: number, outer: number, inner: number, cx: number, cy: number) {
+  const gapDeg = 4;
+  const wedgeDeg = (360 - total * gapDeg) / total;
+  const start = index * (wedgeDeg + gapDeg);
+  const end = start + wedgeDeg;
+  const point = (radius: number, deg: number) => {
+    const rad = (deg * Math.PI) / 180;
+    return [cx + radius * Math.sin(rad), cy - radius * Math.cos(rad)];
+  };
+  const [ox1, oy1] = point(outer, start);
+  const [ox2, oy2] = point(outer, end);
+  const [ix2, iy2] = point(inner, end);
+  const [ix1, iy1] = point(inner, start);
+  const large = wedgeDeg > 180 ? 1 : 0;
+  return `M ${ox1.toFixed(2)} ${oy1.toFixed(2)} A ${outer} ${outer} 0 ${large} 1 ${ox2.toFixed(2)} ${oy2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${inner} ${inner} 0 ${large} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`;
+}
+
+function formatChecklistTime(iso: string | null) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
 function playPing(urgent = false) {
@@ -499,6 +539,10 @@ export default function Home() {
     () => Array.from({ length: tableCount }, (_, index) => index + 1),
     [tableCount],
   );
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [checklistDoneCount, setChecklistDoneCount] = useState(0);
+  const [checklistNotice, setChecklistNotice] = useState('');
+  const pendingChecklistTogglesRef = useRef<Set<string>>(new Set());
   const [assignedTasks, setAssignedTasks] = useState(initialAssignedTasks);
   const [handoverDraft, setHandoverDraft] = useState('');
   const [handoverImportant, setHandoverImportant] = useState(false);
@@ -1006,6 +1050,56 @@ export default function Home() {
         });
     });
   }, [activeDepartment, connectedDepartment, staffSessionToken]);
+
+  const loadChecklist = useCallback(() => {
+    if (!staffSessionToken || connectedDepartment !== 'Restaurant') return;
+    void fetch('/api/checklist', { headers: { authorization: `Bearer ${staffSessionToken}` } })
+      .then((response) => (response.ok ? response.json() : Promise.reject()) as Promise<{ items: ChecklistItem[]; doneCount: number }>)
+      .then((data) => {
+        setChecklistItems(data.items);
+        setChecklistDoneCount(data.doneCount);
+      })
+      .catch(() => setChecklistNotice('Checklist could not be loaded. Check the department connection.'));
+  }, [staffSessionToken, connectedDepartment]);
+
+  useEffect(() => {
+    if (activeDepartment !== 'Restaurant') return;
+    loadChecklist();
+  }, [activeDepartment, loadChecklist]);
+
+  const toggleChecklistItem = async (item: ChecklistItem) => {
+    if (pendingChecklistTogglesRef.current.has(item.key)) return;
+    if (!staffSessionToken || connectedDepartment !== 'Restaurant') {
+      setChecklistNotice('Connect the Restaurant department PIN to check off tasks.');
+      window.setTimeout(() => setChecklistNotice(''), 4000);
+      return;
+    }
+    pendingChecklistTogglesRef.current.add(item.key);
+    const wasDone = item.done;
+    setChecklistItems((current) => current.map((candidate) => (candidate.key === item.key ? { ...candidate, done: !wasDone } : candidate)));
+    setChecklistDoneCount((current) => current + (wasDone ? -1 : 1));
+    try {
+      const response = wasDone
+        ? await fetch(`/api/checklist?itemKey=${encodeURIComponent(item.key)}`, {
+            method: 'DELETE',
+            headers: { authorization: `Bearer ${staffSessionToken}` },
+          })
+        : await fetch('/api/checklist', {
+            method: 'POST',
+            headers: { authorization: `Bearer ${staffSessionToken}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ itemKey: item.key }),
+          });
+      if (!response.ok) throw new Error();
+      loadChecklist();
+    } catch {
+      setChecklistItems((current) => current.map((candidate) => (candidate.key === item.key ? { ...candidate, done: wasDone } : candidate)));
+      setChecklistDoneCount((current) => current + (wasDone ? 1 : -1));
+      setChecklistNotice('That change did not save — please try again.');
+      window.setTimeout(() => setChecklistNotice(''), 4000);
+    } finally {
+      pendingChecklistTogglesRef.current.delete(item.key);
+    }
+  };
 
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
@@ -2450,6 +2544,78 @@ export default function Home() {
                 })}
               </div>
               {tableStatusNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {tableStatusNotice}</div>}
+            </section>
+          )}
+          {activeDepartment === 'Restaurant' && checklistItems.length > 0 && (
+            <section className="restaurant-checklist glass-panel dashboard-movable" style={{ order: tileOrder('handover') - 1 }} aria-labelledby="restaurant-checklist-title">
+              <div className="section-heading restaurant-checklist-heading">
+                <div>
+                  <span className="eyebrow"><ListChecks size={13} /> Daily checklist</span>
+                  <h2 id="restaurant-checklist-title">Today&rsquo;s board</h2>
+                  <p>Tap a task as you finish it — it fills in a piece of the board. Resets fresh at midnight.</p>
+                </div>
+              </div>
+              <div className="checklist-layout">
+                <div className="checklist-board-card">
+                  <div className="checklist-board-wrap">
+                    <svg viewBox="0 0 300 300">
+                      {checklistItems.map((item, index) => (
+                        <path
+                          key={item.key}
+                          className={`checklist-wedge ${item.done ? 'done' : ''} ${CHECKLIST_GROUP_CLASS[item.group]}`}
+                          d={checklistWedgePath(index, checklistItems.length, 128, 64, 150, 150)}
+                        />
+                      ))}
+                    </svg>
+                    <div className="checklist-board-center">
+                      <div className="num">{checklistDoneCount}</div>
+                      <div className="of">of {checklistItems.length} done</div>
+                    </div>
+                  </div>
+                  <div className="checklist-legend">
+                    <div className="item"><span className="dot g-open" /> Opening</div>
+                    <div className="item"><span className="dot g-service" /> Service prep</div>
+                    <div className="item"><span className="dot g-close" /> Closing</div>
+                  </div>
+                  <div className="checklist-note">
+                    {checklistItems.length - checklistDoneCount === 0
+                      ? 'Board complete — nice work.'
+                      : `${checklistItems.length - checklistDoneCount} piece${checklistItems.length - checklistDoneCount === 1 ? '' : 's'} left — the board fills in as your shift finishes.`}
+                  </div>
+                </div>
+                <div className="checklist-list-stack">
+                  {(['Opening', 'Service prep', 'Closing'] as ChecklistGroup[]).map((group) => {
+                    const groupItems = checklistItems.filter((item) => item.group === group);
+                    if (!groupItems.length) return null;
+                    const groupDone = groupItems.filter((item) => item.done).length;
+                    return (
+                      <div className="checklist-section" key={group}>
+                        <div className="checklist-section-head">
+                          <span className={`dot ${CHECKLIST_GROUP_CLASS[group]}`} />
+                          <h3>{group}</h3>
+                          <span>{groupDone} of {groupItems.length}</span>
+                        </div>
+                        {groupItems.map((item) => (
+                          <button
+                            type="button"
+                            key={item.key}
+                            className={`checklist-row ${item.done ? 'done' : ''} ${CHECKLIST_GROUP_CLASS[item.group]}`}
+                            onClick={() => toggleChecklistItem(item)}
+                            aria-pressed={item.done}
+                          >
+                            <span className="checklist-check"><Check size={13} /></span>
+                            <span className="label">{item.label}</span>
+                            {item.done && (
+                              <span className="meta">{formatChecklistTime(item.completedAt)}{item.completedByName ? ` · ${item.completedByName}` : ''}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {checklistNotice && <div className="table-status-notice"><ShieldCheck size={15} /> {checklistNotice}</div>}
             </section>
           )}
           {canAccessGuestRequests && featuredGuestRequest && (

@@ -241,6 +241,16 @@ export const schemaStatements = [
     created_at TEXT NOT NULL,
     UNIQUE(message_id, recipient_department_id)
   )`,
+  `CREATE TABLE IF NOT EXISTS checklist_completions (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    item_key TEXT NOT NULL,
+    checklist_date TEXT NOT NULL,
+    completed_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    completed_at TEXT NOT NULL,
+    UNIQUE(department_id, item_key, checklist_date)
+  )`,
   `CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_sender_client_id ON messages(sender_staff_id, client_message_id) WHERE client_message_id IS NOT NULL`,
   `CREATE INDEX IF NOT EXISTS idx_receipts_department_viewed ON message_receipts(department_id, viewed_at)`,
@@ -258,6 +268,7 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_message_deliveries_department_state ON message_deliveries(department_id, state, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_realtime_events_department_sequence ON realtime_events(hotel_id, department_id, sequence)`,
   `CREATE INDEX IF NOT EXISTS idx_urgent_escalations_due ON urgent_escalations(due_at, escalated_at, cancelled_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_checklist_completions_department_date ON checklist_completions(department_id, checklist_date)`,
 ] as const;
 
 export async function ensureSchema(db: D1Database) {
