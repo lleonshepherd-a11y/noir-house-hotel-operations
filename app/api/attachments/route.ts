@@ -1,6 +1,8 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
+import { canAccessGuestRequestByRole } from '@/lib/backend/policy';
 import { bearerToken, getDatabase, getFileStorage } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
+import { isManagement, type StaffIdentity } from '@/lib/backend/types';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const allowedTypes = new Set(['application/pdf', 'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/webm', 'image/jpeg', 'image/png', 'image/webp']);
@@ -58,15 +60,52 @@ export async function POST(request: Request) {
   }
 }
 
+// Being in the same hotel isn't enough to open a file - it also has to be
+// attached to something this staff member actually has a reason to see:
+// their own department's task, a guest request they're allowed to handle, or
+// a conversation their department is part of. Management can see anything in
+// their hotel, same as everywhere else in this app.
+async function assertAttachmentAccess(
+  db: D1Database,
+  identity: StaffIdentity,
+  record: { message_id: string | null; task_id: string | null; guest_request_id: string | null },
+) {
+  if (isManagement(identity)) return;
+  if (record.task_id) {
+    const task = await db.prepare('SELECT assigned_department_id FROM tasks WHERE id = ?')
+      .bind(record.task_id).first<{ assigned_department_id: string }>();
+    if (task && task.assigned_department_id === identity.departmentId) return;
+    throw new Response('Forbidden', { status: 403 });
+  }
+  if (record.guest_request_id) {
+    if (canAccessGuestRequestByRole(identity)) return;
+    const guestRequest = await db.prepare('SELECT assigned_department_id FROM guest_requests WHERE id = ?')
+      .bind(record.guest_request_id).first<{ assigned_department_id: string | null }>();
+    if (guestRequest && guestRequest.assigned_department_id === identity.departmentId) return;
+    throw new Response('Forbidden', { status: 403 });
+  }
+  if (record.message_id) {
+    const message = await db.prepare('SELECT conversation_id FROM messages WHERE id = ?')
+      .bind(record.message_id).first<{ conversation_id: string }>();
+    const membership = message && await db.prepare(`SELECT 1 FROM conversation_departments
+      WHERE conversation_id = ? AND department_id = ?`).bind(message.conversation_id, identity.departmentId).first();
+    if (membership) return;
+    throw new Response('Forbidden', { status: 403 });
+  }
+  throw new Response('Forbidden', { status: 403 });
+}
+
 export async function GET(request: Request) {
   try {
     const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return Response.json({ error: 'Attachment is required' }, { status: 400 });
-    const record = await db.prepare(`SELECT object_key, file_name, content_type FROM attachments
-      WHERE id = ? AND hotel_id = ?`).bind(id, identity.hotelId).first<{ object_key: string; file_name: string; content_type: string }>();
+    const record = await db.prepare(`SELECT object_key, file_name, content_type, message_id, task_id, guest_request_id FROM attachments
+      WHERE id = ? AND hotel_id = ?`).bind(id, identity.hotelId)
+      .first<{ object_key: string; file_name: string; content_type: string; message_id: string | null; task_id: string | null; guest_request_id: string | null }>();
     if (!record) return new Response('Not found', { status: 404 });
+    await assertAttachmentAccess(db, identity, record);
     const object = await getFileStorage().get(record.object_key);
     if (!object) return new Response('Not found', { status: 404 });
     const headers = new Headers();

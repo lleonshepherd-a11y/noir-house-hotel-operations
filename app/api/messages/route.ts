@@ -141,24 +141,7 @@ export async function POST(request: Request) {
       .bind(conversationId, identity.departmentId).all<{ department_id: string }>();
     const urgency = body.urgency ?? 'normal';
     const eventPayload = JSON.stringify({ conversationId, urgency, senderDepartmentId: identity.departmentId });
-    const deliveryStatements = recipientDepartments.results.flatMap(({ department_id: departmentId }) => {
-      const statements = [
-        db.prepare(`INSERT INTO message_deliveries
-          (message_id, department_id, state, attempts, created_at, updated_at) VALUES (?, ?, 'queued', 0, ?, ?)`)
-          .bind(messageId, departmentId, now, now),
-        db.prepare(`INSERT INTO realtime_events
-          (hotel_id, department_id, event_type, entity_type, entity_id, payload_json, created_at)
-          VALUES (?, ?, 'message.queued', 'message', ?, ?, ?)`).bind(identity.hotelId, departmentId, messageId, eventPayload, now),
-      ];
-      if (urgency === 'urgent' || urgency === 'emergency') {
-        statements.push(db.prepare(`INSERT INTO urgent_escalations
-          (id, message_id, recipient_department_id, escalation_department_id, due_at, created_at)
-          SELECT ?, ?, ?, id, ?, ? FROM departments WHERE hotel_id = ? AND slug = 'general-manager'`)
-          .bind(crypto.randomUUID(), messageId, departmentId, new Date(Date.now() + (urgency === 'emergency' ? 60_000 : 5 * 60_000)).toISOString(), now, identity.hotelId));
-      }
-      return statements;
-    });
-    await db.batch([
+    const allStatements = [
       db.prepare(`INSERT INTO messages (id, conversation_id, sender_staff_id, body, urgency, message_type, reply_to_message_id, created_at, client_message_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
         messageId,
@@ -172,8 +155,45 @@ export async function POST(request: Request) {
         body.clientMessageId.trim(),
       ),
       db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').bind(now, conversationId),
-      ...deliveryStatements,
-    ]);
+    ];
+    // The urgent_escalations insert below depends on a 'general-manager'
+    // department existing for this hotel (its SELECT ... WHERE just matches
+    // zero rows otherwise) - track where each one lands in the batch so a
+    // silent no-op can be caught and reported instead of quietly dropping
+    // the escalation.
+    const escalationChecks: { index: number; departmentId: string }[] = [];
+    recipientDepartments.results.forEach(({ department_id: departmentId }) => {
+      allStatements.push(
+        db.prepare(`INSERT INTO message_deliveries
+          (message_id, department_id, state, attempts, created_at, updated_at) VALUES (?, ?, 'queued', 0, ?, ?)`)
+          .bind(messageId, departmentId, now, now),
+        db.prepare(`INSERT INTO realtime_events
+          (hotel_id, department_id, event_type, entity_type, entity_id, payload_json, created_at)
+          VALUES (?, ?, 'message.queued', 'message', ?, ?, ?)`).bind(identity.hotelId, departmentId, messageId, eventPayload, now),
+      );
+      if (urgency === 'urgent' || urgency === 'emergency') {
+        escalationChecks.push({ index: allStatements.length, departmentId });
+        allStatements.push(db.prepare(`INSERT INTO urgent_escalations
+          (id, message_id, recipient_department_id, escalation_department_id, due_at, created_at)
+          SELECT ?, ?, ?, id, ?, ? FROM departments WHERE hotel_id = ? AND slug = 'general-manager'`)
+          .bind(crypto.randomUUID(), messageId, departmentId, new Date(Date.now() + (urgency === 'emergency' ? 60_000 : 5 * 60_000)).toISOString(), now, identity.hotelId));
+      }
+    });
+    const batchResults = await db.batch(allStatements);
+    for (const check of escalationChecks) {
+      if (!batchResults[check.index]?.meta?.changes) {
+        console.error('urgent escalation not created: no general-manager department for hotel', identity.hotelId, 'message', messageId);
+        await appendAuditEvent(db, {
+          hotelId: identity.hotelId,
+          actorStaffId: null,
+          actorDepartmentId: null,
+          action: 'escalation.misconfigured',
+          entityType: 'message',
+          entityId: messageId,
+          metadata: { departmentId: check.departmentId, reason: 'No general-manager department configured for this hotel' },
+        });
+      }
+    }
     await appendAuditEvent(db, {
       hotelId: identity.hotelId,
       actorStaffId: identity.staffId,

@@ -76,7 +76,7 @@ export const schemaStatements = [
     hotel_id TEXT NOT NULL REFERENCES hotels(id),
     source_message_id TEXT REFERENCES messages(id),
     assigned_department_id TEXT NOT NULL REFERENCES departments(id),
-    created_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    created_by_staff_id TEXT REFERENCES staff(id),
     completed_by_staff_id TEXT REFERENCES staff(id),
     title TEXT NOT NULL,
     details TEXT,
@@ -126,6 +126,10 @@ export const schemaStatements = [
     body TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','in_progress','resolved','archived')),
     urgency TEXT NOT NULL DEFAULT 'normal' CHECK(urgency IN ('normal','urgent')),
+    access_token TEXT,
+    reply_body TEXT,
+    replied_at TEXT,
+    replied_by_staff_id TEXT REFERENCES staff(id),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`,
@@ -258,6 +262,104 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_message_deliveries_department_state ON message_deliveries(department_id, state, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_realtime_events_department_sequence ON realtime_events(hotel_id, department_id, sequence)`,
   `CREATE INDEX IF NOT EXISTS idx_urgent_escalations_due ON urgent_escalations(due_at, escalated_at, cancelled_at)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_guest_requests_access_token ON guest_requests(access_token) WHERE access_token IS NOT NULL`,
+  `CREATE TABLE IF NOT EXISTS login_failures (
+    id TEXT PRIMARY KEY,
+    identifier TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_login_failures_identifier_created ON login_failures(identifier, created_at)`,
+  `CREATE TABLE IF NOT EXISTS checklist_completions (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    item_key TEXT NOT NULL,
+    checklist_date TEXT NOT NULL,
+    completed_at TEXT NOT NULL,
+    UNIQUE(department_id, item_key, checklist_date)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_checklist_completions_department_date ON checklist_completions(department_id, checklist_date)`,
+  `CREATE TABLE IF NOT EXISTS fridge_units (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK(kind IN ('fridge','freezer')),
+    position INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_fridge_units_department_active ON fridge_units(department_id, active, position)`,
+  `CREATE TABLE IF NOT EXISTS fridge_readings (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    unit_id TEXT NOT NULL REFERENCES fridge_units(id),
+    reading_c REAL NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('in_range','above_range','below_range')),
+    corrective_action TEXT,
+    reading_date TEXT NOT NULL,
+    logged_at TEXT NOT NULL,
+    session TEXT NOT NULL DEFAULT 'morning'
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_fridge_readings_unit_date ON fridge_readings(unit_id, reading_date, logged_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_fridge_readings_department_date ON fridge_readings(department_id, reading_date)`,
+  `CREATE INDEX IF NOT EXISTS idx_fridge_readings_unit_date_session ON fridge_readings(unit_id, reading_date, session, logged_at)`,
+  `CREATE TABLE IF NOT EXISTS food_temperature_logs (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    check_type TEXT NOT NULL CHECK(check_type IN ('cooking','hot_holding','cold_display','delivery_chilled','delivery_frozen')),
+    item_name TEXT NOT NULL,
+    supplier TEXT,
+    reading_c REAL NOT NULL,
+    in_range INTEGER NOT NULL,
+    packaging_ok INTEGER,
+    use_by_ok INTEGER,
+    quantity_ok INTEGER,
+    corrective_action TEXT,
+    logged_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_food_temperature_logs_department_logged ON food_temperature_logs(department_id, logged_at)`,
+  `CREATE TABLE IF NOT EXISTS probe_checks (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    checked_date TEXT NOT NULL,
+    checked_at TEXT NOT NULL,
+    UNIQUE(department_id, checked_date)
+  )`,
+  `CREATE TABLE IF NOT EXISTS wall_planner_categories (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    label TEXT NOT NULL,
+    color TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS wall_planner_entries (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    entry_date TEXT NOT NULL,
+    entry_time TEXT NOT NULL,
+    title TEXT NOT NULL,
+    category_id TEXT NOT NULL REFERENCES wall_planner_categories(id),
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_wall_planner_entries_hotel_date ON wall_planner_entries(hotel_id, entry_date)`,
+  `CREATE TABLE IF NOT EXISTS wall_planner_entry_departments (
+    entry_id TEXT NOT NULL REFERENCES wall_planner_entries(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    PRIMARY KEY (entry_id, department_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_wall_planner_entry_departments_department ON wall_planner_entry_departments(department_id)`,
+  `CREATE TABLE IF NOT EXISTS wall_planner_reminder_log (
+    entry_id TEXT NOT NULL REFERENCES wall_planner_entries(id),
+    offset_days INTEGER NOT NULL,
+    sent_at TEXT NOT NULL,
+    PRIMARY KEY (entry_id, offset_days)
+  )`,
 ] as const;
 
 export async function ensureSchema(db: D1Database) {

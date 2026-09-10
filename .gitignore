@@ -36,3 +36,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# build/type-check caches, not source
+/.cache/
+tsconfig.tsbuildinfo
