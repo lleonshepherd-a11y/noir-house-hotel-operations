@@ -7152,7 +7152,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ department: department, pin: pin }),
       })
-        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (r) {
+          return r.text().then(function (text) {
+            var data;
+            try { data = text ? JSON.parse(text) : {}; } catch (parseErr) { data = { error: text }; }
+            return { ok: r.ok, data: data };
+          });
+        })
         .then(function (result) {
           if (!result.ok) throw new Error((result.data && result.data.error) || 'Sign in failed');
           sessionStorage.setItem(TOKEN_KEY, result.data.token);

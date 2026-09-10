@@ -200,6 +200,18 @@
     el.hidden = false;
   }
 
+  // Not every error path on the backend replies with a JSON body (some are
+  // a plain-text Response), so parse defensively rather than let .json()
+  // throw "Unexpected token" on a message that was perfectly readable as
+  // plain text.
+  function parseResponse(r) {
+    return r.text().then(function (text) {
+      var data;
+      try { data = text ? JSON.parse(text) : {}; } catch (parseErr) { data = { error: text }; }
+      return { ok: r.ok, data: data };
+    });
+  }
+
   function authHeaders() {
     var token = sessionStorage.getItem(TOKEN_KEY);
     return token ? { Authorization: 'Bearer ' + token } : null;
@@ -228,7 +240,7 @@
         email: document.getElementById('signupEmail').value,
         password: document.getElementById('signupPassword').value,
       }),
-    }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    }).then(parseResponse)
       .then(function (result) {
         submitBtn.disabled = false;
         if (!result.ok) { showError(authError, result.data.error || 'Could not create your hotel.'); return; }
@@ -251,7 +263,7 @@
         email: document.getElementById('loginEmail').value,
         password: document.getElementById('loginPassword').value,
       }),
-    }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    }).then(parseResponse)
       .then(function (result) {
         submitBtn.disabled = false;
         if (!result.ok) { showError(authError, result.data.error || 'Invalid email or password.'); return; }
@@ -313,7 +325,7 @@
       headers: authHeaders(),
     }).then(function (r) {
       if (r.status === 204) { loadDepartments(); return; }
-      return r.json().then(function (data) { showError(deptError, (data && data.error) || 'Could not remove that department.'); });
+      return parseResponse(r).then(function (result) { showError(deptError, (result.data && result.data.error) || 'Could not remove that department.'); });
     });
   });
 
@@ -362,7 +374,7 @@
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
       body: JSON.stringify({ displayName: name, departmentId: departmentId, pin: pin }),
-    }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    }).then(parseResponse)
       .then(function (result) {
         if (!result.ok) { showError(staffError, result.data.error || 'Could not add that staff member.'); return; }
         nameInput.value = '';
