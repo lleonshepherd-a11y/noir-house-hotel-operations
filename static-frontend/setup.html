@@ -54,8 +54,11 @@
   .section{margin-bottom:24px}
   .section-label{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
   .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-  .chip{display:flex;align-items:center;gap:6px;background:var(--page);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:650;color:var(--ink)}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--page);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:650;color:var(--ink)}
   .chip-empty{color:var(--ink-dim);font-size:13px}
+  .chip-remove{width:18px;height:18px;border:0;border-radius:50%;background:transparent;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+  .chip-remove:hover{background:var(--danger-wash);color:var(--danger)}
+  .chip-remove svg{width:11px;height:11px}
 
   .add-row{display:flex;gap:8px;align-items:flex-end}
   .add-row .field{flex:1}
@@ -71,10 +74,10 @@
 
   .done-banner{background:var(--good-wash);border:1px solid transparent;border-radius:14px;padding:16px 18px;margin-top:26px}
   .done-banner h3{margin:0 0 6px;font-size:14px;color:var(--good)}
-  .done-banner p{margin:0 0 10px;font-size:13px;color:var(--ink-mid);line-height:1.5}
-  .done-banner .link-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-  .done-banner .link-row code{flex:1;font-size:12.5px;color:var(--ink);overflow-x:auto;white-space:nowrap}
-  .done-banner .link-row button{border:0;background:var(--blue-wash);color:var(--blue);font:inherit;font-size:11.5px;font-weight:700;border-radius:8px;padding:6px 10px;cursor:pointer}
+  .done-banner p{margin:0 0 14px;font-size:13px;color:var(--ink-mid);line-height:1.5}
+  .login-link-btn{display:block;width:100%;margin-top:0;text-align:center;text-decoration:none;line-height:22px}
+  .copy-link-btn{display:block;width:100%;margin-top:8px;border:0;background:transparent;color:var(--ink-dim);font:inherit;font-size:12px;font-weight:650;padding:6px;cursor:pointer;text-align:center}
+  .copy-link-btn:hover{color:var(--ink)}
 
   @media(max-width:520px){
     .staff-form{grid-template-columns:1fr 1fr}
@@ -138,6 +141,7 @@
           </div>
           <button type="button" class="btn btn-small" id="addDeptBtn">Add</button>
         </div>
+        <p class="error" id="deptError" hidden></p>
       </div>
 
       <div class="section">
@@ -163,11 +167,9 @@
 
       <div class="done-banner" id="doneBanner" hidden>
         <h3>You're set up</h3>
-        <p>Staff sign in at the link below, choose <strong id="doneHotelName"></strong>, then their department and PIN.</p>
-        <div class="link-row">
-          <code id="loginUrl">dashboard.freedomservices.online</code>
-          <button type="button" id="copyLinkBtn">Copy</button>
-        </div>
+        <p>Staff sign in below, choose <strong id="doneHotelName"></strong>, then their department and PIN.</p>
+        <a class="btn login-link-btn" id="loginLinkBtn" href="#" target="_blank" rel="noopener">Open staff sign-in</a>
+        <button type="button" class="copy-link-btn" id="copyLinkBtn">Copy link</button>
       </div>
     </div>
   </div>
@@ -280,8 +282,10 @@
     progressDept.classList.toggle('done', departmentsCache.length > 0);
     progressStaff.classList.toggle('done', staffCache.length > 0);
     doneBanner.hidden = !(departmentsCache.length > 0 && staffCache.length > 0);
-    if (!doneBanner.hidden) document.getElementById('loginUrl').textContent = location.origin;
+    if (!doneBanner.hidden) document.getElementById('loginLinkBtn').href = location.origin + '/';
   }
+
+  var deptError = document.getElementById('deptError');
 
   function loadDepartments() {
     fetch('/api/owner/departments', { headers: authHeaders() })
@@ -290,12 +294,28 @@
         if (!data) return;
         departmentsCache = data.departments;
         deptChipRow.innerHTML = departmentsCache.length
-          ? departmentsCache.map(function (d) { return '<span class="chip">' + escapeHtml(d.name) + '</span>'; }).join('')
+          ? departmentsCache.map(function (d) {
+              return '<span class="chip">' + escapeHtml(d.name) +
+                '<button type="button" class="chip-remove" data-remove-dept="' + d.id + '" aria-label="Remove ' + escapeHtml(d.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>';
+            }).join('')
           : '<span class="chip-empty">No departments yet.</span>';
         newStaffDept.innerHTML = departmentsCache.map(function (d) { return '<option value="' + d.id + '">' + escapeHtml(d.name) + '</option>'; }).join('');
         updateProgressAndBanner();
       });
   }
+
+  deptChipRow.addEventListener('click', function (event) {
+    var btn = event.target.closest('[data-remove-dept]');
+    if (!btn) return;
+    deptError.hidden = true;
+    fetch('/api/owner/departments?id=' + encodeURIComponent(btn.dataset.removeDept), {
+      method: 'DELETE',
+      headers: authHeaders(),
+    }).then(function (r) {
+      if (r.status === 204) { loadDepartments(); return; }
+      return r.json().then(function (data) { showError(deptError, (data && data.error) || 'Could not remove that department.'); });
+    });
+  });
 
   document.getElementById('addDeptBtn').addEventListener('click', function () {
     var input = document.getElementById('newDeptName');
@@ -351,9 +371,15 @@
       });
   });
 
-  document.getElementById('copyLinkBtn').addEventListener('click', function () {
-    var text = document.getElementById('loginUrl').textContent;
-    if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+  document.getElementById('copyLinkBtn').addEventListener('click', function (event) {
+    var btn = event.currentTarget;
+    var text = document.getElementById('loginLinkBtn').href;
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(function () {
+      var original = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = original; }, 1500);
+    }).catch(function () {});
   });
 
   // Resume an existing owner session on reload, same idea as the staff
