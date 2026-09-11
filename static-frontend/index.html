@@ -58,7 +58,8 @@
 
   /* ---- main ---- */
   .main{margin-left:124px;padding:26px 34px 50px}
-  .main-inner{max-width:none;margin:0 auto;position:relative}
+  .main-inner{max-width:none;margin:0 auto;position:relative;transition:opacity .22s ease,transform .22s ease}
+  .main-inner.switching{opacity:.4;transform:translateY(4px)}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
   .ntoast{pointer-events:auto;width:100%;box-sizing:border-box;padding:9px 14px;border-radius:12px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.16),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
   .ntoast.leaving{animation:urgent-card-out .25s ease forwards}
@@ -91,17 +92,19 @@
      long notification feed - GM clicks straight through to deal with one,
      leaves the rest for later. Same department colours/icons as everywhere
      else (window.DEPT_ICONS), just in circle-avatar form. */
-  .gm-urgent-stack{position:absolute;top:-16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;min-width:260px;background:var(--page);padding:6px 8px 10px;border-radius:0 0 18px 18px;z-index:21}
+  .gm-urgent-stack{position:absolute;top:-11px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;min-width:780px;max-width:min(780px,calc(100vw - 40px));background:var(--page);padding:3px 8px 5px;border-radius:0 0 14px 14px;z-index:21}
   .gm-urgent-stack[hidden]{display:none}
-  .gm-urgent-avatar{position:relative;width:32px;height:32px;border-radius:50%;margin-left:-9px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease}
+  .gm-urgent-avatar{position:relative;width:22px;height:22px;border-radius:50%;margin-left:-6px;border:2px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e)}
   .gm-urgent-avatar:first-child{margin-left:0}
   .gm-urgent-avatar:hover{transform:translateY(-2px)}
-  .gm-urgent-avatar svg{width:15px;height:15px}
-  .gm-urgent-avatar .dept-icon-initials{font-size:11px;font-weight:800}
-  .gm-urgent-badge{position:absolute;bottom:-3px;right:-4px;min-width:16px;height:16px;padding:0 2px;border-radius:50%;background:#ff3b30;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
-  @keyframes gmUrgentSlideIn{0%{opacity:0;transform:translateY(14px) scale(.85)}100%{opacity:1;transform:translateY(0) scale(1)}}
-  @keyframes gmUrgentShake{0%,100%{transform:scale(1) rotate(0deg)}25%{transform:scale(1) rotate(-6deg)}50%{transform:scale(1) rotate(5deg)}75%{transform:scale(1) rotate(-3deg)}}
-  .gm-urgent-avatar.new{animation:gmUrgentSlideIn .45s cubic-bezier(.22,.68,.35,1) forwards, gmUrgentShake .5s ease-in-out .45s}
+  .gm-urgent-avatar svg{width:11px;height:11px}
+  .gm-urgent-avatar .dept-icon-initials{font-size:8px;font-weight:800}
+  .gm-urgent-badge{position:absolute;bottom:-3px;right:-4px;min-width:13px;height:13px;padding:0 2px;border-radius:50%;background:#ff3b30;color:#fff;font-size:7.5px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;animation:gmUrgentPulse 1.8s ease-in-out infinite}
+  @keyframes gmUrgentSlideIn{0%{opacity:0;transform:translateY(20px) scale(.7)}60%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes gmUrgentShake{0%,100%{transform:scale(1) rotate(0deg)}30%{transform:scale(1) rotate(-3deg)}60%{transform:scale(1) rotate(2deg)}100%{transform:scale(1) rotate(0deg)}}
+  @keyframes gmUrgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.55),0 0 0 2px #fff inset}50%{box-shadow:0 0 0 4px rgba(255,59,48,0),0 0 0 2px #fff inset}}
+  .gm-urgent-avatar.pressed{animation:gmUrgentShake .4s ease-in-out}
+  .gm-urgent-avatar.new{animation:gmUrgentSlideIn .62s cubic-bezier(0.16,1,0.3,1) forwards, gmUrgentShake .45s ease-in-out .62s}
   .dept-select{position:relative;flex:0 0 auto}
   .dept-select-btn{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 12px;border-radius:11px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
   .dept-select-btn svg:first-child{width:15px;height:15px;color:#fff;flex:0 0 auto}
@@ -422,6 +425,9 @@
   <main class="main"><div class="main-inner">
     <div class="topbar">
       <div class="greet"><strong id="greeting">Good afternoon</strong><span id="today"></span></div>
+      <div class="gm-urgent-stack" id="gmUrgentStack" hidden></div>
+      <div class="spacer"></div>
+      <button class="icon-btn has-dot" id="guestQBtn" title="Guest questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></button>
       <div class="dept-select">
         <button class="dept-select-btn" id="deptSelectBtn">
           <span id="deptSelectLabel">General Manager</span>
@@ -438,10 +444,6 @@
           <button class="dept-dd-item" data-dept="Maintenance">Maintenance</button>
         </div>
       </div>
-      <div class="gm-urgent-stack" id="gmUrgentStack" hidden></div>
-      <div class="spacer"></div>
-      <button class="icon-btn has-dot" id="guestQBtn" title="Guest questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></button>
-      <button class="icon-btn" id="notifBellBtn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg></button>
       <button class="icon-btn" id="topbarCalendarBtn" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v2.6"/><path d="M16 3v2.6"/><rect x="3.5" y="4.8" width="17" height="16" rx="3.2"/><path d="M3.5 9.6h17"/><circle cx="8.2" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="14" r=".9" fill="currentColor" stroke="none"/></svg></button>
       <div class="compose-select">
         <button type="button" class="round-btn" id="newMessageBtn" aria-label="New message" aria-haspopup="true" aria-expanded="false" title="New message"><span class="pillow"><i></i><i></i><i></i></span></button>
@@ -4429,26 +4431,25 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (!stack) return;
       var el = document.getElementById('deptSelectLabel');
       var currentDept = el ? el.textContent.trim() : '';
-      if (currentDept !== 'General Manager') {
-        stack.hidden = true;
-        return;
-      }
+      // Every department sees which other departments have something
+      // urgent open, not just the GM - their own department's urgent
+      // items already show on their own urgent banner, so this is
+      // deliberately everyone-but-yourself.
       var localTasks = window.getLocalTasks ? window.getLocalTasks() : [];
       var counts = {};
       localTasks.forEach(function (t) {
         if (t.priority !== 'Urgent' || t.status === 'completed') return;
-        if (!t.messageDept || t.messageDept === 'General Manager') return;
+        if (!t.messageDept || t.messageDept === currentDept) return;
         counts[t.messageDept] = (counts[t.messageDept] || 0) + 1;
       });
       var depts = Object.keys(counts).sort();
       stack.hidden = depts.length === 0;
       if (!depts.length) { gmUrgentSeen = {}; return; }
       stack.innerHTML = depts.map(function (dept) {
-        var d = DEPT_ICONS[dept] || DEPT_ICONS['You'];
         var badge = deptBadge(dept);
         var isNew = !gmUrgentSeen[dept];
         return '<button type="button" class="gm-urgent-avatar' + (isNew ? ' new' : '') + '" data-goto-dept="' + dept + '" ' +
-          'style="background:linear-gradient(145deg,' + d.grad + ')" title="' + dept + ': urgent item waiting" aria-label="' + dept + ' has an urgent item">' +
+          'title="' + dept + ': urgent item waiting" aria-label="' + dept + ' has an urgent item">' +
           badge.html + '<span class="gm-urgent-badge">' + counts[dept] + '</span></button>';
       }).join('');
       depts.forEach(function (dept) { gmUrgentSeen[dept] = true; });
@@ -4459,6 +4460,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var btn = e.target.closest('[data-goto-dept]');
       if (!btn) return;
       var dept = btn.dataset.gotoDept;
+      // A quick shake as press feedback, then a smooth fade/slide into the
+      // department instead of an instant cut - the .switching class below
+      // is what the .dash-panel transition (see CSS) reacts to.
+      btn.classList.add('pressed');
+      setTimeout(function () { btn.classList.remove('pressed'); }, 400);
+      var mainInner = document.querySelector('.main-inner');
+      if (mainInner) {
+        mainInner.classList.add('switching');
+        setTimeout(function () { mainInner.classList.remove('switching'); }, 260);
+      }
       // Same bit of bookkeeping the department dropdown's own click handler
       // does - switchDashboard alone doesn't touch the pill label or which
       // dropdown item is marked "on", so without this the pill and this
@@ -8132,8 +8143,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       });
       if (log.length > 50) log.length = 50;
       var unreadCount = log.filter(function (n) { return !n.read; }).length;
-      bell.dataset.count = unreadCount > 9 ? '9+' : String(unreadCount);
-      bell.classList.add('has-dot');
+      if (bell) {
+        bell.dataset.count = unreadCount > 9 ? '9+' : String(unreadCount);
+        bell.classList.add('has-dot');
+      }
       if (drawer.classList.contains('open')) render();
       if (activityDrawer && activityDrawer.classList.contains('open')) renderActivity();
     };
@@ -8142,7 +8155,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       render();
       drawer.classList.add('open');
       backdrop.classList.add('open');
-      bell.classList.remove('has-dot');
+      if (bell) bell.classList.remove('has-dot');
     }
     function closeNotif() {
       drawer.classList.remove('open');
@@ -8172,7 +8185,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         render();
       });
     }
-    bell.addEventListener('click', openNotif);
+    if (bell) bell.addEventListener('click', openNotif);
     document.getElementById('notifClose').addEventListener('click', closeNotif);
     backdrop.addEventListener('click', closeNotif);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNotif(); });
