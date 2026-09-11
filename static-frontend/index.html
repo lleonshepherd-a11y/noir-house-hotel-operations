@@ -88,22 +88,24 @@
   .topbar .greet strong{display:block;font-size:19px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
-  /* Departments with an urgent item pile up here instead of a long
-     notification feed - tap one to bring that item up and reply, leave
-     the rest for later. Same department colours/icons as everywhere else
-     (window.DEPT_ICONS), just in circle-avatar form. Lives as a normal
-     row in the topbar rather than an overlapping notch - simpler and
-     doesn't fight every department-name length and viewport width. */
-  .gm-urgent-stack{display:flex;align-items:center;gap:8px;margin-left:16px;padding:5px 12px 5px 6px;background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 1px 2px rgba(20,20,40,.06);flex:0 0 auto}
+  /* Departments with something waiting pile up here as plain round
+     icons - no bar, no label, the icon itself is the notification.
+     They sit in a page-coloured "dip" cut into the divider between the
+     greeting row and the numbers row below, so they read as tucked into
+     the panel rather than floating on top of it. Same department
+     colours/icons as everywhere else (window.DEPT_ICONS). Tap one to
+     open that department's message thread directly. */
+  .gm-urgent-stack{position:relative;display:flex;align-items:center;margin-left:14px;flex:0 0 auto}
   .gm-urgent-stack[hidden]{display:none}
-  .gm-urgent-stack-label{font-size:11.5px;font-weight:700;color:var(--ink-mid);white-space:nowrap}
-  .gm-urgent-avatars{display:flex;align-items:center}
-  .gm-urgent-avatar{position:relative;width:30px;height:30px;border-radius:50%;margin-left:-8px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e)}
+  .gm-urgent-dip{position:absolute;left:-14px;right:-14px;top:-10px;bottom:-27px;background:var(--page);border-radius:0 0 22px 22px;box-shadow:inset 0 3px 5px rgba(20,20,40,.07);z-index:-1}
+  .gm-urgent-avatars{display:flex;align-items:center;padding:2px 6px}
+  .gm-urgent-avatar{position:relative;width:32px;height:32px;border-radius:50%;margin-left:-9px;border:2.5px solid var(--page);box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e)}
   .gm-urgent-avatar:first-child{margin-left:0}
   .gm-urgent-avatar:hover{transform:translateY(-2px)}
-  .gm-urgent-avatar svg{width:14px;height:14px}
-  .gm-urgent-avatar .dept-icon-initials{font-size:11px;font-weight:800}
-  .gm-urgent-badge{position:absolute;bottom:-3px;right:-4px;min-width:16px;height:16px;padding:0 2px;border-radius:50%;background:#ff3b30;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;animation:gmUrgentPulse 1.8s ease-in-out infinite}
+  .gm-urgent-avatar svg{width:15px;height:15px}
+  .gm-urgent-avatar .dept-icon-initials{font-size:11.5px;font-weight:800}
+  .gm-urgent-badge{position:absolute;bottom:-3px;right:-4px;min-width:16px;height:16px;padding:0 2px;border-radius:50%;background:#ff3b30;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--page);animation:gmUrgentPulse 1.8s ease-in-out infinite}
+  .gm-urgent-badge.is-normal{background:#8e8e93;animation:none}
   @keyframes gmUrgentSlideIn{0%{opacity:0;transform:translateX(-14px) scale(.7)}60%{opacity:1}100%{opacity:1;transform:translateX(0) scale(1)}}
   @keyframes gmUrgentShake{0%,100%{transform:scale(1) rotate(0deg)}30%{transform:scale(1) rotate(-3deg)}60%{transform:scale(1) rotate(2deg)}100%{transform:scale(1) rotate(0deg)}}
   @keyframes gmUrgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.55),0 0 0 2px #fff inset}50%{box-shadow:0 0 0 4px rgba(255,59,48,0),0 0 0 2px #fff inset}}
@@ -270,6 +272,11 @@
   .spotlight .who{position:absolute;left:20px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:linear-gradient(155deg,#3b5bfd,#7b91ff);border:2px solid var(--card)}
 
   .glance-card{padding:0;overflow:hidden;display:flex;flex-direction:column}
+  /* The relocated topbar lands as this card's first child, but the card
+     itself has no padding of its own (its other rows manage their own
+     insets) - give the topbar its own so the greeting doesn't sit flush
+     against the card's edges. */
+  .glance-card > .topbar{padding:22px 26px 18px}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 26px;flex-wrap:wrap}
   .glance-head:not(.gm-compact-head){justify-content:flex-start}
   .glance-head-stats{flex:1 1 auto;justify-content:center}
@@ -4428,12 +4435,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       return { cls: '', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d.icon + '</svg>' };
     }
 
-    // GM-only: every department currently carrying an urgent, unfinished
-    // task gets a small avatar here at the top instead of a long
-    // notification feed - tap one to jump straight to that department.
-    // Trying this as a small, easily-reversible addition to the existing
-    // topbar rather than reshaping it, per the user's own "move the minimum
-    // amount and see how it looks" instruction.
+    // Every department currently waiting on a reply gets a small round
+    // icon here instead of a long notification feed - tap one to open
+    // that department's message thread and reply right there. Genuinely
+    // urgent items keep the big red banner/toast treatment elsewhere;
+    // this feed also carries ordinary messages so nothing goes unseen,
+    // just without the loud treatment - only urgent ones get the
+    // pulsing red badge, everything else gets a plain grey count.
     var gmUrgentSeen = {};
     function renderGmUrgentStack() {
       var stack = document.getElementById('gmUrgentStack');
@@ -4441,17 +4449,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var el = document.getElementById('deptSelectLabel');
       var currentDept = el ? el.textContent.trim() : '';
       // Every department sees which other departments have something
-      // urgent open, not just the GM - their own department's urgent
-      // items already show on their own urgent banner, so this is
-      // deliberately everyone-but-yourself.
+      // waiting, not just the GM - their own department's own items
+      // already show on their own page, so this is deliberately
+      // everyone-but-yourself.
       var localTasks = window.getLocalTasks ? window.getLocalTasks() : [];
       var counts = {};
-      var firstTaskId = {};
+      var hasUrgent = {};
       localTasks.forEach(function (t) {
-        if (t.priority !== 'Urgent' || t.status === 'completed') return;
+        if (t.status === 'completed') return;
         if (!t.messageDept || t.messageDept === currentDept) return;
         counts[t.messageDept] = (counts[t.messageDept] || 0) + 1;
-        if (!(t.messageDept in firstTaskId)) firstTaskId[t.messageDept] = t.id;
+        if (t.priority === 'Urgent') hasUrgent[t.messageDept] = true;
       });
       var depts = Object.keys(counts).sort();
       stack.hidden = depts.length === 0;
@@ -4459,11 +4467,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var avatarsHtml = depts.map(function (dept) {
         var badge = deptBadge(dept);
         var isNew = !gmUrgentSeen[dept];
-        return '<button type="button" class="gm-urgent-avatar' + (isNew ? ' new' : '') + '" data-goto-dept="' + dept + '" data-task-id="' + firstTaskId[dept] + '" ' +
-          'title="' + dept + ': urgent item waiting, tap to open" aria-label="' + dept + ' has an urgent item">' +
-          badge.html + '<span class="gm-urgent-badge">' + counts[dept] + '</span></button>';
+        var urgent = !!hasUrgent[dept];
+        return '<button type="button" class="gm-urgent-avatar' + (isNew ? ' new' : '') + '" data-goto-dept="' + dept + '" ' +
+          'title="' + dept + (urgent ? ': urgent item waiting' : ': new message') + ', tap to reply" aria-label="' + dept + (urgent ? ' has an urgent item' : ' has a new message') + '">' +
+          badge.html + '<span class="gm-urgent-badge' + (urgent ? '' : ' is-normal') + '">' + counts[dept] + '</span></button>';
       }).join('');
-      stack.innerHTML = '<span class="gm-urgent-stack-label">Urgent</span><div class="gm-urgent-avatars">' + avatarsHtml + '</div>';
+      stack.innerHTML = '<div class="gm-urgent-dip"></div><div class="gm-urgent-avatars">' + avatarsHtml + '</div>';
       depts.forEach(function (dept) { gmUrgentSeen[dept] = true; });
       Object.keys(gmUrgentSeen).forEach(function (dept) { if (!counts[dept]) delete gmUrgentSeen[dept]; });
     }
@@ -4471,12 +4480,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     document.getElementById('gmUrgentStack').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-goto-dept]');
       if (!btn) return;
-      // A quick shake as press feedback, then bring the actual urgent item
-      // up right here to read and reply to - no need to leave the page
-      // you're already on just to see what it is.
+      // A quick shake as press feedback, then open that department's
+      // actual message thread to read and reply - not a generic task
+      // drawer, the real conversation.
       btn.classList.add('pressed');
       setTimeout(function () { btn.classList.remove('pressed'); }, 400);
-      if (btn.dataset.taskId && window.openTaskDetail) window.openTaskDetail(btn.dataset.taskId);
+      if (window.openConversation) window.openConversation(btn.dataset.gotoDept);
     });
     setTimeout(renderGmUrgentStack, 50);
 
