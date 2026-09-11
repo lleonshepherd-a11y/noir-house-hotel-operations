@@ -88,6 +88,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, created, ranAt: now.toISOString() });
   } catch (error) {
     if (error instanceof Response) return error;
-    return Response.json({ error: 'Wall planner reminder run failed' }, { status: 500 });
+    console.error('wall planner reminder run failed:', error);
+    return Response.json({ error: 'Wall planner reminder run failed', detail: String(error) }, { status: 500 });
   }
 }
