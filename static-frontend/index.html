@@ -58,7 +58,8 @@
 
   /* ---- main ---- */
   .main{margin-left:124px;padding:26px 34px 50px}
-  .main-inner{max-width:none;margin:0 auto;position:relative}
+  .main-inner{max-width:none;margin:0 auto;position:relative;transition:opacity .22s ease,transform .22s ease}
+  .main-inner.switching{opacity:.4;transform:translateY(4px)}
   .topbar{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
   .ntoast{pointer-events:auto;width:100%;box-sizing:border-box;padding:9px 14px;border-radius:12px;background:#fff;box-shadow:0 10px 30px rgba(20,21,28,.16),0 1px 2px rgba(20,21,28,.06);animation:urgent-card-in .4s cubic-bezier(.22,1,.36,1)}
   .ntoast.leaving{animation:urgent-card-out .25s ease forwards}
@@ -84,9 +85,32 @@
   .ntoast-btn-ghost:hover{background:var(--blue-soft)}
   @keyframes urgent-card-in{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
   @keyframes urgent-card-out{to{opacity:0;transform:translateY(-12px)}}
-  .topbar .greet strong{display:block;font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .topbar .greet strong{display:block;font-size:19px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
+  /* Departments with something waiting pile up here as plain round
+     icons - no bar, no label, the icon itself is the notification.
+     They sit in a page-coloured "dip" cut into the divider between the
+     greeting row and the numbers row below, so they read as tucked into
+     the panel rather than floating on top of it. Same department
+     colours/icons as everywhere else (window.DEPT_ICONS). Tap one to
+     open that department's message thread directly. */
+  .gm-urgent-stack{position:relative;display:flex;align-items:center;margin-left:14px;flex:0 0 auto}
+  .gm-urgent-stack[hidden]{display:none}
+  .gm-urgent-dip{position:absolute;left:-14px;right:-14px;top:-10px;bottom:-27px;background:var(--page);border-radius:0 0 22px 22px;box-shadow:inset 0 3px 5px rgba(20,20,40,.07);z-index:-1}
+  .gm-urgent-avatars{display:flex;align-items:center;padding:2px 6px}
+  .gm-urgent-avatar{position:relative;width:32px;height:32px;border-radius:50%;margin-left:-9px;border:2.5px solid var(--page);box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e)}
+  .gm-urgent-avatar:first-child{margin-left:0}
+  .gm-urgent-avatar:hover{transform:translateY(-2px)}
+  .gm-urgent-avatar svg{width:15px;height:15px}
+  .gm-urgent-avatar .dept-icon-initials{font-size:11.5px;font-weight:800}
+  .gm-urgent-badge{position:absolute;bottom:-3px;right:-4px;min-width:16px;height:16px;padding:0 2px;border-radius:50%;background:#ff3b30;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--page);animation:gmUrgentPulse 1.8s ease-in-out infinite}
+  .gm-urgent-badge.is-normal{background:#8e8e93;animation:none}
+  @keyframes gmUrgentSlideIn{0%{opacity:0;transform:translateX(-14px) scale(.7)}60%{opacity:1}100%{opacity:1;transform:translateX(0) scale(1)}}
+  @keyframes gmUrgentShake{0%,100%{transform:scale(1) rotate(0deg)}30%{transform:scale(1) rotate(-3deg)}60%{transform:scale(1) rotate(2deg)}100%{transform:scale(1) rotate(0deg)}}
+  @keyframes gmUrgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.55),0 0 0 2px #fff inset}50%{box-shadow:0 0 0 4px rgba(255,59,48,0),0 0 0 2px #fff inset}}
+  .gm-urgent-avatar.pressed{animation:gmUrgentShake .4s ease-in-out}
+  .gm-urgent-avatar.new{animation:gmUrgentSlideIn .62s cubic-bezier(0.16,1,0.3,1) forwards, gmUrgentShake .45s ease-in-out .62s}
   .dept-select{position:relative;flex:0 0 auto}
   .dept-select-btn{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 12px;border-radius:11px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
   .dept-select-btn svg:first-child{width:15px;height:15px;color:#fff;flex:0 0 auto}
@@ -248,6 +272,11 @@
   .spotlight .who{position:absolute;left:20px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:linear-gradient(155deg,#3b5bfd,#7b91ff);border:2px solid var(--card)}
 
   .glance-card{padding:0;overflow:hidden;display:flex;flex-direction:column}
+  /* The relocated topbar lands as this card's first child, but the card
+     itself has no padding of its own (its other rows manage their own
+     insets) - give the topbar its own so the greeting doesn't sit flush
+     against the card's edges. */
+  .glance-card > .topbar{padding:22px 26px 18px}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 26px;flex-wrap:wrap}
   .glance-head:not(.gm-compact-head){justify-content:flex-start}
   .glance-head-stats{flex:1 1 auto;justify-content:center}
@@ -407,6 +436,9 @@
   <main class="main"><div class="main-inner">
     <div class="topbar">
       <div class="greet"><strong id="greeting">Good afternoon</strong><span id="today"></span></div>
+      <div class="gm-urgent-stack" id="gmUrgentStack" hidden></div>
+      <div class="spacer"></div>
+      <button class="icon-btn has-dot" id="guestQBtn" title="Guest questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></button>
       <div class="dept-select">
         <button class="dept-select-btn" id="deptSelectBtn">
           <span id="deptSelectLabel">General Manager</span>
@@ -423,9 +455,6 @@
           <button class="dept-dd-item" data-dept="Maintenance">Maintenance</button>
         </div>
       </div>
-      <div class="spacer"></div>
-      <button class="icon-btn has-dot" id="guestQBtn" title="Guest questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></button>
-      <button class="icon-btn" id="notifBellBtn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5a5 5 0 0 1 10 0c0 5 2 6.5 2 6.5H5s2-1.5 2-6.5Z"/><path d="M10.3 18.5a1.8 1.8 0 0 0 3.4 0"/></svg></button>
       <button class="icon-btn" id="topbarCalendarBtn" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v2.6"/><path d="M16 3v2.6"/><rect x="3.5" y="4.8" width="17" height="16" rx="3.2"/><path d="M3.5 9.6h17"/><circle cx="8.2" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="14" r=".9" fill="currentColor" stroke="none"/></svg></button>
       <div class="compose-select">
         <button type="button" class="round-btn" id="newMessageBtn" aria-label="New message" aria-haspopup="true" aria-expanded="false" title="New message"><span class="pillow"><i></i><i></i><i></i></span></button>
@@ -4047,6 +4076,15 @@
     .fh-stat-body strong{font-size:16px}
     .composer{padding:14px 16px 16px}
     .task-feed-embed .task-feed-list,.feed-scroll>.messages-feed-list{height:auto;max-height:340px}
+
+    /* The compose menu (Message a department / Announcement) is positioned
+       right:0 relative to its own small trigger button, which sits fine
+       inside a full-width topbar - but the button that actually opens it
+       here is the rail's Messages icon, over on the opposite side of the
+       screen at this width. Anchoring to the viewport instead of the
+       trigger keeps it fully on-screen regardless of which button opened
+       it. */
+    .compose-menu{position:fixed!important;left:12px!important;right:12px!important;top:auto!important;bottom:76px!important;width:auto!important}
   }
 
   /* ==== Liquid Glass concept pass: ambient mesh backdrop, frosted rail and
@@ -4069,7 +4107,12 @@
   .rail button.rail-announce{color:var(--rose)}
   .rail button.rail-announce:hover{background:rgba(242,96,78,.12);color:var(--rose)}
 
-  .topbar{position:relative;z-index:20;background:rgba(255,255,255,.55);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.8);border-radius:28px;box-shadow:0 1px 1px rgba(255,255,255,.9) inset,0 20px 40px rgba(31,38,60,.08);padding:16px 22px}
+  /* No longer its own floating bar - this now lives inside whichever
+     department's first card is showing (see relocateTopbar()), using the
+     room at the top of that card instead of sitting in a separate one.
+     No background/border/shadow of its own any more; the parent .card
+     provides all of that. */
+  .topbar{position:relative;z-index:20;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;box-shadow:none;border-radius:0;padding:0 0 18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
 
   /* New message: round gradient button with a pillow-shaped chat bubble,
      replacing the old text pill so it reads as a single distinct action. */
@@ -4104,7 +4147,7 @@
   .dash-panel .glance-tile-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);color:#fff;box-shadow:0 10px 20px rgba(20,20,22,.24)}
   .dash-panel .glance-tile.urgent .glance-tile-icon{background:linear-gradient(135deg,#ff8a80,var(--rose));box-shadow:0 10px 20px rgba(242,96,78,.4)}
 
-  .glance-alert-banner{position:relative;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-radius:26px;padding:20px 26px;margin:0 0 16px;background:linear-gradient(120deg,rgba(255,138,128,.3),rgba(255,255,255,.55));backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:1px solid rgba(255,255,255,.8);box-shadow:0 1px 1px rgba(255,255,255,.9) inset,0 18px 34px -16px rgba(255,59,48,.1);cursor:pointer;transition:box-shadow .18s ease,transform .18s ease}
+  .glance-alert-banner{position:relative;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-radius:26px;padding:20px 26px;margin:0 0 16px;background:linear-gradient(120deg,rgba(255,59,48,.55),rgba(255,255,255,.35));backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:1px solid rgba(255,255,255,.8);box-shadow:0 1px 1px rgba(255,255,255,.9) inset,0 18px 34px -16px rgba(255,59,48,.1);cursor:pointer;transition:box-shadow .18s ease,transform .18s ease}
   .glance-alert-banner:hover{box-shadow:0 1px 1px rgba(255,255,255,.9) inset,0 24px 42px -14px rgba(255,59,48,.16);transform:translateY(-5px)}
   .glance-alert-banner[hidden]{display:none}
   .glance-alert-icon{flex:0 0 auto;width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff8a80,var(--rose));color:#fff;box-shadow:0 10px 22px rgba(242,96,78,.4)}
@@ -4391,6 +4434,60 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (d.initials) return { cls: ' dept-icon-circle', html: '<span class="dept-icon-initials">' + d.initials + '</span>' };
       return { cls: '', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d.icon + '</svg>' };
     }
+
+    // Every department currently waiting on a reply gets a small round
+    // icon here instead of a long notification feed - tap one to open
+    // that department's message thread and reply right there. Genuinely
+    // urgent items keep the big red banner/toast treatment elsewhere;
+    // this feed also carries ordinary messages so nothing goes unseen,
+    // just without the loud treatment - only urgent ones get the
+    // pulsing red badge, everything else gets a plain grey count.
+    var gmUrgentSeen = {};
+    function renderGmUrgentStack() {
+      var stack = document.getElementById('gmUrgentStack');
+      if (!stack) return;
+      var el = document.getElementById('deptSelectLabel');
+      var currentDept = el ? el.textContent.trim() : '';
+      // Every department sees which other departments have something
+      // waiting, not just the GM - their own department's own items
+      // already show on their own page, so this is deliberately
+      // everyone-but-yourself.
+      var localTasks = window.getLocalTasks ? window.getLocalTasks() : [];
+      var counts = {};
+      var hasUrgent = {};
+      localTasks.forEach(function (t) {
+        if (t.status === 'completed') return;
+        if (!t.messageDept || t.messageDept === currentDept) return;
+        counts[t.messageDept] = (counts[t.messageDept] || 0) + 1;
+        if (t.priority === 'Urgent') hasUrgent[t.messageDept] = true;
+      });
+      var depts = Object.keys(counts).sort();
+      stack.hidden = depts.length === 0;
+      if (!depts.length) { gmUrgentSeen = {}; return; }
+      var avatarsHtml = depts.map(function (dept) {
+        var badge = deptBadge(dept);
+        var isNew = !gmUrgentSeen[dept];
+        var urgent = !!hasUrgent[dept];
+        return '<button type="button" class="gm-urgent-avatar' + (isNew ? ' new' : '') + '" data-goto-dept="' + dept + '" ' +
+          'title="' + dept + (urgent ? ': urgent item waiting' : ': new message') + ', tap to reply" aria-label="' + dept + (urgent ? ' has an urgent item' : ' has a new message') + '">' +
+          badge.html + '<span class="gm-urgent-badge' + (urgent ? '' : ' is-normal') + '">' + counts[dept] + '</span></button>';
+      }).join('');
+      stack.innerHTML = '<div class="gm-urgent-dip"></div><div class="gm-urgent-avatars">' + avatarsHtml + '</div>';
+      depts.forEach(function (dept) { gmUrgentSeen[dept] = true; });
+      Object.keys(gmUrgentSeen).forEach(function (dept) { if (!counts[dept]) delete gmUrgentSeen[dept]; });
+    }
+    window.renderGmUrgentStack = renderGmUrgentStack;
+    document.getElementById('gmUrgentStack').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-goto-dept]');
+      if (!btn) return;
+      // A quick shake as press feedback, then open that department's
+      // actual message thread to read and reply - not a generic task
+      // drawer, the real conversation.
+      btn.classList.add('pressed');
+      setTimeout(function () { btn.classList.remove('pressed'); }, 400);
+      if (window.openConversation) window.openConversation(btn.dataset.gotoDept);
+    });
+    setTimeout(renderGmUrgentStack, 50);
 
     function feedIconHtml(from) {
       return '';
@@ -5118,6 +5215,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         renderGlanceCard();
         if (typeof window.renderActivityFeed === 'function') window.renderActivityFeed();
         if (typeof window.renderDeptActivity === 'function') window.renderDeptActivity();
+        if (typeof window.renderGmUrgentStack === 'function') window.renderGmUrgentStack();
       }
       window.renderAllTaskFeeds = renderAllTaskFeeds;
       function renderTasksList() { renderAllTaskFeeds(); }
@@ -6988,7 +7086,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (dropdown.hidden) openDropdown(); else closeDropdown();
     });
     var topRowEl = document.querySelector('.top-row');
+    // The greeting/controls bar isn't its own separate card any more - it
+    // physically lives inside whichever department's own first card is
+    // showing (there's room at the top of it), so it has to move there
+    // each time the department changes rather than sitting in one fixed
+    // spot in the page.
+    function relocateTopbar(dept) {
+      var topbar = document.querySelector('.topbar');
+      var panel = document.querySelector('.dash-panel[data-dash="' + dept + '"]');
+      if (!topbar || !panel) return;
+      var target = panel.querySelector(':scope > .card') || panel;
+      if (target.firstChild !== topbar) target.insertBefore(topbar, target.firstChild);
+    }
+
     function switchDashboard(dept) {
+      relocateTopbar(dept);
       Array.prototype.forEach.call(document.querySelectorAll('.dash-panel'), function (panel) {
         panel.hidden = panel.dataset.dash !== dept;
       });
@@ -7079,14 +7191,30 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var TOKEN_KEY = 'noirHouseStaffToken';
     var DEPT_KEY = 'noirHouseStaffDept';
 
-    ['General Manager', 'Front of House', 'Concierge', 'Restaurant', 'Kitchen', 'Housekeeping', 'Maintenance'].forEach(function (name) {
-      var opt = document.createElement('button');
-      opt.type = 'button';
-      opt.className = 'login-dept-option';
-      opt.dataset.dept = name;
-      opt.textContent = name;
-      deptDropdown.appendChild(opt);
-    });
+    function populateDeptDropdown(names) {
+      deptDropdown.innerHTML = '';
+      names.forEach(function (name) {
+        var opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'login-dept-option';
+        opt.dataset.dept = name;
+        opt.textContent = name;
+        deptDropdown.appendChild(opt);
+      });
+    }
+    // The real, current list of departments - whichever hotels have
+    // actually been set up - rather than a fixed guess at what a hotel's
+    // departments are called.
+    fetch('/api/departments-public')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        populateDeptDropdown((data && data.departments && data.departments.length)
+          ? data.departments
+          : ['General Manager', 'Front of House', 'Concierge', 'Restaurant', 'Kitchen', 'Housekeeping', 'Maintenance']);
+      })
+      .catch(function () {
+        populateDeptDropdown(['General Manager', 'Front of House', 'Concierge', 'Restaurant', 'Kitchen', 'Housekeeping', 'Maintenance']);
+      });
     function closeDeptDropdown() { deptDropdown.hidden = true; }
     deptTrigger.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -7543,6 +7671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           syncHandoversForDepartment(dept);
         }
         if (window.renderUrgentFloat) window.renderUrgentFloat();
+        if (window.renderGmUrgentStack) window.renderGmUrgentStack();
       };
     }
     // The very first switchDashboard call (from page load / login resume) can
@@ -8034,8 +8163,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       });
       if (log.length > 50) log.length = 50;
       var unreadCount = log.filter(function (n) { return !n.read; }).length;
-      bell.dataset.count = unreadCount > 9 ? '9+' : String(unreadCount);
-      bell.classList.add('has-dot');
+      if (bell) {
+        bell.dataset.count = unreadCount > 9 ? '9+' : String(unreadCount);
+        bell.classList.add('has-dot');
+      }
       if (drawer.classList.contains('open')) render();
       if (activityDrawer && activityDrawer.classList.contains('open')) renderActivity();
     };
@@ -8044,7 +8175,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       render();
       drawer.classList.add('open');
       backdrop.classList.add('open');
-      bell.classList.remove('has-dot');
+      if (bell) bell.classList.remove('has-dot');
     }
     function closeNotif() {
       drawer.classList.remove('open');
@@ -8074,7 +8205,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         render();
       });
     }
-    bell.addEventListener('click', openNotif);
+    if (bell) bell.addEventListener('click', openNotif);
     document.getElementById('notifClose').addEventListener('click', closeNotif);
     backdrop.addEventListener('click', closeNotif);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNotif(); });
