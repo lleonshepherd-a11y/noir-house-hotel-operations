@@ -98,8 +98,8 @@
      open that department's message thread directly. */
   .gm-urgent-stack{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);display:flex;align-items:center;z-index:25}
   .gm-urgent-stack[hidden]{display:none}
-  .gm-urgent-dip{position:absolute;left:-16px;right:-16px;top:-12px;bottom:-12px;background:var(--page);border-radius:20px;box-shadow:inset 0 -3px 5px rgba(20,20,40,.05);z-index:-1}
-  .gm-urgent-avatars{display:flex;align-items:center;padding:2px 6px}
+  .gm-urgent-dip{position:absolute;left:-32px;right:-32px;top:-12px;bottom:-12px;background:var(--page);border-radius:24px;box-shadow:inset 0 -3px 5px rgba(20,20,40,.05);z-index:-1}
+  .gm-urgent-avatars{display:flex;align-items:center;padding:2px 16px;min-width:60px;justify-content:center}
   .gm-urgent-avatar{position:relative;width:32px;height:32px;border-radius:50%;margin-left:-9px;border:2.5px solid var(--page);box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e)}
   .gm-urgent-avatar:first-child{margin-left:0}
   .gm-urgent-avatar:hover{transform:translateY(-2px)}
@@ -272,7 +272,7 @@
   .spotlight button{width:100%;height:42px;border-radius:12px;border:0;background:var(--rail);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
   .spotlight .who{position:absolute;left:20px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:linear-gradient(155deg,#3b5bfd,#7b91ff);border:2px solid var(--card)}
 
-  .glance-card{padding:0;overflow:hidden;display:flex;flex-direction:column}
+  .glance-card{padding:0;overflow:visible;border-radius:20px;display:flex;flex-direction:column}
   /* The relocated topbar lands as this card's first child, but the card
      itself has no padding of its own (its other rows manage their own
      insets) - give the topbar its own so the greeting doesn't sit flush
