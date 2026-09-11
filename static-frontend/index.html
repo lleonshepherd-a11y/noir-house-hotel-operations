@@ -91,9 +91,9 @@
      long notification feed - GM clicks straight through to deal with one,
      leaves the rest for later. Same department colours/icons as everywhere
      else (window.DEPT_ICONS), just in circle-avatar form. */
-  .gm-urgent-stack{display:flex;align-items:center;margin-left:14px;flex:0 0 auto}
+  .gm-urgent-stack{position:absolute;top:-16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;background:var(--page);padding:6px 8px 10px;border-radius:0 0 18px 18px;z-index:21}
   .gm-urgent-stack[hidden]{display:none}
-  .gm-urgent-avatar{position:relative;width:36px;height:36px;border-radius:50%;margin-left:-10px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease}
+  .gm-urgent-avatar{position:relative;width:32px;height:32px;border-radius:50%;margin-left:-9px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;transition:transform .15s ease}
   .gm-urgent-avatar:first-child{margin-left:0}
   .gm-urgent-avatar:hover{transform:translateY(-2px)}
   .gm-urgent-avatar svg{width:15px;height:15px}
