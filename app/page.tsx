@@ -356,6 +356,7 @@ export default function Home() {
   });
   const [composerOpen, setComposerOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [openThreadDepartment, setOpenThreadDepartment] = useState<string | null>(null);
   const [guestNotificationsOpen, setGuestNotificationsOpen] = useState(false);
   const [shiftNotificationsOpen, setShiftNotificationsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -764,6 +765,30 @@ export default function Home() {
     () => messages.filter((message) => message.unread && isForActiveDepartment(message)).length,
     [messages, isForActiveDepartment],
   );
+  const departmentUnreadCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    departments.forEach((department) => {
+      counts[department.name] = 0;
+    });
+    messages.forEach((message) => {
+      if (message.unread && counts[message.from] !== undefined) {
+        counts[message.from] += 1;
+      }
+    });
+    return counts;
+  }, [messages]);
+  const departmentUrgentFlags = useMemo(() => {
+    const flags: Record<string, boolean> = {};
+    departments.forEach((department) => {
+      flags[department.name] = false;
+    });
+    messages.forEach((message) => {
+      if (message.unread && message.urgent && flags[message.from] !== undefined) {
+        flags[message.from] = true;
+      }
+    });
+    return flags;
+  }, [messages]);
   const activeNotification = useMemo(
     () => messages.find((message) => message.unread && isForActiveDepartment(message)),
     [messages, isForActiveDepartment],
@@ -1910,6 +1935,173 @@ export default function Home() {
       )}
 
       <section className="workspace">
+        {openThreadDepartment && (() => {
+          const threadDept = departments.find((department) => department.name === openThreadDepartment);
+          const ThreadIcon = threadDept?.icon ?? MessageSquareText;
+          const threadMessages = messages
+            .filter((message) => message.from === openThreadDepartment || message.to === openThreadDepartment)
+            .slice()
+            .reverse();
+          const sendThreadReply = () => {
+            const text = draft.trim();
+            if (!text && !attachment) return;
+            const time = new Intl.DateTimeFormat('en-GB', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }).format(new Date());
+            setMessages((current) => [
+              {
+                id: Date.now(),
+                from: activeDepartment,
+                to: openThreadDepartment,
+                text,
+                time,
+                unread: false,
+                urgent: false,
+                attachmentUrl: attachmentPreview || undefined,
+                attachmentName: attachment || undefined,
+                voiceNoteUrl: voiceNoteUrl || undefined,
+                voiceNoteDuration: voiceNoteUrl ? voiceNoteDuration : undefined,
+              },
+              ...current,
+            ]);
+            setDraft('');
+            setAttachment('');
+            setAttachmentPreview('');
+            setVoiceNoteUrl('');
+            setVoiceNoteDuration(0);
+          };
+          return (
+            <div className="dept-thread-overlay" role="dialog" aria-modal="true" aria-label={`${openThreadDepartment} messages`}>
+              <div className="dept-thread-panel glass-panel">
+                <div className="dept-thread-head">
+                  <button
+                    type="button"
+                    className="dept-thread-close"
+                    onClick={() => setOpenThreadDepartment(null)}
+                    aria-label="Close conversation"
+                  >
+                    <X size={16} />
+                  </button>
+                  <span className="dept-thread-ava" style={{ background: threadDept?.accent }}>
+                    <ThreadIcon size={20} color="#181818" />
+                  </span>
+                  <strong>{openThreadDepartment}</strong>
+                  <span className="dept-thread-sub">
+                    {departmentUnreadCounts[openThreadDepartment] || 0} unread
+                  </span>
+                </div>
+                <div className="dept-thread-body">
+                  {threadMessages.length === 0 && (
+                    <p className="dept-thread-empty">No messages with {openThreadDepartment} yet.</p>
+                  )}
+                  {threadMessages.map((message) => {
+                    const outgoing = message.from === activeDepartment;
+                    return (
+                      <div
+                        className={`dept-thread-row ${outgoing ? 'out' : 'in'} ${message.urgent ? 'urgent' : ''}`}
+                        key={message.id}
+                      >
+                        {!outgoing && <span className="dept-thread-sender">{message.from}</span>}
+                        <div className="dept-thread-bubble">
+                          {message.text}
+                          {message.voiceNoteUrl && (
+                            <div className="dept-thread-voice-note">
+                              <audio controls preload="metadata" src={message.voiceNoteUrl}>
+                                Your browser cannot play this voice note.
+                              </audio>
+                            </div>
+                          )}
+                          {message.attachmentUrl && (
+                            <img className="dept-thread-attachment-img" src={message.attachmentUrl} alt={message.attachmentName || 'Attachment'} />
+                          )}
+                          {!message.attachmentUrl && message.attachmentName && !message.voiceNoteUrl && (
+                            <div className="dept-thread-attachment-chip"><Paperclip size={12} />{message.attachmentName}</div>
+                          )}
+                        </div>
+                        <div className="dept-thread-meta">{message.time}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {attachment && (
+                  <div className="dept-thread-attach-preview">
+                    <Paperclip size={13} />
+                    <span>{attachment}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachment('');
+                        setAttachmentPreview('');
+                        setVoiceNoteUrl('');
+                        setVoiceNoteDuration(0);
+                      }}
+                      aria-label="Remove attachment"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+                <form
+                  className="dept-thread-composer"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    sendThreadReply();
+                  }}
+                >
+                  <label className="dept-thread-attach-button" aria-label="Attach a photo or PDF">
+                    <Paperclip size={16} />
+                    <input
+                      type="file"
+                      key={attachment}
+                      accept="image/*,.pdf,application/pdf"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        setAttachment(file?.name ?? '');
+                        setAttachmentPreview(
+                          file?.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+                        );
+                        setVoiceNoteUrl('');
+                        setVoiceNoteDuration(0);
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className={`dept-thread-mic-button ${recording ? 'active' : ''}`}
+                    onClick={toggleVoiceNote}
+                    aria-label={recording ? 'Stop voice recording' : 'Record a voice note'}
+                    title="Record a voice note"
+                  >
+                    <Mic size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={`dept-thread-dictate-button ${dictating ? 'active' : ''}`}
+                    onClick={toggleDictation}
+                    disabled={!dictationAvailable}
+                    aria-pressed={dictating}
+                    aria-label={dictating ? 'Stop voice to text' : 'Start voice to text'}
+                    title={dictationAvailable ? 'Voice to text' : 'Voice to text unavailable in this browser'}
+                  >
+                    <Mic size={16} />
+                  </button>
+                  <input
+                    type="text"
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder={dictating ? 'Listening…' : `Reply to ${openThreadDepartment}…`}
+                    aria-label={`Reply to ${openThreadDepartment}`}
+                  />
+                  <button type="submit" aria-label="Send reply">
+                    <Send size={15} />
+                  </button>
+                </form>
+              </div>
+            </div>
+          );
+        })()}
         <header className="topbar glass-panel">
           <div className="property-heading">
             <p>NOIR HOUSE · LONDON</p>
@@ -2258,6 +2450,31 @@ export default function Home() {
             </button>
           </div>
         </header>
+        {Object.values(departmentUnreadCounts).some((count) => count > 0) && (
+          <div className="dept-notch-bar" aria-label="Departments with unread messages">
+            <div className="dept-notch-shape" aria-hidden="true" />
+            <div className="dept-notch-stack">
+              {departments
+                .filter((department) => departmentUnreadCounts[department.name] > 0)
+                .map((department) => {
+                  const DepartmentIcon = department.icon;
+                  return (
+                    <button
+                      type="button"
+                      key={department.name}
+                      className={`dept-notch-avatar ${departmentUrgentFlags[department.name] ? 'urgent' : ''}`}
+                      style={{ background: departmentUrgentFlags[department.name] ? undefined : department.accent }}
+                      aria-label={`${departmentUnreadCounts[department.name]} unread from ${department.name}${departmentUrgentFlags[department.name] ? ', urgent' : ''}`}
+                      onClick={() => setOpenThreadDepartment(department.name)}
+                    >
+                      <DepartmentIcon size={17} color={departmentUrgentFlags[department.name] ? '#fff' : '#181818'} strokeWidth={2} />
+                      <span className="dept-notch-badge">{departmentUnreadCounts[department.name]}</span>
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        )}
 
         <div className="content">
           <section className="management-announcement glass-panel" style={{ order: 0 }}>
