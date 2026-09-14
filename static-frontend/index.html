@@ -4842,8 +4842,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         convPriority.hidden = !on;
       });
 
-      function renderThread(dept) {
-        var msgs = threads[dept] || [];
+      // A message is "yours" if it was sent by your own department in
+      // this thread - since a thread only ever has two departments in
+      // it, that's an unambiguous stand-in for "sent by the viewer".
+      function markOwnMessages(rawMessages, viewerDeptName) {
+        return rawMessages.map(function (m) {
+          return {
+            from: m.sender_department === viewerDeptName ? 'You' : m.sender_department,
+            text: m.body,
+            time: new Date(m.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }),
+            urgent: m.urgency === 'urgent' || m.urgency === 'emergency'
+          };
+        });
+      }
+
+      function renderThreadMessages(msgs) {
         if (!msgs.length) {
           convThread.innerHTML = '<div class="conv-empty">No messages yet.</div>';
           return;
@@ -4879,6 +4892,25 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           });
         });
         convThread.scrollTop = convThread.scrollHeight;
+      }
+
+      var currentConvId = null;
+      var currentConvOtherDeptId = null;
+      function renderThread(dept) {
+        var headers = window.authHeaders && window.authHeaders();
+        if (!headers || !window.ensureDepartments) { renderThreadMessages(threads[dept] || []); return; }
+        window.ensureDepartments().then(function (map) {
+          var otherId = map && map[dept];
+          if (!otherId) { renderThreadMessages(threads[dept] || []); return; }
+          currentConvOtherDeptId = otherId;
+          return fetch('/api/messages?withDepartmentId=' + encodeURIComponent(otherId), { headers: headers })
+            .then(function (r) { return r.ok ? r.json() : { conversation: null, messages: [] }; })
+            .then(function (data) {
+              currentConvId = data.conversation ? data.conversation.id : null;
+              var viewerDept = document.getElementById('deptSelectLabel').textContent.trim();
+              renderThreadMessages(markOwnMessages(data.messages || [], viewerDept));
+            });
+        }).catch(function () { renderThreadMessages(threads[dept] || []); });
       }
 
       var ATTACH_ICONS = {
@@ -5041,17 +5073,45 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           if (window.createTaskOnServer) window.createTaskOnServer(task, currentConvDept);
         }
         threads[currentConvDept].push(entry);
-        if (window.createMessageOnServer) window.createMessageOnServer(currentConvDept, text, convPriority.value === 'Urgent', entry);
         convReplyInput.value = '';
         convAttachments = [];
         convActionReq.classList.remove('on');
         convPriority.hidden = true;
         convPriority.value = 'Normal';
         renderConvAttachments();
-        renderThread(currentConvDept);
-        renderMainMessagesList();
         updateConvSendState();
         renderAllTaskFeeds();
+        var sentToDept = currentConvDept;
+        var headers = window.authHeaders && window.authHeaders();
+        if (headers && currentConvOtherDeptId) {
+          // A real session with a resolved department id - send to the
+          // actual conversations API, reusing the standing thread's id
+          // once one exists so replies land in the same conversation
+          // instead of spawning a new one on every message. Re-render
+          // only after the send lands, so the bubble comes from the
+          // server's own record of it rather than racing the fetch.
+          fetch('/api/messages', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+            body: JSON.stringify({
+              conversationId: currentConvId || undefined,
+              recipientDepartmentIds: currentConvId ? undefined : [currentConvOtherDeptId],
+              message: text,
+              urgency: convPriority.value === 'Urgent' ? 'urgent' : 'normal',
+              clientMessageId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+            }),
+          })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('save failed')); })
+            .then(function (data) {
+              if (data && data.conversationId) currentConvId = data.conversationId;
+              if (currentConvDept === sentToDept) renderThread(sentToDept);
+            })
+            .catch(function () { if (window.notifySaveFailed) window.notifySaveFailed('Your message'); });
+        } else {
+          if (window.createMessageOnServer) window.createMessageOnServer(sentToDept, text, convPriority.value === 'Urgent', entry);
+          renderThread(sentToDept);
+        }
+        renderMainMessagesList();
       }
       convSendBtn.addEventListener('click', sendConvReply);
       convReplyInput.addEventListener('keydown', function (e) {
@@ -7326,6 +7386,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       deptFetchPromise.then(function () { deptFetchPromise = null; });
       return deptFetchPromise;
     }
+    window.ensureDepartments = ensureDepartments;
+    window.authHeaders = authHeaders;
 
     var BACKEND_TO_LOCAL_STATUS = { open: 'acknowledged', in_progress: 'in-progress', completed: 'completed' };
     var LOCAL_TO_BACKEND_STATUS = { acknowledged: 'open', 'in-progress': 'in_progress', completed: 'completed' };

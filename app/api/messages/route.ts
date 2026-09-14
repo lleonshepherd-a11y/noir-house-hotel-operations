@@ -43,12 +43,45 @@ async function departmentFeed(db: D1Database, identity: StaffIdentity, requested
   return Response.json({ messages: messages.results });
 }
 
+// The dashboard's per-department message drawer wants one standing
+// thread with another department, like a DM - "conversations" underneath
+// are more general (multi-party, subject-based), so this finds the
+// most recent department-kind conversation containing exactly the
+// caller's department and the one they asked for, creating none if it
+// doesn't exist yet (the first message sent will create it via POST).
+async function departmentThread(db: D1Database, identity: StaffIdentity, otherDepartmentId: string) {
+  if (otherDepartmentId === identity.departmentId) return Response.json({ error: 'Cannot open a thread with your own department' }, { status: 400 });
+  await assertDepartmentInHotel(db, otherDepartmentId, identity.hotelId);
+  const conversation = await db
+    .prepare(`SELECT c.id, c.hotel_id, c.kind, c.subject, c.status, c.created_at, c.updated_at
+      FROM conversations c
+      JOIN conversation_departments cd1 ON cd1.conversation_id = c.id AND cd1.department_id = ?
+      JOIN conversation_departments cd2 ON cd2.conversation_id = c.id AND cd2.department_id = ?
+      WHERE c.kind = 'department' AND c.hotel_id = ?
+        AND (SELECT COUNT(*) FROM conversation_departments cd WHERE cd.conversation_id = c.id) = 2
+      ORDER BY c.updated_at DESC LIMIT 1`)
+    .bind(identity.departmentId, otherDepartmentId, identity.hotelId)
+    .first<{ id: string; hotel_id: string; kind: string; subject: string | null; status: string; created_at: string; updated_at: string }>();
+  if (!conversation) return Response.json({ conversation: null, messages: [] });
+  const messages = await db
+    .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.reply_to_message_id, m.created_at,
+        s.display_name AS sender_name, d.name AS sender_department
+      FROM messages m JOIN staff s ON s.id = m.sender_staff_id
+      JOIN departments d ON d.id = s.department_id
+      WHERE m.conversation_id = ? ORDER BY m.created_at ASC LIMIT 250`)
+    .bind(conversation.id)
+    .all();
+  return Response.json({ conversation, messages: messages.results });
+}
+
 export async function GET(request: Request) {
   try {
     const db = await getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const url = new URL(request.url);
     const conversationId = url.searchParams.get('conversationId');
+    const withDepartmentId = url.searchParams.get('withDepartmentId');
+    if (withDepartmentId) return departmentThread(db, identity, withDepartmentId);
     if (!conversationId) return departmentFeed(db, identity, url.searchParams.get('departmentId'));
     const conversation = await db
       .prepare('SELECT id, hotel_id, kind, subject, status, created_at, updated_at FROM conversations WHERE id = ?')
