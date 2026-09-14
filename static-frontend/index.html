@@ -456,7 +456,7 @@
       </div>
       <button class="icon-btn" id="topbarCalendarBtn" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v2.6"/><path d="M16 3v2.6"/><rect x="3.5" y="4.8" width="17" height="16" rx="3.2"/><path d="M3.5 9.6h17"/><circle cx="8.2" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="14" r=".9" fill="currentColor" stroke="none"/></svg></button>
       <div class="compose-select">
-        <button type="button" class="round-btn" id="newMessageBtn" aria-label="New message" title="New message"><span class="pillow"><i></i><i></i><i></i></span></button>
+        <button type="button" class="round-btn" id="newMessageBtn" aria-label="New message" title="New message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></button>
       </div>
     </div>
 
@@ -4270,14 +4270,12 @@
      provides all of that. */
   .topbar{position:relative;z-index:20;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;box-shadow:none;border-radius:0;padding:0 0 18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
 
-  /* New message: round gradient button with a pillow-shaped chat bubble,
-     replacing the old text pill so it reads as a single distinct action. */
-  .round-btn{position:relative;width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;flex:0 0 auto;background:linear-gradient(135deg,#3396ff,var(--blue-dark));box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 10px 22px rgba(59,91,253,.34);display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease}
+  /* New message: square button using the same messages icon as the
+     sidebar rail, so the topbar action matches the nav item it opens. */
+  .round-btn{position:relative;width:44px;height:44px;border-radius:14px;border:0;cursor:pointer;flex:0 0 auto;color:#fff;background:linear-gradient(135deg,#3396ff,var(--blue-dark));box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 10px 22px rgba(59,91,253,.34);display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease}
   .round-btn:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 14px 28px rgba(59,91,253,.42)}
   .round-btn:active{transform:translateY(0)}
-  .pillow{width:20px;height:14px;border-radius:8px;background:#fff;position:relative;flex:none;display:flex;align-items:center;justify-content:center;gap:2.5px}
-  .pillow::after{content:'';position:absolute;left:6px;bottom:-4px;width:7px;height:7px;background:inherit;clip-path:polygon(0 0,100% 0,0 100%);border-radius:0 0 0 3px}
-  .pillow i{width:2.6px;height:2.6px;border-radius:50%;background:var(--blue-dark);display:block}
+  .round-btn svg{width:20px;height:20px}
 
   /* Choosing between messaging a department and broadcasting to all staff:
      one round button, a small menu instead of two competing controls. */
