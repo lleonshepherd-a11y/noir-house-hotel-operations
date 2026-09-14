@@ -38,7 +38,12 @@ export async function GET(request: Request) {
     if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
       return Response.json({ error: 'A valid year and month are required' }, { status: 400 });
     }
-    const hotel = await db.prepare('SELECT id FROM hotels LIMIT 1').first<{ id: string }>();
+    // Same reasoning as wall-planner-categories' resolveHotel: an
+    // unordered LIMIT 1 could return any hotel once more than one exists
+    // in this database (test/onboarding hotels included) - the oldest
+    // one is a deterministic stand-in for "the real one" until this page
+    // has an actual sign-in to scope by.
+    const hotel = await db.prepare('SELECT id FROM hotels ORDER BY created_at ASC LIMIT 1').first<{ id: string }>();
     if (!hotel) return Response.json({ entries: [] });
 
     // Pad a week either side of the month so the leading/trailing days shown

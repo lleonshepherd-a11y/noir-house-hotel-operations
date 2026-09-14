@@ -11,8 +11,13 @@ function mapRow(row: CategoryRow) {
   return { id: row.id, label: row.label, color: row.color };
 }
 
+// No explicit hotel to scope to (this page has no sign-in) - "the
+// oldest hotel" is a deliberate, deterministic stand-in for "the real
+// one" now that test/onboarding hotels can also exist in this database,
+// rather than an unordered LIMIT 1 that could silently return any of
+// them depending on how the table happens to be stored.
 async function resolveHotel(db: D1Database) {
-  return db.prepare('SELECT id FROM hotels LIMIT 1').first<{ id: string }>();
+  return db.prepare('SELECT id FROM hotels ORDER BY created_at ASC LIMIT 1').first<{ id: string }>();
 }
 
 function isValidColor(value: unknown): value is string {
