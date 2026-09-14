@@ -13,7 +13,7 @@
     { "binding": "FILES", "bucket_name": "noir-house-files" }
   ],
   "routes": [
-    { "pattern": "dashboard.freedomservices.online", "custom_domain": true }
+    { "pattern": "dashboard.hotelping.co.uk", "custom_domain": true }
   ],
   "observability": { "enabled": true }
 }
