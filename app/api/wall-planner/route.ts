@@ -114,19 +114,42 @@ export async function POST(request: Request) {
 
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
+    // The calendar entry doubles as an event "group" - the same
+    // departments involved become its team, with their own shared
+    // conversation, so a wedding's date and its assigned team are one
+    // connected thing instead of a calendar entry with no chat and a
+    // group chat with no date.
+    const groupId = crypto.randomUUID();
+    const conversationId = crypto.randomUUID();
+    // Order matters within the batch: a row has to exist before anything
+    // else can reference its id, so the group and its conversation are
+    // created first, then the calendar entry that points at the group.
     await db.batch([
+      db.prepare(`INSERT INTO groups (id, hotel_id, name, event_date, created_by_label, created_at)
+          VALUES (?, ?, ?, ?, 'Operations Calendar', ?)`)
+        .bind(groupId, hotelId, title, date, now),
+      ...departmentRows.results.map((dept) =>
+        db.prepare('INSERT INTO group_members (group_id, department_id, joined_at) VALUES (?, ?, ?)').bind(groupId, dept.id, now),
+      ),
+      db.prepare(`INSERT INTO conversations (id, hotel_id, kind, subject, status, created_by_label, created_at, updated_at, group_id)
+          VALUES (?, ?, 'group', ?, 'open', 'Operations Calendar', ?, ?, ?)`)
+        .bind(conversationId, hotelId, title, now, now, groupId),
+      ...departmentRows.results.map((dept) =>
+        db.prepare('INSERT INTO conversation_departments (conversation_id, department_id) VALUES (?, ?)').bind(conversationId, dept.id),
+      ),
       db.prepare(`INSERT INTO wall_planner_entries
-          (id, hotel_id, entry_date, entry_time, title, category_id, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`)
-        .bind(id, hotelId, date, time, title, categoryId, now),
+          (id, hotel_id, entry_date, entry_time, title, category_id, created_at, group_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+        .bind(id, hotelId, date, time, title, categoryId, now, groupId),
       ...departmentRows.results.map((dept) =>
         db.prepare('INSERT INTO wall_planner_entry_departments (entry_id, department_id) VALUES (?, ?)').bind(id, dept.id),
       ),
     ]);
 
-    return Response.json({ id, date, time, title }, { status: 201 });
+    return Response.json({ id, date, time, title, groupId, conversationId }, { status: 201 });
   } catch (error) {
     if (error instanceof Response) return error;
-    return Response.json({ error: 'Unable to add that entry' }, { status: 500 });
+    console.error('wall-planner POST failed:', error);
+    return Response.json({ error: 'Unable to add that entry', detail: String(error) }, { status: 500 });
   }
 }

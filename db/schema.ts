@@ -56,13 +56,14 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS conversations (
     id TEXT PRIMARY KEY,
     hotel_id TEXT NOT NULL REFERENCES hotels(id),
-    kind TEXT NOT NULL CHECK(kind IN ('department','direct','guest_request','approval','system')),
+    kind TEXT NOT NULL CHECK(kind IN ('department','direct','guest_request','approval','system','group')),
     subject TEXT,
     status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','resolved','archived')),
     created_by_staff_id TEXT REFERENCES staff(id),
     created_by_label TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    group_id TEXT REFERENCES groups(id),
     CHECK (created_by_staff_id IS NOT NULL OR created_by_label IS NOT NULL)
   )`,
   `CREATE TABLE IF NOT EXISTS conversation_departments (
@@ -367,7 +368,8 @@ export const schemaStatements = [
     entry_time TEXT NOT NULL,
     title TEXT NOT NULL,
     category_id TEXT NOT NULL REFERENCES wall_planner_categories(id),
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    group_id TEXT REFERENCES groups(id)
   )`,
   `CREATE INDEX IF NOT EXISTS idx_wall_planner_entries_hotel_date ON wall_planner_entries(hotel_id, entry_date)`,
   `CREATE TABLE IF NOT EXISTS wall_planner_entry_departments (
@@ -414,10 +416,12 @@ export const schemaStatements = [
     event_date TEXT,
     guest_count INTEGER,
     location TEXT,
-    created_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    created_by_staff_id TEXT REFERENCES staff(id),
+    created_by_label TEXT,
     created_at TEXT NOT NULL,
     archived_at TEXT,
-    deleted_at TEXT
+    deleted_at TEXT,
+    CHECK (created_by_staff_id IS NOT NULL OR created_by_label IS NOT NULL)
   )`,
   `CREATE TABLE IF NOT EXISTS group_members (
     group_id TEXT NOT NULL REFERENCES groups(id),
