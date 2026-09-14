@@ -4213,18 +4213,22 @@
   .dash-panel .glance-tile-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);color:#fff;box-shadow:0 10px 20px rgba(20,20,22,.24)}
   .dash-panel .glance-tile.urgent .glance-tile-icon{background:linear-gradient(135deg,#ff8a80,var(--rose));box-shadow:0 10px 20px rgba(242,96,78,.4)}
 
-  .glance-alert-banner{position:relative;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-radius:26px;padding:19px 25px;margin:0 0 16px;background:rgba(255,255,255,.7);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:2px solid rgba(255,59,48,.6);box-shadow:0 18px 34px -20px rgba(255,59,48,.22);cursor:pointer;transition:box-shadow .18s ease,transform .18s ease}
-  .glance-alert-banner:hover{box-shadow:0 24px 42px -18px rgba(255,59,48,.3);transform:translateY(-5px)}
+  /* A thin single-line strip, not a stacked card - everything sits on
+     one row and the summary text ellipsis-truncates instead of
+     wrapping, so a long run of urgent task titles can never make this
+     grow tall again. */
+  .glance-alert-banner{position:relative;display:flex;align-items:center;gap:14px;border-radius:14px;padding:11px 16px;margin:0 0 16px;background:rgba(255,255,255,.7);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:2px solid rgba(255,59,48,.6);box-shadow:0 12px 24px -16px rgba(255,59,48,.22);cursor:pointer;transition:box-shadow .18s ease,transform .18s ease}
+  .glance-alert-banner:hover{box-shadow:0 16px 30px -14px rgba(255,59,48,.3);transform:translateY(-3px)}
   .glance-alert-banner[hidden]{display:none}
-  .glance-alert-icon{flex:0 0 auto;width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff8a80,var(--rose));color:#fff;box-shadow:0 10px 22px rgba(242,96,78,.4)}
-  .glance-alert-icon svg{width:23px;height:23px}
-  .glance-alert-copy{flex:1 1 auto;min-width:220px}
-  .glance-alert-num-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .glance-alert-num-row strong{font-size:34px;font-weight:800;color:var(--rose);font-variant-numeric:tabular-nums}
-  .glance-alert-num-row span{font-size:17px;font-weight:700;color:var(--ink)}
-  .glance-alert-sub{margin-top:4px;font-size:13px;color:var(--ink-mid)}
-  .glance-alert-btn{flex:0 0 auto;display:flex;align-items:center;gap:7px;border:0;border-radius:100px;padding:13px 22px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;background:#1c1e26;color:#fff;box-shadow:0 14px 28px rgba(20,21,28,.24)}
-  .glance-alert-btn svg{width:15px;height:15px}
+  .glance-alert-icon{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff8a80,var(--rose));color:#fff;box-shadow:0 6px 14px rgba(242,96,78,.4)}
+  .glance-alert-icon svg{width:16px;height:16px}
+  .glance-alert-copy{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:8px;overflow:hidden}
+  .glance-alert-num-row{display:flex;align-items:baseline;gap:6px;flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden}
+  .glance-alert-num-row strong{flex:0 0 auto;font-size:18px;font-weight:800;color:var(--rose);font-variant-numeric:tabular-nums}
+  .glance-alert-num-row span{overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:700;color:var(--ink)}
+  .glance-alert-sub{margin-top:0;font-size:13px;color:var(--ink-mid);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .glance-alert-btn{flex:0 0 auto;display:flex;align-items:center;gap:6px;border:0;border-radius:100px;padding:9px 16px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;background:#1c1e26;color:#fff;box-shadow:0 8px 18px rgba(20,21,28,.24)}
+  .glance-alert-btn svg{width:13px;height:13px}
   .glance-alert-btn:hover{filter:brightness(1.15)}
 </style>
 
@@ -4450,12 +4454,37 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var input = document.getElementById('composeInput');
     var sendBtn = document.getElementById('sendBtn');
 
-    // Populated from the real conversations API once a staff session
-    // exists (see syncRealThreads, further down this script) - empty by
-    // default rather than seeded with example messages, since every
-    // preview/notification surface in the app reads straight from this
-    // object and a real hotel should never see scripted example content.
-    var threads = {};
+    // A real staff session overwrites this completely with the real
+    // conversations API (see syncRealThreads, further down this script) -
+    // this seed content only ever shows in the no-login preview mode
+    // (SKIP_LOGIN_WHILE_EDITING), so a demo to a prospective hotel still
+    // has something to look at instead of an empty dashboard. Never
+    // shown to a real, logged-in hotel.
+    var threads = {
+      'General Manager': [
+        { from: 'General Manager', text: 'Fire drill in the staff car park tomorrow at 07:00.', time: '20:04', urgent: true }
+      ],
+      'Front of House': [
+        { from: 'Front of House', text: 'The Carrington party has arrived, six guests for table 12.', time: '19:42' }
+      ],
+      'Concierge': [
+        { from: 'Concierge', text: 'The airport car for room 408 has arrived at the main entrance.', time: '19:24' }
+      ],
+      'Restaurant': [
+        { from: 'Restaurant', text: 'Table 9 is asking for the wine list ahead of a party of six.', time: '19:12' },
+        { from: 'Restaurant', text: 'Guest at table 3 has a shellfish allergy, kitchen has been notified.', time: '18:45', urgent: true },
+        { from: 'Restaurant', text: 'Private dining room is ready for the 8pm reservation.', time: '17:30' }
+      ],
+      'Kitchen': [
+        { from: 'Kitchen', text: 'Sea bass special: four portions remain. Please confirm before taking another order.', time: '19:38' }
+      ],
+      'Housekeeping': [
+        { from: 'Housekeeping', text: 'Room 235 has been cleaned and is ready for the waiting guest.', time: '19:35' }
+      ],
+      'Maintenance': [
+        { from: 'Maintenance', text: 'Room 118 leak has been isolated, engineer on site now.', time: '19:50' }
+      ]
+    };
     window.getLocalThreads = function () { return threads; };
 
     // Same icon + colour per department everywhere it appears: this drawer, the
@@ -4472,11 +4501,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       'All departments': { grad: '#5a5c68,#8a8c98', icon: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.8"/>' }
     };
     window.DEPT_ICONS = DEPT_ICONS;
-    // Every real department gets an empty slot up front (not just ones
-    // that happen to have a message yet) so every push/length access
-    // below has an array to work with instead of needing its own guard.
+    // Every real department gets an array slot up front (not just ones
+    // seeded with a demo message above) so every push/length access
+    // below has an array to work with instead of needing its own guard -
+    // doesn't touch departments that already have seed content.
     Object.keys(DEPT_ICONS).forEach(function (d) {
-      if (d !== 'You' && d !== 'All departments') threads[d] = [];
+      if (d !== 'You' && d !== 'All departments' && !threads[d]) threads[d] = [];
     });
 
     function deptBadge(dept) {
@@ -5503,7 +5533,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         if (bannerEl) bannerEl.hidden = urgentTasks.length === 0;
         if (summaryEl) {
           summaryEl.textContent = urgentTasks.length
-            ? urgentTasks.slice(0, 3).map(function (t) { return t.title; }).join(', ') + (urgentTasks.length > 3 ? ', and more' : '') + ', all waiting on a response'
+            ? urgentTasks[0].title + (urgentTasks.length > 1 ? ' — and ' + (urgentTasks.length - 1) + ' more waiting on a response' : ', waiting on a response')
             : '';
         }
         if (maintOpenEl) maintOpenEl.textContent = tasks.filter(function (t) { return t.messageDept === 'Maintenance' && t.status !== 'completed'; }).length;
@@ -8471,6 +8501,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
     var STATUS_LABEL = { reported: 'Reported', in_progress: 'In progress', fixed: 'Fixed' };
     var ADVANCE_LABEL = { reported: 'Start job', in_progress: 'Mark fixed' };
+    var NEXT_DEMO_STATUS = { reported: 'in_progress', in_progress: 'fixed' };
 
     function escapeHtml(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
     function formatTime(iso) {
@@ -8497,9 +8528,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         '</div>';
     }
 
+    // Shown only when there's no real staff session and the real board
+    // is genuinely empty - a prospective hotel demoing the page still
+    // sees what a working ticket looks like, rather than a blank board.
+    // A real logged-in hotel with zero open tickets just sees "Nothing
+    // open right now", never this.
+    var DEMO_TICKETS = [
+      { id: 'demo-1', roomNumber: 'Room 118', description: 'Water leak under the bathroom sink, isolated and awaiting parts', status: 'in_progress', priority: 'problem', guestPresent: false, createdAt: new Date(Date.now() - 3 * 3600000).toISOString() },
+      { id: 'demo-2', roomNumber: 'Room 214', description: 'AC unit rattling, guest asked for it to be checked before tonight', status: 'reported', priority: 'urgent', guestPresent: true, createdAt: new Date(Date.now() - 40 * 60000).toISOString() },
+    ];
+
     function render(tickets) {
-      list.innerHTML = tickets.length
-        ? tickets.map(ticketHtml).join('')
+      var isDemo = !(window.authHeaders && window.authHeaders());
+      var showTickets = tickets.length ? tickets : (isDemo ? DEMO_TICKETS : []);
+      list.innerHTML = showTickets.length
+        ? showTickets.map(ticketHtml).join('')
         : '<div class="maint-ticket-empty">Nothing open right now.</div>';
     }
 
@@ -8508,7 +8551,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       fetch('/api/maintenance-tickets?department=Maintenance')
         .then(function (r) { return r.ok ? r.json() : { tickets: [] }; })
         .then(function (data) { render(data.tickets || []); })
-        .catch(function () { list.innerHTML = '<div class="maint-ticket-empty">Unable to load tickets.</div>'; });
+        .catch(function () { render([]); });
     }
 
     window.loadMaintenanceTickets = function (dept) {
@@ -8518,6 +8561,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     list.addEventListener('click', function (e) {
       var btn = e.target.closest('.maint-ticket-advance');
       if (!btn) return;
+      // A demo ticket has nothing real to update on the server - just
+      // advance it in place so the example still feels interactive.
+      if (btn.dataset.id.indexOf('demo-') === 0) {
+        var demo = DEMO_TICKETS.filter(function (t) { return t.id === btn.dataset.id; })[0];
+        if (demo) { demo.status = NEXT_DEMO_STATUS[demo.status] || demo.status; render([]); }
+        return;
+      }
       btn.disabled = true;
       fetch('/api/maintenance-tickets?id=' + encodeURIComponent(btn.dataset.id), { method: 'PATCH' })
         .then(function () { load(); });
