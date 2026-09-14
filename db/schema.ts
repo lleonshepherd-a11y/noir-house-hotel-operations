@@ -460,6 +460,7 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS maintenance_tickets (
     id TEXT PRIMARY KEY,
     hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT REFERENCES departments(id),
     room_number TEXT,
     description TEXT NOT NULL,
     photo_path TEXT,
@@ -467,7 +468,7 @@ export const schemaStatements = [
     priority TEXT NOT NULL DEFAULT 'problem',
     guest_present INTEGER NOT NULL DEFAULT 0,
     deadline TEXT,
-    created_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    created_by_staff_id TEXT REFERENCES staff(id),
     owner_staff_id TEXT REFERENCES staff(id),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,

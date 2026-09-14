@@ -2026,9 +2026,17 @@
       </div>
       <div class="col">
         <div class="card">
-          <div class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.1-3.1a6 6 0 0 1-7.94 7.94l-6.16 6.16a2.12 2.12 0 0 1-3-3l6.16-6.16a6 6 0 0 1 7.94-7.94Z"/></svg>Open jobs</div>
-          <div class="msg-row"><div><strong>Room 118</strong><span>Water leak, isolated and awaiting parts</span></div></div>
-          <div class="msg-row"><div><strong>Room 214</strong><span>AC unit needs checking before tonight</span></div></div>
+          <div class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.1-3.1a6 6 0 0 1-7.94 7.94l-6.16 6.16a2.12 2.12 0 0 1-3-3l6.16-6.16a6 6 0 0 1 7.94-7.94Z"/></svg>Maintenance tickets</div>
+          <div class="maint-ticket-list" id="maintTicketList"><div class="maint-ticket-empty">Loading&hellip;</div></div>
+          <form class="maint-ticket-form" id="maintTicketForm">
+            <input type="text" id="maintTicketRoom" placeholder="Room / area (optional)">
+            <textarea id="maintTicketDesc" placeholder="What's wrong?" rows="2" required></textarea>
+            <div class="maint-ticket-form-row">
+              <label class="maint-ticket-check"><input type="checkbox" id="maintTicketUrgent">Urgent</label>
+              <label class="maint-ticket-check"><input type="checkbox" id="maintTicketGuest">Guest present</label>
+              <button type="submit">Raise ticket</button>
+            </div>
+          </form>
         </div>
 
         <div class="card handover-card">
@@ -3046,6 +3054,34 @@
   .msg-row span{display:block;font-size:12px;color:var(--ink-dim);margin-top:2px;line-height:1.5}
   .msg-row time{margin-left:auto;font-size:11px;color:var(--ink-dim);white-space:nowrap}
   .msg-row.urgent-row{border:1px solid var(--rose);border-radius:10px;padding-left:8px;padding-right:8px}
+
+  /* A real maintenance ticket: room, description, priority and guest
+     flags at a glance, one clear status pill, one button that always
+     moves it to the next stage - reported, then in progress, then
+     fixed, nothing to choose. */
+  .maint-ticket-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+  .maint-ticket-empty{font-size:13px;color:var(--ink-dim);padding:14px 0;text-align:center}
+  .maint-ticket{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+  .maint-ticket.is-urgent{border-color:var(--rose);background:rgba(242,96,78,.05)}
+  .maint-ticket-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .maint-ticket-room{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .maint-ticket-time{font-size:11px;color:var(--ink-dim);white-space:nowrap}
+  .maint-ticket-desc{font-size:13px;color:var(--ink-mid);line-height:1.5}
+  .maint-ticket-tags{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:2px}
+  .maint-ticket-status{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 9px;border-radius:100px;background:var(--page);color:var(--ink-mid)}
+  .maint-ticket-status.st-in_progress{background:rgba(242,166,63,.16);color:#a5690a}
+  .maint-ticket-status.st-fixed{background:rgba(40,183,116,.14);color:var(--green)}
+  .maint-ticket-urgent-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--rose);background:rgba(242,96,78,.14);padding:3px 8px;border-radius:100px}
+  .maint-ticket-guest-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;color:var(--ink-mid);background:var(--page);padding:3px 8px;border-radius:100px}
+  .maint-ticket-advance{margin-left:auto;flex:0 0 auto;height:28px;padding:0 12px;border:1px solid var(--line);border-radius:100px;background:#fff;color:var(--ink);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+  .maint-ticket-advance:hover{background:var(--page)}
+  .maint-ticket-form{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+  .maint-ticket-form input[type="text"],.maint-ticket-form textarea{font:inherit;font-size:13px;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--page);resize:none}
+  .maint-ticket-form input[type="text"]:focus,.maint-ticket-form textarea:focus{outline:2px solid var(--blue);outline-offset:1px;background:#fff}
+  .maint-ticket-form-row{display:flex;align-items:center;gap:14px}
+  .maint-ticket-check{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-mid);cursor:pointer}
+  .maint-ticket-form-row button{margin-left:auto;height:34px;padding:0 16px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  .maint-ticket-form-row button:hover{background:#2f4de0}
 
   .powered-by{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:32px 0 8px;font-size:12px;color:var(--ink)}
   .powered-by svg{width:15px;height:15px;color:var(--ink)}
@@ -7163,6 +7199,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       }
       if (window.updateGreeting) window.updateGreeting(dept === 'All departments' ? null : dept);
       if (window.loadChecklistForActiveDept) window.loadChecklistForActiveDept();
+      if (window.loadMaintenanceTickets) window.loadMaintenanceTickets(dept);
     }
     window.switchDashboard = switchDashboard;
 
@@ -8417,6 +8454,102 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (card) loadCard(card);
     };
     window.loadChecklistForActiveDept();
+  })();
+
+  // Maintenance tickets: a real, department-scoped job list (no sign-in,
+  // same as the checklist/fridge pages) - room, description, priority
+  // and guest-present at a glance, one status pill, one button that
+  // always moves a ticket to its next stage.
+  (function () {
+    var list = document.getElementById('maintTicketList');
+    var form = document.getElementById('maintTicketForm');
+    if (!list || !form) return;
+    var roomInput = document.getElementById('maintTicketRoom');
+    var descInput = document.getElementById('maintTicketDesc');
+    var urgentCheck = document.getElementById('maintTicketUrgent');
+    var guestCheck = document.getElementById('maintTicketGuest');
+
+    var STATUS_LABEL = { reported: 'Reported', in_progress: 'In progress', fixed: 'Fixed' };
+    var ADVANCE_LABEL = { reported: 'Start job', in_progress: 'Mark fixed' };
+
+    function escapeHtml(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+    function formatTime(iso) {
+      try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }); }
+      catch (e) { return ''; }
+    }
+
+    function ticketHtml(t) {
+      var advance = ADVANCE_LABEL[t.status]
+        ? '<button type="button" class="maint-ticket-advance" data-id="' + t.id + '">' + ADVANCE_LABEL[t.status] + '</button>'
+        : '';
+      return '<div class="maint-ticket' + (t.priority === 'urgent' ? ' is-urgent' : '') + '">' +
+        '<div class="maint-ticket-top">' +
+        '<span class="maint-ticket-room">' + escapeHtml(t.roomNumber || 'General') + '</span>' +
+        '<span class="maint-ticket-time">' + formatTime(t.createdAt) + '</span>' +
+        '</div>' +
+        '<div class="maint-ticket-desc">' + escapeHtml(t.description) + '</div>' +
+        '<div class="maint-ticket-tags">' +
+        '<span class="maint-ticket-status st-' + t.status + '">' + STATUS_LABEL[t.status] + '</span>' +
+        (t.priority === 'urgent' ? '<span class="maint-ticket-urgent-tag">Urgent</span>' : '') +
+        (t.guestPresent ? '<span class="maint-ticket-guest-tag">Guest present</span>' : '') +
+        advance +
+        '</div>' +
+        '</div>';
+    }
+
+    function render(tickets) {
+      list.innerHTML = tickets.length
+        ? tickets.map(ticketHtml).join('')
+        : '<div class="maint-ticket-empty">Nothing open right now.</div>';
+    }
+
+    function load() {
+      list.innerHTML = '<div class="maint-ticket-empty">Loading&hellip;</div>';
+      fetch('/api/maintenance-tickets?department=Maintenance')
+        .then(function (r) { return r.ok ? r.json() : { tickets: [] }; })
+        .then(function (data) { render(data.tickets || []); })
+        .catch(function () { list.innerHTML = '<div class="maint-ticket-empty">Unable to load tickets.</div>'; });
+    }
+
+    window.loadMaintenanceTickets = function (dept) {
+      if (dept === 'Maintenance') load();
+    };
+
+    list.addEventListener('click', function (e) {
+      var btn = e.target.closest('.maint-ticket-advance');
+      if (!btn) return;
+      btn.disabled = true;
+      fetch('/api/maintenance-tickets?id=' + encodeURIComponent(btn.dataset.id), { method: 'PATCH' })
+        .then(function () { load(); });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var description = descInput.value.trim();
+      if (!description) return;
+      var submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      fetch('/api/maintenance-tickets?department=Maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomNumber: roomInput.value.trim(),
+          description: description,
+          priority: urgentCheck.checked ? 'urgent' : 'problem',
+          guestPresent: guestCheck.checked,
+        }),
+      }).then(function (r) {
+        submitBtn.disabled = false;
+        if (!r.ok) return;
+        roomInput.value = '';
+        descInput.value = '';
+        urgentCheck.checked = false;
+        guestCheck.checked = false;
+        load();
+      }, function () { submitBtn.disabled = false; });
+    });
+
+    if (document.querySelector('.dash-panel[data-dash="Maintenance"]:not([hidden])')) load();
   })();
 
   // Fridge & freezer checks: a real, department-managed unit list (staff can
