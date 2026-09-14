@@ -265,6 +265,11 @@
      against the card's edges. */
   .glance-card > .topbar{padding:22px 26px 18px}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 26px;flex-wrap:wrap}
+  /* The clock/date/weather cluster belongs on the left, with the
+     "Live - updated" text on the right - it was flipped at some point,
+     so put it back without touching every other .glance-head (many
+     have nothing to do with this clock row). */
+  .glance-head:has(.gm-compact-meta){flex-direction:row-reverse}
   .glance-head:not(.gm-compact-head){justify-content:flex-start}
   .glance-head-stats{flex:1 1 auto;justify-content:center}
   .gm-compact-head{flex-wrap:wrap;row-gap:14px}
