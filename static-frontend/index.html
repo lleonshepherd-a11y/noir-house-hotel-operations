@@ -1815,6 +1815,25 @@
           <button type="button" class="ta-log-view-btn" id="rrLogViewBtn">View full log</button>
         </div>
 
+        <div class="card room-readiness-card">
+          <div class="ta-head">
+            <div class="ta-head-text">
+              <div class="ta-title">Room Readiness Projection</div>
+              <div class="ta-sub">Mock-up &middot; calculated from the Rooms Ready board above, ready to swap for a real PMS feed and real clean events</div>
+            </div>
+          </div>
+          <div class="rrp-status-row">
+            <span class="rrp-status-pill" id="rrpStatusPill">&ndash;</span>
+            <span class="rrp-deadline" id="rrpDeadline"></span>
+          </div>
+          <div class="rrp-grid">
+            <div class="rrp-stat"><div class="rrp-num" id="rrpRemaining">&ndash;</div><div class="rrp-label">Rooms remaining</div></div>
+            <div class="rrp-stat"><div class="rrp-num" id="rrpPace">&ndash;</div><div class="rrp-label">Current pace</div></div>
+            <div class="rrp-stat"><div class="rrp-num" id="rrpTimeLeft">&ndash;</div><div class="rrp-label">Time to deadline</div></div>
+            <div class="rrp-stat"><div class="rrp-num" id="rrpProjected">&ndash;</div><div class="rrp-label">Projected finish</div></div>
+          </div>
+        </div>
+
         <div class="card handover-card">
           <div class="ho-head">
             <div class="ho-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-7h6v7"/></svg></div>
@@ -2735,7 +2754,7 @@
 <div class="drawer-backdrop" id="tableAwayBackdrop"></div>
 <aside class="drawer" id="tableAwayModal">
   <div class="drawer-head">
-    <div class="drawer-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg><span id="tableAwayModalTitle">Table clear</span></div>
+    <div class="drawer-title"><svg id="tableAwayModalIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg><span id="tableAwayModalTitle">Table clear</span></div>
     <button class="drawer-close" id="tableAwayModalClose" aria-label="Close">&times;</button>
   </div>
   <div class="drawer-body">
@@ -3620,6 +3639,21 @@
   .ta-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
   .ta-title{font-size:16px;font-weight:700;color:var(--ink)}
   .ta-sub{font-size:12.5px;color:var(--ink-dim);margin-top:4px;max-width:340px}
+
+  /* Room readiness projection - a calculation, not a new data source:
+     reads the same Rooms Ready board's done/doneAt state, so swapping
+     that board for a real PMS + housekeeping feed later carries this
+     straight over with it. */
+  .rrp-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+  .rrp-status-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:5px 12px;border-radius:100px;background:var(--page);color:var(--ink-mid)}
+  .rrp-status-pill.on-track{background:rgba(40,183,116,.14);color:var(--green)}
+  .rrp-status-pill.at-risk{background:rgba(242,166,63,.16);color:#a5690a}
+  .rrp-status-pill.behind{background:rgba(242,96,78,.14);color:var(--rose)}
+  .rrp-deadline{font-size:12px;color:var(--ink-dim);font-weight:600}
+  .rrp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .rrp-stat{background:var(--page);border-radius:14px;padding:14px 16px}
+  .rrp-num{font-size:22px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  .rrp-label{font-size:11.5px;color:var(--ink-dim);font-weight:600;margin-top:2px}
   .ta-legend{display:flex;gap:14px;flex:0 0 auto;padding-top:2px}
   .ta-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-dim);white-space:nowrap}
   .ta-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:2px solid var(--line)}
@@ -5824,6 +5858,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       (function () {
         var modal = document.getElementById('tableAwayModal');
         var modalBackdrop = document.getElementById('tableAwayBackdrop');
+        var modalIcon = document.getElementById('tableAwayModalIcon');
         var modalTitle = document.getElementById('tableAwayModalTitle');
         var modalNote = document.getElementById('tableAwayNoteInput');
         var modalLabel = document.getElementById('tableAwayNoteLabel');
@@ -5831,9 +5866,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         var modalClose = document.getElementById('tableAwayModalClose');
         if (!modal) return;
         var pending = null;
+        var GLASS_ICON = '<path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>';
+        var BED_ICON = '<path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 18v2"/><path d="M21 18v2"/><path d="M3 12V7a1 1 0 0 1 1-1h7v4"/><circle cx="7.5" cy="8" r="1.3" fill="currentColor" stroke="none"/>';
 
         function openNoteModal(board, item) {
           pending = { board: board, item: item };
+          if (modalIcon) modalIcon.innerHTML = board.itemNoun === 'Room' ? BED_ICON : GLASS_ICON;
           modalTitle.textContent = board.itemNoun + ' ' + item.num + ' clear';
           modalLabel.textContent = 'Note for ' + board.messageDept + ' (optional)';
           modalConfirm.textContent = 'Send to ' + board.messageDept;
@@ -5971,6 +6009,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           }
 
           var board = {
+            items: items,
             itemNoun: opts.itemNoun,
             messageDept: opts.messageDept,
             editableCovers: !!opts.editableCovers,
@@ -6115,6 +6154,94 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             }
           });
         }
+      })();
+
+      // Room readiness projection - a calculation only, no new data of
+      // its own. Reads the Rooms Ready board's existing {done, doneAt}
+      // state as a stand-in for real housekeeping clean events, and a
+      // fixed 3pm target as a stand-in for a real PMS check-in deadline.
+      // Swapping getRoomData()'s body for a real departures/clean-event
+      // API later is the only change needed - everything below it only
+      // ever reads the {total, doneTimestamps} shape it returns.
+      (function () {
+        var DEADLINE_HOUR = 15, DEADLINE_MINUTE = 0; // placeholder - replace with the real per-day check-in deadline once one exists
+        var AT_RISK_BUFFER_MINUTES = 30;
+        var pill = document.getElementById('rrpStatusPill');
+        var deadlineEl = document.getElementById('rrpDeadline');
+        var remainingEl = document.getElementById('rrpRemaining');
+        var paceEl = document.getElementById('rrpPace');
+        var timeLeftEl = document.getElementById('rrpTimeLeft');
+        var projectedEl = document.getElementById('rrpProjected');
+        if (!pill) return;
+
+        function getRoomData() {
+          var board = window.roomsReadyBoard;
+          var items = (board && board.items) || [];
+          var doneTimestamps = items
+            .filter(function (item) { return item.done && item.doneAt; })
+            .map(function (item) { return item.doneAt; })
+            .sort(function (a, b) { return a - b; });
+          return { total: items.length, doneTimestamps: doneTimestamps };
+        }
+
+        function formatClock(date) {
+          return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        function formatDuration(minutes) {
+          var sign = minutes < 0 ? '-' : '';
+          minutes = Math.abs(Math.round(minutes));
+          var h = Math.floor(minutes / 60), m = minutes % 60;
+          return sign + (h ? h + 'h ' : '') + m + 'm';
+        }
+        function setStatus(label, cls) {
+          pill.textContent = label;
+          pill.className = 'rrp-status-pill' + (cls ? ' ' + cls : '');
+        }
+
+        function render() {
+          var now = new Date();
+          var deadline = new Date(now);
+          deadline.setHours(DEADLINE_HOUR, DEADLINE_MINUTE, 0, 0);
+          deadlineEl.textContent = 'Target ' + formatClock(deadline) + ' check-in';
+          timeLeftEl.textContent = formatDuration((deadline.getTime() - now.getTime()) / 60000);
+
+          var data = getRoomData();
+          var doneCount = data.doneTimestamps.length;
+          var remaining = data.total - doneCount;
+          remainingEl.textContent = data.total ? (remaining + ' of ' + data.total) : '–';
+
+          if (!data.total || remaining <= 0) {
+            paceEl.textContent = '–';
+            projectedEl.textContent = data.total ? 'All rooms ready' : '–';
+            setStatus(data.total ? 'On track' : 'No data', data.total ? 'on-track' : '');
+            return;
+          }
+          if (doneCount < 2) {
+            // Pace needs two clean events to measure a gap between them -
+            // with zero or one so far there's nothing to project yet.
+            paceEl.textContent = 'Awaiting data';
+            projectedEl.textContent = '–';
+            setStatus('Awaiting data', '');
+            return;
+          }
+
+          var first = data.doneTimestamps[0];
+          var last = data.doneTimestamps[doneCount - 1];
+          var avgMinutesPerRoom = (last - first) / 60000 / (doneCount - 1);
+          var paceRoomsPerHour = avgMinutesPerRoom > 0 ? 60 / avgMinutesPerRoom : 0;
+          var projectedMs = now.getTime() + remaining * avgMinutesPerRoom * 60000;
+          var minutesPastDeadline = (projectedMs - deadline.getTime()) / 60000;
+
+          paceEl.textContent = paceRoomsPerHour.toFixed(1) + '/hr';
+          projectedEl.textContent = formatClock(new Date(projectedMs));
+
+          if (minutesPastDeadline <= 0) setStatus('On track', 'on-track');
+          else if (minutesPastDeadline <= AT_RISK_BUFFER_MINUTES) setStatus('At risk', 'at-risk');
+          else setStatus('Behind', 'behind');
+        }
+
+        render();
+        setInterval(render, 5000);
       })();
 
       (function () {
