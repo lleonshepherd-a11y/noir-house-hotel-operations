@@ -2455,14 +2455,16 @@
     <div class="compose-to" id="composeTo">To <strong>All departments</strong></div>
     <div class="attach-row" id="attachRow" hidden></div>
     <textarea id="composeInput" rows="1" placeholder="Write your message&hellip;"></textarea>
-    <div class="composer-tools">
+    <div class="composer-row composer-tools-row">
       <div class="tool-icons">
         <button class="tool-btn" id="micBtn" title="Voice to text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
         <button class="tool-btn" id="noteBtn" title="Text note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3"/></svg></button>
-        <button class="tool-btn urgent-btn" id="urgentBtn" title="Mark urgent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Urgent</button>
         <button class="tool-btn" id="fileBtn" title="Attach file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.48"/></svg></button>
         <button class="tool-btn" id="photoBtn" title="Attach photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
       </div>
+    </div>
+    <div class="composer-row composer-actions-row">
+      <button class="urgent-btn" id="urgentBtn" title="Mark urgent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Urgent</button>
       <button class="send-btn" id="sendBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Send</button>
     </div>
     <input type="file" id="fileInput" hidden>
@@ -3004,23 +3006,28 @@
   .composer textarea{width:100%;resize:none;min-height:52px;max-height:120px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;color:var(--ink);font-family:inherit;font-size:13.5px;line-height:1.45;box-sizing:border-box;transition:background .18s,border-color .18s,box-shadow .18s}
   .composer textarea::placeholder{color:var(--ink-dim)}
   .composer textarea:focus{outline:none;background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,91,253,.14)}
-  .composer-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+  /* Same two-row layout as the thread's reply composer (.conv-composer):
+     an icons-only row, then an actions row with the pills and Send on
+     the right - one shared visual language for both message boxes. */
+  .composer-row{display:flex;align-items:center;gap:8px;min-width:0}
+  .composer-tools-row .tool-icons{margin-right:auto}
   .tool-icons{display:flex;align-items:center;gap:2px;min-width:0}
-  .tool-btn{position:relative;width:30px;height:30px;border:0;background:transparent;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:color .15s,filter .15s}
-  .tool-btn svg{width:15px;height:15px}
+  .tool-btn{position:relative;width:32px;height:32px;border:0;background:transparent;color:var(--ink-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:color .15s,filter .15s}
+  .tool-btn svg{width:17px;height:17px}
   .tool-btn:hover{color:var(--ink)}
   .tool-btn.active{color:var(--blue);animation:tool-glow 1s ease-in-out infinite}
   @keyframes tool-glow{0%,100%{opacity:1;filter:drop-shadow(0 0 2px currentColor)}50%{opacity:.3;filter:drop-shadow(0 0 10px currentColor)}}
   @media(prefers-reduced-motion:reduce){.tool-btn.active{animation:none;filter:drop-shadow(0 0 5px currentColor)}}
 
-  .tool-btn.urgent-btn{width:auto;height:auto;padding:6px 12px 6px 9px;gap:5px;background:rgba(242,166,63,.14);color:var(--amber);font-family:inherit;font-size:11.5px;font-weight:700;border-radius:100px}
-  .tool-btn.urgent-btn:hover{background:rgba(242,166,63,.22);color:var(--amber)}
-  .tool-btn.urgent-btn.on{background:var(--amber);color:#fff}
-  @media(prefers-reduced-motion:reduce){.tool-btn.urgent-btn.on{animation:none}}
+  .composer-actions-row{margin-left:auto}
+  .urgent-btn{display:flex;align-items:center;gap:5px;height:30px;padding:0 11px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink-mid);font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;margin-left:auto}
+  .urgent-btn svg{width:15px;height:15px}
+  .urgent-btn:hover{background:var(--page)}
+  .urgent-btn.on{background:rgba(242,96,78,.1);border-color:rgba(242,96,78,.25);color:var(--rose)}
 
   .msg-row.urgent{background:rgba(242,96,78,.08);margin:0 -10px;padding:12px 10px;border-radius:12px;border-top-color:transparent}
   .urgent-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--rose);background:rgba(242,96,78,.16);padding:2px 7px;border-radius:100px;margin-right:6px;vertical-align:middle}
-  .send-btn{height:34px;padding:0 16px;border-radius:10px;border:0;background:var(--blue);color:#fff;font-family:inherit;font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:6px;cursor:pointer;flex:0 0 auto;box-shadow:0 6px 16px rgba(59,91,253,.32);transition:background .15s,box-shadow .15s,transform .1s}
+  .send-btn{display:flex;align-items:center;gap:5px;height:30px;padding:0 13px;border-radius:8px;border:0;background:var(--blue);color:#fff;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;flex:0 0 auto;box-shadow:0 6px 16px rgba(59,91,253,.32);transition:background .15s,box-shadow .15s,transform .1s;white-space:nowrap}
   .send-btn svg{width:13px;height:13px;flex:0 0 auto}
   .send-btn:hover{background:#2f4de0}
   .send-btn:active{transform:scale(.96)}
