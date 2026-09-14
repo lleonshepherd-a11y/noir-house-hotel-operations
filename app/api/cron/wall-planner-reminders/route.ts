@@ -62,20 +62,30 @@ export async function POST(request: Request) {
           .bind(entry.id).all<{ department_id: string }>();
         const nowIso = new Date().toISOString();
         const whenLabel = offsetDays === 1 ? 'tomorrow' : `in ${offsetDays} days`;
-        const statements = departments.results.map((dept) =>
-          db.prepare(`INSERT INTO tasks
-              (id, hotel_id, assigned_department_id, created_by_staff_id, title, details, priority, status, created_at, updated_at)
-              VALUES (?, ?, ?, NULL, ?, ?, 'normal', 'open', ?, ?)`)
-            .bind(
-              crypto.randomUUID(),
-              entry.hotel_id,
-              dept.department_id,
-              `${entry.title} is ${whenLabel}`,
-              `${entry.category_label}, ${entry.entry_time} on ${entry.entry_date}. From the operations calendar.`,
-              nowIso,
-              nowIso,
-            ),
-        );
+        const title = `${entry.title} is ${whenLabel}`;
+        const details = `${entry.category_label}, ${entry.entry_time} on ${entry.entry_date}. From the operations calendar.`;
+        const statements = departments.results.flatMap((dept) => {
+          // Also raised as a real message (not just a task), scoped to
+          // just that department, sent by the calendar itself rather
+          // than a staff member - so it shows up anywhere real messages
+          // do (the dashboard's notification bar, and eventually Hotel
+          // Ping) instead of only being visible as a task.
+          const conversationId = crypto.randomUUID();
+          return [
+            db.prepare(`INSERT INTO tasks
+                (id, hotel_id, assigned_department_id, created_by_staff_id, title, details, priority, status, created_at, updated_at)
+                VALUES (?, ?, ?, NULL, ?, ?, 'normal', 'open', ?, ?)`)
+              .bind(crypto.randomUUID(), entry.hotel_id, dept.department_id, title, details, nowIso, nowIso),
+            db.prepare(`INSERT INTO conversations (id, hotel_id, kind, subject, status, created_by_label, created_at, updated_at)
+                VALUES (?, ?, 'system', ?, 'open', 'Operations Calendar', ?, ?)`)
+              .bind(conversationId, entry.hotel_id, title, nowIso, nowIso),
+            db.prepare('INSERT INTO conversation_departments (conversation_id, department_id) VALUES (?, ?)')
+              .bind(conversationId, dept.department_id),
+            db.prepare(`INSERT INTO messages (id, conversation_id, sender_label, body, urgency, message_type, created_at)
+                VALUES (?, ?, 'Operations Calendar', ?, 'normal', 'message', ?)`)
+              .bind(crypto.randomUUID(), conversationId, `${title}. ${details}`, nowIso),
+          ];
+        });
         statements.push(
           db.prepare('INSERT INTO wall_planner_reminder_log (entry_id, offset_days, sent_at) VALUES (?, ?, ?)')
             .bind(entry.id, offsetDays, nowIso),

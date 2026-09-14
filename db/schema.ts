@@ -56,12 +56,14 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS conversations (
     id TEXT PRIMARY KEY,
     hotel_id TEXT NOT NULL REFERENCES hotels(id),
-    kind TEXT NOT NULL CHECK(kind IN ('department','direct','guest_request','approval')),
+    kind TEXT NOT NULL CHECK(kind IN ('department','direct','guest_request','approval','system')),
     subject TEXT,
     status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','resolved','archived')),
-    created_by_staff_id TEXT NOT NULL REFERENCES staff(id),
+    created_by_staff_id TEXT REFERENCES staff(id),
+    created_by_label TEXT,
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    CHECK (created_by_staff_id IS NOT NULL OR created_by_label IS NOT NULL)
   )`,
   `CREATE TABLE IF NOT EXISTS conversation_departments (
     conversation_id TEXT NOT NULL REFERENCES conversations(id),
@@ -71,13 +73,15 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS messages (
     id TEXT PRIMARY KEY,
     conversation_id TEXT NOT NULL REFERENCES conversations(id),
-    sender_staff_id TEXT NOT NULL REFERENCES staff(id),
+    sender_staff_id TEXT REFERENCES staff(id),
+    sender_label TEXT,
     body TEXT NOT NULL,
     urgency TEXT NOT NULL DEFAULT 'normal' CHECK(urgency IN ('normal','urgent','emergency')),
     message_type TEXT NOT NULL DEFAULT 'message' CHECK(message_type IN ('message','request','approval','decision','completion')),
     reply_to_message_id TEXT REFERENCES messages(id),
     client_message_id TEXT,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    CHECK (sender_staff_id IS NOT NULL OR sender_label IS NOT NULL)
   )`,
   `CREATE TABLE IF NOT EXISTS message_receipts (
     message_id TEXT NOT NULL REFERENCES messages(id),

@@ -94,27 +94,33 @@ export async function POST(request: Request) {
       .bind(id, department.hotel_id, department.id, unit.id, readingC, status, correctiveAction, date, now, session).run();
 
     if (status !== 'in_range') {
-      // No staff is signed in on this page, so this can't go through the
-      // normal messaging system (it requires a sender's staff session).
-      // Instead it raises a real urgent task straight on Kitchen's own
-      // board - the same board its head chef already sees, not the GM's -
-      // since a fridge running warm is a kitchen problem, not a management
-      // one.
+      // No staff is signed in on this page, so this can't be attributed to
+      // a sender's staff session - raises a real urgent task straight on
+      // Kitchen's own board (the same board its head chef already sees,
+      // not the GM's, since a fridge running warm is a kitchen problem,
+      // not a management one), and also a real message sent by the fridge
+      // monitor itself (sender_staff_id null, sender_label set), so it
+      // shows up anywhere real messages do rather than only as a task.
       const safeRange = unit.kind === 'fridge' ? '1-5C' : '-18C or below';
       const direction = status === 'above_range' ? 'above' : 'below';
       const taskId = crypto.randomUUID();
-      await db.prepare(`INSERT INTO tasks
-          (id, hotel_id, assigned_department_id, created_by_staff_id, title, details, priority, status, created_at, updated_at)
-          VALUES (?, ?, ?, NULL, ?, ?, 'urgent', 'open', ?, ?)`)
-        .bind(
-          taskId,
-          department.hotel_id,
-          department.id,
-          `${unit.name} reading ${direction} safe range: ${readingC}C`,
-          `Safe range is ${safeRange}.${correctiveAction ? ` Note logged: ${correctiveAction}` : ''}`,
-          now,
-          now,
-        ).run();
+      const title = `${unit.name} reading ${direction} safe range: ${readingC}C`;
+      const details = `Safe range is ${safeRange}.${correctiveAction ? ` Note logged: ${correctiveAction}` : ''}`;
+      const conversationId = crypto.randomUUID();
+      await db.batch([
+        db.prepare(`INSERT INTO tasks
+            (id, hotel_id, assigned_department_id, created_by_staff_id, title, details, priority, status, created_at, updated_at)
+            VALUES (?, ?, ?, NULL, ?, ?, 'urgent', 'open', ?, ?)`)
+          .bind(taskId, department.hotel_id, department.id, title, details, now, now),
+        db.prepare(`INSERT INTO conversations (id, hotel_id, kind, subject, status, created_by_label, created_at, updated_at)
+            VALUES (?, ?, 'system', ?, 'open', 'Fridge Monitor', ?, ?)`)
+          .bind(conversationId, department.hotel_id, title, now, now),
+        db.prepare('INSERT INTO conversation_departments (conversation_id, department_id) VALUES (?, ?)')
+          .bind(conversationId, department.id),
+        db.prepare(`INSERT INTO messages (id, conversation_id, sender_label, body, urgency, message_type, created_at)
+            VALUES (?, ?, 'Fridge Monitor', ?, 'urgent', 'message', ?)`)
+          .bind(crypto.randomUUID(), conversationId, `${title}. ${details}`, now),
+      ]);
 
       await appendAuditEvent(db, {
         hotelId: department.hotel_id,

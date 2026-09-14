@@ -31,11 +31,12 @@ async function departmentFeed(db: D1Database, identity: StaffIdentity, requested
   }
   const messages = await db
     .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.created_at, m.conversation_id,
-        s.display_name AS sender_name, d.name AS sender_department
+        COALESCE(s.display_name, m.sender_label) AS sender_name,
+        COALESCE(d.name, m.sender_label) AS sender_department
       FROM messages m
       JOIN conversation_departments cd ON cd.conversation_id = m.conversation_id
-      JOIN staff s ON s.id = m.sender_staff_id
-      JOIN departments d ON d.id = s.department_id
+      LEFT JOIN staff s ON s.id = m.sender_staff_id
+      LEFT JOIN departments d ON d.id = s.department_id
       WHERE cd.department_id = ?
       ORDER BY m.created_at DESC LIMIT 100`)
     .bind(departmentId)
@@ -65,9 +66,11 @@ async function departmentThread(db: D1Database, identity: StaffIdentity, otherDe
   if (!conversation) return Response.json({ conversation: null, messages: [] });
   const messages = await db
     .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.reply_to_message_id, m.created_at,
-        s.display_name AS sender_name, d.name AS sender_department
-      FROM messages m JOIN staff s ON s.id = m.sender_staff_id
-      JOIN departments d ON d.id = s.department_id
+        COALESCE(s.display_name, m.sender_label) AS sender_name,
+        COALESCE(d.name, m.sender_label) AS sender_department
+      FROM messages m
+      LEFT JOIN staff s ON s.id = m.sender_staff_id
+      LEFT JOIN departments d ON d.id = s.department_id
       WHERE m.conversation_id = ? ORDER BY m.created_at ASC LIMIT 250`)
     .bind(conversation.id)
     .all();
@@ -100,9 +103,11 @@ export async function GET(request: Request) {
     }
     const messages = await db
       .prepare(`SELECT m.id, m.body, m.urgency, m.message_type, m.reply_to_message_id, m.created_at,
-          s.display_name AS sender_name, d.name AS sender_department
-        FROM messages m JOIN staff s ON s.id = m.sender_staff_id
-        JOIN departments d ON d.id = s.department_id
+          COALESCE(s.display_name, m.sender_label) AS sender_name,
+          COALESCE(d.name, m.sender_label) AS sender_department
+        FROM messages m
+        LEFT JOIN staff s ON s.id = m.sender_staff_id
+        LEFT JOIN departments d ON d.id = s.department_id
         WHERE m.conversation_id = ? ORDER BY m.created_at ASC LIMIT 250`)
       .bind(conversationId)
       .all();
