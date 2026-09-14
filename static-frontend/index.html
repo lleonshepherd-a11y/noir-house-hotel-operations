@@ -79,16 +79,22 @@
   .ntoast-simple-preview{font-size:13px;color:var(--ink-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   @keyframes urgent-card-in{from{opacity:0;transform:translateY(-18px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes urgent-card-out{to{opacity:0;transform:translateY(-12px)}}
-  /* The same notification shape, but living in the page instead of
-     floating over it - a strip inside the topbar itself (the .topbar's
-     own flex-wrap sends this full-width child onto its own line below
-     the greeting row) that a new item's card slides into, rather than a
-     popup stacking on top of the screen. */
-  .dept-notify-bar{flex:0 0 100%;display:flex;flex-direction:column;gap:8px;margin-top:16px}
+  /* A compact "island" pill living inside the topbar itself (the
+     .topbar's own flex-wrap sends this full-width child onto its own
+     line below the greeting row) rather than a popup stacking on top of
+     the screen or a full-width card. Round department icons slide into
+     it one at a time, same feel as the old dip's avatars, just housed in
+     a clean floating bar instead of a cutout. */
+  .dept-notify-bar{flex:0 0 100%;display:flex;margin-top:16px}
   .dept-notify-bar[hidden]{display:none}
-  .dept-notify-card{display:flex;align-items:center;gap:14px;padding:10px 16px 10px 10px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 18px -8px rgba(20,21,28,.14);cursor:pointer;animation:urgent-card-in .4s cubic-bezier(.16,1,.3,1);transition:transform .15s ease,box-shadow .15s ease}
-  .dept-notify-card:hover{transform:translateY(-1px);box-shadow:0 12px 24px -10px rgba(20,21,28,.18)}
-  .dept-notify-card.leaving{animation:urgent-card-out .22s ease forwards}
+  .dept-notify-pill{display:flex;align-items:center;padding:6px;background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 10px 24px -10px rgba(20,21,28,.2)}
+  .dept-notify-avatar{position:relative;width:40px;height:40px;border-radius:50%;margin-left:-10px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);animation:urgent-card-in .45s cubic-bezier(.16,1,.3,1)}
+  .dept-notify-avatar:first-child{margin-left:0}
+  .dept-notify-avatar.is-urgent{background:linear-gradient(135deg,#ff6b5e,#e0342a)}
+  .dept-notify-avatar:hover{transform:translateY(-2px)}
+  .dept-notify-avatar svg{width:17px;height:17px}
+  .dept-notify-avatar .dept-icon-initials{font-size:13px;font-weight:800}
+  .dept-notify-avatar.leaving{animation:urgent-card-out .22s ease forwards}
   .topbar .greet strong{display:block;font-size:19px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
@@ -4138,9 +4144,9 @@
   .glance-alert-num-row strong{font-size:34px;font-weight:800;color:var(--rose);font-variant-numeric:tabular-nums}
   .glance-alert-num-row span{font-size:17px;font-weight:700;color:var(--ink)}
   .glance-alert-sub{margin-top:4px;font-size:13px;color:var(--ink-mid)}
-  .glance-alert-btn{flex:0 0 auto;display:flex;align-items:center;gap:7px;border:0;border-radius:100px;padding:13px 22px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff8a80,var(--rose));color:#fff;box-shadow:0 14px 28px rgba(242,96,78,.34)}
+  .glance-alert-btn{flex:0 0 auto;display:flex;align-items:center;gap:7px;border:0;border-radius:100px;padding:13px 22px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;background:#1c1e26;color:#fff;box-shadow:0 14px 28px rgba(20,21,28,.24)}
   .glance-alert-btn svg{width:15px;height:15px}
-  .glance-alert-btn:hover{filter:brightness(1.04)}
+  .glance-alert-btn:hover{filter:brightness(1.15)}
 </style>
 
 <script>
@@ -7663,36 +7669,40 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
     }
 
-    // One notification-bar shape for everything that slides in here: a
-    // round department icon (red if urgent, graphite otherwise), the
-    // department name, and a one-line preview. Tap it to open that
-    // department's real thread and reply - no expand, no separate
-    // actions row.
-    var DEPT_NOTIFY_MAX = 4;
+    // A compact floating pill inside the topbar - round department icons
+    // (red if urgent, graphite otherwise) slide into it one at a time,
+    // same feel as the old dip, just a clean self-contained bar instead
+    // of a cutout. Tap an icon to open that department's real thread and
+    // reply.
+    var DEPT_NOTIFY_MAX = 5;
     function showDeptNotification(dept, text, urgent, taskId) {
       var bar = document.getElementById('deptNotifyBar');
       if (!bar) return;
-      var el = document.createElement('div');
-      el.className = 'dept-notify-card';
+      var pill = bar.querySelector('.dept-notify-pill');
+      if (!pill) {
+        pill = document.createElement('div');
+        pill.className = 'dept-notify-pill';
+        bar.appendChild(pill);
+      }
+      var el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'dept-notify-avatar' + (urgent ? ' is-urgent' : '');
+      el.title = dept + ': ' + text;
+      el.setAttribute('aria-label', dept + ': ' + text);
       var badge = window.deptBadge ? window.deptBadge(dept) : { html: '' };
-      el.innerHTML =
-        '<span class="ntoast-simple-icon' + (urgent ? ' is-urgent' : '') + '">' + badge.html + '</span>' +
-        '<div class="ntoast-simple-body">' +
-        '<span class="ntoast-simple-dept">' + escapeHtml(dept) + '</span>' +
-        '<span class="ntoast-simple-preview">' + escapeHtml(text) + '</span>' +
-        '</div>';
+      el.innerHTML = badge.html;
       bar.hidden = false;
-      bar.prepend(el);
-      // Keep the bar to a handful of cards rather than growing forever -
+      pill.prepend(el);
+      // Keep the pill to a handful of icons rather than growing forever -
       // the oldest just drops off as new ones slide in.
-      while (bar.children.length > DEPT_NOTIFY_MAX) bar.removeChild(bar.lastElementChild);
+      while (pill.children.length > DEPT_NOTIFY_MAX) pill.removeChild(pill.lastElementChild);
 
       function remove() {
         if (!el.parentNode) return;
         el.classList.add('leaving');
         setTimeout(function () {
           el.remove();
-          if (!bar.children.length) bar.hidden = true;
+          if (!pill.children.length) bar.hidden = true;
         }, 250);
       }
       setTimeout(remove, TOAST_LIFETIME_MS);
