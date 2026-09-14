@@ -451,11 +451,7 @@
       </div>
       <button class="icon-btn" id="topbarCalendarBtn" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v2.6"/><path d="M16 3v2.6"/><rect x="3.5" y="4.8" width="17" height="16" rx="3.2"/><path d="M3.5 9.6h17"/><circle cx="8.2" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="14" r=".9" fill="currentColor" stroke="none"/></svg></button>
       <div class="compose-select">
-        <button type="button" class="round-btn" id="newMessageBtn" aria-label="New message" aria-haspopup="true" aria-expanded="false" title="New message"><span class="pillow"><i></i><i></i><i></i></span></button>
-        <div class="compose-menu" id="composeMenu" hidden>
-          <button type="button" class="compose-menu-item" id="composeMenuDept"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>Message a department</button>
-          <button type="button" class="compose-menu-item" id="composeMenuAnnounce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2.5 5h2l-1.2-5H12l7 4V5l-7 4H5a2 2 0 0 0-2 2Z"/></svg>Announcement to all staff</button>
-        </div>
+        <button type="button" class="round-btn" id="newMessageBtn" aria-label="New message" title="New message"><span class="pillow"><i></i><i></i><i></i></span></button>
       </div>
     </div>
 
@@ -2614,7 +2610,6 @@
   <div class="drawer-body" id="convThread"></div>
   <div class="conv-composer">
     <div class="conv-attach-row" id="convAttachRow" hidden></div>
-    <input type="text" id="convReplyTitle" class="conv-title-input" placeholder="Title" maxlength="80" required>
     <textarea id="convReplyInput" rows="1" placeholder="Write a reply&hellip;"></textarea>
     <div class="conv-composer-row conv-tools-row">
       <div class="conv-tools">
@@ -4825,7 +4820,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var convTitleIcon = document.getElementById('convTitleIcon');
       var convThread = document.getElementById('convThread');
       var convReplyInput = document.getElementById('convReplyInput');
-      var convReplyTitle = document.getElementById('convReplyTitle');
       var convMarkBtn = document.getElementById('convMarkComplete');
       var convSendBtn = document.getElementById('convSendBtn');
       var convAttachRow = document.getElementById('convAttachRow');
@@ -4973,13 +4967,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       });
 
       function updateConvSendState() {
-        var empty = convReplyTitle.value.trim() === '' || (convReplyInput.value.trim() === '' && convAttachments.length === 0);
+        var empty = convReplyInput.value.trim() === '' && convAttachments.length === 0;
         convSendBtn.classList.toggle('disabled', empty);
       }
-      convReplyTitle.addEventListener('input', function () {
-        convReplyTitle.classList.remove('invalid');
-        updateConvSendState();
-      });
       convReplyInput.addEventListener('input', updateConvSendState);
 
       function openConversation(dept) {
@@ -4993,14 +4983,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         convAttachments = [];
         renderConvAttachments();
         convReplyInput.value = '';
-        convReplyTitle.value = '';
-        convReplyTitle.classList.remove('invalid');
         updateConvSendState();
         unreadDepts[dept] = false;
         renderMainMessagesList();
         convDrawer.classList.add('open');
         convBackdrop.classList.add('open');
-        convReplyTitle.focus();
+        convReplyInput.focus();
       }
       window.openConversation = openConversation;
       function closeConversation() {
@@ -5014,19 +5002,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       function sendConvReply() {
         var text = convReplyInput.value.trim();
-        var title = convReplyTitle.value.trim();
         if (!currentConvDept) return;
-        if (!title) {
-          convReplyTitle.classList.remove('invalid');
-          void convReplyTitle.offsetWidth;
-          convReplyTitle.classList.add('invalid');
-          convReplyTitle.focus();
-          return;
-        }
         if (!text && !convAttachments.length) return;
-        var entry = { from: 'You', text: text, time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }), title: title };
+        var entry = { from: 'You', text: text, time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }) };
         if (convAttachments.length) entry.attachments = convAttachments.slice();
         if (convActionReq.classList.contains('on')) {
+          // A linked task still wants its own short title for the task
+          // feed/detail view, even though the message itself is just
+          // plain chat text now - derive one from the message rather
+          // than asking for a separate title up front.
+          var title = text.length > 60 ? text.slice(0, 57).trim() + '…' : text;
           var task = {
             id: taskIdSeq++,
             title: title,
@@ -5049,7 +5034,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         threads[currentConvDept].push(entry);
         if (window.createMessageOnServer) window.createMessageOnServer(currentConvDept, text, convPriority.value === 'Urgent', entry);
         convReplyInput.value = '';
-        convReplyTitle.value = '';
         convAttachments = [];
         convActionReq.classList.remove('on');
         convPriority.hidden = true;
@@ -6227,56 +6211,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       (function () {
         var btn = document.getElementById('newMessageBtn');
-        var menu = document.getElementById('composeMenu');
-        var deptItem = document.getElementById('composeMenuDept');
-        var announceItem = document.getElementById('composeMenuAnnounce');
-        if (!btn || !menu) return;
-
-        function currentDeptName() {
-          var el = document.getElementById('deptSelectLabel');
-          return el ? el.textContent.trim() : 'General Manager';
-        }
-        function openMenu() {
-          menu.hidden = false;
-          btn.setAttribute('aria-expanded', 'true');
-        }
-        function closeMenu() {
-          menu.hidden = true;
-          btn.setAttribute('aria-expanded', 'false');
-        }
-        // Shared by the topbar button's own click and by every other
-        // "open new message" entry point (the rail icon, footer buttons,
-        // etc.) - those used to proxy in via newMessageBtn.click(), but a
-        // synthetic click's bubble phase resolves before the real click that
-        // triggered it finishes bubbling to document, so the "close menu on
-        // an outside click" listener below immediately closed the menu this
-        // same click had just opened. Calling this directly instead avoids
-        // that synthetic-event ordering trap entirely.
-        function triggerNewMessage(e) {
-          // Only the GM can broadcast to every department, so only the GM
-          // gets a choice here - everyone else just goes straight to their
-          // own department's compose drawer, same as before.
-          if (currentDeptName() !== 'General Manager') {
-            if (window.openMessageDrawer) window.openMessageDrawer();
-            return;
-          }
-          if (e) e.stopPropagation();
-          if (menu.hidden) openMenu(); else closeMenu();
+        if (!btn) return;
+        // Announcements have their own dedicated button in the rail (GM
+        // only) that opens the announce composer directly - this button is
+        // just for messaging a department, no menu to choose between the
+        // two any more, so it's one click instead of two either way.
+        function triggerNewMessage() {
+          if (window.openMessageDrawer) window.openMessageDrawer();
         }
         window.triggerNewMessage = triggerNewMessage;
         btn.addEventListener('click', triggerNewMessage);
-        deptItem.addEventListener('click', function () {
-          closeMenu();
-          if (window.openMessageDrawer) window.openMessageDrawer();
-        });
-        announceItem.addEventListener('click', function () {
-          closeMenu();
-          if (window.openAnnounceComposeDrawer) window.openAnnounceComposeDrawer();
-        });
-        document.addEventListener('click', function (e) {
-          if (!menu.hidden && !e.target.closest('.compose-select')) closeMenu();
-        });
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
       })();
 
       (function () {
