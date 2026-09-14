@@ -3956,16 +3956,18 @@
   .opscal-legend-edit svg,.opscal-legend-remove svg{width:12px;height:12px}
   .opscal-legend-add{display:flex;align-items:center;gap:5px;border:1px dashed var(--oc-line);background:transparent;color:var(--blue);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px 6px 9px;cursor:pointer}
   .opscal-legend-add svg{width:13px;height:13px}
-  .opscal-grid-card{background:#fff;border:1px solid var(--oc-line);border-radius:18px;box-shadow:0 1px 3px rgba(20,22,30,.05);overflow:hidden}
-  .opscal-weekday-row{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--oc-line)}
-  .opscal-weekday-row div{padding:10px 0;text-align:center;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--oc-dim)}
-  .opscal-month-grid{display:grid;grid-template-columns:repeat(7,1fr)}
-  .opscal-day-cell{min-height:104px;padding:8px;border-right:1px solid var(--oc-line);border-bottom:1px solid var(--oc-line);cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:5px}
-  .opscal-day-cell:nth-child(7n){border-right:0}
-  .opscal-day-cell:hover{background:#fafbfd}
-  .opscal-day-cell.other-month{background:#fbfbfc}
+  /* Individual rounded tiles with a gap between them, rather than one
+     bordered card sliced up with grid lines - reads as a set of day
+     tiles you can pick out at a glance instead of a spreadsheet. */
+  .opscal-grid-card{background:none;border:0;box-shadow:none;border-radius:0}
+  .opscal-weekday-row{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:0;padding:0 2px}
+  .opscal-weekday-row div{padding:0 0 8px;text-align:center;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--oc-dim)}
+  .opscal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .opscal-day-cell{min-height:104px;padding:9px;border:1px solid var(--oc-line);border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(20,21,28,.04);cursor:pointer;transition:background .12s,box-shadow .12s,transform .12s;display:flex;flex-direction:column;gap:5px}
+  .opscal-day-cell:hover{background:#fafbfd;box-shadow:0 4px 12px rgba(20,21,28,.08);transform:translateY(-1px)}
+  .opscal-day-cell.other-month{background:#f4f5f7;border-color:transparent;box-shadow:none}
   .opscal-day-cell.other-month .opscal-day-num{color:#c7c9d1}
-  .opscal-day-cell.selected{background:var(--oc-wash)}
+  .opscal-day-cell.selected{background:var(--oc-wash);border-color:var(--blue-soft)}
   .opscal-day-num{font-size:12.5px;font-weight:700;color:var(--oc-mid)}
   .opscal-day-num.today{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff}
   .opscal-day-events{display:flex;flex-direction:column;gap:3px;min-width:0}
