@@ -14,7 +14,18 @@ export async function GET() {
   try {
     const db = await getDatabase();
     const rows = await db.prepare('SELECT DISTINCT name FROM departments ORDER BY name').all<{ name: string }>();
-    return Response.json({ departments: rows.results.map((row) => row.name) });
+    // Different hotels can end up with the same department name in different
+    // casing (e.g. a test hotel's "kitchen" next to the real "Kitchen") -
+    // collapse those together instead of showing both, preferring whichever
+    // casing starts with a capital letter.
+    const byKey = new Map<string, string>();
+    for (const row of rows.results) {
+      const key = row.name.trim().toLowerCase();
+      const existing = byKey.get(key);
+      if (!existing || (/^[a-z]/.test(existing) && !/^[a-z]/.test(row.name))) byKey.set(key, row.name);
+    }
+    const departments = Array.from(byKey.values()).sort((a, b) => a.localeCompare(b));
+    return Response.json({ departments });
   } catch (error) {
     if (error instanceof Response) return error;
     return Response.json({ error: 'Unable to load departments' }, { status: 500 });
