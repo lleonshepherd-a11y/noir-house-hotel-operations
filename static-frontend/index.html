@@ -79,6 +79,16 @@
   .ntoast-simple-preview{font-size:13px;color:var(--ink-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   @keyframes urgent-card-in{from{opacity:0;transform:translateY(-18px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes urgent-card-out{to{opacity:0;transform:translateY(-12px)}}
+  /* The same notification shape, but living in the page instead of
+     floating over it - a strip inside the topbar itself (the .topbar's
+     own flex-wrap sends this full-width child onto its own line below
+     the greeting row) that a new item's card slides into, rather than a
+     popup stacking on top of the screen. */
+  .dept-notify-bar{flex:0 0 100%;display:flex;flex-direction:column;gap:8px;margin-top:16px}
+  .dept-notify-bar[hidden]{display:none}
+  .dept-notify-card{display:flex;align-items:center;gap:14px;padding:10px 16px 10px 10px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 18px -8px rgba(20,21,28,.14);cursor:pointer;animation:urgent-card-in .4s cubic-bezier(.16,1,.3,1);transition:transform .15s ease,box-shadow .15s ease}
+  .dept-notify-card:hover{transform:translateY(-1px);box-shadow:0 12px 24px -10px rgba(20,21,28,.18)}
+  .dept-notify-card.leaving{animation:urgent-card-out .22s ease forwards}
   .topbar .greet strong{display:block;font-size:19px;font-weight:700;letter-spacing:-.02em}
   .topbar .greet span{display:block;font-size:12.5px;color:var(--ink-mid);margin-top:3px}
   .topbar .spacer{flex:1 1 auto}
@@ -433,6 +443,7 @@
           <button type="button" class="compose-menu-item" id="composeMenuAnnounce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2.5 5h2l-1.2-5H12l7 4V5l-7 4H5a2 2 0 0 0-2 2Z"/></svg>Announcement to all staff</button>
         </div>
       </div>
+      <div class="dept-notify-bar" id="deptNotifyBar" hidden></div>
     </div>
 
 
@@ -4117,8 +4128,8 @@
   .dash-panel .glance-tile-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);color:#fff;box-shadow:0 10px 20px rgba(20,20,22,.24)}
   .dash-panel .glance-tile.urgent .glance-tile-icon{background:linear-gradient(135deg,#ff8a80,var(--rose));box-shadow:0 10px 20px rgba(242,96,78,.4)}
 
-  .glance-alert-banner{position:relative;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-radius:26px;padding:20px 26px;margin:0 0 16px;background:linear-gradient(120deg,rgba(255,59,48,.55),rgba(255,255,255,.35));backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:1px solid rgba(255,255,255,.8);box-shadow:0 1px 1px rgba(255,255,255,.9) inset,0 18px 34px -16px rgba(255,59,48,.1);cursor:pointer;transition:box-shadow .18s ease,transform .18s ease}
-  .glance-alert-banner:hover{box-shadow:0 1px 1px rgba(255,255,255,.9) inset,0 24px 42px -14px rgba(255,59,48,.16);transform:translateY(-5px)}
+  .glance-alert-banner{position:relative;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-radius:26px;padding:19px 25px;margin:0 0 16px;background:rgba(255,255,255,.7);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:2px solid rgba(255,59,48,.6);box-shadow:0 18px 34px -20px rgba(255,59,48,.22);cursor:pointer;transition:box-shadow .18s ease,transform .18s ease}
+  .glance-alert-banner:hover{box-shadow:0 24px 42px -18px rgba(255,59,48,.3);transform:translateY(-5px)}
   .glance-alert-banner[hidden]{display:none}
   .glance-alert-icon{flex:0 0 auto;width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff8a80,var(--rose));color:#fff;box-shadow:0 10px 22px rgba(242,96,78,.4)}
   .glance-alert-icon svg{width:23px;height:23px}
@@ -7657,9 +7668,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     // department name, and a one-line preview. Tap it to open that
     // department's real thread and reply - no expand, no separate
     // actions row.
+    var DEPT_NOTIFY_MAX = 4;
     function showDeptNotification(dept, text, urgent, taskId) {
+      var bar = document.getElementById('deptNotifyBar');
+      if (!bar) return;
       var el = document.createElement('div');
-      el.className = 'ntoast';
+      el.className = 'dept-notify-card';
       var badge = window.deptBadge ? window.deptBadge(dept) : { html: '' };
       el.innerHTML =
         '<span class="ntoast-simple-icon' + (urgent ? ' is-urgent' : '') + '">' + badge.html + '</span>' +
@@ -7667,12 +7681,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         '<span class="ntoast-simple-dept">' + escapeHtml(dept) + '</span>' +
         '<span class="ntoast-simple-preview">' + escapeHtml(text) + '</span>' +
         '</div>';
-      stack.prepend(el);
+      bar.hidden = false;
+      bar.prepend(el);
+      // Keep the bar to a handful of cards rather than growing forever -
+      // the oldest just drops off as new ones slide in.
+      while (bar.children.length > DEPT_NOTIFY_MAX) bar.removeChild(bar.lastElementChild);
 
       function remove() {
         if (!el.parentNode) return;
         el.classList.add('leaving');
-        setTimeout(function () { el.remove(); }, 250);
+        setTimeout(function () {
+          el.remove();
+          if (!bar.children.length) bar.hidden = true;
+        }, 250);
       }
       setTimeout(remove, TOAST_LIFETIME_MS);
       el.addEventListener('click', function () {
