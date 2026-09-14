@@ -38,6 +38,15 @@ export interface OwnerIdentity {
   hotelId: string;
 }
 
+// A named individual (a department head using the mobile app), distinct
+// from the dashboard's shared per-department PIN console - has their own
+// email+password, not a PIN anyone in the department can use.
+export interface ManagerIdentity {
+  managerId: string;
+  hotelId: string;
+  departmentId: string;
+}
+
 export interface ResourceScope {
   hotelId: string;
   departmentId?: string | null;
