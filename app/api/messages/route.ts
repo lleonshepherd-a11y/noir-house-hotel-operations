@@ -81,8 +81,13 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const conversationId = url.searchParams.get('conversationId');
     const withDepartmentId = url.searchParams.get('withDepartmentId');
-    if (withDepartmentId) return departmentThread(db, identity, withDepartmentId);
-    if (!conversationId) return departmentFeed(db, identity, url.searchParams.get('departmentId'));
+    // Awaited rather than returned directly - a thrown Response (e.g. the
+    // Forbidden check inside either helper) only reaches this function's
+    // own catch below if the rejection is awaited here first; returning
+    // the bare promise lets it escape as an unhandled rejection instead,
+    // which the framework turns into a bodyless 500.
+    if (withDepartmentId) return await departmentThread(db, identity, withDepartmentId);
+    if (!conversationId) return await departmentFeed(db, identity, url.searchParams.get('departmentId'));
     const conversation = await db
       .prepare('SELECT id, hotel_id, kind, subject, status, created_at, updated_at FROM conversations WHERE id = ?')
       .bind(conversationId)

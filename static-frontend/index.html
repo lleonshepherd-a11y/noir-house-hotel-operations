@@ -4392,34 +4392,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var input = document.getElementById('composeInput');
     var sendBtn = document.getElementById('sendBtn');
 
-    var threads = {
-      'General Manager': [
-        { from: 'General Manager', text: 'Fire drill in the staff car park tomorrow at 07:00.', time: '20:04' }
-      ],
-      'Front of House': [
-        { from: 'Front of House', text: 'The Carrington party has arrived, six guests for table 12.', time: '19:42' }
-      ],
-      'Concierge': [
-        { from: 'Concierge', text: 'The airport car for room 408 has arrived at the main entrance.', time: '19:24' }
-      ],
-      'Restaurant': [
-        { from: 'Restaurant', text: 'Table 9 is asking for the wine list ahead of a party of six.', time: '19:12' },
-        { from: 'Restaurant', text: 'Guest at table 3 has a shellfish allergy, kitchen has been notified.', time: '18:45', urgent: true },
-        { from: 'Restaurant', text: 'Private dining room is ready for the 8pm reservation.', time: '17:30' },
-        { from: 'Restaurant', text: 'Wine supplier has confirmed delivery for this afternoon.', time: '14:10' },
-        { from: 'Restaurant', text: 'Board dinner table is set, wine has been decanted ahead of arrival.', time: '19:05' },
-        { from: 'Restaurant', text: 'Table 14 is requesting the dessert menu.', time: '13:20' }
-      ],
-      'Kitchen': [
-        { from: 'Kitchen', text: 'Sea bass special: four portions remain. Please confirm before taking another order.', time: '19:38' }
-      ],
-      'Housekeeping': [
-        { from: 'Housekeeping', text: 'Room 235 has been cleaned and is ready for the waiting guest.', time: '19:35' }
-      ],
-      'Maintenance': [
-        { from: 'Maintenance', text: 'Room 118 leak has been isolated, engineer on site now.', time: '19:50' }
-      ]
-    };
+    // Populated from the real conversations API once a staff session
+    // exists (see syncRealThreads, further down this script) - empty by
+    // default rather than seeded with example messages, since every
+    // preview/notification surface in the app reads straight from this
+    // object and a real hotel should never see scripted example content.
+    var threads = {};
     window.getLocalThreads = function () { return threads; };
 
     // Same icon + colour per department everywhere it appears: this drawer, the
@@ -4436,12 +4414,49 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       'All departments': { grad: '#5a5c68,#8a8c98', icon: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.8"/>' }
     };
     window.DEPT_ICONS = DEPT_ICONS;
+    // Every real department gets an empty slot up front (not just ones
+    // that happen to have a message yet) so every push/length access
+    // below has an array to work with instead of needing its own guard.
+    Object.keys(DEPT_ICONS).forEach(function (d) {
+      if (d !== 'You' && d !== 'All departments') threads[d] = [];
+    });
 
     function deptBadge(dept) {
       var d = DEPT_ICONS[dept] || DEPT_ICONS['You'];
       if (d.initials) return { cls: ' dept-icon-circle', html: '<span class="dept-icon-initials">' + d.initials + '</span>' };
       return { cls: '', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d.icon + '</svg>' };
     }
+
+    // Refills `threads` from the real conversations API for a real staff
+    // session, so every surface that already reads `threads` (the message
+    // previews, the notification bar's per-department check) shows what's
+    // actually happened instead of the old scripted examples. No-ops in
+    // the skip-login preview mode, where threads just stays empty.
+    function syncRealThreads() {
+      var headers = window.authHeaders && window.authHeaders();
+      if (!headers || !window.ensureDepartments) return Promise.resolve();
+      return window.ensureDepartments().then(function (map) {
+        if (!map) return;
+        return Promise.all(Object.keys(map).map(function (name) {
+          return fetch('/api/messages?departmentId=' + encodeURIComponent(map[name]), { headers: headers })
+            .then(function (r) { return r.ok ? r.json() : { messages: [] }; })
+            .then(function (data) {
+              threads[name] = (data.messages || []).slice().reverse().map(function (m) {
+                return {
+                  from: m.sender_department,
+                  text: m.body,
+                  time: new Date(m.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }),
+                  urgent: m.urgency === 'urgent' || m.urgency === 'emergency'
+                };
+              });
+            });
+        }));
+      }).then(function () {
+        if (window.renderMainMessagesList) window.renderMainMessagesList();
+        if (window.renderGmUrgentStack) window.renderGmUrgentStack();
+      });
+    }
+    window.syncRealThreads = syncRealThreads;
     // Reused by the top notification bar (see the toast IIFE further down)
     // for its round department icon.
     window.deptBadge = deptBadge;
@@ -4585,7 +4600,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       el.addEventListener('pointercancel', endDrag);
     }
 
-    var previewOrder = ['Front of House', 'Kitchen', 'Housekeeping', 'General Manager'];
+    // Was a fixed 4-department list matching the old hardcoded demo data -
+    // now derived from whichever departments actually have messages, since
+    // real data means any department could have activity.
+    function previewOrder() { return Object.keys(threads).filter(function (d) { return threads[d] && threads[d].length; }); }
     var unreadDepts = {};
     var pinnedDepts = {};
     var openMenuDept = null;
@@ -4609,8 +4627,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     // direct access to either, so it reaches them through these instead.
     window.getLocalTasks = function () { return tasks; };
     window.nextLocalTaskId = function () { return taskIdSeq++; };
-    previewOrder.forEach(function (d) { unreadDepts[d] = true; });
-    threads['General Manager'][0].badge = 'Urgent';
+    previewOrder().forEach(function (d) { unreadDepts[d] = true; });
 
     var PIN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
     var MORE_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
@@ -4693,7 +4710,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
 
     function renderAllFeed(listEl, state, card) {
-      var byTime = previewOrder.slice().sort(function (a, b) {
+      var byTime = previewOrder().sort(function (a, b) {
         var ma = threads[a][threads[a].length - 1];
         var mb = threads[b][threads[b].length - 1];
         if (state.sortPriority) {
@@ -5105,6 +5122,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             .then(function (data) {
               if (data && data.conversationId) currentConvId = data.conversationId;
               if (currentConvDept === sentToDept) renderThread(sentToDept);
+              if (window.syncRealThreads) window.syncRealThreads();
             })
             .catch(function () { if (window.notifySaveFailed) window.notifySaveFailed('Your message'); });
         } else {
@@ -7211,6 +7229,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       gate.hidden = false;
       shell.hidden = true;
     }
+    var realThreadsSyncStarted = false;
     function showShell(deptName) {
       gate.hidden = true;
       shell.hidden = false;
@@ -7220,6 +7239,24 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       });
       var label = document.getElementById('deptSelectLabel');
       if (label) label.textContent = deptName;
+      function syncEverything() {
+        if (window.syncRealThreads) window.syncRealThreads();
+        // The notification bar needs to know about every department's
+        // urgent items, not just whichever one is currently open - the
+        // per-department sync below only ever ran for the active tab, so
+        // cross-department notifications stayed on demo data until you'd
+        // physically visited every department this session.
+        if (window.ensureDepartments && window.syncTasksForDepartment) {
+          window.ensureDepartments().then(function (map) {
+            Object.keys(map || {}).forEach(function (name) { window.syncTasksForDepartment(name); });
+          });
+        }
+      }
+      syncEverything();
+      if (!realThreadsSyncStarted) {
+        realThreadsSyncStarted = true;
+        setInterval(syncEverything, 30000);
+      }
     }
 
     // Deliberately left on: click straight into any department with no PIN.
