@@ -481,6 +481,21 @@ export const schemaStatements = [
     body TEXT NOT NULL,
     created_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS approval_requests (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    requested_by_label TEXT NOT NULL,
+    title TEXT NOT NULL,
+    details TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','declined')),
+    decided_by_label TEXT,
+    decision_note TEXT,
+    created_at TEXT NOT NULL,
+    decided_at TEXT
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_approval_requests_hotel_status ON approval_requests(hotel_id, status, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_approval_requests_department_created ON approval_requests(department_id, created_at)`,
   `CREATE TABLE IF NOT EXISTS quick_replies (
     id TEXT PRIMARY KEY,
     department_id TEXT NOT NULL REFERENCES departments(id),

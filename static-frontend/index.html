@@ -723,6 +723,18 @@
               <div class="gm-action-list" id="gmActionList"></div>
             </div>
 
+            <div class="card appr-card" id="apprGmCard">
+              <div class="appr-head">
+                <div class="appr-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11"/></svg></div>
+                <div class="appr-head-text">
+                  <div class="appr-title">Approvals</div>
+                  <div class="appr-sub">One tap to approve or decline &middot; every decision is logged</div>
+                </div>
+                <span class="appr-count" id="apprGmCount">0</span>
+              </div>
+              <div class="appr-list" id="apprGmList"><div class="appr-empty">No requests waiting on you.</div></div>
+            </div>
+
             <div class="card checklist-card" data-checklist-dept="General Manager">
                   <div class="checklist-eyebrow"><span class="checklist-eyebrow-dot"></span>GENERAL MANAGER &middot; DAILY CHECKLIST</div>
                   <h2 class="checklist-board-title">Today&rsquo;s board</h2>
@@ -3654,6 +3666,45 @@
   .rrp-stat{background:var(--page);border-radius:14px;padding:14px 16px}
   .rrp-num{font-size:22px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
   .rrp-label{font-size:11.5px;color:var(--ink-dim);font-weight:600;margin-top:2px}
+
+  /* One-tap approval flow: a small "Request approval" card on every
+     department panel (raise it, see its status) and a matching
+     "Approvals" card on the General Manager panel (approve/decline in
+     one tap). Both talk to /api/approval-requests. */
+  .appr-card{padding:22px 24px}
+  .appr-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .appr-head-icon{flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--page);display:flex;align-items:center;justify-content:center;color:var(--ink-mid)}
+  .appr-head-icon svg{width:17px;height:17px}
+  .appr-head-text{flex:1 1 auto;min-width:0}
+  .appr-title{font-size:15px;font-weight:700;color:var(--ink)}
+  .appr-sub{font-size:12px;color:var(--ink-dim);margin-top:2px}
+  .appr-count{flex:0 0 auto;font-size:12px;font-weight:800;color:var(--ink-mid);background:var(--page);border-radius:100px;padding:3px 10px}
+  .appr-form{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .appr-input,.appr-textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;font-family:inherit;color:var(--ink);background:var(--page)}
+  .appr-textarea{resize:vertical;min-height:44px}
+  .appr-input:focus,.appr-textarea:focus{outline:none;border-color:var(--blue)}
+  .appr-send-btn{align-self:flex-end;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:700;padding:9px 16px;border-radius:100px;cursor:pointer}
+  .appr-send-btn:hover{background:var(--blue-dark)}
+  .appr-send-btn:disabled{opacity:.5;cursor:default}
+  .appr-list{display:flex;flex-direction:column;gap:10px}
+  .appr-empty{font-size:12.5px;color:var(--ink-dim);padding:6px 2px}
+  .appr-item{background:var(--page);border-radius:14px;padding:12px 14px}
+  .appr-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .appr-item-title{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .appr-item-meta{font-size:11.5px;color:var(--ink-dim);margin-top:2px}
+  .appr-item-details{font-size:12.5px;color:var(--ink-mid);margin-top:6px}
+  .appr-pill{flex:0 0 auto;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 10px;border-radius:100px;background:#fff;color:var(--ink-mid)}
+  .appr-pill.pending{color:#a5690a;background:rgba(242,166,63,.16)}
+  .appr-pill.approved{color:var(--green);background:rgba(40,183,116,.14)}
+  .appr-pill.declined{color:var(--rose);background:rgba(242,96,78,.14)}
+  .appr-item-actions{display:flex;gap:8px;margin-top:10px}
+  .appr-approve-btn,.appr-decline-btn{flex:1 1 0;border:none;border-radius:100px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .appr-approve-btn{background:var(--green);color:#fff}
+  .appr-decline-btn{background:#fff;border:1px solid var(--line);color:var(--ink-mid)}
+  .appr-approve-btn:hover{opacity:.9}
+  .appr-decline-btn:hover{background:var(--page)}
+  .appr-item-note{font-size:12px;color:var(--ink-mid);margin-top:6px;font-style:italic}
+
   .ta-legend{display:flex;gap:14px;flex:0 0 auto;padding-top:2px}
   .ta-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-dim);white-space:nowrap}
   .ta-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:2px solid var(--line)}
@@ -6244,6 +6295,200 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         setInterval(render, 5000);
       })();
 
+      // One-tap approval flow: a "Request Approval" card on every real
+      // department panel and one "Approvals" card on the General Manager
+      // panel, both backed by /api/approval-requests. No PIN session
+      // needed to raise or decide one (same as maintenance tickets), but
+      // every decision is written server-side to the append-only
+      // audit_events hash chain, so who decided it, when, and what can't
+      // be silently changed afterwards even though the row itself can
+      // only ever be decided once (the server rejects a second decision).
+      (function () {
+        function escapeHtml(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+        function minsAgo(iso) { return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); }
+        function agoText(iso) { var m = minsAgo(iso); return m < 1 ? 'just now' : (m < 60 ? m + 'm ago' : Math.round(m / 60) + 'h ago'); }
+        function isDemoMode() { return !(window.authHeaders && window.authHeaders()); }
+
+        function showApprovalToast(title, body) {
+          var stack = document.getElementById('toastStack');
+          if (!stack) return;
+          var el = document.createElement('div');
+          el.className = 'toast';
+          el.innerHTML = '<div class="toast-body"><strong>' + escapeHtml(title) + '</strong><span>' + escapeHtml(body) + '</span></div>' +
+            '<div class="toast-actions"><button class="toast-dismiss" aria-label="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>';
+          stack.appendChild(el);
+          function dismiss() { el.classList.add('leaving'); setTimeout(function () { if (el.parentNode) el.remove(); }, 260); }
+          el.querySelector('.toast-dismiss').addEventListener('click', dismiss);
+          setTimeout(dismiss, 6000);
+        }
+
+        // Shown only in the no-login preview (no real hotel session) so a
+        // prospective client sees what a decided request looks like - a
+        // real hotel with zero requests just sees the empty state below.
+        var DEMO = [
+          { id: 'demo-appr-1', department: 'Housekeeping', requestedBy: 'Housekeeping', title: 'Overtime for 2 staff, Friday night', details: 'Short staffed for Friday turnover without cover.', status: 'pending', decidedBy: null, decisionNote: null, createdAt: new Date(Date.now() - 35 * 60000).toISOString() },
+          { id: 'demo-appr-2', department: 'Maintenance', requestedBy: 'Maintenance', title: 'Boiler part purchase order, £340', details: 'Supplier can deliver same day if approved now.', status: 'approved', decidedBy: 'General Manager', decisionNote: 'Approved, go ahead.', createdAt: new Date(Date.now() - 3 * 3600000).toISOString() },
+          { id: 'demo-appr-3', department: 'Front of House', requestedBy: 'Front of House', title: 'Early check-in for VIP guest', details: 'Room is ready, guest arriving 3 hours early.', status: 'declined', decidedBy: 'General Manager', decisionNote: 'Room needs a deep clean first, ask them to wait until 2pm.', createdAt: new Date(Date.now() - 5 * 3600000).toISOString() }
+        ];
+
+        function pillHtml(status) {
+          var label = status === 'pending' ? 'Pending' : status === 'approved' ? 'Approved' : 'Declined';
+          return '<span class="appr-pill ' + status + '">' + label + '</span>';
+        }
+
+        var DEPT_NAMES = Object.keys(window.DEPT_ICONS || {}).filter(function (d) {
+          return d !== 'General Manager' && d !== 'You' && d !== 'All departments';
+        });
+        var deptWidgets = {};
+
+        function deptItemHtml(item) {
+          var note = item.status !== 'pending' && (item.decidedBy || item.decisionNote)
+            ? '<div class="appr-item-note">' + (item.decidedBy ? escapeHtml(item.decidedBy) : '') + (item.decisionNote ? ((item.decidedBy ? ': ' : '') + escapeHtml(item.decisionNote)) : '') + '</div>'
+            : '';
+          return '<div class="appr-item">' +
+            '<div class="appr-item-top"><span class="appr-item-title">' + escapeHtml(item.title) + '</span>' + pillHtml(item.status) + '</div>' +
+            '<div class="appr-item-meta">' + agoText(item.createdAt) + '</div>' +
+            (item.details ? '<div class="appr-item-details">' + escapeHtml(item.details) + '</div>' : '') +
+            note +
+            '</div>';
+        }
+
+        function renderDeptList(name, items) {
+          var widget = deptWidgets[name];
+          if (!widget) return;
+          var showItems = items.length ? items : (isDemoMode() ? DEMO.filter(function (d) { return d.department === name; }) : []);
+          widget.listEl.innerHTML = showItems.length ? showItems.map(deptItemHtml).join('') : '<div class="appr-empty">No requests yet.</div>';
+        }
+
+        function loadDept(name) {
+          var widget = deptWidgets[name];
+          if (!widget) return;
+          fetch('/api/approval-requests?department=' + encodeURIComponent(name))
+            .then(function (r) { return r.ok ? r.json() : { requests: [] }; })
+            .then(function (data) {
+              var items = data.requests || [];
+              items.forEach(function (item) {
+                var previously = widget.seen[item.id];
+                if (previously === 'pending' && item.status !== 'pending') {
+                  showApprovalToast(item.status === 'approved' ? 'Request approved' : 'Request declined',
+                    item.title + (item.decisionNote ? ' — ' + item.decisionNote : ''));
+                }
+                widget.seen[item.id] = item.status;
+              });
+              renderDeptList(name, items);
+            })
+            .catch(function () { renderDeptList(name, []); });
+        }
+
+        function buildDeptWidget(name) {
+          var panel = document.querySelector('.dash-panel[data-dash="' + name + '"] .col:last-child');
+          if (!panel) return;
+          var wrap = document.createElement('div');
+          wrap.className = 'card appr-card';
+          wrap.innerHTML = '<div class="appr-head">' +
+            '<div class="appr-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11"/></svg></div>' +
+            '<div class="appr-head-text"><div class="appr-title">Request Approval</div><div class="appr-sub">Send something to the General Manager for a one-tap decision</div></div>' +
+            '</div>' +
+            '<div class="appr-form">' +
+            '<input type="text" class="appr-input appr-title-input" placeholder="What do you need approved?" maxlength="140">' +
+            '<textarea class="appr-textarea appr-details-input" rows="2" placeholder="Details (optional)"></textarea>' +
+            '<button type="button" class="appr-send-btn">Send for approval</button>' +
+            '</div>' +
+            '<div class="appr-list"></div>';
+          panel.appendChild(wrap);
+
+          var titleInput = wrap.querySelector('.appr-title-input');
+          var detailsInput = wrap.querySelector('.appr-details-input');
+          var sendBtn = wrap.querySelector('.appr-send-btn');
+          var listEl = wrap.querySelector('.appr-list');
+          deptWidgets[name] = { listEl: listEl, seen: {} };
+
+          sendBtn.addEventListener('click', function () {
+            var title = titleInput.value.trim();
+            if (!title) { titleInput.focus(); return; }
+            sendBtn.disabled = true;
+            fetch('/api/approval-requests', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ department: name, title: title, details: detailsInput.value.trim() })
+            }).then(function (r) {
+              sendBtn.disabled = false;
+              if (!r.ok) return;
+              titleInput.value = '';
+              detailsInput.value = '';
+              loadDept(name);
+              loadGm();
+            }, function () { sendBtn.disabled = false; });
+          });
+
+          loadDept(name);
+        }
+
+        DEPT_NAMES.forEach(buildDeptWidget);
+
+        var gmListEl = document.getElementById('apprGmList');
+        var gmCountEl = document.getElementById('apprGmCount');
+        var gmBusy = {};
+
+        function gmItemHtml(item) {
+          return '<div class="appr-item" data-id="' + item.id + '">' +
+            '<div class="appr-item-top"><span class="appr-item-title">' + escapeHtml(item.title) + '</span>' + pillHtml(item.status) + '</div>' +
+            '<div class="appr-item-meta">' + escapeHtml(item.department) + ' &middot; ' + escapeHtml(item.requestedBy) + ' &middot; ' + agoText(item.createdAt) + '</div>' +
+            (item.details ? '<div class="appr-item-details">' + escapeHtml(item.details) + '</div>' : '') +
+            '<div class="appr-item-actions">' +
+            '<button type="button" class="appr-approve-btn" data-decision="approved">Approve</button>' +
+            '<button type="button" class="appr-decline-btn" data-decision="declined">Decline</button>' +
+            '</div></div>';
+        }
+
+        function loadGm() {
+          if (!gmListEl) return;
+          fetch('/api/approval-requests?pending=1')
+            .then(function (r) { return r.ok ? r.json() : { requests: [] }; })
+            .then(function (data) {
+              var items = (data.requests || []).filter(function (i) { return i.status === 'pending'; });
+              var showItems = items.length ? items : (isDemoMode() ? DEMO.filter(function (d) { return d.status === 'pending'; }) : []);
+              gmListEl.innerHTML = showItems.length ? showItems.map(gmItemHtml).join('') : '<div class="appr-empty">No requests waiting on you.</div>';
+              if (gmCountEl) gmCountEl.textContent = showItems.length;
+            })
+            .catch(function () {});
+        }
+
+        if (gmListEl) {
+          gmListEl.addEventListener('click', function (e) {
+            var btn = e.target.closest('.appr-approve-btn, .appr-decline-btn');
+            if (!btn) return;
+            var row = btn.closest('.appr-item');
+            var id = row.dataset.id;
+            if (id.indexOf('demo-') === 0) { row.remove(); return; }
+            if (gmBusy[id]) return;
+            gmBusy[id] = true;
+            Array.prototype.forEach.call(row.querySelectorAll('button'), function (b) { b.disabled = true; });
+            fetch('/api/approval-requests?id=' + encodeURIComponent(id), {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ decision: btn.dataset.decision, decidedBy: 'General Manager' })
+            }).then(function () {
+              delete gmBusy[id];
+              loadGm();
+            }, function () {
+              delete gmBusy[id];
+              Array.prototype.forEach.call(row.querySelectorAll('button'), function (b) { b.disabled = false; });
+            });
+          });
+        }
+
+        loadGm();
+        window.loadApprovalsForActiveDept = function (dept) {
+          if (dept === 'General Manager') loadGm();
+          else if (deptWidgets[dept]) loadDept(dept);
+        };
+        setInterval(function () {
+          loadGm();
+          DEPT_NAMES.forEach(loadDept);
+        }, 10000);
+      })();
+
       (function () {
         var DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
         var PIN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
@@ -7357,6 +7602,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (window.updateGreeting) window.updateGreeting(dept === 'All departments' ? null : dept);
       if (window.loadChecklistForActiveDept) window.loadChecklistForActiveDept();
       if (window.loadMaintenanceTickets) window.loadMaintenanceTickets(dept);
+      if (window.loadApprovalsForActiveDept) window.loadApprovalsForActiveDept(dept);
     }
     window.switchDashboard = switchDashboard;
 
