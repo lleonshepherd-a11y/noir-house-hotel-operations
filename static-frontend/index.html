@@ -274,7 +274,14 @@
   .gm-compact-date.wc-date-line{margin:0;font-size:16px}
   .gm-compact-weather{display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:600;color:var(--ink-mid);white-space:nowrap}
   .gm-compact-weather svg{width:17px;height:17px;color:var(--amber);flex:0 0 auto}
-  .gm-compact-stats{flex:0 0 auto;justify-content:flex-start}
+  /* Always its own full-width row below the greeting/clock line - left
+     as flex:0 0 auto it only wrapped down there because the row ran out
+     of horizontal space, so a wide enough desktop window let it sit
+     inline instead and shoved the clock into the middle of the row.
+     Two-class selector needed to beat .fh-status-stats's own flex rule
+     further down the sheet, which otherwise wins on source order. */
+  .gm-compact-stats{justify-content:flex-start}
+  .gm-compact-head .gm-compact-stats{flex:0 0 100%}
   .gm-compact-stats .fh-stat{padding:0 18px}
   .gm-compact-stats .fh-stat-body span{font-size:12.5px}
   .gm-compact-cta{flex:0 0 auto;margin-left:auto}
@@ -3154,13 +3161,23 @@
   .conv-title-icon{display:flex;color:var(--blue);flex:0 0 auto}
   .conv-title-icon[hidden]{display:none}
   .conv-title-icon svg{width:18px;height:18px}
-  #convThread{display:flex;flex-direction:column;gap:20px;padding:20px}
-  .conv-msg{display:flex;flex-direction:column;gap:4px}
-  .conv-msg-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-  .conv-msg-head strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto;font-size:11px;font-weight:600;color:var(--ink-mid)}
-  .conv-msg-head time{flex:0 0 auto;white-space:nowrap;font-size:11px;color:var(--ink-dim)}
-  .conv-msg-title{display:block;font-size:14.5px;font-weight:700;color:var(--ink);margin-top:2px}
-  .conv-msg p{margin:0;font-size:14px;color:var(--ink-mid);line-height:1.55}
+  /* iMessage-style bubbles: the other department's messages on the
+     left in grey with their name above, your own replies on the right
+     in blue with no name (it's obviously you), a pink/red bubble for
+     anything flagged urgent, tail corner on whichever side is talking. */
+  #convThread{display:flex;flex-direction:column;gap:3px;padding:16px 14px;background:var(--page)}
+  .conv-msg{display:flex;flex-direction:column;max-width:78%;margin-bottom:9px}
+  .conv-msg.conv-in{align-self:flex-start;align-items:flex-start}
+  .conv-msg.conv-out{align-self:flex-end;align-items:flex-end}
+  .conv-msg-sender{font-size:11px;font-weight:700;color:var(--ink-dim);margin:0 10px 3px}
+  .conv-bubble{padding:10px 14px;border-radius:19px;background:#fff}
+  .conv-msg.conv-in .conv-bubble{background:#e9e9ec;color:var(--ink);border-bottom-left-radius:5px}
+  .conv-msg.conv-out .conv-bubble{background:linear-gradient(180deg,var(--blue),var(--blue-dark));color:#fff;border-bottom-right-radius:5px}
+  .conv-msg.conv-urgent .conv-bubble{background:#ffe1dd;color:#a3241a}
+  .conv-msg.conv-urgent.conv-out .conv-bubble{background:linear-gradient(180deg,#ff8a7a,var(--rose));color:#fff}
+  .conv-msg-title{display:block;font-size:14.5px;font-weight:700;margin-bottom:2px}
+  .conv-msg p{margin:0;font-size:14.5px;line-height:1.4}
+  .conv-msg-meta{font-size:10.5px;color:var(--ink-dim);font-weight:600;margin-top:4px;padding:0 4px}
   .conv-empty{font-size:13px;color:var(--ink-dim);padding:30px 0;text-align:center}
   .conv-composer{padding:18px 20px 20px;border-top:1px solid var(--line);flex:0 0 auto;display:flex;flex-direction:column;gap:10px;background:var(--page)}
   .conv-title-input{width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--ink);font-family:inherit;font-size:13.5px;font-weight:600;box-sizing:border-box;transition:border-color .15s,background .15s}
@@ -3549,9 +3566,9 @@
   .gi-impact-label:nth-child(2){text-align:center}
   .gi-impact-label:last-child{text-align:right}
   .gi-impact-label.current{color:var(--blue)}
-  .view-task-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-family:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:100px;cursor:pointer}
-  .view-task-btn svg{width:13px;height:13px}
-  .view-task-btn:hover{background:rgba(255,255,255,.08)}
+  .view-task-btn{display:inline-flex;align-items:center;gap:6px;margin:4px 4px 0;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:100px;cursor:pointer}
+  .view-task-btn svg{width:13px;height:13px;color:var(--ink-mid)}
+  .view-task-btn:hover{background:var(--page)}
   .conv-msg-task-done{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:11.5px;font-weight:700;color:var(--green)}
   .conv-msg-task-done svg{width:13px;height:13px}
 
@@ -4841,11 +4858,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
               taskHtml = '<button type="button" class="view-task-btn" data-task-id="' + m.taskId + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 3v3h6V3"/><path d="m8.5 13 2 2 4-4.5"/></svg>View task</button>';
             }
           }
-          return '<div class="conv-msg"><div class="conv-msg-head"><strong>' + escapeHtml(m.from) + '</strong><time>' + m.time + '</time></div>' +
+          var out = m.from === 'You';
+          return '<div class="conv-msg ' + (out ? 'conv-out' : 'conv-in') + (m.urgent ? ' conv-urgent' : '') + '">' +
+            (out ? '' : '<span class="conv-msg-sender">' + escapeHtml(m.from) + '</span>') +
+            '<div class="conv-bubble">' +
             (m.title ? '<span class="conv-msg-title">' + escapeHtml(m.title) + '</span>' : '') +
             (m.text ? '<p>' + escapeHtml(m.text) + '</p>' : '') +
+            '</div>' +
             (attachHtml ? '<div class="conv-attach-row">' + attachHtml + '</div>' : '') +
             taskHtml +
+            '<div class="conv-msg-meta">' + m.time + '</div>' +
             '</div>';
         }).join('');
         Array.prototype.forEach.call(convThread.querySelectorAll('.view-task-btn'), function (btn) {
