@@ -79,13 +79,13 @@
   .ntoast-simple-preview{font-size:13px;color:var(--ink-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   @keyframes urgent-card-in{from{opacity:0;transform:translateY(-18px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes urgent-card-out{to{opacity:0;transform:translateY(-12px)}}
-  /* A compact "island" pill living inside the topbar itself (the
-     .topbar's own flex-wrap sends this full-width child onto its own
-     line below the greeting row) rather than a popup stacking on top of
-     the screen or a full-width card. Round department icons slide into
-     it one at a time, same feel as the old dip's avatars, just housed in
-     a clean floating bar instead of a cutout. */
-  .dept-notify-bar{flex:0 0 100%;display:flex;margin-top:16px}
+  /* A compact "island" pill living inline in the topbar's own row,
+     between the greeting and the department switcher, rather than a
+     popup stacking on top of the screen or a full-width card. Round
+     department icons slide into it one at a time, same feel as the old
+     dip's avatars, just housed in a clean floating bar instead of a
+     cutout. */
+  .dept-notify-bar{flex:0 0 auto;display:flex;margin-left:16px}
   .dept-notify-bar[hidden]{display:none}
   .dept-notify-pill{display:flex;align-items:center;padding:6px;background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 10px 24px -10px rgba(20,21,28,.2)}
   .dept-notify-avatar{position:relative;width:40px;height:40px;border-radius:50%;margin-left:-10px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);animation:urgent-card-in .45s cubic-bezier(.16,1,.3,1)}
@@ -423,6 +423,7 @@
   <main class="main"><div class="main-inner">
     <div class="topbar">
       <div class="greet"><strong id="greeting">Good afternoon</strong><span id="today"></span></div>
+      <div class="dept-notify-bar" id="deptNotifyBar" hidden></div>
       <div class="spacer"></div>
       <button class="icon-btn has-dot" id="guestQBtn" title="Guest questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg></button>
       <div class="dept-select">
@@ -449,7 +450,6 @@
           <button type="button" class="compose-menu-item" id="composeMenuAnnounce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2.5 5h2l-1.2-5H12l7 4V5l-7 4H5a2 2 0 0 0-2 2Z"/></svg>Announcement to all staff</button>
         </div>
       </div>
-      <div class="dept-notify-bar" id="deptNotifyBar" hidden></div>
     </div>
 
 
