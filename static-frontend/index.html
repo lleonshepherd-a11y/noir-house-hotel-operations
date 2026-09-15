@@ -293,6 +293,10 @@
   .gm-compact-head .gm-compact-stats{flex:0 0 100%}
   .gm-compact-stats .fh-stat{padding:0 18px}
   .gm-compact-stats .fh-stat-body span{font-size:12.5px}
+  /* These four headline numbers have no real feed behind them at all yet
+     (arrivals/departures/guests/covers need the PMS), so this says so
+     plainly rather than letting them quietly pass as live. */
+  .gm-sample-note{flex:0 0 100%;font-size:11px;color:var(--ink-dim);margin-top:2px;padding:0 18px}
   .gm-compact-cta{flex:0 0 auto;margin-left:auto}
   @media(max-width:900px){.gm-compact-cta{margin-left:0}}
   .glance-head-stats .fh-stat{padding:0 26px}
@@ -520,6 +524,7 @@
             <div class="fh-stat-body"><strong>86</strong><span>Covers</span></div>
           </div>
         </div>
+        <div class="gm-sample-note">Sample figures, will update automatically once connected to your PMS.</div>
       </div>
 
       <div class="glance-head-title-group" style="padding:20px 0 0;margin:0 26px;border-top:1px solid var(--line)">
@@ -954,6 +959,19 @@
             </div>
             <div class="checklist-groups"></div>
           </div>
+        </div>
+
+        <div class="card mf-card">
+          <div class="mf-head">
+            <div class="mf-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></div>
+            <div class="mf-head-text">
+              <div class="mf-title">Message Feed</div>
+              <div class="mf-sub">Every department, in one place</div>
+            </div>
+            <span class="mf-count"></span>
+          </div>
+          <div class="mf-day-label">Today</div>
+          <div class="mf-list"></div>
         </div>
 
         <div class="card handover-card">
@@ -1403,6 +1421,19 @@
             </div>
             <div class="checklist-groups"></div>
           </div>
+        </div>
+
+        <div class="card mf-card">
+          <div class="mf-head">
+            <div class="mf-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></div>
+            <div class="mf-head-text">
+              <div class="mf-title">Message Feed</div>
+              <div class="mf-sub">Every department, in one place</div>
+            </div>
+            <span class="mf-count"></span>
+          </div>
+          <div class="mf-day-label">Today</div>
+          <div class="mf-list"></div>
         </div>
 
         <div class="card handover-card">
