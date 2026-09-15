@@ -2629,11 +2629,12 @@
       (function () {
         var btn = document.getElementById('newMessageBtn');
         if (!btn) return;
-        // Announcements have their own dedicated button in the rail (GM
-        // only) that opens the announce composer directly, so this button is
-        // just for messaging a department, no menu to choose between the
-        // two any more, so it's one click instead of two either way.
+        // Now opens the same Messages hub as the rail icon, instead of
+        // the old standalone compose popup - one messaging system, not
+        // two different-looking entry points into it.
         function triggerNewMessage() {
+          var railMessagesBtn = document.querySelector('.rail button[data-view="messages"]');
+          if (railMessagesBtn) { railMessagesBtn.click(); return; }
           if (window.openMessageDrawer) window.openMessageDrawer();
         }
         window.triggerNewMessage = triggerNewMessage;
@@ -3239,13 +3240,18 @@
     // Mock data for now: swapping this for the real manager directory
     // (already has its own table - see managers/manager_sessions) is the
     // only change needed later.
+    // "online" is a placeholder state for now (no real presence signal
+    // exists yet for either managers or department consoles) - kept as
+    // a plain field per contact specifically so it's a one-line swap
+    // once a real online/offline signal exists, same convention as the
+    // mock manager threads below.
     var MANAGERS = [
-      { name: 'John', role: 'General Manager' },
-      { name: 'Priya', role: 'Assistant Manager' },
-      { name: 'Marcus', role: 'Food & Beverage Manager' },
-      { name: 'Elena', role: 'Head Chef' },
-      { name: 'Grace', role: 'Head of Housekeeping' },
-      { name: 'Sandra', role: 'Restaurant Manager' }
+      { name: 'John', role: 'General Manager', online: true },
+      { name: 'Priya', role: 'Assistant Manager', online: false },
+      { name: 'Marcus', role: 'Food & Beverage Manager', online: false },
+      { name: 'Elena', role: 'Head Chef', online: true },
+      { name: 'Grace', role: 'Head of Housekeeping', online: true },
+      { name: 'Sandra', role: 'Restaurant Manager', online: true }
     ];
     window.MANAGERS = MANAGERS;
     var managerRow = document.getElementById('managerRow');
@@ -3268,7 +3274,7 @@
 
     function managerButtonHtml(m) {
       return '<button type="button" class="manager-btn' + (selectedDept === m.name ? ' on' : '') + '" data-dept="' + escapeHtml(m.name) + '">' +
-        '<span class="manager-avatar">' + escapeHtml(m.name.charAt(0)) + '</span>' +
+        '<span class="manager-avatar ' + (m.online ? 'presence-online' : 'presence-offline') + '">' + escapeHtml(m.name.charAt(0)) + '</span>' +
         '<span class="manager-name-role"><span class="manager-name">' + escapeHtml(m.name) + '</span><span class="manager-role">' + escapeHtml(m.role) + '</span></span></button>';
     }
 
@@ -3471,12 +3477,22 @@
       return urgentCount * 1000 + (unread ? 100 : 0) + msgs.length;
     }
 
+    // One combined score+recency ranking so a department and a manager
+    // can sit right next to each other and whichever actually needs
+    // answering first shows first - splitting them into two separate
+    // sections just meant checking two lists instead of one.
+    function timeToMins(t) {
+      if (!t) return -1;
+      var parts = t.split(':');
+      return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+    }
+
     function buildContacts() {
       var managerContacts = MANAGERS.map(function (m) {
         var msgs = managerThreads[m.name] || [];
         var last = msgs[msgs.length - 1];
         return {
-          key: 'manager:' + m.name, kind: 'manager', name: m.name, sub: m.role,
+          key: 'manager:' + m.name, kind: 'manager', name: m.name, sub: m.role, online: m.online,
           lastText: last ? (last.from === 'You' ? 'You: ' : '') + last.text : 'No messages yet',
           time: last ? last.time : '', unread: false, urgent: false,
           score: scoreOf(msgs, false)
@@ -3489,22 +3505,37 @@
         var unread = !!unreadDepts[d];
         var urgentCount = msgs.filter(function (m) { return m.urgent; }).length;
         return {
-          key: 'dept:' + d, kind: 'dept', name: d, sub: null,
+          key: 'dept:' + d, kind: 'dept', name: d, sub: null, online: null,
           lastText: last ? (last.from === 'You' ? 'You: ' : '') + last.text : 'No messages yet',
           time: last ? last.time : '', unread: unread, urgent: urgentCount > 0,
           score: scoreOf(msgs, unread)
         };
       });
-      managerContacts.sort(function (a, b) { return b.score - a.score; });
-      deptContacts.sort(function (a, b) { return b.score - a.score; });
-      return { managers: managerContacts, depts: deptContacts };
+      var all = managerContacts.concat(deptContacts);
+      all.sort(function (a, b) { return a.score !== b.score ? b.score - a.score : timeToMins(b.time) - timeToMins(a.time); });
+      return all;
+    }
+
+    // Presence ring around every avatar, same idea as the real app: green
+    // for online, red for offline. Departments have no individual signal
+    // to check yet (a shared console isn't "someone", it's a board), so
+    // they read as online whenever the board has ever been used; a real
+    // per-department connection check is a fair next step once wanted.
+    function presenceClass(c) {
+      var online = c.kind === 'dept' ? true : c.online;
+      return online ? 'presence-online' : 'presence-offline';
+    }
+
+    function deptAvatarHtml(c) {
+      var d = DEPT_ICONS[c.name] || DEPT_ICONS['You'];
+      var badge = window.deptBadge ? window.deptBadge(c.name) : { cls: '', html: initialsOf(c.name) };
+      return '<span class="msgapp-avatar ' + presenceClass(c) + badge.cls + '" style="background:linear-gradient(135deg,' + d.grad + ')">' + badge.html + '</span>';
     }
 
     function contactRowHtml(c) {
-      var avatarClass = c.kind === 'dept' ? 'msgapp-avatar dept' : 'msgapp-avatar';
-      var avatarText = c.kind === 'dept' ? c.name.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() : initialsOf(c.name);
+      var avatarHtml = c.kind === 'dept' ? deptAvatarHtml(c) : '<span class="msgapp-avatar ' + presenceClass(c) + '">' + initialsOf(c.name) + '</span>';
       return '<button type="button" class="msgapp-contact' + (activeKey === c.key ? ' on' : '') + '" data-key="' + c.key + '">' +
-        '<span class="' + avatarClass + '">' + avatarText + '</span>' +
+        avatarHtml +
         '<span class="msgapp-contact-body">' +
         '<span class="msgapp-contact-top"><span class="msgapp-contact-name">' + escapeHtml2(c.name) + '</span><span class="msgapp-contact-time">' + escapeHtml2(c.time) + '</span></span>' +
         '<span class="msgapp-contact-sub-row"><span class="msgapp-contact-sub' + (c.urgent ? ' urgent' : '') + '">' + escapeHtml2(c.lastText) + '</span>' + (c.unread ? '<span class="msgapp-unread-dot"></span>' : '') + '</span>' +
@@ -3514,39 +3545,78 @@
 
     function renderContactList() {
       var query = (searchInput.value || '').trim().toLowerCase();
-      var groups = buildContacts();
+      var contacts = buildContacts();
       var filterFn = function (c) { return !query || c.name.toLowerCase().indexOf(query) !== -1 || (c.sub || '').toLowerCase().indexOf(query) !== -1; };
-      var managers = groups.managers.filter(filterFn);
-      var depts = groups.depts.filter(filterFn);
-      var html = '';
-      if (managers.length) html += '<div class="msgapp-section-label">Managers</div>' + managers.map(contactRowHtml).join('');
-      if (depts.length) html += '<div class="msgapp-section-label">Departments</div>' + depts.map(contactRowHtml).join('');
-      contactListEl.innerHTML = html || '<div class="msgapp-section-label">No matches</div>';
+      var filtered = contacts.filter(filterFn);
+      contactListEl.innerHTML = filtered.length ? filtered.map(contactRowHtml).join('') : '<div class="msgapp-section-label">No matches</div>';
     }
 
     function threadFor(kind, name) {
       return kind === 'manager' ? (managerThreads[name] || (managerThreads[name] = [])) : (threads[name] || (threads[name] = []));
     }
 
+    var PIN_ICON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a1 1 0 0 1 1 1v6.28l3.6 3.6a1 1 0 0 1 .29.71V15a1 1 0 0 1-1 1h-3v5a1 1 0 1 1-2 0v-5H8a1 1 0 0 1-1-1v-1.41a1 1 0 0 1 .29-.71L11 9.28V3a1 1 0 0 1 1-1Z"/></svg>';
+    var currentThreadMsgs = [];
+
+    // Pinning moves a message out of the plain chronological flow into
+    // its own bar fixed to the top of the thread, so the important one
+    // doesn't get buried as new messages come in - same idea as
+    // WhatsApp/Telegram's pinned messages. Client-side for now: it
+    // sticks for the life of this array (mock manager threads keep it
+    // for the session; a real department thread re-fetches from the
+    // server, so its pins reset on the next sync until pins are backed
+    // by a real field there too).
     function renderThreadBubbles(msgs) {
-      threadEl.innerHTML = msgs.length ? ('<div class="msgapp-day-label">Today</div>' + msgs.map(function (m) {
+      currentThreadMsgs = msgs;
+      var pinned = msgs.filter(function (m) { return m.pinned; });
+      var pinnedHtml = pinned.length ? ('<div class="msgapp-pinned-bar">' + pinned.map(function (m) {
+        var idx = msgs.indexOf(m);
+        return '<div class="msgapp-pinned-item">' + PIN_ICON_SVG +
+          '<span class="msgapp-pinned-text"><strong>' + escapeHtml2(m.from) + ':</strong> ' + escapeHtml2(m.text) + '</span>' +
+          '<button type="button" class="msgapp-unpin-btn" data-idx="' + idx + '" title="Unpin">&times;</button></div>';
+      }).join('') + '</div>') : '';
+
+      var bodyHtml = msgs.length ? ('<div class="msgapp-day-label">Today</div>' + msgs.map(function (m, idx) {
         var out = m.from === 'You';
         return '<div class="msgapp-msg ' + (out ? 'out' : 'in') + (m.urgent ? ' urgent' : '') + '">' +
           (out ? '' : '<span class="msgapp-msg-sender">' + escapeHtml2(m.from) + '</span>') +
+          '<div class="msgapp-bubble-row">' +
           '<div class="msgapp-bubble">' + escapeHtml2(m.text) + '</div>' +
+          '<button type="button" class="msgapp-pin-btn' + (m.pinned ? ' on' : '') + '" data-idx="' + idx + '" title="' + (m.pinned ? 'Unpin message' : 'Pin message') + '">' + PIN_ICON_SVG + '</button>' +
+          '</div>' +
           '<div class="msgapp-msg-meta">' + escapeHtml2(m.time) + '</div>' +
           '</div>';
       }).join('')) : '<div class="msgapp-day-label">No messages yet, say hello</div>';
+
+      threadEl.innerHTML = pinnedHtml + bodyHtml;
       threadEl.scrollTop = threadEl.scrollHeight;
     }
+
+    threadEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.msgapp-pin-btn, .msgapp-unpin-btn');
+      if (!btn) return;
+      var idx = Number(btn.dataset.idx);
+      if (currentThreadMsgs[idx]) currentThreadMsgs[idx].pinned = !currentThreadMsgs[idx].pinned;
+      renderThreadBubbles(currentThreadMsgs);
+    });
 
     function openContact(kind, name, sub) {
       activeKey = kind + ':' + name;
       if (kind === 'dept') unreadDepts[name] = false;
       emptyEl.hidden = true;
       threadWrap.hidden = false;
-      panelAvatar.className = kind === 'dept' ? 'msgapp-panel-avatar dept' : 'msgapp-panel-avatar';
-      panelAvatar.textContent = kind === 'dept' ? name.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() : initialsOf(name);
+      if (kind === 'dept') {
+        var d = DEPT_ICONS[name] || DEPT_ICONS['You'];
+        var badge = window.deptBadge ? window.deptBadge(name) : { cls: '', html: '' };
+        panelAvatar.className = 'msgapp-panel-avatar presence-online' + badge.cls;
+        panelAvatar.style.background = 'linear-gradient(135deg,' + d.grad + ')';
+        panelAvatar.innerHTML = badge.html;
+      } else {
+        var mgr = MANAGERS.filter(function (m) { return m.name === name; })[0];
+        panelAvatar.className = 'msgapp-panel-avatar ' + (mgr && mgr.online ? 'presence-online' : 'presence-offline');
+        panelAvatar.style.background = '';
+        panelAvatar.textContent = initialsOf(name);
+      }
       panelTitle.textContent = name;
       panelSub.textContent = sub || 'Department';
 
@@ -3581,7 +3651,113 @@
 
     searchInput.addEventListener('input', renderContactList);
 
-    function updateMsgAppSendState() { sendBtnEl.disabled = msgInput.value.trim() === ''; }
+    // Attachments (file/photo/voice note/mic dictation, plus drag-drop) -
+    // same capabilities and the same ATTACH_ICONS map as the original
+    // conversation drawer, just wired to this panel's own elements so
+    // nothing about the old drawer had to change.
+    var msgappAttachments = [];
+    var attachRowEl = document.getElementById('msgappAttachRow');
+    var MSGAPP_ATTACH_ICONS = {
+      photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+      voice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2"/><path d="M9 7v10"/><path d="M14 4v16"/><path d="M19 8v8"/></svg>',
+      file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>'
+    };
+
+    function renderMsgappAttachments() {
+      attachRowEl.hidden = msgappAttachments.length === 0;
+      attachRowEl.innerHTML = msgappAttachments.map(function (a, i) {
+        return '<span class="msgapp-attach-chip">' + (MSGAPP_ATTACH_ICONS[a.type] || '') + escapeHtml2(a.label) + '<button type="button" data-i="' + i + '" aria-label="Remove">&times;</button></span>';
+      }).join('');
+      updateMsgAppSendState();
+    }
+    attachRowEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-i]');
+      if (!btn) return;
+      msgappAttachments.splice(Number(btn.dataset.i), 1);
+      renderMsgappAttachments();
+    });
+
+    var msgappFileInput = document.getElementById('msgappFileInput');
+    var msgappPhotoInput = document.getElementById('msgappPhotoInput');
+    document.getElementById('msgappFileBtn').addEventListener('click', function () { msgappFileInput.click(); });
+    document.getElementById('msgappPhotoBtn').addEventListener('click', function () { msgappPhotoInput.click(); });
+    msgappFileInput.addEventListener('change', function () {
+      Array.prototype.forEach.call(msgappFileInput.files, function (f) { msgappAttachments.push({ type: 'file', label: f.name }); });
+      renderMsgappAttachments();
+      msgappFileInput.value = '';
+    });
+    msgappPhotoInput.addEventListener('change', function () {
+      Array.prototype.forEach.call(msgappPhotoInput.files, function (f) { msgappAttachments.push({ type: 'photo', label: f.name }); });
+      renderMsgappAttachments();
+      msgappPhotoInput.value = '';
+    });
+
+    var msgappMicBtn = document.getElementById('msgappMicBtn');
+    var msgappSpeechRec = null;
+    var MsgappSpeechRecCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (MsgappSpeechRecCtor) {
+      msgappSpeechRec = new MsgappSpeechRecCtor();
+      msgappSpeechRec.continuous = true;
+      msgappSpeechRec.interimResults = false;
+      msgappSpeechRec.onresult = function (e) {
+        var transcript = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) transcript += e.results[i][0].transcript;
+        transcript = transcript.trim();
+        if (transcript) {
+          msgInput.value = (msgInput.value ? msgInput.value + ' ' : '') + transcript;
+          updateMsgAppSendState();
+        }
+      };
+      msgappSpeechRec.onend = function () { msgappMicBtn.classList.remove('active'); };
+      msgappSpeechRec.onerror = function () { msgappMicBtn.classList.remove('active'); };
+    }
+    msgappMicBtn.addEventListener('click', function () {
+      if (!msgappSpeechRec) return;
+      if (msgappMicBtn.classList.contains('active')) { msgappSpeechRec.stop(); }
+      else { try { msgappSpeechRec.start(); msgappMicBtn.classList.add('active'); } catch (e) {} }
+    });
+
+    var msgappVoiceNoteBtn = document.getElementById('msgappVoiceNoteBtn');
+    var msgappActiveRecorder = null;
+    var msgappRecordStartedAt = 0;
+    msgappVoiceNoteBtn.addEventListener('click', function () {
+      if (msgappActiveRecorder) { msgappActiveRecorder.stop(); return; }
+      if (!navigator.mediaDevices || !window.MediaRecorder) return;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        var chunks = [];
+        var recorder = new MediaRecorder(stream);
+        msgappActiveRecorder = recorder;
+        msgappRecordStartedAt = Date.now();
+        msgappVoiceNoteBtn.classList.add('active');
+        recorder.addEventListener('dataavailable', function (e) { if (e.data.size) chunks.push(e.data); });
+        recorder.addEventListener('stop', function () {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          var seconds = Math.max(1, Math.round((Date.now() - msgappRecordStartedAt) / 1000));
+          msgappAttachments.push({ type: 'voice', label: 'Voice note (' + seconds + 's)' });
+          renderMsgappAttachments();
+          msgappVoiceNoteBtn.classList.remove('active');
+          msgappActiveRecorder = null;
+        });
+        recorder.start();
+      }).catch(function () { msgappVoiceNoteBtn.classList.remove('active'); });
+    });
+
+    var msgappComposerWrap = document.getElementById('msgappComposerWrap');
+    var msgappDragDepth = 0;
+    msgappComposerWrap.addEventListener('dragenter', function (e) { e.preventDefault(); msgappDragDepth++; msgappComposerWrap.classList.add('drag-over'); });
+    msgappComposerWrap.addEventListener('dragover', function (e) { e.preventDefault(); });
+    msgappComposerWrap.addEventListener('dragleave', function () { msgappDragDepth = Math.max(0, msgappDragDepth - 1); if (!msgappDragDepth) msgappComposerWrap.classList.remove('drag-over'); });
+    msgappComposerWrap.addEventListener('drop', function (e) {
+      e.preventDefault();
+      msgappDragDepth = 0;
+      msgappComposerWrap.classList.remove('drag-over');
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length) return;
+      Array.prototype.forEach.call(files, function (f) { msgappAttachments.push({ type: 'file', label: f.name }); });
+      renderMsgappAttachments();
+    });
+
+    function updateMsgAppSendState() { sendBtnEl.disabled = msgInput.value.trim() === '' && msgappAttachments.length === 0; }
     msgInput.addEventListener('input', function () {
       msgInput.style.height = 'auto';
       msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
@@ -3594,16 +3770,19 @@
     function sendFromPanel() {
       if (!activeKey) return;
       var text = msgInput.value.trim();
-      if (!text) return;
+      if (!text && msgappAttachments.length === 0) return;
       var parts = activeKey.split(':');
       var kind = parts[0], name = parts.slice(1).join(':');
-      var entry = { from: 'You', text: text, time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }) };
+      var fullText = text + (msgappAttachments.length ? (text ? ' ' : '') + msgappAttachments.map(function (a) { return '📎 ' + a.label; }).join(' ') : '');
+      var entry = { from: 'You', text: fullText, time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }) };
       threadFor(kind, name).push(entry);
       renderThreadBubbles(threadFor(kind, name));
       renderContactList();
-      if (kind === 'dept' && window.createMessageOnServer) window.createMessageOnServer(name, text, false, entry);
+      if (kind === 'dept' && window.createMessageOnServer) window.createMessageOnServer(name, fullText, false, entry);
       msgInput.value = '';
       msgInput.style.height = 'auto';
+      msgappAttachments = [];
+      renderMsgappAttachments();
       updateMsgAppSendState();
       msgInput.focus();
     }
