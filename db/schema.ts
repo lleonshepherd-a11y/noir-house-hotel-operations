@@ -496,6 +496,16 @@ export const schemaStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_approval_requests_hotel_status ON approval_requests(hotel_id, status, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_approval_requests_department_created ON approval_requests(department_id, created_at)`,
+  `CREATE TABLE IF NOT EXISTS shift_events (
+    id TEXT PRIMARY KEY,
+    hotel_id TEXT NOT NULL REFERENCES hotels(id),
+    department_id TEXT NOT NULL REFERENCES departments(id),
+    event TEXT NOT NULL CHECK(event IN ('start','end')),
+    shift_label TEXT,
+    staff_label TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_shift_events_department_created ON shift_events(department_id, created_at)`,
   `CREATE TABLE IF NOT EXISTS quick_replies (
     id TEXT PRIMARY KEY,
     department_id TEXT NOT NULL REFERENCES departments(id),

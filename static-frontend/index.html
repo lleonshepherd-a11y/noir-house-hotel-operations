@@ -3745,6 +3745,17 @@
   .appr-decline-btn:hover{background:var(--page)}
   .appr-item-note{font-size:12px;color:var(--ink-mid);margin-top:6px;font-style:italic}
 
+  /* Shift start/end toggle, added to every department's own Handover
+     card header. A plain on/off switch rather than a form, since
+     starting or ending a shift is a single tap with nothing to type. */
+  .shift-toggle-wrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .shift-toggle-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-dim)}
+  .shift-switch{width:44px;height:25px;border-radius:100px;background:var(--line);border:0;padding:2px;cursor:pointer;position:relative;flex:0 0 auto;transition:background .18s ease}
+  .shift-switch .shift-knob{width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(20,21,28,.25);display:block;transition:transform .18s ease}
+  .shift-switch.on{background:var(--green)}
+  .shift-switch.on .shift-knob{transform:translateX(19px)}
+  .shift-switch:disabled{opacity:.6;cursor:default}
+
   .ta-legend{display:flex;gap:14px;flex:0 0 auto;padding-top:2px}
   .ta-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-dim);white-space:nowrap}
   .ta-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:2px solid var(--line)}
@@ -6531,6 +6542,77 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         }, 10000);
       })();
 
+      // Shift start/end tracking: one on/off switch on every department's
+      // own Handover card, backed by /api/shift-events. No PIN needed
+      // (same convention as everything else here), and it's an append-only
+      // log server-side, so "who started/ended the shift and when" always
+      // has a real history even though the UI only ever shows the latest.
+      (function () {
+        function formatClock(iso) { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }); }
+
+        var SHIFT_DEPT_NAMES = Object.keys(window.DEPT_ICONS || {}).filter(function (d) {
+          return d !== 'You' && d !== 'All departments';
+        });
+        var widgets = {};
+
+        function subText(name, current) {
+          if (!current || current.event === 'end') return name + ' · Off shift';
+          return name + ' · On shift since ' + formatClock(current.createdAt);
+        }
+
+        function render(name, current) {
+          var widget = widgets[name];
+          if (!widget) return;
+          widget.switchEl.classList.toggle('on', !!current && current.event === 'start');
+          widget.switchEl.setAttribute('aria-checked', String(!!current && current.event === 'start'));
+          widget.subEl.textContent = subText(name, current);
+        }
+
+        function load(name) {
+          var widget = widgets[name];
+          if (!widget) return;
+          fetch('/api/shift-events?department=' + encodeURIComponent(name))
+            .then(function (r) { return r.ok ? r.json() : { current: null }; })
+            .then(function (data) { widget.current = data.current || null; render(name, widget.current); })
+            .catch(function () {});
+        }
+
+        function buildWidget(name) {
+          var subEl = document.querySelector('.dash-panel[data-dash="' + name + '"] .handover-card .ho-sub');
+          var head = document.querySelector('.dash-panel[data-dash="' + name + '"] .handover-card .ho-head');
+          if (!subEl || !head) return;
+
+          var wrap = document.createElement('div');
+          wrap.className = 'shift-toggle-wrap';
+          wrap.innerHTML = '<span class="shift-toggle-label">Shift</span>' +
+            '<button type="button" class="shift-switch" role="switch" aria-checked="false"><span class="shift-knob"></span></button>';
+          head.appendChild(wrap);
+
+          var switchEl = wrap.querySelector('.shift-switch');
+          widgets[name] = { subEl: subEl, switchEl: switchEl, current: null };
+
+          switchEl.addEventListener('click', function () {
+            var widget = widgets[name];
+            var isOn = widget.current && widget.current.event === 'start';
+            switchEl.disabled = true;
+            fetch('/api/shift-events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ department: name, event: isOn ? 'end' : 'start' }),
+            }).then(function () {
+              switchEl.disabled = false;
+              load(name);
+            }, function () { switchEl.disabled = false; });
+          });
+
+          load(name);
+        }
+
+        SHIFT_DEPT_NAMES.forEach(buildWidget);
+        window.loadShiftForActiveDept = function (dept) { if (widgets[dept]) load(dept); };
+        setInterval(function () { SHIFT_DEPT_NAMES.forEach(load); }, 30000);
+      })();
+
       (function () {
         var DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
         var PIN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
@@ -7645,6 +7727,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (window.loadChecklistForActiveDept) window.loadChecklistForActiveDept();
       if (window.loadMaintenanceTickets) window.loadMaintenanceTickets(dept);
       if (window.loadApprovalsForActiveDept) window.loadApprovalsForActiveDept(dept);
+      if (window.loadShiftForActiveDept) window.loadShiftForActiveDept(dept);
     }
     window.switchDashboard = switchDashboard;
 
