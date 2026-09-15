@@ -3526,10 +3526,12 @@
       return online ? 'presence-online' : 'presence-offline';
     }
 
+    // Black and white, not the department's usual colour - a person's
+    // photo doesn't have a colour background either, so a department's
+    // icon shouldn't stand out as "the colourful one" in the same list.
     function deptAvatarHtml(c) {
-      var d = DEPT_ICONS[c.name] || DEPT_ICONS['You'];
       var badge = window.deptBadge ? window.deptBadge(c.name) : { cls: '', html: initialsOf(c.name) };
-      return '<span class="msgapp-avatar ' + presenceClass(c) + badge.cls + '" style="background:linear-gradient(135deg,' + d.grad + ')">' + badge.html + '</span>';
+      return '<span class="msgapp-avatar ' + presenceClass(c) + badge.cls + '">' + badge.html + '</span>';
     }
 
     function contactRowHtml(c) {
@@ -3606,10 +3608,9 @@
       emptyEl.hidden = true;
       threadWrap.hidden = false;
       if (kind === 'dept') {
-        var d = DEPT_ICONS[name] || DEPT_ICONS['You'];
         var badge = window.deptBadge ? window.deptBadge(name) : { cls: '', html: '' };
         panelAvatar.className = 'msgapp-panel-avatar presence-online' + badge.cls;
-        panelAvatar.style.background = 'linear-gradient(135deg,' + d.grad + ')';
+        panelAvatar.style.background = '';
         panelAvatar.innerHTML = badge.html;
       } else {
         var mgr = MANAGERS.filter(function (m) { return m.name === name; })[0];

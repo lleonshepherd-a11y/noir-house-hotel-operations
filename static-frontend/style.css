@@ -613,7 +613,7 @@
      right - deliberately built to feel like the messaging apps everyone
      already knows (WhatsApp/Messenger), so there's near-zero learning
      curve for staff. */
-  .msgapp{display:flex;height:calc(100vh - 150px);min-height:480px;background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+  .msgapp{display:flex;height:calc(100vh - 105px);min-height:480px;background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
   .msgapp-sidebar{width:320px;flex:0 0 auto;border-right:1px solid var(--line);display:flex;flex-direction:column;background:#fbfbfc}
   .msgapp-sidebar-head{padding:18px 18px 12px;flex:0 0 auto}
   .msgapp-sidebar-title{font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
@@ -839,7 +839,7 @@
   .cg-item-advance{margin-left:auto;flex:0 0 auto;height:28px;padding:0 12px;border:1px solid var(--line);border-radius:100px;background:#fff;color:var(--ink);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
   .cg-item-advance:hover{background:var(--page)}
 
-  .powered-by{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:32px 0 8px;font-size:12px;color:var(--ink)}
+  .powered-by{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 0 0;font-size:11px;color:var(--ink)}
   .powered-by img{height:15px;width:auto;display:block;border-radius:3px}
 
   .feed-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink);background:none;flex:0 0 auto}
