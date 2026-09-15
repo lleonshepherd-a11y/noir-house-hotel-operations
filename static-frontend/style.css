@@ -603,8 +603,71 @@
   .manager-btn{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--page);color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:600;padding:10px 12px;border-radius:14px;cursor:pointer;text-align:left;transition:background .15s,color .15s,border-color .15s}
   .manager-btn:hover{background:rgba(20,21,28,.07)}
   .manager-btn.on{background:rgba(59,91,253,.1);color:var(--blue);border-color:rgba(59,91,253,.16)}
-  .manager-avatar{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.01em}
-  .manager-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .manager-avatar{flex:0 0 auto;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2c2d33;color:#fff;font-size:11px;font-weight:800}
+  .manager-name-role{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .manager-name{font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .manager-role{font-size:11px;color:var(--ink-dim);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .manager-btn.on .manager-role{color:var(--blue)}
+
+  /* The main Messages view: one unified contact list (managers by name,
+     departments below) on the left, a familiar chat-app thread on the
+     right - deliberately built to feel like the messaging apps everyone
+     already knows (WhatsApp/Messenger), so there's near-zero learning
+     curve for staff. */
+  .msgapp{display:flex;height:calc(100vh - 150px);min-height:480px;background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+  .msgapp-sidebar{width:320px;flex:0 0 auto;border-right:1px solid var(--line);display:flex;flex-direction:column;background:#fbfbfc}
+  .msgapp-sidebar-head{padding:18px 18px 12px;flex:0 0 auto}
+  .msgapp-sidebar-title{font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .msgapp-search{margin-top:12px;display:flex;align-items:center;gap:8px;background:var(--page);border-radius:11px;padding:9px 12px}
+  .msgapp-search svg{width:15px;height:15px;color:var(--ink-dim);flex:0 0 auto}
+  .msgapp-search input{border:0;background:none;outline:none;font:inherit;font-size:13px;color:var(--ink);width:100%}
+  .msgapp-contact-list{flex:1 1 auto;overflow-y:auto;padding:4px 8px 12px}
+  .msgapp-section-label{padding:14px 12px 6px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-dim)}
+  .msgapp-contact{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:14px;cursor:pointer;width:100%;border:0;background:none;text-align:left;font:inherit}
+  .msgapp-contact:hover{background:var(--page)}
+  .msgapp-contact.on{background:rgba(59,91,253,.09)}
+  .msgapp-avatar{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:#2c2d33;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700}
+  .msgapp-avatar.dept{background:#eef0f3;color:var(--ink-mid)}
+  .msgapp-contact-body{flex:1 1 auto;min-width:0}
+  .msgapp-contact-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .msgapp-contact-name{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msgapp-contact-time{font-size:10.5px;color:var(--ink-dim);flex:0 0 auto}
+  .msgapp-contact-sub-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:1px}
+  .msgapp-contact-sub{font-size:11.5px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msgapp-contact-sub.urgent{color:var(--rose);font-weight:700}
+  .msgapp-unread-dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+  .msgapp-contact-role{font-size:10.5px;color:var(--blue);font-weight:700;margin-top:1px}
+
+  .msgapp-panel{flex:1 1 auto;display:flex;flex-direction:column;min-width:0;position:relative}
+  .msgapp-empty{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--ink-dim)}
+  .msgapp-empty svg{width:34px;height:34px;opacity:.5}
+  .msgapp-empty p{font-size:13px;margin:0}
+  .msgapp-thread-wrap{position:absolute;inset:0;display:flex;flex-direction:column}
+  .msgapp-panel-head{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line);flex:0 0 auto}
+  .msgapp-panel-avatar{width:36px;height:36px;border-radius:50%;background:#2c2d33;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:0 0 auto}
+  .msgapp-panel-avatar.dept{background:#eef0f3;color:var(--ink-mid)}
+  .msgapp-panel-title{font-size:14px;font-weight:700;color:var(--ink)}
+  .msgapp-panel-title span{color:var(--ink-dim);font-weight:600}
+  .msgapp-panel-sub{font-size:11.5px;color:var(--ink-dim);font-weight:600;margin-top:1px}
+  .msgapp-thread{flex:1 1 auto;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column}
+  .msgapp-day-label{align-self:center;font-size:10.5px;font-weight:700;color:var(--ink-dim);background:var(--page);padding:4px 12px;border-radius:100px;margin-bottom:14px}
+  .msgapp-msg{display:flex;flex-direction:column;max-width:62%;margin-bottom:10px}
+  .msgapp-msg.in{align-self:flex-start;align-items:flex-start}
+  .msgapp-msg.out{align-self:flex-end;align-items:flex-end}
+  .msgapp-msg-sender{font-size:10.5px;font-weight:700;color:var(--ink-dim);margin:0 12px 3px}
+  .msgapp-bubble{padding:10px 14px;border-radius:18px;font-size:13.5px;line-height:1.45}
+  .msgapp-msg.in .msgapp-bubble{background:var(--page);color:var(--ink);border-bottom-left-radius:5px}
+  .msgapp-msg.out .msgapp-bubble{background:linear-gradient(180deg,var(--blue),var(--blue-dark));color:#fff;border-bottom-right-radius:5px}
+  .msgapp-msg.urgent .msgapp-bubble{background:#ffe1dd;color:#a3241a}
+  .msgapp-msg.urgent.out .msgapp-bubble{background:linear-gradient(180deg,#ff8a7a,var(--rose));color:#fff}
+  .msgapp-msg-meta{font-size:10px;color:var(--ink-dim);font-weight:600;margin-top:4px;padding:0 4px}
+  .msgapp-composer{flex:0 0 auto;padding:14px 18px 18px;border-top:1px solid var(--line);display:flex;align-items:flex-end;gap:10px}
+  .msgapp-composer textarea{flex:1 1 auto;resize:none;max-height:120px;background:var(--page);border:1px solid var(--line);border-radius:20px;padding:11px 18px;font:inherit;font-size:13.5px;color:var(--ink);outline:none}
+  .msgapp-composer textarea:focus{border-color:var(--blue);background:#fff}
+  .msgapp-send-btn{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:0;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .msgapp-send-btn svg{width:17px;height:17px}
+  .msgapp-send-btn:hover{background:var(--blue-dark)}
+  .msgapp-send-btn:disabled{opacity:.5;cursor:default}
 
   .thread-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,.4);padding:14px 20px 0;flex:0 0 auto}
   .drawer-body{padding:8px 20px 16px;overflow-y:auto;flex:1 1 auto;scrollbar-width:none}

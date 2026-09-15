@@ -1852,9 +1852,37 @@
     </section>
 
     <section class="view" id="view-messages" hidden>
-      <div class="card">
-        <div class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>Messages</div>
-        <div class="messages-feed-list"></div>
+      <div class="msgapp">
+        <div class="msgapp-sidebar">
+          <div class="msgapp-sidebar-head">
+            <div class="msgapp-sidebar-title">Messages</div>
+            <div class="msgapp-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="msgappSearch" placeholder="Search people or departments&hellip;">
+            </div>
+          </div>
+          <div class="msgapp-contact-list" id="msgappContactList"></div>
+        </div>
+        <div class="msgapp-panel">
+          <div class="msgapp-empty" id="msgappEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>
+            <p>Pick someone from the list to see the conversation.</p>
+          </div>
+          <div class="msgapp-thread-wrap" id="msgappThreadWrap" hidden>
+            <div class="msgapp-panel-head">
+              <span class="msgapp-panel-avatar" id="msgappPanelAvatar"></span>
+              <div class="msgapp-panel-headtext">
+                <div class="msgapp-panel-title" id="msgappPanelTitle"></div>
+                <div class="msgapp-panel-sub" id="msgappPanelSub"></div>
+              </div>
+            </div>
+            <div class="msgapp-thread" id="msgappThread"></div>
+            <div class="msgapp-composer">
+              <textarea id="msgappInput" rows="1" placeholder="Write a message&hellip;"></textarea>
+              <button type="button" id="msgappSendBtn" class="msgapp-send-btn" aria-label="Send message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

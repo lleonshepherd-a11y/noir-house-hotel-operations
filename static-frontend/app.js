@@ -679,6 +679,7 @@
       if (typeof window.renderActivityFeed === 'function') window.renderActivityFeed();
       if (typeof window.renderFhActivity === 'function') window.renderFhActivity();
       if (typeof window.renderDeptActivity === 'function') window.renderDeptActivity();
+      if (typeof window.renderMessagesApp === 'function') window.renderMessagesApp();
     }
     window.renderMainMessagesList = renderMainMessagesList;
 
@@ -3232,18 +3233,21 @@
     // Named managers, not departments - a manager isn't tied to one
     // department board the way "Restaurant" or "Kitchen" is, so they get
     // their own section in the same compose drawer rather than being
-    // mixed into the department grid above. Mock data for now: swapping
-    // this for the real manager directory (already has its own table -
-    // see managers/manager_sessions) is the only change needed later.
-    var MANAGER_ICONS = {
-      'General Manager': { grad: '#f2604e,#f79c8f', initials: 'GM' },
-      'Assistant Manager': { grad: '#7b6ef6,#c3bdfb', initials: 'AM' },
-      'Food & Beverage Manager': { grad: '#c17b52,#e3ad86', initials: 'FB' },
-      'Head Chef': { grad: '#f2a63f,#f7c987', initials: 'HC' },
-      'Head of Housekeeping': { grad: '#28b774,#7fe0ab', initials: 'HH' },
-      'Restaurant Manager': { grad: '#3b5bfd,#7b91ff', initials: 'RM' }
-    };
-    window.MANAGER_ICONS = MANAGER_ICONS;
+    // mixed into the department grid above. Real people, so the name is
+    // what's shown first, with the role as a subtitle - not a department
+    // colour system, so no colour-coded icons here, just a plain initial.
+    // Mock data for now: swapping this for the real manager directory
+    // (already has its own table - see managers/manager_sessions) is the
+    // only change needed later.
+    var MANAGERS = [
+      { name: 'John', role: 'General Manager' },
+      { name: 'Priya', role: 'Assistant Manager' },
+      { name: 'Marcus', role: 'Food & Beverage Manager' },
+      { name: 'Elena', role: 'Head Chef' },
+      { name: 'Grace', role: 'Head of Housekeeping' },
+      { name: 'Sandra', role: 'Restaurant Manager' }
+    ];
+    window.MANAGERS = MANAGERS;
     var managerRow = document.getElementById('managerRow');
 
     function deptPriorityList() {
@@ -3262,11 +3266,10 @@
 
     var deptRowAll = document.getElementById('deptRowAll');
 
-    function managerButtonHtml(name) {
-      var meta = MANAGER_ICONS[name];
-      return '<button type="button" class="manager-btn' + (selectedDept === name ? ' on' : '') + '" data-dept="' + escapeHtml(name) + '">' +
-        '<span class="manager-avatar" style="background:linear-gradient(135deg,' + meta.grad + ')">' + meta.initials + '</span>' +
-        '<span class="manager-name">' + escapeHtml(name) + '</span></button>';
+    function managerButtonHtml(m) {
+      return '<button type="button" class="manager-btn' + (selectedDept === m.name ? ' on' : '') + '" data-dept="' + escapeHtml(m.name) + '">' +
+        '<span class="manager-avatar">' + escapeHtml(m.name.charAt(0)) + '</span>' +
+        '<span class="manager-name-role"><span class="manager-name">' + escapeHtml(m.name) + '</span><span class="manager-role">' + escapeHtml(m.role) + '</span></span></button>';
     }
 
     function renderDeptGrid() {
@@ -3274,7 +3277,7 @@
       deptRow.innerHTML = deptPriorityList().map(function (row) {
         return deptButtonHtml(row.dept);
       }).join('');
-      if (managerRow) managerRow.innerHTML = Object.keys(MANAGER_ICONS).map(managerButtonHtml).join('');
+      if (managerRow) managerRow.innerHTML = MANAGERS.map(managerButtonHtml).join('');
     }
 
     function selectDept(dept, btn) {
@@ -3412,6 +3415,203 @@
     closeBtn.addEventListener('click', closeDrawer);
     backdrop.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+
+    // The main Messages view (rail icon): one unified contact list -
+    // managers (by name, with their role underneath) and departments,
+    // sorted together by recent activity - with a familiar chat-app thread
+    // on the right, built deliberately close to WhatsApp/Messenger so
+    // there's next to no learning curve for staff. Managers are mock data
+    // for now (no real manager-to-manager messaging backend yet); real
+    // departments reuse the same /api/messages the rest of the dashboard
+    // already talks to. Nested in this same scope (not a new sibling
+    // IIFE) so it can see threads/DEPT_ICONS/MANAGERS/unreadDepts
+    // directly, same as everything else above it.
+    var contactListEl = document.getElementById('msgappContactList');
+    if (!contactListEl) return;
+    var emptyEl = document.getElementById('msgappEmpty');
+    var threadWrap = document.getElementById('msgappThreadWrap');
+    var panelAvatar = document.getElementById('msgappPanelAvatar');
+    var panelTitle = document.getElementById('msgappPanelTitle');
+    var panelSub = document.getElementById('msgappPanelSub');
+    var threadEl = document.getElementById('msgappThread');
+    var msgInput = document.getElementById('msgappInput');
+    var sendBtnEl = document.getElementById('msgappSendBtn');
+    var searchInput = document.getElementById('msgappSearch');
+
+    // Same shape as the department threads (see the compose drawer
+    // above) so one render path handles both - swapping this for a real
+    // manager-messaging API later only means changing where this data
+    // comes from, not how it's displayed.
+    var managerThreads = {
+      'Sandra': [
+        { from: 'Sandra', text: 'Can we push the private dining booking to 8:30 instead of 8?', time: '14:02' },
+        { from: 'You', text: "That works, I'll let the kitchen know to adjust prep timing.", time: '14:04' },
+        { from: 'Sandra', text: 'Perfect, thank you.', time: '14:05' }
+      ],
+      'John': [
+        { from: 'John', text: 'Approved, go ahead with the boiler part order.', time: '13:31' }
+      ],
+      'Elena': [
+        { from: 'Elena', text: "Allergen sheet updated for tonight's tasting menu.", time: '12:48' }
+      ],
+      'Grace': [
+        { from: 'Grace', text: 'Room 402 will be ready by 1pm for the early arrival.', time: '11:20' }
+      ],
+      'Priya': [],
+      'Marcus': []
+    };
+
+    function escapeHtml2(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+    function initialsOf(name) { return name.charAt(0).toUpperCase(); }
+
+    var activeKey = null; // 'manager:Sandra' or 'dept:Restaurant'
+
+    function scoreOf(msgs, unread) {
+      var urgentCount = msgs.filter(function (m) { return m.urgent; }).length;
+      return urgentCount * 1000 + (unread ? 100 : 0) + msgs.length;
+    }
+
+    function buildContacts() {
+      var managerContacts = MANAGERS.map(function (m) {
+        var msgs = managerThreads[m.name] || [];
+        var last = msgs[msgs.length - 1];
+        return {
+          key: 'manager:' + m.name, kind: 'manager', name: m.name, sub: m.role,
+          lastText: last ? (last.from === 'You' ? 'You: ' : '') + last.text : 'No messages yet',
+          time: last ? last.time : '', unread: false, urgent: false,
+          score: scoreOf(msgs, false)
+        };
+      });
+      var deptNames = Object.keys(DEPT_ICONS).filter(function (d) { return d !== 'General Manager' && d !== 'You' && d !== 'All departments'; });
+      var deptContacts = deptNames.map(function (d) {
+        var msgs = threads[d] || [];
+        var last = msgs[msgs.length - 1];
+        var unread = !!unreadDepts[d];
+        var urgentCount = msgs.filter(function (m) { return m.urgent; }).length;
+        return {
+          key: 'dept:' + d, kind: 'dept', name: d, sub: null,
+          lastText: last ? (last.from === 'You' ? 'You: ' : '') + last.text : 'No messages yet',
+          time: last ? last.time : '', unread: unread, urgent: urgentCount > 0,
+          score: scoreOf(msgs, unread)
+        };
+      });
+      managerContacts.sort(function (a, b) { return b.score - a.score; });
+      deptContacts.sort(function (a, b) { return b.score - a.score; });
+      return { managers: managerContacts, depts: deptContacts };
+    }
+
+    function contactRowHtml(c) {
+      var avatarClass = c.kind === 'dept' ? 'msgapp-avatar dept' : 'msgapp-avatar';
+      var avatarText = c.kind === 'dept' ? c.name.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() : initialsOf(c.name);
+      return '<button type="button" class="msgapp-contact' + (activeKey === c.key ? ' on' : '') + '" data-key="' + c.key + '">' +
+        '<span class="' + avatarClass + '">' + avatarText + '</span>' +
+        '<span class="msgapp-contact-body">' +
+        '<span class="msgapp-contact-top"><span class="msgapp-contact-name">' + escapeHtml2(c.name) + '</span><span class="msgapp-contact-time">' + escapeHtml2(c.time) + '</span></span>' +
+        '<span class="msgapp-contact-sub-row"><span class="msgapp-contact-sub' + (c.urgent ? ' urgent' : '') + '">' + escapeHtml2(c.lastText) + '</span>' + (c.unread ? '<span class="msgapp-unread-dot"></span>' : '') + '</span>' +
+        (c.sub ? '<span class="msgapp-contact-role">' + escapeHtml2(c.sub) + '</span>' : '') +
+        '</span></button>';
+    }
+
+    function renderContactList() {
+      var query = (searchInput.value || '').trim().toLowerCase();
+      var groups = buildContacts();
+      var filterFn = function (c) { return !query || c.name.toLowerCase().indexOf(query) !== -1 || (c.sub || '').toLowerCase().indexOf(query) !== -1; };
+      var managers = groups.managers.filter(filterFn);
+      var depts = groups.depts.filter(filterFn);
+      var html = '';
+      if (managers.length) html += '<div class="msgapp-section-label">Managers</div>' + managers.map(contactRowHtml).join('');
+      if (depts.length) html += '<div class="msgapp-section-label">Departments</div>' + depts.map(contactRowHtml).join('');
+      contactListEl.innerHTML = html || '<div class="msgapp-section-label">No matches</div>';
+    }
+
+    function threadFor(kind, name) {
+      return kind === 'manager' ? (managerThreads[name] || (managerThreads[name] = [])) : (threads[name] || (threads[name] = []));
+    }
+
+    function renderThreadBubbles(msgs) {
+      threadEl.innerHTML = msgs.length ? ('<div class="msgapp-day-label">Today</div>' + msgs.map(function (m) {
+        var out = m.from === 'You';
+        return '<div class="msgapp-msg ' + (out ? 'out' : 'in') + (m.urgent ? ' urgent' : '') + '">' +
+          (out ? '' : '<span class="msgapp-msg-sender">' + escapeHtml2(m.from) + '</span>') +
+          '<div class="msgapp-bubble">' + escapeHtml2(m.text) + '</div>' +
+          '<div class="msgapp-msg-meta">' + escapeHtml2(m.time) + '</div>' +
+          '</div>';
+      }).join('')) : '<div class="msgapp-day-label">No messages yet, say hello</div>';
+      threadEl.scrollTop = threadEl.scrollHeight;
+    }
+
+    function openContact(kind, name, sub) {
+      activeKey = kind + ':' + name;
+      if (kind === 'dept') unreadDepts[name] = false;
+      emptyEl.hidden = true;
+      threadWrap.hidden = false;
+      panelAvatar.className = kind === 'dept' ? 'msgapp-panel-avatar dept' : 'msgapp-panel-avatar';
+      panelAvatar.textContent = kind === 'dept' ? name.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() : initialsOf(name);
+      panelTitle.textContent = name;
+      panelSub.textContent = sub || 'Department';
+
+      if (kind === 'dept' && window.authHeaders && window.authHeaders() && window.ensureDepartments) {
+        window.ensureDepartments().then(function (map) {
+          var otherId = map && map[name];
+          if (!otherId) { renderThreadBubbles(threadFor(kind, name)); return; }
+          return fetch('/api/messages?withDepartmentId=' + encodeURIComponent(otherId), { headers: window.authHeaders() })
+            .then(function (r) { return r.ok ? r.json() : { messages: [] }; })
+            .then(function (data) {
+              var viewerDept = document.getElementById('deptSelectLabel').textContent.trim();
+              var mapped = (data.messages || []).map(function (m) {
+                return { from: m.sender_department === viewerDept ? 'You' : m.sender_department, text: m.body, time: new Date(m.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }), urgent: m.urgency === 'urgent' || m.urgency === 'emergency' };
+              });
+              renderThreadBubbles(mapped);
+            });
+        }).catch(function () { renderThreadBubbles(threadFor(kind, name)); });
+      } else {
+        renderThreadBubbles(threadFor(kind, name));
+      }
+      renderContactList();
+    }
+
+    contactListEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.msgapp-contact');
+      if (!btn) return;
+      var parts = btn.dataset.key.split(':');
+      var kind = parts[0], name = parts.slice(1).join(':');
+      var manager = MANAGERS.filter(function (m) { return m.name === name; })[0];
+      openContact(kind, name, manager ? manager.role : null);
+    });
+
+    searchInput.addEventListener('input', renderContactList);
+
+    function updateMsgAppSendState() { sendBtnEl.disabled = msgInput.value.trim() === ''; }
+    msgInput.addEventListener('input', function () {
+      msgInput.style.height = 'auto';
+      msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+      updateMsgAppSendState();
+    });
+    msgInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFromPanel(); }
+    });
+
+    function sendFromPanel() {
+      if (!activeKey) return;
+      var text = msgInput.value.trim();
+      if (!text) return;
+      var parts = activeKey.split(':');
+      var kind = parts[0], name = parts.slice(1).join(':');
+      var entry = { from: 'You', text: text, time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }) };
+      threadFor(kind, name).push(entry);
+      renderThreadBubbles(threadFor(kind, name));
+      renderContactList();
+      if (kind === 'dept' && window.createMessageOnServer) window.createMessageOnServer(name, text, false, entry);
+      msgInput.value = '';
+      msgInput.style.height = 'auto';
+      updateMsgAppSendState();
+      msgInput.focus();
+    }
+    sendBtnEl.addEventListener('click', sendFromPanel);
+    updateMsgAppSendState();
+
+    window.renderMessagesApp = renderContactList;
+    renderContactList();
   })();
 
   (function () {
@@ -4191,12 +4391,12 @@
   (function () {
     var buttons = Array.prototype.slice.call(document.querySelectorAll('.rail button[data-view]'));
     buttons.forEach(function (button) {
-      if (button.dataset.view === 'messages') {
-        button.addEventListener('click', function (e) {
-          if (window.triggerNewMessage) window.triggerNewMessage(e);
-        });
-        return;
-      }
+      // Messages now has a real destination (the WhatsApp-style hub in
+      // view-messages), so this falls through to the plain view-switcher
+      // below like Home/Tasks do, instead of shortcutting straight to
+      // the quick-compose popup. Quick compose still has its own button
+      // in the topbar (round-btn) for raising a new message from
+      // anywhere without leaving the page.
       if (button.dataset.view === 'guest') {
         button.addEventListener('click', function () {
           document.getElementById('guestQBtn').click();
