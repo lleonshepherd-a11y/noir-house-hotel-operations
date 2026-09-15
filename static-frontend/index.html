@@ -1134,6 +1134,34 @@
         </div>
       </div>
       <div class="col">
+        <div class="card concierge-card">
+          <div class="cg-head">
+            <div class="cg-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5a8 8 0 0 1 16 0"/><path d="M2.5 17.5h19"/><circle cx="12" cy="6.7" r="1.3" fill="#fff" stroke="none"/></svg></div>
+            <div class="cg-head-text">
+              <div class="cg-title">Concierge Requests</div>
+              <div class="cg-sub">Tables, transport, tickets, recommendations, luggage</div>
+            </div>
+            <span class="cg-count" id="cgCount">0</span>
+          </div>
+          <form class="cg-form" id="cgForm">
+            <div class="cg-type-row" id="cgTypeRow">
+              <button type="button" class="cg-type-btn on" data-type="restaurant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7"/></svg>Restaurant</button>
+              <button type="button" class="cg-type-btn" data-type="transport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2v-6l-3-5H6L3 11v6h2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>Transport</button>
+              <button type="button" class="cg-type-btn" data-type="tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>Tickets</button>
+              <button type="button" class="cg-type-btn" data-type="recommendation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Recommend</button>
+              <button type="button" class="cg-type-btn" data-type="luggage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>Luggage</button>
+              <button type="button" class="cg-type-btn" data-type="other"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 2.4 7.2H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>Other</button>
+            </div>
+            <div class="cg-form-row">
+              <input type="text" id="cgRoom" placeholder="Room (optional)">
+              <input type="text" id="cgGuest" placeholder="Guest name (optional)">
+            </div>
+            <textarea id="cgDetails" placeholder="What do they need?" rows="2" required></textarea>
+            <button type="submit" class="cg-submit-btn">Log request</button>
+          </form>
+          <div class="cg-list" id="cgList"><div class="cg-empty">Loading&hellip;</div></div>
+        </div>
+
         <div class="card msg-hub-card">
           <div class="msg-hub-head">
             <div class="msg-hub-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>Messages</div>
@@ -3153,6 +3181,61 @@
   .maint-ticket-check{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-mid);cursor:pointer}
   .maint-ticket-form-row button{margin-left:auto;height:34px;padding:0 16px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
   .maint-ticket-form-row button:hover{background:#2f4de0}
+
+  /* Concierge's own board: not a complaint list (that's Front of House's
+     Guest Issues) but arrangements to make - a table, a taxi, tickets, a
+     recommendation, luggage. Same single-advance-button lifecycle as
+     maintenance tickets, with a coloured icon per request type so the
+     list reads at a glance instead of needing the label read out. */
+  .concierge-card{padding:24px}
+  .cg-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .cg-head-icon{flex:0 0 auto;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 16px rgba(20,20,22,.22)}
+  .cg-head-icon svg{width:18px;height:18px}
+  .cg-head-text{flex:1 1 auto;min-width:0}
+  .cg-title{font-size:15.5px;font-weight:700;color:var(--ink)}
+  .cg-sub{font-size:12px;color:var(--ink-dim);margin-top:2px}
+  .cg-count{flex:0 0 auto;font-size:12px;font-weight:800;color:var(--ink-mid);background:var(--page);border-radius:100px;padding:3px 11px}
+
+  .cg-type-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .cg-type-btn{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);background:var(--page);color:var(--ink-mid);font:inherit;font-size:11.5px;font-weight:700;padding:6px 11px 6px 8px;border-radius:100px;cursor:pointer}
+  .cg-type-btn svg{width:14px;height:14px}
+  .cg-type-btn.on{border-color:var(--cg-accent,var(--blue));background:var(--cg-accent-wash,var(--blue-wash));color:var(--cg-accent,var(--blue))}
+  .cg-type-btn[data-type="restaurant"].on{--cg-accent:#3b5bfd;--cg-accent-wash:#eef1ff}
+  .cg-type-btn[data-type="transport"].on{--cg-accent:#7b6ef6;--cg-accent-wash:rgba(123,110,246,.12)}
+  .cg-type-btn[data-type="tickets"].on{--cg-accent:#a5690a;--cg-accent-wash:rgba(242,166,63,.16)}
+  .cg-type-btn[data-type="recommendation"].on{--cg-accent:#1c8a58;--cg-accent-wash:rgba(40,183,116,.14)}
+  .cg-type-btn[data-type="luggage"].on{--cg-accent:#5a5c68;--cg-accent-wash:#eef0f3}
+  .cg-type-btn[data-type="other"].on{--cg-accent:#d1488a;--cg-accent-wash:rgba(209,72,138,.12)}
+
+  .cg-form{display:flex;flex-direction:column;gap:8px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+  .cg-form-row{display:flex;gap:8px}
+  .cg-form input[type="text"],.cg-form textarea{font:inherit;font-size:13px;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--page);resize:none;width:100%}
+  .cg-form input[type="text"]:focus,.cg-form textarea:focus{outline:2px solid var(--blue);outline-offset:1px;background:#fff}
+  .cg-submit-btn{align-self:flex-end;height:34px;padding:0 16px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  .cg-submit-btn:hover{background:#2f4de0}
+
+  .cg-list{display:flex;flex-direction:column;gap:10px}
+  .cg-empty{font-size:13px;color:var(--ink-dim);padding:14px 0;text-align:center}
+  .cg-item{display:flex;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .cg-item-icon{flex:0 0 auto;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--cg-accent-wash,var(--page));color:var(--cg-accent,var(--ink-mid))}
+  .cg-item-icon svg{width:15px;height:15px}
+  .cg-item[data-type="restaurant"]{--cg-accent:#3b5bfd;--cg-accent-wash:#eef1ff}
+  .cg-item[data-type="transport"]{--cg-accent:#7b6ef6;--cg-accent-wash:rgba(123,110,246,.12)}
+  .cg-item[data-type="tickets"]{--cg-accent:#a5690a;--cg-accent-wash:rgba(242,166,63,.16)}
+  .cg-item[data-type="recommendation"]{--cg-accent:#1c8a58;--cg-accent-wash:rgba(40,183,116,.14)}
+  .cg-item[data-type="luggage"]{--cg-accent:#5a5c68;--cg-accent-wash:#eef0f3}
+  .cg-item[data-type="other"]{--cg-accent:#d1488a;--cg-accent-wash:rgba(209,72,138,.12)}
+  .cg-item-body{flex:1 1 auto;min-width:0}
+  .cg-item-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .cg-item-who{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .cg-item-time{font-size:11px;color:var(--ink-dim);white-space:nowrap}
+  .cg-item-details{font-size:13px;color:var(--ink-mid);line-height:1.5;margin-top:2px}
+  .cg-item-bottom{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .cg-item-status{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 9px;border-radius:100px;background:var(--page);color:var(--ink-mid)}
+  .cg-item-status.st-arranged{background:rgba(59,91,253,.12);color:var(--blue)}
+  .cg-item-status.st-confirmed{background:rgba(40,183,116,.14);color:var(--green)}
+  .cg-item-advance{margin-left:auto;flex:0 0 auto;height:28px;padding:0 12px;border:1px solid var(--line);border-radius:100px;background:#fff;color:var(--ink);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+  .cg-item-advance:hover{background:var(--page)}
 
   .powered-by{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:32px 0 8px;font-size:12px;color:var(--ink)}
   .powered-by svg{width:15px;height:15px;color:var(--ink)}
@@ -6613,6 +6696,134 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         setInterval(function () { SHIFT_DEPT_NAMES.forEach(load); }, 30000);
       })();
 
+      // Concierge's own board: guest requests (not complaints) with a
+      // room/guest, a type, and the same one-button lifecycle as
+      // maintenance tickets. Backed by /api/concierge-requests.
+      (function () {
+        var list = document.getElementById('cgList');
+        if (!list) return;
+        var form = document.getElementById('cgForm');
+        var typeRow = document.getElementById('cgTypeRow');
+        var roomInput = document.getElementById('cgRoom');
+        var guestInput = document.getElementById('cgGuest');
+        var detailsInput = document.getElementById('cgDetails');
+        var countEl = document.getElementById('cgCount');
+        var selectedType = 'restaurant';
+
+        var TYPE_LABEL = { restaurant: 'Restaurant', transport: 'Transport', tickets: 'Tickets', recommendation: 'Recommend', luggage: 'Luggage', other: 'Other' };
+        var TYPE_ICON = {
+          restaurant: '<path d="M3 2v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7"/>',
+          transport: '<path d="M19 17h2v-6l-3-5H6L3 11v6h2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/>',
+          tickets: '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>',
+          recommendation: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+          luggage: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+          other: '<path d="m12 2 2.4 7.2H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z"/>',
+        };
+        var STATUS_LABEL = { open: 'Open', arranged: 'Arranged', confirmed: 'Confirmed' };
+        var ADVANCE_LABEL = { open: 'Mark arranged', arranged: 'Mark confirmed' };
+        var NEXT_DEMO_STATUS = { open: 'arranged', arranged: 'confirmed' };
+
+        function escapeHtml(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+        function formatTime(iso) { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); }
+
+        Array.prototype.forEach.call(typeRow.querySelectorAll('.cg-type-btn'), function (btn) {
+          btn.addEventListener('click', function () {
+            selectedType = btn.dataset.type;
+            Array.prototype.forEach.call(typeRow.querySelectorAll('.cg-type-btn'), function (b) { b.classList.toggle('on', b === btn); });
+          });
+        });
+
+        function who(r) {
+          var bits = [];
+          if (r.roomNumber) bits.push('Room ' + r.roomNumber);
+          if (r.guestName) bits.push(r.guestName);
+          return bits.length ? bits.join(' · ') : TYPE_LABEL[r.requestType] || 'Request';
+        }
+
+        function itemHtml(r) {
+          var advance = ADVANCE_LABEL[r.status]
+            ? '<button type="button" class="cg-item-advance" data-id="' + r.id + '">' + ADVANCE_LABEL[r.status] + '</button>'
+            : '';
+          return '<div class="cg-item" data-type="' + r.requestType + '">' +
+            '<div class="cg-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (TYPE_ICON[r.requestType] || TYPE_ICON.other) + '</svg></div>' +
+            '<div class="cg-item-body">' +
+            '<div class="cg-item-top"><span class="cg-item-who">' + escapeHtml(who(r)) + '</span><span class="cg-item-time">' + formatTime(r.createdAt) + '</span></div>' +
+            '<div class="cg-item-details">' + escapeHtml(r.details) + '</div>' +
+            '<div class="cg-item-bottom"><span class="cg-item-status st-' + r.status + '">' + STATUS_LABEL[r.status] + '</span>' + advance + '</div>' +
+            '</div></div>';
+        }
+
+        // Shown only when there's no real staff session and the board is
+        // genuinely empty, same convention as maintenance tickets - a
+        // prospective hotel still sees what a working request looks like.
+        var DEMO_REQUESTS = [
+          { id: 'demo-cg-1', roomNumber: '312', guestName: 'Mr. Whitfield', requestType: 'restaurant', details: 'Table for 2 at the rooftop restaurant, 8pm, anniversary, quiet corner if possible.', status: 'open', createdAt: new Date(Date.now() - 15 * 60000).toISOString() },
+          { id: 'demo-cg-2', roomNumber: '204', guestName: null, requestType: 'transport', details: 'Airport taxi for 3 guests, pickup 6:30am tomorrow.', status: 'arranged', createdAt: new Date(Date.now() - 50 * 60000).toISOString() },
+          { id: 'demo-cg-3', roomNumber: null, guestName: 'Ms. Okafor', requestType: 'tickets', details: 'Two tickets to the evening river cruise, tonight if available.', status: 'open', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
+        ];
+
+        function render(requests) {
+          var isDemo = !(window.authHeaders && window.authHeaders());
+          var showRequests = requests.length ? requests : (isDemo ? DEMO_REQUESTS : []);
+          list.innerHTML = showRequests.length
+            ? showRequests.map(itemHtml).join('')
+            : '<div class="cg-empty">Nothing outstanding right now.</div>';
+          countEl.textContent = showRequests.filter(function (r) { return r.status !== 'confirmed'; }).length;
+        }
+
+        function load() {
+          list.innerHTML = '<div class="cg-empty">Loading&hellip;</div>';
+          fetch('/api/concierge-requests?department=Concierge')
+            .then(function (r) { return r.ok ? r.json() : { requests: [] }; })
+            .then(function (data) { render(data.requests || []); })
+            .catch(function () { render([]); });
+        }
+
+        window.loadConciergeRequests = function (dept) {
+          if (dept === 'Concierge') load();
+        };
+
+        list.addEventListener('click', function (e) {
+          var btn = e.target.closest('.cg-item-advance');
+          if (!btn) return;
+          if (btn.dataset.id.indexOf('demo-') === 0) {
+            var demo = DEMO_REQUESTS.filter(function (r) { return r.id === btn.dataset.id; })[0];
+            if (demo) { demo.status = NEXT_DEMO_STATUS[demo.status] || demo.status; render([]); }
+            return;
+          }
+          btn.disabled = true;
+          fetch('/api/concierge-requests?id=' + encodeURIComponent(btn.dataset.id), { method: 'PATCH' })
+            .then(function () { load(); });
+        });
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var details = detailsInput.value.trim();
+          if (!details) return;
+          var submitBtn = form.querySelector('button[type="submit"]');
+          submitBtn.disabled = true;
+          fetch('/api/concierge-requests?department=Concierge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomNumber: roomInput.value.trim(),
+              guestName: guestInput.value.trim(),
+              requestType: selectedType,
+              details: details,
+            }),
+          }).then(function (r) {
+            submitBtn.disabled = false;
+            if (!r.ok) return;
+            roomInput.value = '';
+            guestInput.value = '';
+            detailsInput.value = '';
+            load();
+          }, function () { submitBtn.disabled = false; });
+        });
+
+        if (document.querySelector('.dash-panel[data-dash="Concierge"]:not([hidden])')) load();
+      })();
+
       (function () {
         var DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
         var PIN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
@@ -7728,6 +7939,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (window.loadMaintenanceTickets) window.loadMaintenanceTickets(dept);
       if (window.loadApprovalsForActiveDept) window.loadApprovalsForActiveDept(dept);
       if (window.loadShiftForActiveDept) window.loadShiftForActiveDept(dept);
+      if (window.loadConciergeRequests) window.loadConciergeRequests(dept);
     }
     window.switchDashboard = switchDashboard;
 
