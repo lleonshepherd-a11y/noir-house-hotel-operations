@@ -3229,6 +3229,23 @@
     var composeTo = document.getElementById('composeTo');
     var selectedDept = 'All departments';
 
+    // Named managers, not departments - a manager isn't tied to one
+    // department board the way "Restaurant" or "Kitchen" is, so they get
+    // their own section in the same compose drawer rather than being
+    // mixed into the department grid above. Mock data for now: swapping
+    // this for the real manager directory (already has its own table -
+    // see managers/manager_sessions) is the only change needed later.
+    var MANAGER_ICONS = {
+      'General Manager': { grad: '#f2604e,#f79c8f', initials: 'GM' },
+      'Assistant Manager': { grad: '#7b6ef6,#c3bdfb', initials: 'AM' },
+      'Food & Beverage Manager': { grad: '#c17b52,#e3ad86', initials: 'FB' },
+      'Head Chef': { grad: '#f2a63f,#f7c987', initials: 'HC' },
+      'Head of Housekeeping': { grad: '#28b774,#7fe0ab', initials: 'HH' },
+      'Restaurant Manager': { grad: '#3b5bfd,#7b91ff', initials: 'RM' }
+    };
+    window.MANAGER_ICONS = MANAGER_ICONS;
+    var managerRow = document.getElementById('managerRow');
+
     function deptPriorityList() {
       var names = Object.keys(DEPT_ICONS).filter(function (d) { return d !== 'General Manager' && d !== 'You' && d !== 'All departments'; });
       return names.map(function (d) {
@@ -3245,17 +3262,26 @@
 
     var deptRowAll = document.getElementById('deptRowAll');
 
+    function managerButtonHtml(name) {
+      var meta = MANAGER_ICONS[name];
+      return '<button type="button" class="manager-btn' + (selectedDept === name ? ' on' : '') + '" data-dept="' + escapeHtml(name) + '">' +
+        '<span class="manager-avatar" style="background:linear-gradient(135deg,' + meta.grad + ')">' + meta.initials + '</span>' +
+        '<span class="manager-name">' + escapeHtml(name) + '</span></button>';
+    }
+
     function renderDeptGrid() {
       deptRowAll.innerHTML = deptButtonHtml('All departments');
       deptRow.innerHTML = deptPriorityList().map(function (row) {
         return deptButtonHtml(row.dept);
       }).join('');
+      if (managerRow) managerRow.innerHTML = Object.keys(MANAGER_ICONS).map(managerButtonHtml).join('');
     }
 
     function selectDept(dept, btn) {
       selectedDept = dept;
       Array.prototype.forEach.call(deptRowAll.querySelectorAll('.dept-btn'), function (c) { c.classList.remove('on'); });
       Array.prototype.forEach.call(deptRow.querySelectorAll('.dept-btn'), function (c) { c.classList.remove('on'); });
+      if (managerRow) Array.prototype.forEach.call(managerRow.querySelectorAll('.manager-btn'), function (c) { c.classList.remove('on'); });
       btn.classList.add('on');
       input.placeholder = dept === 'All departments' ? 'Write your message…' : 'Message ' + dept + '…';
       composeTo.innerHTML = 'To <strong>' + dept + '</strong>';
@@ -3267,8 +3293,14 @@
       if (!btn) return;
       selectDept(btn.dataset.dept, btn);
     }
+    function onManagerClick(e) {
+      var btn = e.target.closest('.manager-btn');
+      if (!btn) return;
+      selectDept(btn.dataset.dept, btn);
+    }
     deptRowAll.addEventListener('click', onDeptClick);
     deptRow.addEventListener('click', onDeptClick);
+    if (managerRow) managerRow.addEventListener('click', onManagerClick);
 
     function currentDept() {
       return selectedDept;

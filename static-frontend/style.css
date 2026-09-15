@@ -595,6 +595,17 @@
   .dept-btn.on{background:rgba(59,91,253,.1);color:var(--blue);border-color:rgba(59,91,253,.16);box-shadow:none}
   .dept-btn.on svg{color:var(--blue)}
 
+  /* Messaging a named manager is a different kind of recipient to a
+     department, so its own section label plus a small round-avatar
+     treatment (initials on a colour, like a real person) keeps it
+     visually distinct from the plain department buttons above it. */
+  .manager-section{border-top:1px solid var(--line);padding-top:16px;margin-top:2px}
+  .manager-btn{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--page);color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:600;padding:10px 12px;border-radius:14px;cursor:pointer;text-align:left;transition:background .15s,color .15s,border-color .15s}
+  .manager-btn:hover{background:rgba(20,21,28,.07)}
+  .manager-btn.on{background:rgba(59,91,253,.1);color:var(--blue);border-color:rgba(59,91,253,.16)}
+  .manager-avatar{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.01em}
+  .manager-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
   .thread-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,.4);padding:14px 20px 0;flex:0 0 auto}
   .drawer-body{padding:8px 20px 16px;overflow-y:auto;flex:1 1 auto;scrollbar-width:none}
   .drawer-body::-webkit-scrollbar{display:none}
