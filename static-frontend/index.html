@@ -85,7 +85,11 @@
      department icons slide into it one at a time, same feel as the old
      dip's avatars, just housed in a clean floating bar instead of a
      cutout. */
-  .dept-notify-bar{flex:0 0 auto;display:flex;margin-left:16px}
+  /* Centered on the topbar itself (not wherever it happens to fall in the
+     flex row) so a notification always slides in to the middle of the
+     page, with equal space either side, instead of hugging the greeting
+     text on the left. */
+  .dept-notify-bar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;z-index:5}
   .dept-notify-bar[hidden]{display:none}
   .dept-notify-pill{display:flex;align-items:center;padding:6px;background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 10px 24px -10px rgba(20,21,28,.2)}
   .dept-notify-avatar{position:relative;width:40px;height:40px;border-radius:50%;margin-left:-10px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex:none;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(20,20,40,.16);transition:transform .15s ease;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);animation:urgent-card-in .45s cubic-bezier(.16,1,.3,1)}
