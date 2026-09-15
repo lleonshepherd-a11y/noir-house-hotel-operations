@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* The hidden attribute must always win over any display:X rule elsewhere in
-     this file, no matter how that rule is written or when it was added — an
+     this file, no matter how that rule is written or when it was added, since an
      element with its own display:flex/grid/block otherwise silently ignores
      hidden, since author CSS always beats the browser's own default styling
      for [hidden] regardless of selector specificity. This one rule is the
@@ -265,14 +265,14 @@
   .glance-card{padding:0;overflow:hidden;display:flex;flex-direction:column}
   /* The relocated topbar lands as this card's first child, but the card
      itself has no padding of its own (its other rows manage their own
-     insets) - give the topbar its own so the greeting doesn't sit flush
-     against the card's edges. */
+     insets), so this gives the topbar its own, keeping the greeting from
+     sitting flush against the card's edges. */
   .glance-card > .topbar{padding:22px 26px 18px}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 26px;flex-wrap:wrap}
   /* The clock/date/weather cluster belongs on the left, with the
-     "Live - updated" text on the right - it was flipped at some point,
-     so put it back without touching every other .glance-head (many
-     have nothing to do with this clock row). */
+     "Live · updated" text on the right. It was flipped at some point,
+     so this puts it back without touching every other .glance-head
+     (many have nothing to do with this clock row). */
   .glance-head:has(.gm-compact-meta){flex-direction:row-reverse}
   .glance-head:not(.gm-compact-head){justify-content:flex-start}
   .glance-head-stats{flex:1 1 auto;justify-content:center}
@@ -283,7 +283,7 @@
   .gm-compact-date.wc-date-line{margin:0;font-size:16px}
   .gm-compact-weather{display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:600;color:var(--ink-mid);white-space:nowrap}
   .gm-compact-weather svg{width:17px;height:17px;color:var(--amber);flex:0 0 auto}
-  /* Always its own full-width row below the greeting/clock line - left
+  /* Always its own full-width row below the greeting/clock line. Left
      as flex:0 0 auto it only wrapped down there because the row ran out
      of horizontal space, so a wide enough desktop window let it sit
      inline instead and shoved the clock into the middle of the row.
@@ -1310,26 +1310,6 @@
 
 <div class="grid">
       <div class="col">
-        <div class="card checklist-card" data-checklist-dept="Restaurant">
-          <div class="checklist-eyebrow"><span class="checklist-eyebrow-dot"></span>RESTAURANT &middot; DAILY CHECKLIST</div>
-          <h2 class="checklist-board-title">Today&rsquo;s board</h2>
-          <p class="checklist-board-desc">Tap a task as you finish it. It fills in a piece of the board, and resets fresh at midnight.</p>
-          <div class="checklist-layout">
-            <div class="checklist-board-card">
-              <div class="checklist-board-wrap"><svg viewBox="0 0 300 300" class="checklist-board-svg"></svg>
-                <div class="checklist-board-center"><div class="checklist-board-num">0</div><div class="checklist-board-of">of 0 done</div></div>
-              </div>
-              <div class="checklist-legend">
-                <div class="checklist-legend-item"><span class="checklist-dot g-open"></span>Opening</div>
-                <div class="checklist-legend-item"><span class="checklist-dot g-service"></span>Service prep</div>
-                <div class="checklist-legend-item"><span class="checklist-dot g-close"></span>Closing</div>
-              </div>
-              <div class="checklist-board-note">Loading&hellip;</div>
-            </div>
-            <div class="checklist-groups"></div>
-          </div>
-        </div>
-
         <div class="card msg-hub-card">
           <div class="msg-hub-head">
             <div class="msg-hub-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>Messages</div>
@@ -1403,6 +1383,26 @@
             <span class="mf-count"></span>
           </div>
           <div class="ao-list" data-activity-dept="Restaurant"></div>
+        </div>
+
+        <div class="card checklist-card" data-checklist-dept="Restaurant">
+          <div class="checklist-eyebrow"><span class="checklist-eyebrow-dot"></span>RESTAURANT &middot; DAILY CHECKLIST</div>
+          <h2 class="checklist-board-title">Today&rsquo;s board</h2>
+          <p class="checklist-board-desc">Tap a task as you finish it. It fills in a piece of the board, and resets fresh at midnight.</p>
+          <div class="checklist-layout">
+            <div class="checklist-board-card">
+              <div class="checklist-board-wrap"><svg viewBox="0 0 300 300" class="checklist-board-svg"></svg>
+                <div class="checklist-board-center"><div class="checklist-board-num">0</div><div class="checklist-board-of">of 0 done</div></div>
+              </div>
+              <div class="checklist-legend">
+                <div class="checklist-legend-item"><span class="checklist-dot g-open"></span>Opening</div>
+                <div class="checklist-legend-item"><span class="checklist-dot g-service"></span>Service prep</div>
+                <div class="checklist-legend-item"><span class="checklist-dot g-close"></span>Closing</div>
+              </div>
+              <div class="checklist-board-note">Loading&hellip;</div>
+            </div>
+            <div class="checklist-groups"></div>
+          </div>
         </div>
 
         <div class="card handover-card">
@@ -2065,6 +2065,18 @@
         </div>
       </div>
       <div class="col">
+        <div class="card activity-card">
+          <div class="mf-head">
+            <div class="mf-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="mf-head-text">
+              <div class="mf-title">Live Activity</div>
+              <div class="mf-sub">Messages and tasks, in one place</div>
+            </div>
+            <span class="mf-count"></span>
+          </div>
+          <div class="ao-list" data-activity-dept="Maintenance"></div>
+        </div>
+
         <div class="card">
           <div class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.1-3.1a6 6 0 0 1-7.94 7.94l-6.16 6.16a2.12 2.12 0 0 1-3-3l6.16-6.16a6 6 0 0 1 7.94-7.94Z"/></svg>Maintenance tickets</div>
           <div class="maint-ticket-list" id="maintTicketList"><div class="maint-ticket-empty">Loading&hellip;</div></div>
@@ -2148,18 +2160,6 @@
             <div class="tb-post"><div class="tb-post-body"><div class="tb-post-head"><span class="tb-post-name">General Manager</span><span class="tb-post-time">Wed &middot; 08:40</span></div><p class="tb-post-text">Great response time on the Room 118 leak, appreciated by the whole front desk team.</p></div></div>
             <div class="tb-post"><div class="tb-post-body"><div class="tb-post-head"><span class="tb-post-name">Maintenance</span><span class="tb-post-time">Thu &middot; 13:05</span></div><p class="tb-post-text">Boiler service is booked for next Tuesday morning, expect brief hot water interruption.</p></div></div>
           </div>
-        </div>
-
-        <div class="card activity-card">
-          <div class="mf-head">
-            <div class="mf-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
-            <div class="mf-head-text">
-              <div class="mf-title">Live Activity</div>
-              <div class="mf-sub">Messages and tasks, in one place</div>
-            </div>
-            <span class="mf-count"></span>
-          </div>
-          <div class="ao-list" data-activity-dept="Maintenance"></div>
         </div>
 
         <div class="card mf-card">
@@ -3062,7 +3062,7 @@
   .composer textarea:focus{outline:none;background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,91,253,.14)}
   /* Same two-row layout as the thread's reply composer (.conv-composer):
      an icons-only row, then an actions row with the pills and Send on
-     the right - one shared visual language for both message boxes. */
+     the right, one shared visual language for both message boxes. */
   .composer-row{display:flex;align-items:center;gap:8px;min-width:0}
   .composer-tools-row .tool-icons{margin-right:auto}
   .tool-icons{display:flex;align-items:center;gap:2px;min-width:0}
@@ -3097,8 +3097,8 @@
 
   /* A real maintenance ticket: room, description, priority and guest
      flags at a glance, one clear status pill, one button that always
-     moves it to the next stage - reported, then in progress, then
-     fixed, nothing to choose. */
+     moves it to the next stage (reported, then in progress, then
+     fixed), nothing to choose. */
   .maint-ticket-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
   .maint-ticket-empty{font-size:13px;color:var(--ink-dim);padding:14px 0;text-align:center}
   .maint-ticket{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
@@ -3129,7 +3129,7 @@
   .feed-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink);background:none;flex:0 0 auto}
   .feed-icon svg{width:19px;height:19px;flex:0 0 auto;display:block}
 
-  /* Messages preview: calm, flat enterprise list — no glass, no gradients */
+  /* Messages preview: calm, flat enterprise list, no glass, no gradients */
   .msg-hub-card{background:#fff;border:1px solid var(--line);box-shadow:0 2px 10px rgba(20,21,28,.05);border-radius:20px;padding:24px}
   .msg-hub-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
   .msg-hub-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--ink)}
@@ -3661,8 +3661,8 @@
   .ta-title{font-size:16px;font-weight:700;color:var(--ink)}
   .ta-sub{font-size:12.5px;color:var(--ink-dim);margin-top:4px;max-width:340px}
 
-  /* Room readiness projection - a calculation, not a new data source:
-     reads the same Rooms Ready board's done/doneAt state, so swapping
+  /* Room readiness projection: a calculation, not a new data source.
+     Reads the same Rooms Ready board's done/doneAt state, so swapping
      that board for a real PMS + housekeeping feed later carries this
      straight over with it. */
   .rrp-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
@@ -3810,7 +3810,7 @@
 
   /* Daily checklist: a circular board made of one wedge per task, coloured
      by shift phase, that fills in solid as the department works through its
-     own real, per-day list - plus the same list broken out by phase next to
+     own real, per-day list, plus the same list broken out by phase next to
      it so every task can still be tapped directly. */
   .checklist-card{padding:28px}
   .checklist-eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
@@ -4093,7 +4093,7 @@
   .opscal-legend-add{display:flex;align-items:center;gap:5px;border:1px dashed var(--oc-line);background:transparent;color:var(--blue);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px 6px 9px;cursor:pointer}
   .opscal-legend-add svg{width:13px;height:13px}
   /* Individual rounded tiles with a gap between them, rather than one
-     bordered card sliced up with grid lines - reads as a set of day
+     bordered card sliced up with grid lines. Reads as a set of day
      tiles you can pick out at a glance instead of a spreadsheet. */
   .opscal-grid-card{background:none;border:0;box-shadow:none;border-radius:0}
   .opscal-weekday-row{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:0;padding:0 2px}
@@ -4137,8 +4137,9 @@
      controls, same pattern as the department switcher elsewhere. */
   .opscal-type-select{position:relative}
   /* .opscal-add-form button (further down) styles the submit button by
-     plain element selector - beats a single class here on specificity,
-     so this needs the form-scoped compound selector to win instead. */
+     plain element selector, which beats a single class here on
+     specificity, so this needs the form-scoped compound selector to
+     win instead. */
   .opscal-add-form .opscal-type-btn{width:100%;grid-column:auto;justify-self:auto;height:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;font-size:13px;font-weight:600;color:var(--ink);border:1px solid var(--oc-line);border-radius:10px;padding:9px 10px;background:#fafbfd;cursor:pointer}
   .opscal-type-btn:focus{outline:2px solid var(--blue);outline-offset:1px;background:#fff}
   .opscal-type-btn .chev{width:13px;height:13px;color:var(--oc-dim);flex:0 0 auto;transition:transform .15s}
@@ -4184,7 +4185,7 @@
      is deliberately last in the stylesheet so it wins over every earlier
      rule at these widths without fighting specificity case by case. ---- */
   @media(max-width:640px){
-    /* Rail becomes a bottom tab bar - same buttons, same click handlers,
+    /* Rail becomes a bottom tab bar: same buttons, same click handlers,
        just laid out horizontally and pinned to the bottom of the screen,
        which is the pattern people actually expect on a phone. */
     .rail{
@@ -4202,15 +4203,15 @@
     .main{margin-left:0;padding:16px 14px 84px}
 
     /* Any header row that pairs a title with a pushed-right action button
-       needs to be allowed to wrap - otherwise the button sits on top of the
-       title text instead of dropping below it. */
+       needs to be allowed to wrap, otherwise the button sits on top of
+       the title text instead of dropping below it. */
     .glance-head-title-group,.top-row,.fh-status-stats{flex-wrap:wrap;row-gap:10px}
     .glance-clock{border-right:0;padding-right:0}
     .fh-status-stats .fh-stat{padding:0 14px 0 0;border-left:0}
 
     /* The GM overview numbers (arrivals/departures/guests/covers) were
-       wrapping unevenly as plain flex items - 3 to a row then 1 stranded
-       on its own - which read as cramped. A fixed 2x2 grid gives each
+       wrapping unevenly as plain flex items, 3 to a row then 1 stranded
+       on its own, which read as cramped. A fixed 2x2 grid gives each
        number its own even cell instead. */
     .gm-compact-stats{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;flex:1 1 100%}
     .gm-compact-stats .fh-stat{padding:0;border-left:0}
@@ -4239,7 +4240,7 @@
 
     /* The compose menu (Message a department / Announcement) is positioned
        right:0 relative to its own small trigger button, which sits fine
-       inside a full-width topbar - but the button that actually opens it
+       inside a full-width topbar, but the button that actually opens it
        here is the rail's Messages icon, over on the opposite side of the
        screen at this width. Anchoring to the viewport instead of the
        trigger keeps it fully on-screen regardless of which button opened
@@ -4270,7 +4271,7 @@
   .rail button.rail-announce{color:var(--rose)}
   .rail button.rail-announce:hover{background:rgba(242,96,78,.14);color:var(--rose)}
 
-  /* No longer its own floating bar - this now lives inside whichever
+  /* No longer its own floating bar. This now lives inside whichever
      department's first card is showing (see relocateTopbar()), using the
      room at the top of that card instead of sitting in a separate one.
      No background/border/shadow of its own any more; the parent .card
@@ -4308,7 +4309,7 @@
   .dash-panel .glance-tile-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4a4a4d,#1c1c1e);color:#fff;box-shadow:0 10px 20px rgba(20,20,22,.24)}
   .dash-panel .glance-tile.urgent .glance-tile-icon{background:linear-gradient(135deg,#ff8a80,var(--rose));box-shadow:0 10px 20px rgba(242,96,78,.4)}
 
-  /* A thin single-line strip, not a stacked card - everything sits on
+  /* A thin single-line strip, not a stacked card. Everything sits on
      one row and the summary text ellipsis-truncates instead of
      wrapping, so a long run of urgent task titles can never make this
      grow tall again. */
@@ -5043,7 +5044,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       });
 
       // A message is "yours" if it was sent by your own department in
-      // this thread - since a thread only ever has two departments in
+      // this thread, since a thread only ever has two departments in
       // it, that's an unambiguous stand-in for "sent by the viewer".
       function markOwnMessages(rawMessages, viewerDeptName) {
         return rawMessages.map(function (m) {
@@ -5250,7 +5251,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         if (convActionReq.classList.contains('on')) {
           // A linked task still wants its own short title for the task
           // feed/detail view, even though the message itself is just
-          // plain chat text now - derive one from the message rather
+          // plain chat text now, so derive one from the message rather
           // than asking for a separate title up front.
           var title = text.length > 60 ? text.slice(0, 57).trim() + '…' : text;
           var task = {
@@ -5284,7 +5285,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         var sentToDept = currentConvDept;
         var headers = window.authHeaders && window.authHeaders();
         if (headers && currentConvOtherDeptId) {
-          // A real session with a resolved department id - send to the
+          // A real session with a resolved department id: send to the
           // actual conversations API, reusing the standing thread's id
           // once one exists so replies land in the same conversation
           // instead of spawning a new one on every message. Re-render
@@ -5628,7 +5629,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         if (bannerEl) bannerEl.hidden = urgentTasks.length === 0;
         if (summaryEl) {
           summaryEl.textContent = urgentTasks.length
-            ? urgentTasks[0].title + (urgentTasks.length > 1 ? ' — and ' + (urgentTasks.length - 1) + ' more waiting on a response' : ', waiting on a response')
+            ? urgentTasks[0].title + (urgentTasks.length > 1 ? ', and ' + (urgentTasks.length - 1) + ' more waiting on a response' : ', waiting on a response')
             : '';
         }
         if (maintOpenEl) maintOpenEl.textContent = tasks.filter(function (t) { return t.messageDept === 'Maintenance' && t.status !== 'completed'; }).length;
@@ -5766,7 +5767,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       }
       var glanceDetailCurrentKey = null;
       var SEARCHABLE_GLANCE_KEYS = { 'ready-rooms': 'room', 'tables-cleared': 'table' };
-      var GLANCE_NOT_FOUND_TEXT = { 'ready-rooms': ' is not on the ready list &mdash; not cleaned yet.', 'tables-cleared': ' is not cleared yet.' };
+      var GLANCE_NOT_FOUND_TEXT = { 'ready-rooms': ' is not on the ready list, not cleaned yet.', 'tables-cleared': ' is not cleared yet.' };
       (function () {
         var searchInput = document.getElementById('glanceDetailSearch');
         searchInput.addEventListener('input', function () {
@@ -6217,15 +6218,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         }
       })();
 
-      // Room readiness projection - a calculation only, no new data of
+      // Room readiness projection: a calculation only, no new data of
       // its own. Reads the Rooms Ready board's existing {done, doneAt}
       // state as a stand-in for real housekeeping clean events, and a
       // fixed 3pm target as a stand-in for a real PMS check-in deadline.
       // Swapping getRoomData()'s body for a real departures/clean-event
-      // API later is the only change needed - everything below it only
+      // API later is the only change needed; everything below it only
       // ever reads the {total, doneTimestamps} shape it returns.
       (function () {
-        var DEADLINE_HOUR = 15, DEADLINE_MINUTE = 0; // placeholder - replace with the real per-day check-in deadline once one exists
+        var DEADLINE_HOUR = 15, DEADLINE_MINUTE = 0; // placeholder, replace with the real per-day check-in deadline once one exists
         var AT_RISK_BUFFER_MINUTES = 30;
         var pill = document.getElementById('rrpStatusPill');
         var deadlineEl = document.getElementById('rrpDeadline');
@@ -6333,7 +6334,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         }
 
         // Shown only in the no-login preview (no real hotel session) so a
-        // prospective client sees what a decided request looks like - a
+        // prospective client sees what a decided request looks like; a
         // real hotel with zero requests just sees the empty state below.
         var DEMO = [
           { id: 'demo-appr-1', department: 'Housekeeping', requestedBy: 'Housekeeping', title: 'Overtime for 2 staff, Friday night', details: 'Short staffed for Friday turnover without cover.', status: 'pending', decidedBy: null, decisionNote: null, createdAt: new Date(Date.now() - 35 * 60000).toISOString() },
@@ -6381,7 +6382,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
                 var previously = widget.seen[item.id];
                 if (previously === 'pending' && item.status !== 'pending') {
                   showApprovalToast(item.status === 'approved' ? 'Request approved' : 'Request declined',
-                    item.title + (item.decisionNote ? ' — ' + item.decisionNote : ''));
+                    item.title + (item.decisionNote ? ': ' + item.decisionNote : ''));
                 }
                 widget.seen[item.id] = item.status;
               });
@@ -6770,7 +6771,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         var btn = document.getElementById('newMessageBtn');
         if (!btn) return;
         // Announcements have their own dedicated button in the rail (GM
-        // only) that opens the announce composer directly - this button is
+        // only) that opens the announce composer directly, so this button is
         // just for messaging a department, no menu to choose between the
         // two any more, so it's one click instead of two either way.
         function triggerNewMessage() {
@@ -7545,7 +7546,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (dropdown.hidden) openDropdown(); else closeDropdown();
     });
     var topRowEl = document.querySelector('.top-row');
-    // The greeting/controls bar isn't its own separate card any more - it
+    // The greeting/controls bar isn't its own separate card any more. It
     // physically lives inside whichever department's own first card is
     // showing (there's room at the top of it), so it has to move there
     // each time the department changes rather than sitting in one fixed
@@ -7663,8 +7664,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         deptDropdown.appendChild(opt);
       });
     }
-    // The real, current list of departments - whichever hotels have
-    // actually been set up - rather than a fixed guess at what a hotel's
+    // The real, current list of departments (whichever hotels have
+    // actually been set up), rather than a fixed guess at what a hotel's
     // departments are called.
     fetch('/api/departments-public')
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -7714,7 +7715,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       function syncEverything() {
         if (window.syncRealThreads) window.syncRealThreads();
         // The notification bar needs to know about every department's
-        // urgent items, not just whichever one is currently open - the
+        // urgent items, not just whichever one is currently open. The
         // per-department sync below only ever ran for the active tab, so
         // cross-department notifications stayed on demo data until you'd
         // physically visited every department this session.
@@ -7734,7 +7735,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     // Deliberately left on: click straight into any department with no PIN.
     // The real cost is that nobody gets a real staff session this way, so
     // every server-synced feature (messages, tasks, urgent alerts like the
-    // fridge one) never syncs live - the dashboard shows static numbers
+    // fridge one) never syncs live, so the dashboard shows static numbers
     // only. Turn this back to false once staff are actually signing in with
     // their own PINs, so those features are live.
     var SKIP_LOGIN_WHILE_EDITING = true;
@@ -7867,7 +7868,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // Number(dataset.taskId) reads), so a task synced from the server keeps its
   // local numeric id and carries the real one separately as _serverId for
   // any follow-up create/update calls. A task with no _server flag is still
-  // pure local demo data and is never sent anywhere - this only reaches the
+  // pure local demo data and is never sent anywhere. This only reaches the
   // network for tasks that came from, or were created against, a real session.
   (function () {
     var deptNameToId = null;
@@ -8169,7 +8170,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // Urgent-task alerts: a short-lived toast per newly-seen urgent task
   // (dropping in at the top, stacking above any other toast already showing),
-  // gone on its own after a few seconds - it leaves the notification bell
+  // gone on its own after a few seconds. It leaves the notification bell
   // badged so the alert isn't lost, just no longer taking up screen space.
   (function () {
     var stack = document.getElementById('toastStack');
@@ -8177,7 +8178,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var TOAST_LIFETIME_MS = 5500;
     // Kept in sessionStorage, not just memory, so a task that's already been
     // alerted on doesn't pop up again every time the page reloads or the tab
-    // is reopened during the same day - only a genuinely new urgent task
+    // is reopened during the same day. Only a genuinely new urgent task
     // should trigger a fresh toast.
     var ANNOUNCED_KEY = 'noirHouseAnnouncedUrgentIds';
     var announcedIds = {};
@@ -8215,7 +8216,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
     }
 
-    // A compact floating pill inside the topbar - round department icons
+    // A compact floating pill inside the topbar. Round department icons
     // (red if urgent, graphite otherwise) slide into it one at a time,
     // same feel as the old dip, just a clean self-contained bar instead
     // of a cutout. Tap an icon to open that department's real thread and
@@ -8261,7 +8262,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
 
     // Every department's pending items (urgent or not) slide in here for
-    // everyone but that department itself - their own items already show
+    // everyone but that department itself; their own items already show
     // on their own page. Runs on a timer and right after every sync so a
     // new item shows up quickly either way; the announced-id dedup means
     // firing it twice back to back is harmless.
@@ -8701,7 +8702,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   })();
 
   // Lets Front of House pull up a scannable QR code for the real guest-help
-  // page on demand - typed room number goes straight into the link so the
+  // page on demand. Typed room number goes straight into the link so the
   // printed card can drop a guest onto their own room's pre-filled form.
   (function () {
     var btn = document.getElementById('guestQrBtn');
@@ -8720,7 +8721,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       // The QR generator is embedded directly in this page (not loaded from
       // a CDN) specifically because an ad blocker or hotel network blocking
       // a third-party script left this box blank before, with no visible
-      // error - inlining it removes that failure mode entirely.
+      // error, and inlining it removes that failure mode entirely.
       if (!window.qrcode) return;
       var qr = window.qrcode(0, 'M');
       qr.addData(url);
@@ -8737,8 +8738,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   // Daily checklist: a wedge board (one slice per task, coloured by shift
   // phase) plus the same list broken out by phase, backed by /api/checklist.
-  // Deliberately open with no PIN sign-in - whoever is on shift just taps it
-  // - so the department comes from the card itself (data-checklist-dept)
+  // Deliberately open with no PIN sign-in: whoever is on shift just taps it,
+  // so the department comes from the card itself (data-checklist-dept)
   // rather than a staff session.
   (function () {
     var CHECKLIST_GROUPS = ['Opening', 'Service prep', 'Closing'];
@@ -8870,7 +8871,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   })();
 
   // Maintenance tickets: a real, department-scoped job list (no sign-in,
-  // same as the checklist/fridge pages) - room, description, priority
+  // same as the checklist/fridge pages): room, description, priority
   // and guest-present at a glance, one status pill, one button that
   // always moves a ticket to its next stage.
   (function () {
@@ -8912,7 +8913,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
 
     // Shown only when there's no real staff session and the real board
-    // is genuinely empty - a prospective hotel demoing the page still
+    // is genuinely empty. A prospective hotel demoing the page still
     // sees what a working ticket looks like, rather than a blank board.
     // A real logged-in hotel with zero open tickets just sees "Nothing
     // open right now", never this.
@@ -8944,7 +8945,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     list.addEventListener('click', function (e) {
       var btn = e.target.closest('.maint-ticket-advance');
       if (!btn) return;
-      // A demo ticket has nothing real to update on the server - just
+      // A demo ticket has nothing real to update on the server, so just
       // advance it in place so the example still feels interactive.
       if (btn.dataset.id.indexOf('demo-') === 0) {
         var demo = DEMO_TICKETS.filter(function (t) { return t.id === btn.dataset.id; })[0];
@@ -9268,7 +9269,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   })();
 
   // Food temperature log: Kitchen-only, same no-PIN pattern as the fridge
-  // checks and daily checklist - whoever is on shift just logs it, no
+  // checks and daily checklist: whoever is on shift just logs it, no
   // sign-in needed.
   (function () {
     var navBtn = document.getElementById('foodTempNavBtn');
@@ -9496,7 +9497,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   })();
 
   // Operations calendar: a wall planner shared by every department, not
-  // scoped to one - no sign-in, same as the checklist and fridge/food-temp
+  // scoped to one. No sign-in, same as the checklist and fridge/food-temp
   // pages, but visible from every department's rail instead of just one.
   // Event types (Wedding, Banquet, ...) are a real, editable list rather
   // than a fixed set, so anyone can add, rename, recolour or remove one.
@@ -9548,7 +9549,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         .map(function (cb) { return cb.value; });
     }
 
-    // Custom modal (add/rename/remove a type) - a native prompt()/confirm()
+    // Custom modal (add/rename/remove a type): a native prompt()/confirm()
     // shows the page's raw address, which reads as confusing and
     // unprofessional to hotel staff, so every interactive tool in this app
     // uses its own in-page modal instead.
@@ -9687,7 +9688,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       categoryDropdown.innerHTML = categories.map(function (c) {
         return '<button type="button" class="opscal-type-item" data-id="' + c.id + '">' + escapeHtml(c.label) + '</button>';
       }).join('');
-      // The previously-selected type might have been removed - fall back
+      // The previously-selected type might have been removed, so fall back
       // to the first one so the field is never left pointing at nothing.
       if (!categories.some(function (c) { return c.id === selectedCategoryId; })) {
         selectedCategoryId = categories.length ? categories[0].id : '';
