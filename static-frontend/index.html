@@ -4255,13 +4255,16 @@
   .mesh .b4{width:500px;height:500px;bottom:-200px;right:10%;background:radial-gradient(circle,#e4e8ee,transparent 70%)}
   .shell{z-index:1}
 
-  .rail{background:rgba(255,255,255,.4)!important;backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,.65)!important;box-shadow:0 20px 50px rgba(31,38,60,.14)!important}
-  .rail .mark{background:linear-gradient(135deg,#2c2c2e,#000)}
-  .rail button{color:#6e6e73}
-  .rail button:hover{background:rgba(0,0,0,.05);color:#1d1d1f}
-  .rail button.on{background:linear-gradient(135deg,var(--blue),var(--blue-dark))!important;color:#fff!important;box-shadow:0 8px 18px rgba(59,91,253,.35)}
+  /* Sidebar rail: the one deliberately dark+green element on an otherwise
+     white dashboard, to echo the app's own black-and-green identity
+     without re-theming the whole (fixed-screen) console. */
+  .rail{background:rgba(10,10,13,.88)!important;backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 20px 50px rgba(0,0,0,.35)!important}
+  .rail .mark{background:linear-gradient(135deg,#3a3a3d,#1c1c1e)}
+  .rail button{color:#30d158}
+  .rail button:hover{background:rgba(255,255,255,.08);color:#4cd873}
+  .rail button.on{background:linear-gradient(135deg,#30d158,#1c8a58)!important;color:#fff!important;box-shadow:0 8px 18px rgba(48,209,88,.35)}
   .rail button.rail-announce{color:var(--rose)}
-  .rail button.rail-announce:hover{background:rgba(242,96,78,.12);color:var(--rose)}
+  .rail button.rail-announce:hover{background:rgba(242,96,78,.14);color:var(--rose)}
 
   /* No longer its own floating bar - this now lives inside whichever
      department's first card is showing (see relocateTopbar()), using the
@@ -4272,8 +4275,8 @@
 
   /* New message: square button using the same messages icon as the
      sidebar rail, so the topbar action matches the nav item it opens. */
-  .round-btn{position:relative;width:44px;height:44px;border-radius:14px;border:0;cursor:pointer;flex:0 0 auto;color:#fff;background:linear-gradient(135deg,#3396ff,var(--blue-dark));box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 10px 22px rgba(59,91,253,.34);display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease}
-  .round-btn:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 14px 28px rgba(59,91,253,.42)}
+  .round-btn{position:relative;width:44px;height:44px;border-radius:14px;border:0;cursor:pointer;flex:0 0 auto;color:#fff;background:linear-gradient(135deg,#30d158,#1c8a58);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 10px 22px rgba(48,209,88,.34);display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease}
+  .round-btn:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 14px 28px rgba(48,209,88,.42)}
   .round-btn:active{transform:translateY(0)}
   .round-btn svg{width:20px;height:20px}
 
