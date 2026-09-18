@@ -460,6 +460,34 @@ h1,h2,h3,p{margin:0;}
 .room-tile.ready,.table-tile.cleared{border-color:color-mix(in oklch,var(--success) 32%,var(--line));background:color-mix(in oklch,var(--success) 10%,transparent);color:color-mix(in oklch,var(--success) 80%,white);}
 .room-status-notice,.table-status-notice{display:flex;align-items:center;gap:8px;margin-top:14px;color:color-mix(in oklch,var(--success) 78%,white);font-size:11px;}
 
+/* Housekeeping room board */
+.room-board{display:flex;flex-direction:column;gap:22px;}
+.room-board-intro{font-size:12px;line-height:1.5;color:var(--ink-dim);}
+.room-board-floor{display:flex;flex-direction:column;gap:12px;}
+.room-board-floor-heading{display:flex;align-items:center;justify-content:space-between;}
+.room-board-floor-heading strong{font-size:14px;font-weight:650;color:var(--ink);}
+.room-board-floor-heading span{font-size:11px;font-weight:600;color:var(--ink-faint);}
+.room-board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:12px;}
+.room-board-tile{aspect-ratio:1;border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(160deg,var(--raise-a),var(--raise-b));color:var(--ink-dim);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11px;transition:.15s;}
+.room-board-tile:hover{background:rgba(26,29,41,.07);transform:translateY(-1px);}
+.room-board-tile strong{font-size:17px;font-weight:650;color:var(--ink);}
+.room-board-tile.ready{border-color:color-mix(in oklch,var(--success) 32%,var(--line));background:color-mix(in oklch,var(--success) 10%,transparent);color:color-mix(in oklch,var(--success) 80%,white);}
+.room-board-tile.ready strong{color:color-mix(in oklch,var(--success) 85%,white);}
+
+/* SOS board */
+.sos-board{display:flex;flex-direction:column;gap:18px;}
+.sos-board-intro{font-size:12px;line-height:1.5;color:var(--ink-dim);}
+.sos-board-grid{display:flex;flex-direction:column;gap:12px;}
+.sos-board-tile{display:flex;align-items:center;gap:14px;padding:18px 20px;border:1px solid color-mix(in oklch,var(--danger) 24%,var(--line));border-radius:var(--r-lg);background:color-mix(in oklch,var(--danger) 6%,transparent);color:color-mix(in oklch,var(--danger) 82%,var(--ink));transition:.15s;text-align:left;}
+.sos-board-tile:hover{background:color-mix(in oklch,var(--danger) 11%,transparent);transform:translateY(-1px);}
+.sos-board-tile strong{display:block;font-size:15px;font-weight:650;color:var(--ink);}
+.sos-board-tile span{font-size:11.5px;color:var(--ink-dim);}
+.sos-board-tile.sent{border-color:color-mix(in oklch,var(--success) 35%,var(--line));background:color-mix(in oklch,var(--success) 10%,transparent);color:color-mix(in oklch,var(--success) 82%,white);}
+.sos-board-tile.sent span{color:color-mix(in oklch,var(--success) 78%,white);}
+.sos-nav-button{color:color-mix(in oklch,var(--danger) 78%,var(--ink-dim));}
+.sos-nav-button:hover{color:color-mix(in oklch,var(--danger) 88%,var(--ink));}
+.sos-nav-button.active{color:color-mix(in oklch,var(--danger) 85%,white);background:color-mix(in oklch,var(--danger) 14%,transparent);}
+
 /* GM status overview */
 .gm-status-overview{padding:18px 20px;margin-bottom:16px;}
 .gm-status-overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}

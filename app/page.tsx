@@ -29,6 +29,8 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  Siren,
+  CheckCircle2,
   Sparkles,
   Sun,
   UtensilsCrossed,
@@ -55,6 +57,14 @@ const departments = [
   { name: 'Bar', icon: Martini, online: 4, accent: 'oklch(0.60 0.07 285)' },
   { name: 'Housekeeping', icon: BedDouble, online: 11, accent: 'oklch(0.62 0.08 150)' },
   { name: 'Maintenance', icon: Wrench, online: 2, accent: 'oklch(0.60 0.09 255)' },
+];
+
+// Placeholder floor/room layout for the demo hotel. Real floor and room
+// numbers are entered per property when a hotel signs up.
+const floorLayout = [
+  { floor: 'Floor 1', rooms: Array.from({ length: 10 }, (_, index) => 101 + index) },
+  { floor: 'Floor 2', rooms: Array.from({ length: 10 }, (_, index) => 111 + index) },
+  { floor: 'Floor 3', rooms: Array.from({ length: 10 }, (_, index) => 121 + index) },
 ];
 
 const staffEncouragementMessages: Record<string, { morning: string[]; afternoon: string[]; night: string[] }> = {
@@ -366,7 +376,8 @@ export default function Home() {
   const [guestNotificationsOpen, setGuestNotificationsOpen] = useState(false);
   const [shiftNotificationsOpen, setShiftNotificationsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'guest' | 'security' | 'settings' | null>(null);
+  const [utilityPanel, setUtilityPanel] = useState<'notes' | 'guest' | 'security' | 'settings' | 'rooms' | 'sos' | null>(null);
+  const [sosConfirmation, setSosConfirmation] = useState<string | null>(null);
   const [gentleSounds, setGentleSounds] = useState(true);
   const [calmMotion, setCalmMotion] = useState(true);
   const [appointmentTitle, setAppointmentTitle] = useState('');
@@ -592,9 +603,13 @@ export default function Home() {
   const SelectedDepartmentIcon = selectedDepartment.icon;
   const canAccessGuestRequests =
     activeDepartment === 'Front of House' || activeDepartment === 'General Manager';
+  const canAccessRoomBoard = activeDepartment === 'Housekeeping';
   useEffect(() => {
     if (!canAccessGuestRequests && utilityPanel === 'guest') setUtilityPanel(null);
   }, [canAccessGuestRequests, utilityPanel]);
+  useEffect(() => {
+    if (!canAccessRoomBoard && utilityPanel === 'rooms') setUtilityPanel(null);
+  }, [canAccessRoomBoard, utilityPanel]);
   const pendingGuestRequests = guestRequests.filter((request) => request.status === 'New');
   const featuredGuestRequest =
     pendingGuestRequests.find((request) => request.urgent) ?? pendingGuestRequests[0];
@@ -1154,6 +1169,26 @@ export default function Home() {
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
 
+  const triggerSos = (floor: string, rooms: number[]) => {
+    const time = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date());
+    const text = `SOS raised on ${floor} (Rooms ${rooms[0]}–${rooms[rooms.length - 1]}). Needs immediate assistance.`;
+    setMessages((current) => [
+      { id: Date.now(), from: activeDepartment, to: 'General Manager', text, time, unread: true, urgent: true },
+      ...current,
+    ]);
+    setPinnedNotes((current) => [
+      { id: Date.now(), text, urgent: true, department: 'General Manager' },
+      ...current,
+    ]);
+    if (gentleSounds) playPing(true);
+    setSosConfirmation(floor);
+    window.setTimeout(() => setSosConfirmation((current) => (current === floor ? null : current)), 4000);
+  };
+
   const markTableCleared = async (table: number) => {
     if (tableStatuses[table] === 'Cleared') return;
     const time = new Intl.DateTimeFormat('en-GB', {
@@ -1591,6 +1626,18 @@ export default function Home() {
               </span>
             )}
           </button>}
+          {canAccessRoomBoard && <button
+            className={`nav-button ${utilityPanel === 'rooms' ? 'active' : ''}`}
+            aria-label="Room board"
+            title="Room board"
+            onClick={() => {
+              setUtilityPanel((panel) => (panel === 'rooms' ? null : 'rooms'));
+              setCalendarOpen(false);
+              setComposerOpen(false);
+            }}
+          >
+            <BedDouble size={20} />
+          </button>}
           <button
             className={`nav-button ${calendarOpen ? 'active' : ''}`}
             aria-label={`${activeDepartment} calendar`}
@@ -1613,6 +1660,18 @@ export default function Home() {
             }}
           >
             <ShieldCheck size={20} />
+          </button>
+          <button
+            className={`nav-button sos-nav-button ${utilityPanel === 'sos' ? 'active' : ''}`}
+            aria-label="SOS"
+            title="SOS"
+            onClick={() => {
+              setUtilityPanel((panel) => (panel === 'sos' ? null : 'sos'));
+              setCalendarOpen(false);
+              setComposerOpen(false);
+            }}
+          >
+            <Siren size={20} />
           </button>
         </nav>
         <div className="sidebar-bottom">
@@ -1654,8 +1713,8 @@ export default function Home() {
         >
           <div className="calendar-heading">
             <div>
-              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : 'Dashboard'}</span>
-              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'guest' ? 'Guest requests' : utilityPanel === 'security' ? 'Security & audit' : 'Settings'}</strong>
+              <span>{utilityPanel === 'notes' ? 'Department workspace' : utilityPanel === 'guest' ? 'Separate guest channel' : utilityPanel === 'security' ? 'Accountability' : utilityPanel === 'rooms' ? 'Housekeeping' : utilityPanel === 'sos' ? 'Emergency' : 'Dashboard'}</span>
+              <strong>{utilityPanel === 'notes' ? `${activeDepartment} notes` : utilityPanel === 'guest' ? 'Guest requests' : utilityPanel === 'security' ? 'Security & audit' : utilityPanel === 'rooms' ? 'Room board' : utilityPanel === 'sos' ? 'Raise an SOS' : 'Settings'}</strong>
             </div>
             <button onClick={() => setUtilityPanel(null)} aria-label={`Close ${utilityPanel}`}><X size={17} /></button>
           </div>
@@ -1745,6 +1804,62 @@ export default function Home() {
               <article><ShieldCheck size={17} /><div><strong>Accountable activity</strong><span>Message and task opening times remain visible in their conversations.</span></div></article>
               <article><KeyRound size={17} /><div><strong>Department PIN session</strong><span>Messages and privileged actions are attributed to the connected department console.</span></div></article>
               <article><ListChecks size={17} /><div><strong>No silent deletion</strong><span>Production records will be archived with a named audit event.</span></div></article>
+            </div>
+          )}
+          {utilityPanel === 'rooms' && (
+            <div className="room-board">
+              <p className="room-board-intro">Tap a room to confirm it is clean and ready. Reception is notified straight away.</p>
+              {floorLayout.map((level) => {
+                const readyCount = level.rooms.filter((room) => roomStatuses[room] === 'Ready').length;
+                return (
+                  <section className="room-board-floor" key={level.floor}>
+                    <div className="room-board-floor-heading">
+                      <strong>{level.floor}</strong>
+                      <span>{readyCount} / {level.rooms.length} ready</span>
+                    </div>
+                    <div className="room-board-grid">
+                      {level.rooms.map((room) => {
+                        const ready = roomStatuses[room] === 'Ready';
+                        return (
+                          <button
+                            key={room}
+                            type="button"
+                            className={`room-board-tile ${ready ? 'ready' : ''}`}
+                            onClick={() => (ready ? undoRoomReady(room) : markRoomReady(room))}
+                          >
+                            {ready ? <CheckCircle2 size={18} /> : <BedDouble size={18} />}
+                            <strong>{room}</strong>
+                            <span>{ready ? 'Ready' : 'To clean'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+              {roomStatusNotice && <p className="room-status-notice"><CheckCircle2 size={14} /> {roomStatusNotice}</p>}
+            </div>
+          )}
+          {utilityPanel === 'sos' && (
+            <div className="sos-board">
+              <p className="sos-board-intro">Tap the floor the emergency is on. This alerts the General Manager immediately, no need to find the exact room first.</p>
+              <div className="sos-board-grid">
+                {floorLayout.map((level) => {
+                  const sent = sosConfirmation === level.floor;
+                  return (
+                    <button
+                      key={level.floor}
+                      type="button"
+                      className={`sos-board-tile ${sent ? 'sent' : ''}`}
+                      onClick={() => triggerSos(level.floor, level.rooms)}
+                    >
+                      {sent ? <CheckCircle2 size={22} /> : <Siren size={22} />}
+                      <strong>{level.floor}</strong>
+                      <span>{sent ? 'Alert sent' : `Rooms ${level.rooms[0]}–${level.rooms[level.rooms.length - 1]}`}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
           {utilityPanel === 'settings' && (
