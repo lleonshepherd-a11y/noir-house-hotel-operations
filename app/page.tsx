@@ -505,6 +505,7 @@ export default function Home() {
     102: 'Ready',
     205: 'Ready',
   });
+  const [lastReadyRoom, setLastReadyRoom] = useState<number | null>(null);
   const [roomStatusNotice, setRoomStatusNotice] = useState('');
   const [tableStatuses, setTableStatuses] = useState<Record<number, 'Occupied' | 'Cleared'>>({});
   const [tableStatusNotice, setTableStatusNotice] = useState('');
@@ -1156,6 +1157,7 @@ export default function Home() {
       ...current,
     ]);
     setRoomStatusNotice(saveError ? `Room ${room} sent to Front of House as ready (${saveError})` : `Room ${room} sent to Front of House as ready.`);
+    setLastReadyRoom(room);
     if (gentleSounds) playPing(false);
     window.setTimeout(() => setRoomStatusNotice(''), 4000);
   };
@@ -1694,7 +1696,7 @@ export default function Home() {
         <>
         <div className="panel-scrim" aria-hidden="true" onClick={() => setUtilityPanel(null)} />
         <section
-          className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`}
+          className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''} ${utilityPanel === 'rooms' ? 'room-service-panel' : ''}`}
           aria-label={`${utilityPanel} panel`}
           tabIndex={utilityPanel === 'guest' ? 0 : undefined}
           onKeyDown={(event) => {
@@ -1806,40 +1808,63 @@ export default function Home() {
               <article><ListChecks size={17} /><div><strong>No silent deletion</strong><span>Production records will be archived with a named audit event.</span></div></article>
             </div>
           )}
-          {utilityPanel === 'rooms' && (
-            <div className="room-board">
-              <p className="room-board-intro">Tap a room to confirm it is clean and ready. Reception is notified straight away.</p>
-              {floorLayout.map((level) => {
-                const readyCount = level.rooms.filter((room) => roomStatuses[room] === 'Ready').length;
-                return (
-                  <section className="room-board-floor" key={level.floor}>
-                    <div className="room-board-floor-heading">
-                      <strong>{level.floor}</strong>
-                      <span>{readyCount} / {level.rooms.length} ready</span>
+          {utilityPanel === 'rooms' && (() => {
+            const allRooms = floorLayout.flatMap((level) => level.rooms);
+            const readyRooms = allRooms.filter((room) => roomStatuses[room] === 'Ready');
+            const remaining = allRooms.length - readyRooms.length;
+            return (
+              <div className="room-service">
+                <div className="rs-eyebrow">A fresh start, every room</div>
+                <h1 className="rs-heading">A little care.<br />All rooms ready.</h1>
+                <p className="rs-subtitle">Fresh sheets. Final touches. Tap a room when it&rsquo;s clean.</p>
+                <section className="rs-progress" aria-label="Cleaning progress">
+                  <div className="rs-progress-head">
+                    <strong>{readyRooms.length} of {allRooms.length} rooms clean</strong>
+                    <span>{remaining === 0 ? 'All ready' : `${remaining} to go`}</span>
+                  </div>
+                  <div className="rs-track">
+                    <div className="rs-fill" style={{ width: `${allRooms.length ? (readyRooms.length / allRooms.length) * 100 : 0}%` }} />
+                  </div>
+                </section>
+                <div className="rs-grid-head">
+                  <h2>Your rooms</h2>
+                  <div className="rs-legend">
+                    <span><b className="rs-dot" />To clean</span>
+                    <span><b className="rs-dot clean" />Clean</span>
+                  </div>
+                </div>
+                <div className="rs-grid" aria-label={`Rooms 1 to ${allRooms.length}`}>
+                  {allRooms.map((room) => {
+                    const ready = roomStatuses[room] === 'Ready';
+                    return (
+                      <button
+                        key={room}
+                        type="button"
+                        className="rs-room"
+                        data-clean={ready}
+                        aria-label={ready ? `Room ${room}, clean. Reception notified.` : `Room ${room}. Mark clean and notify reception.`}
+                        onClick={() => (ready ? undoRoomReady(room) : markRoomReady(room))}
+                      >
+                        {room}
+                        {ready && <span className="rs-check" aria-hidden="true">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="rs-hint">One tap marks it clean and lets reception know.</p>
+                {lastReadyRoom != null && (
+                  <div className="rs-notice" role="status" aria-live="polite">
+                    <span className="rs-notice-icon"><CheckCircle2 size={16} /></span>
+                    <div>
+                      <strong>Room {lastReadyRoom} is ready</strong>
+                      <p>Reception has been notified</p>
                     </div>
-                    <div className="room-board-grid">
-                      {level.rooms.map((room) => {
-                        const ready = roomStatuses[room] === 'Ready';
-                        return (
-                          <button
-                            key={room}
-                            type="button"
-                            className={`room-board-tile ${ready ? 'ready' : ''}`}
-                            onClick={() => (ready ? undoRoomReady(room) : markRoomReady(room))}
-                          >
-                            {ready ? <CheckCircle2 size={18} /> : <BedDouble size={18} />}
-                            <strong>{room}</strong>
-                            <span>{ready ? 'Ready' : 'To clean'}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
-              {roomStatusNotice && <p className="room-status-notice"><CheckCircle2 size={14} /> {roomStatusNotice}</p>}
-            </div>
-          )}
+                    <span className="rs-time">Just now</span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           {utilityPanel === 'sos' && (
             <div className="sos-board">
               <p className="sos-board-intro">Tap the floor the emergency is on. This alerts the General Manager immediately, no need to find the exact room first.</p>
