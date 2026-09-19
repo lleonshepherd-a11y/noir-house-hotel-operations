@@ -4,7 +4,6 @@ CREATE TABLE checklist_completions (
   department_id TEXT NOT NULL REFERENCES departments(id),
   item_key TEXT NOT NULL,
   checklist_date TEXT NOT NULL,
-  completed_by_staff_id TEXT NOT NULL REFERENCES staff(id),
   completed_at TEXT NOT NULL,
   UNIQUE(department_id, item_key, checklist_date)
 );

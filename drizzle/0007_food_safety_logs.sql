@@ -11,7 +11,6 @@ CREATE TABLE food_temperature_logs (
   use_by_ok INTEGER,
   quantity_ok INTEGER,
   corrective_action TEXT,
-  logged_by_staff_id TEXT NOT NULL REFERENCES staff(id),
   logged_at TEXT NOT NULL
 );
 
