@@ -1,4 +1,5 @@
 import { appendAuditEvent } from '@/lib/backend/audit';
+import { notifyHotelPing } from '@/lib/backend/hotelPingNotify';
 import { assertAccess, assertDepartmentInHotel, canAccessGuestRequestByRole } from '@/lib/backend/policy';
 import { bearerToken, getDatabase } from '@/lib/backend/runtime';
 import { requireStaffSession } from '@/lib/backend/sessions';
@@ -16,6 +17,31 @@ async function assertGuestRequestAccess(db: D1Database, identity: StaffIdentity,
   assertAccess(identity, 'read', 'guest_request', { hotelId });
   if (isManagement(identity) || canAccessGuestRequestByRole(identity)) return;
   await assertConversationMembership(db, conversationId, identity.departmentId);
+}
+
+function attachmentType(contentType: string): 'photo' | 'voice' | 'file' {
+  if (contentType.startsWith('image/')) return 'photo';
+  if (contentType.startsWith('audio/')) return 'voice';
+  return 'file';
+}
+
+// Attachments are fetched in a second query keyed by message id rather than
+// joined into the main SELECT - a message can carry more than one file, and
+// a JOIN there would multiply each message row per attachment.
+async function attachmentsByMessageId(db: D1Database, messageIds: string[]) {
+  const byMessage = new Map<string, { id: string; type: string; fileName: string; contentType: string; sizeBytes: number }[]>();
+  if (!messageIds.length) return byMessage;
+  const placeholders = messageIds.map(() => '?').join(',');
+  const rows = await db
+    .prepare(`SELECT id, message_id, file_name, content_type, size_bytes FROM attachments WHERE message_id IN (${placeholders})`)
+    .bind(...messageIds)
+    .all<{ id: string; message_id: string; file_name: string; content_type: string; size_bytes: number }>();
+  for (const row of rows.results) {
+    const list = byMessage.get(row.message_id) ?? [];
+    list.push({ id: row.id, type: attachmentType(row.content_type), fileName: row.file_name, contentType: row.content_type, sizeBytes: row.size_bytes });
+    byMessage.set(row.message_id, list);
+  }
+  return byMessage;
 }
 
 // A flat, most-recent-first feed across every conversation a department
@@ -39,8 +65,10 @@ async function departmentFeed(db: D1Database, identity: StaffIdentity, requested
       WHERE cd.department_id = ?
       ORDER BY m.created_at DESC LIMIT 100`)
     .bind(departmentId)
-    .all();
-  return Response.json({ messages: messages.results });
+    .all<{ id: string }>();
+  const attachmentsByMessage = await attachmentsByMessageId(db, messages.results.map((row) => row.id));
+  const withAttachments = messages.results.map((row) => ({ ...row, attachments: attachmentsByMessage.get(row.id) ?? [] }));
+  return Response.json({ messages: withAttachments });
 }
 
 export async function GET(request: Request) {
@@ -67,8 +95,10 @@ export async function GET(request: Request) {
         JOIN departments d ON d.id = s.department_id
         WHERE m.conversation_id = ? ORDER BY m.created_at ASC LIMIT 250`)
       .bind(conversationId)
-      .all();
-    return Response.json({ conversation, messages: messages.results });
+      .all<{ id: string }>();
+    const attachmentsByMessage = await attachmentsByMessageId(db, messages.results.map((row) => row.id));
+    const withAttachments = messages.results.map((row) => ({ ...row, attachments: attachmentsByMessage.get(row.id) ?? [] }));
+    return Response.json({ conversation, messages: withAttachments });
   } catch (error) {
     if (error instanceof Response) return error;
     return Response.json({ error: 'Unable to load messages' }, { status: 500 });
@@ -137,8 +167,10 @@ export async function POST(request: Request) {
       }
     }
     const messageId = crypto.randomUUID();
-    const recipientDepartments = await db.prepare('SELECT department_id FROM conversation_departments WHERE conversation_id = ? AND department_id != ?')
-      .bind(conversationId, identity.departmentId).all<{ department_id: string }>();
+    const recipientDepartments = await db.prepare(`SELECT cd.department_id, d.slug FROM conversation_departments cd
+        JOIN departments d ON d.id = cd.department_id
+        WHERE cd.conversation_id = ? AND cd.department_id != ?`)
+      .bind(conversationId, identity.departmentId).all<{ department_id: string; slug: string }>();
     const urgency = body.urgency ?? 'normal';
     const eventPayload = JSON.stringify({ conversationId, urgency, senderDepartmentId: identity.departmentId });
     const allStatements = [
@@ -203,6 +235,13 @@ export async function POST(request: Request) {
       entityId: messageId,
       metadata: { conversationId, urgency, clientMessageId: body.clientMessageId.trim(), recipients: recipientDepartments.results.map((row) => row.department_id) },
     });
+    // Best-effort bridge to Hotel Ping (the department heads' own messaging
+    // app) - keyed on this message's own id, which is already deduped above
+    // via client_message_id, so a retry here never sends a department head
+    // the same notification twice.
+    await Promise.all(recipientDepartments.results.map((recipient) =>
+      notifyHotelPing({ idempotencyKey: messageId, departmentSlug: recipient.slug, message: body.message!.trim() }),
+    ));
     return Response.json({ conversationId, messageId, createdAt: now, delivery: 'queued' }, { status: 202 });
   } catch (error) {
     if (error instanceof Response) return error;

@@ -3013,6 +3013,10 @@
   .attach-chip svg{width:12px;height:12px;flex:0 0 auto;color:var(--ink-mid)}
   .attach-chip button{border:0;background:transparent;color:var(--ink-dim);font-size:14px;line-height:1;cursor:pointer;padding:0;margin-left:2px}
   .attach-chip button:hover{color:var(--ink)}
+  .attach-chip[data-type="voice"]{background:#e8f0fe;border-color:#c7dbfb;color:#1a56db}
+  .attach-chip[data-type="voice"] svg{color:#3b7ef2}
+  .attach-chip[data-type="voice"] button{color:#3b7ef2}
+  .attach-chip[data-type="voice"] button:hover{color:#1a56db}
   .composer textarea{width:100%;resize:none;min-height:52px;max-height:120px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;color:var(--ink);font-family:inherit;font-size:13.5px;line-height:1.45;box-sizing:border-box;transition:background .18s,border-color .18s,box-shadow .18s}
   .composer textarea::placeholder{color:var(--ink-dim)}
   .composer textarea:focus{outline:none;background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,91,253,.14)}
@@ -3122,6 +3126,10 @@
   .messages-feed-list .msg-row.unread .msg-preview-solo{color:var(--ink);font-weight:700}
   .msg-row-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;justify-self:end}
   .msg-row-top{display:flex;align-items:center;gap:8px}
+  .msg-read-aloud{display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--ink-dim);padding:0;cursor:pointer;flex:0 0 auto}
+  .msg-read-aloud svg{width:14px;height:14px}
+  .msg-read-aloud:hover{color:var(--ink)}
+  .msg-read-aloud.speaking{color:#3b7ef2}
   .messages-feed-list .msg-row time{font-size:12.5px;font-weight:400;color:var(--ink-dim);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
   .messages-feed-list .msg-row.unread time{color:var(--ink-mid);font-weight:700}
   .unread-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex:0 0 auto}
@@ -3153,6 +3161,8 @@
   .messages-feed-list .msg-attach-icon{display:flex;color:var(--ink-dim);flex:0 0 auto}
   .msg-attach-icon svg{width:14px;height:14px}
   .msg-attach-thumb{width:18px;height:18px;min-width:18px;min-height:18px;max-width:18px;max-height:18px;border-radius:4px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line);display:block}
+  [data-attachment-id]{cursor:pointer}
+  [data-attachment-id].loading{opacity:.5;pointer-events:none}
   .msg-row-actions{display:flex;align-items:center;gap:4px;position:relative}
   .msg-reply-btn{flex:0 0 auto;border:1px solid var(--line);background:none;color:var(--ink-mid);font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:100px;cursor:pointer;white-space:nowrap}
   .msg-reply-btn:hover{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -4669,13 +4679,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       m.attachments.forEach(function (a) {
         if (seen[a.type]) return;
         seen[a.type] = true;
+        var idAttr = a.id ? ' data-attachment-id="' + a.id + '"' : '';
         if (a.type === 'photo' && a.src) {
-          html += '<img class="msg-attach-thumb" width="18" height="18" src="' + a.src + '" alt="" title="Photo attached">';
+          html += '<img class="msg-attach-thumb" width="18" height="18" src="' + a.src + '" alt="" title="Photo attached"' + idAttr + '>';
           return;
         }
         var icon = a.type === 'photo' ? PHOTO_ICON : a.type === 'voice' ? VOICE_ICON : FILE_ICON;
         var label = a.type === 'photo' ? 'Photo attached' : a.type === 'voice' ? 'Voice note attached' : 'File attached';
-        html += '<span class="msg-attach-icon" title="' + label + '">' + icon + '</span>';
+        html += '<span class="msg-attach-icon"' + idAttr + ' title="' + label + '">' + icon + '</span>';
       });
       return html;
     }
@@ -4718,10 +4729,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         '</div>';
     }
 
+    var READ_ALOUD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
     function deptFeedRowHtml(dept, m) {
       var urgent = m.badge === 'Urgent' || m.urgent === true;
       var title = m.title || '';
       var rowClasses = 'msg-row' + (urgent ? ' urgent-row' : '');
+      var speakable = window.speechSynthesis ? '<button type="button" class="msg-read-aloud" data-speak="' + escapeHtml(m.text) + '" title="Read aloud" aria-label="Read this message aloud">' + READ_ALOUD_ICON + '</button>' : '';
       return '<div class="' + rowClasses + '" data-dept="' + escapeHtml(dept) + '">' + feedIconHtml(m.from) +
         '<div class="msg-row-body">' +
         '<div class="msg-row-head"><span class="msg-dept">' + escapeHtml(m.from) + '</span>' +
@@ -4731,7 +4745,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         '<span class="msg-preview' + (title ? '' : ' msg-preview-solo') + '">' + escapeHtml(m.text) + '</span>' +
         '</div>' +
         '<div class="msg-row-side">' +
-        '<div class="msg-row-top">' + attachIconsHtml(m) + '<time>' + m.time + '</time></div>' +
+        '<div class="msg-row-top">' + speakable + attachIconsHtml(m) + '<time>' + m.time + '</time></div>' +
         '</div>' +
         '</div>';
     }
@@ -6967,10 +6981,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       sendBtn.classList.toggle('disabled', empty);
     }
 
+    function attachmentTypeFor(mimeType) {
+      if (mimeType.indexOf('image/') === 0) return 'photo';
+      if (mimeType.indexOf('audio/') === 0) return 'voice';
+      return 'file';
+    }
+
     function renderAttachments() {
       attachRow.hidden = attachments.length === 0;
       attachRow.innerHTML = attachments.map(function (a, i) {
-        return '<span class="attach-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>' + escapeHtml(a) + '<button type="button" data-i="' + i + '" aria-label="Remove">&times;</button></span>';
+        var icon = a.type === 'voice' ? VOICE_ICON : a.type === 'photo' ? PHOTO_ICON : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>';
+        return '<span class="attach-chip" data-type="' + a.type + '">' + icon + escapeHtml(a.name) + '<button type="button" data-i="' + i + '" aria-label="Remove">&times;</button></span>';
       }).join('');
       updateSendState();
     }
@@ -6985,16 +7006,37 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       var text = input.value.trim();
       if (!text && attachments.length === 0) return;
       var dept = currentDept();
-      var fullText = text + (attachments.length ? (text ? ' ' : '') + attachments.map(function (a) { return '📎 ' + a; }).join(' ') : '');
-      var entry = { from: 'You', text: fullText, time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }), urgent: urgentBtn.classList.contains('on') };
+      var pendingFiles = attachments.map(function (a) { return a.file; });
+      // The server requires a non-empty body on every message; an
+      // attachment sent with no caption gets a plain description instead.
+      var messageBody = text || (attachments.length === 1
+        ? (attachments[0].type === 'photo' ? 'Photo' : attachments[0].type === 'voice' ? 'Voice note' : attachments[0].name)
+        : attachments.length + ' attachments');
+      var entry = {
+        from: 'You',
+        text: text || messageBody,
+        time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }),
+        urgent: urgentBtn.classList.contains('on'),
+        attachments: attachments.map(function (a) { return { type: a.type, fileName: a.name }; }),
+      };
       if (dept === 'All departments') {
         Object.keys(threads).forEach(function (d) { threads[d].push(entry); });
       } else {
         if (!threads[dept]) threads[dept] = [];
         threads[dept].push(entry);
       }
-      showToast(dept, fullText, entry.urgent);
-      if (window.createMessageOnServer) window.createMessageOnServer(dept, fullText, entry.urgent, entry);
+      showToast(dept, messageBody, entry.urgent);
+      if (window.createMessageOnServer) {
+        window.createMessageOnServer(dept, messageBody, entry.urgent, entry).then(function (messageId) {
+          if (messageId && pendingFiles.length && window.uploadAttachmentsToMessage) {
+            window.uploadAttachmentsToMessage(messageId, pendingFiles, function () {
+              // Pick up the real attachment ids (needed to open/view them) on
+              // the next sync rather than trying to patch this entry by hand.
+              if (window.syncMessagesForDepartment) window.syncMessagesForDepartment(dept);
+            });
+          }
+        });
+      }
       input.value = '';
       input.style.height = 'auto';
       attachments = [];
@@ -7016,9 +7058,44 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
     var micBtn = document.getElementById('micBtn');
     var noteBtn = document.getElementById('noteBtn');
-    micBtn.addEventListener('click', function () { micBtn.classList.toggle('active'); });
     noteBtn.addEventListener('click', function () { noteBtn.classList.toggle('active'); });
     urgentBtn.addEventListener('click', function () { urgentBtn.classList.toggle('on'); });
+
+    // Real voice note recording, same pattern already used for shift
+    // handover notes - records to a webm blob and stages it as a normal
+    // attachment so it uploads through the same path as a photo or file.
+    var voiceRecorder = null;
+    var voiceChunks = [];
+    if (micBtn) {
+      if (navigator.mediaDevices && window.MediaRecorder) {
+        micBtn.addEventListener('click', function () {
+          if (voiceRecorder && voiceRecorder.state === 'recording') {
+            voiceRecorder.stop();
+            return;
+          }
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+            voiceChunks = [];
+            voiceRecorder = new MediaRecorder(stream);
+            voiceRecorder.ondataavailable = function (e) { if (e.data.size > 0) voiceChunks.push(e.data); };
+            voiceRecorder.onstop = function () {
+              stream.getTracks().forEach(function (t) { t.stop(); });
+              micBtn.classList.remove('recording');
+              var blob = new Blob(voiceChunks, { type: 'audio/webm' });
+              var file = new File([blob], 'voice-note-' + Date.now() + '.webm', { type: 'audio/webm' });
+              attachments.push({ file: file, name: 'Voice note', type: 'voice' });
+              renderAttachments();
+            };
+            voiceRecorder.start();
+            micBtn.classList.add('recording');
+          }).catch(function () {
+            micBtn.title = 'Microphone unavailable';
+          });
+        });
+      } else {
+        micBtn.disabled = true;
+        micBtn.title = 'Voice notes are not supported in this browser';
+      }
+    }
 
     var fileInput = document.getElementById('fileInput');
     var photoInput = document.getElementById('photoInput');
@@ -7026,7 +7103,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     document.getElementById('photoBtn').addEventListener('click', function () { photoInput.click(); });
     [fileInput, photoInput].forEach(function (fi) {
       fi.addEventListener('change', function () {
-        Array.prototype.forEach.call(fi.files, function (f) { attachments.push(f.name); });
+        Array.prototype.forEach.call(fi.files, function (f) { attachments.push({ file: f, name: f.name, type: attachmentTypeFor(f.type) }); });
         renderAttachments();
         fi.value = '';
         input.focus();
@@ -7052,7 +7129,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         composerEl.classList.remove('drag-over');
         var files = e.dataTransfer && e.dataTransfer.files;
         if (!files || !files.length) return;
-        Array.prototype.forEach.call(files, function (f) { attachments.push(f.name); });
+        Array.prototype.forEach.call(files, function (f) { attachments.push({ file: f, name: f.name, type: attachmentTypeFor(f.type) }); });
         renderAttachments();
       });
     }
@@ -7399,6 +7476,42 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       return token ? { Authorization: 'Bearer ' + token } : null;
     }
 
+    // Attachment icons render across several different feed cards, so this
+    // listens on the document once instead of being wired per-card.
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-attachment-id]');
+      if (!el) return;
+      var headers = authHeaders();
+      if (!headers) return;
+      el.classList.add('loading');
+      fetch('/api/attachments?id=' + encodeURIComponent(el.dataset.attachmentId), { headers: headers })
+        .then(function (r) { return r.ok ? r.blob() : Promise.reject(new Error('open failed')); })
+        .then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        })
+        .catch(function () { notifySaveFailed('That attachment'); })
+        .finally(function () { el.classList.remove('loading'); });
+    });
+
+    // Read a message's text aloud with the browser's built-in speech
+    // synthesis - no server round-trip, works offline, and a second click
+    // on the same button (or any other) stops whatever is currently playing.
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.msg-read-aloud');
+      if (!btn || !window.speechSynthesis) return;
+      var wasSpeaking = btn.classList.contains('speaking');
+      window.speechSynthesis.cancel();
+      document.querySelectorAll('.msg-read-aloud.speaking').forEach(function (b) { b.classList.remove('speaking'); });
+      if (wasSpeaking) return;
+      var utterance = new SpeechSynthesisUtterance(btn.dataset.speak || '');
+      utterance.onend = function () { btn.classList.remove('speaking'); };
+      utterance.onerror = function () { btn.classList.remove('speaking'); };
+      btn.classList.add('speaking');
+      window.speechSynthesis.speak(utterance);
+    });
+
     function ensureDepartments() {
       var headers = authHeaders();
       if (!headers) return Promise.resolve(null);
@@ -7556,6 +7669,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
                 text: row.body,
                 time: formatTime(row.created_at),
                 urgent: row.urgency === 'urgent' || row.urgency === 'emergency',
+                attachments: row.attachments || [],
                 _server: true,
                 _serverId: row.id,
               });
@@ -7569,13 +7683,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
     window.createMessageOnServer = function (deptNames, body, urgency, localEntry) {
       var headers = authHeaders();
-      if (!headers) return;
-      ensureDepartments().then(function (map) {
-        if (!map) return;
+      if (!headers) return Promise.resolve(null);
+      return ensureDepartments().then(function (map) {
+        if (!map) return null;
         var names = deptNames === 'All departments' ? Object.keys(map) : [deptNames];
         var ids = names.map(function (n) { return map[n]; }).filter(Boolean);
-        if (!ids.length) return;
-        fetch('/api/messages', {
+        if (!ids.length) return null;
+        return fetch('/api/messages', {
           method: 'POST',
           headers: { Authorization: headers.Authorization, 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -7591,9 +7705,27 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             // so the next sync recognises it and replaces it in place, rather
             // than the server's copy landing as a second, duplicate entry.
             if (data && data.messageId && localEntry) { localEntry._server = true; localEntry._serverId = data.messageId; }
+            return data && data.messageId ? data.messageId : null;
           })
-          .catch(function () { notifySaveFailed('Your message'); });
+          .catch(function () { notifySaveFailed('Your message'); return null; });
       });
+    };
+
+    // Uploads real files to a message that's already been created on the
+    // server (the attachments API requires a real messageId to attach to).
+    // Each upload is independent - one failing shouldn't stop the others.
+    window.uploadAttachmentsToMessage = function (messageId, files, onEach) {
+      var headers = authHeaders();
+      if (!headers || !messageId || !files || !files.length) return Promise.resolve([]);
+      return Promise.all(Array.prototype.map.call(files, function (file) {
+        var form = new FormData();
+        form.append('file', file);
+        form.append('messageId', messageId);
+        return fetch('/api/attachments', { method: 'POST', headers: { Authorization: headers.Authorization }, body: form })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('attachment upload failed')); })
+          .then(function (data) { if (onEach) onEach(null, data); return data; })
+          .catch(function (err) { if (onEach) onEach(err, null); notifySaveFailed('An attachment'); return null; });
+      }));
     };
 
     // Handovers have no local data array to merge into (each is a plain DOM
