@@ -1814,8 +1814,6 @@ export default function Home() {
             const remaining = allRooms.length - readyRooms.length;
             return (
               <div className="room-service">
-                <div className="rs-eyebrow">A fresh start, every room</div>
-                <h1 className="rs-heading">A little care.<br />All rooms ready.</h1>
                 <p className="rs-subtitle">Fresh sheets. Final touches. Tap a room when it&rsquo;s clean.</p>
                 <section className="rs-progress" aria-label="Cleaning progress">
                   <div className="rs-progress-head">
