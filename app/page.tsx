@@ -2171,7 +2171,7 @@ export default function Home() {
                       return (
                       <article
                         key={message.id}
-                        className={`notification-item swipe-notification ${message.urgent ? 'urgent' : ''} ${pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'pinned' : ''}`}
+                        className={`notification-item swipe-notification ${message.from === activeDepartment ? 'sent' : 'received'} ${message.urgent ? 'urgent' : ''} ${pinnedNotificationKeys.includes(`internal-${message.id}`) ? 'pinned' : ''}`}
                         onPointerDown={(event) => beginNotificationSwipe(`internal-${message.id}`, event)}
                         onPointerUp={(event) => finishNotificationSwipe(`internal-${message.id}`, event, () => setMessages((current) => current.filter((item) => item.id !== message.id)))}
                       >
@@ -2414,7 +2414,7 @@ export default function Home() {
                     <button
                       type="button"
                       key={message.id}
-                      className={`message-row-new ${message.urgent ? 'urgent' : ''}`}
+                      className={`message-row-new ${message.from === activeDepartment ? 'sent' : 'received'} ${message.urgent ? 'urgent' : ''}`}
                       onClick={() => markMessageOpened(message.id)}
                     >
                       <span className="message-row-icon" style={{ '--dept-color': senderDepartment?.accent } as CSSProperties}>
