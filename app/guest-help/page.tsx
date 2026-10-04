@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { SubmitEvent, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Car,
@@ -120,6 +121,7 @@ export default function GuestHelpPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room');
+    // oxlint-disable-next-line react/react-compiler -- one-time client-only read of the URL on mount, unavailable during SSR
     if (roomParam) setRoom(roomParam);
   }, []);
 
@@ -158,7 +160,7 @@ export default function GuestHelpPage() {
     };
   }, []);
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault();
     if (!message.trim() || requestState === 'sending') return;
     setRequestState('sending');
@@ -285,7 +287,7 @@ export default function GuestHelpPage() {
           <ShieldCheck size={13} /> Reception is staffed 24 hours a day
         </footer>
         <p className="guest-help-powered-by">
-          Powered by <img src="/logo.png" alt="Freedom Services" />
+          Powered by <Image src="/logo.png" alt="Freedom Services" width={1394} height={1128} />
         </p>
       </div>
     </main>

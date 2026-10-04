@@ -24,7 +24,7 @@ async function sendAlert(title, message) {
   }
 }
 
-export default {
+const cronWorker = {
   async scheduled(event, env, _ctx) {
     try {
       const response = await fetch('https://dashboard.freedomservices.online/api/cron/escalate', {
@@ -69,3 +69,5 @@ export default {
     }
   },
 };
+
+export default cronWorker;

@@ -29,7 +29,9 @@
     "build/**",
     "dist/**",
     "coverage/**",
-    "next-env.d.ts"
+    "next-env.d.ts",
+    "static-frontend/**",
+    "components/ui/**"
   ],
   "rules": {
     "no-array-constructor": "error",

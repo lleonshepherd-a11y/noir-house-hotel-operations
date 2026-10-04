@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SubmitEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   BellRing,
@@ -590,6 +590,7 @@ export default function Home() {
   const canAccessGuestRequests =
     activeDepartment === 'Front of House' || activeDepartment === 'General Manager';
   useEffect(() => {
+    // oxlint-disable-next-line react/react-compiler -- closing a panel whose access was just revoked is a side effect, not derivable render output
     if (!canAccessGuestRequests && utilityPanel === 'guest') setUtilityPanel(null);
   }, [canAccessGuestRequests, utilityPanel]);
   const pendingGuestRequests = guestRequests.filter((request) => request.status === 'New');
@@ -615,12 +616,13 @@ export default function Home() {
   }, [draft, spellCheckEnabled]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/react-compiler -- one-time client-only clock read on mount, unavailable during SSR
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const signInDepartment = async (event: FormEvent) => {
+  const signInDepartment = async (event: SubmitEvent) => {
     event.preventDefault();
     setDepartmentSessionStatus('Checking PIN…');
     try {
@@ -658,6 +660,7 @@ export default function Home() {
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem('noir-house-department-layouts');
+      // oxlint-disable-next-line react/react-compiler -- one-time client-only read of localStorage on mount, unavailable during SSR
       if (stored) setDepartmentTileLayouts(JSON.parse(stored) as Record<string, DashboardTileId[]>);
     } catch {
       /* The dashboard remains usable when local preferences are unavailable. */
@@ -667,6 +670,7 @@ export default function Home() {
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem('noir-house-table-count');
+      // oxlint-disable-next-line react/react-compiler -- one-time client-only read of localStorage on mount, unavailable during SSR
       if (stored) setTableCount(Math.max(1, Number(stored) || defaultTableCount));
     } catch {
       /* The dashboard remains usable when local preferences are unavailable. */
@@ -721,11 +725,13 @@ export default function Home() {
       SpeechRecognition?: BrowserSpeechRecognitionConstructor;
       webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
     };
+    // oxlint-disable-next-line react/react-compiler -- one-time client-only feature-detection on mount, unavailable during SSR
     setDictationAvailable(Boolean(speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition));
   }, []);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+      // oxlint-disable-next-line react/react-compiler -- one-time client-only feature-detection on mount, unavailable during SSR
       setPushPermission('unsupported');
       return;
     }
@@ -899,7 +905,7 @@ export default function Home() {
     }, 80);
   };
 
-  const addShiftHandover = (event: FormEvent) => {
+  const addShiftHandover = (event: SubmitEvent) => {
     event.preventDefault();
     const text = handoverDraft.trim();
     if (!text) return;
@@ -975,6 +981,7 @@ export default function Home() {
 
   useEffect(() => {
     const token = window.sessionStorage.getItem('noir-house-staff-session') ?? '';
+    // oxlint-disable-next-line react/react-compiler -- one-time client-only read of sessionStorage on mount, unavailable during SSR
     setStaffSessionToken(token);
     // Read the token fresh on every call (rather than closing over the value
     // above) so a login that happens after this effect's initial mount is
@@ -1036,7 +1043,7 @@ export default function Home() {
     });
   }, [activeDepartment, connectedDepartment, staffSessionToken]);
 
-  const sendMessage = async (event: FormEvent) => {
+  const sendMessage = async (event: SubmitEvent) => {
     event.preventDefault();
     if (!draft.trim()) return;
     if (isSendingMessageRef.current) return;
@@ -1254,7 +1261,7 @@ export default function Home() {
     }
   };
 
-  const addAppointment = (event: FormEvent) => {
+  const addAppointment = (event: SubmitEvent) => {
     event.preventDefault();
     if (!appointmentTitle.trim() || !appointmentTime) return;
     if (calendarEditingId) {
@@ -1276,7 +1283,7 @@ export default function Home() {
     setAppointmentCategory('routine');
   };
 
-  const savePlannerEntry = (event: FormEvent) => {
+  const savePlannerEntry = (event: SubmitEvent) => {
     event.preventDefault();
     if (!selectedPlannerDay || !plannerEntryTitle.trim() || !plannerEntryTime) return;
     const [hours, minutes] = plannerEntryTime.split(':').map(Number);
@@ -1399,7 +1406,7 @@ export default function Home() {
     if (!response.ok) setPushPermission('configuration-required');
   };
 
-  const pinNote = (event: FormEvent) => {
+  const pinNote = (event: SubmitEvent) => {
     event.preventDefault();
     if (!noteDraft.trim()) return;
     setPinnedNotes((current) => [
@@ -1521,7 +1528,7 @@ export default function Home() {
   const selectedManagementIssue = managementIssues.find((issue) => issue.id === selectedManagementThreadId) ?? null;
   const managementUpdateSignal = watchedManagementIds.length + steppedInManagementIds.length + resolvedManagementIds.length + Object.values(managementThreadNotes).reduce((total, notes) => total + notes.length, 0);
 
-  const publishAnnouncement = async (event: FormEvent) => {
+  const publishAnnouncement = async (event: SubmitEvent) => {
     event.preventDefault();
     const body = announcementDraft.trim();
     if (!body) return;
@@ -1686,9 +1693,12 @@ export default function Home() {
       </aside>
 
       {utilityPanel && (
+        // Scrollable panel made keyboard-scrollable on purpose (PageUp/Down, arrows, Home/End).
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <section
           className={`utility-panel glass-panel ${utilityPanel === 'guest' ? 'guest-requests-panel' : ''}`}
           aria-label={`${utilityPanel} panel`}
+          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={utilityPanel === 'guest' ? 0 : undefined}
           onKeyDown={(event) => {
             if (utilityPanel !== 'guest' || event.target !== event.currentTarget) return;
@@ -1809,8 +1819,8 @@ export default function Home() {
                   <div><input type="password" inputMode="numeric" pattern="[0-9]{4,8}" value={departmentPin} onChange={(event) => setDepartmentPin(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder={`${activeDepartment} PIN`} aria-label={`${activeDepartment} PIN`} /><button type="submit" disabled={departmentPin.length < 4}>Connect</button></div>
                 )}
               </form>
-              <label><span><strong>Notification sounds</strong><small>Short chime normally · calm distinct pattern when urgent</small></span><input type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
-              <label><span><strong>Calm interface motion</strong><small>Subtle visual movement and reminders</small></span><input type="checkbox" checked={calmMotion} onChange={(event) => setCalmMotion(event.target.checked)} /></label>
+              <label htmlFor="gentleSoundsToggle" aria-label="Notification sounds"><span><strong>Notification sounds</strong><small>Short chime normally · calm distinct pattern when urgent</small></span><input id="gentleSoundsToggle" type="checkbox" checked={gentleSounds} onChange={(event) => setGentleSounds(event.target.checked)} /></label>
+              <label htmlFor="calmMotionToggle" aria-label="Calm interface motion"><span><strong>Calm interface motion</strong><small>Subtle visual movement and reminders</small></span><input id="calmMotionToggle" type="checkbox" checked={calmMotion} onChange={(event) => setCalmMotion(event.target.checked)} /></label>
             </div>
           )}
         </section>
@@ -1977,6 +1987,7 @@ export default function Home() {
             setVoiceNoteDuration(0);
           };
           return (
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom CSS overlay, not a native <dialog>'s top-layer/showModal behavior
             <div className="dept-thread-overlay" role="dialog" aria-modal="true" aria-label={`${openThreadDepartment} messages`}>
               <div className="dept-thread-panel glass-panel">
                 <div className="dept-thread-head">
@@ -2012,12 +2023,14 @@ export default function Home() {
                           {message.text}
                           {message.voiceNoteUrl && (
                             <div className="dept-thread-voice-note">
+                              {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- live staff voice note, no transcript exists to caption */}
                               <audio controls preload="metadata" src={message.voiceNoteUrl}>
                                 Your browser cannot play this voice note.
                               </audio>
                             </div>
                           )}
                           {message.attachmentUrl && (
+                            // oxlint-disable-next-line next/no-img-element -- arbitrary staff-uploaded photo, true dimensions unknown until load
                             <img className="dept-thread-attachment-img" src={message.attachmentUrl} alt={message.attachmentName || 'Attachment'} />
                           )}
                           {!message.attachmentUrl && message.attachmentName && !message.voiceNoteUrl && (
@@ -2505,6 +2518,7 @@ export default function Home() {
               <form className="announcement-editor" onSubmit={publishAnnouncement}>
                 <label>
                   Hotel-wide announcement
+                  {/* oxlint-disable-next-line jsx-a11y/no-autofocus -- opened by explicit GM action, not on page load */}
                   <textarea value={announcementDraft} onChange={(event) => setAnnouncementDraft(event.target.value)} placeholder="Write the notice every department must see…" autoFocus />
                 </label>
                 <label>
@@ -2822,6 +2836,7 @@ export default function Home() {
             </section>
           )}
           {activeDepartment === 'General Manager' && selectedManagementIssue && (
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom CSS overlay, not a native <dialog>'s top-layer/showModal behavior
             <section className="gm-thread-panel" role="dialog" aria-modal="true" aria-labelledby="gm-thread-title">
               <button className="gm-thread-close" onClick={() => setSelectedManagementThreadId(null)} aria-label="Close management thread"><X size={18} /></button>
               <span className="eyebrow">Original thread · {selectedManagementIssue.department}</span>
@@ -2904,6 +2919,7 @@ export default function Home() {
                               <span className="voice-note-symbol"><Mic size={15} /></span>
                               <div><strong>Voice note</strong><span className="voice-note-waveform" aria-hidden="true"><i /><i /><i /><i /><i /></span></div>
                               <time>{Math.floor((message.voiceNoteDuration ?? 1) / 60)}:{String((message.voiceNoteDuration ?? 1) % 60).padStart(2, '0')}</time>
+                              {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- live staff voice note, no transcript exists to caption */}
                               <audio controls preload="metadata" src={message.voiceNoteUrl}>Your browser cannot play this voice note.</audio>
                             </div>
                           ) : <p>{message.text}</p>}
@@ -2931,6 +2947,7 @@ export default function Home() {
                           )}
                           {message.attachmentUrl && (
                             <figure className="message-attachment">
+                              {/* oxlint-disable-next-line next/no-img-element -- arbitrary staff-uploaded photo, true dimensions unknown until load */}
                               <img
                                 src={message.attachmentUrl}
                                 alt={message.attachmentName || 'Task attachment'}
@@ -3080,6 +3097,7 @@ export default function Home() {
                       </div>
                       {task.attachmentUrl && (
                         <figure className="task-attachment">
+                          {/* oxlint-disable-next-line next/no-img-element -- arbitrary staff-uploaded photo, true dimensions unknown until load */}
                           <img
                             src={task.attachmentUrl}
                             alt={task.attachmentName || 'Task attachment'}
@@ -3216,6 +3234,7 @@ export default function Home() {
           </div>
           </section>
           {selectedPlannerDay && (
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom CSS overlay, not a native <dialog>'s top-layer/showModal behavior
             <section className="planner-day-panel" role="dialog" aria-modal="true" aria-labelledby="planner-day-title">
               <button className="planner-day-close" type="button" onClick={() => { setSelectedPlannerDay(null); setPlannerEntryMode(null); setPlannerEditingId(null); }} aria-label="Close Ops Planner day details"><X size={18} /></button>
               <span className="eyebrow">Ops Planner · {activeDepartment}</span>
@@ -3255,8 +3274,10 @@ export default function Home() {
         </div>
 
         {composerOpen && (
+          // Custom CSS overlay, not a native <dialog>'s top-layer/showModal behavior.
           <div
             className="composer glass-panel"
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
             role="dialog"
             aria-label="New message"
           >
@@ -3272,7 +3293,7 @@ export default function Home() {
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={sendMessage} tabIndex={0} aria-label="Message details">
+            <form onSubmit={sendMessage} aria-label="Message details">
               {replyContext && (
                 <div className="reply-context" aria-label="Replying to message">
                   <span>Replying to {replyContext.from} · {replyContext.time}</span>
@@ -3351,7 +3372,7 @@ export default function Home() {
                   <ShieldCheck size={13} /> {messageError}
                 </p>
               )}
-              {messageDeliveryNotice && <p className="message-delivery-notice" role="status" aria-live="polite"><ShieldCheck size={13} /> {messageDeliveryNotice}</p>}
+              {messageDeliveryNotice && <output className="message-delivery-notice" aria-live="polite"><ShieldCheck size={13} /> {messageDeliveryNotice}</output>}
               {attachment && (
                 <div className="attachment-chip">
                   <Paperclip size={13} />
@@ -3371,10 +3392,10 @@ export default function Home() {
                 </div>
               )}
               {dictating && (
-                <p className="dictation-status" role="status" aria-live="polite">
+                <output className="dictation-status" aria-live="polite">
                   <span aria-hidden="true" />
                   Voice to text is listening
-                </p>
+                </output>
               )}
               <div className="composer-footer">
                 <div className="composer-tools">
