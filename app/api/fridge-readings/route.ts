@@ -38,7 +38,7 @@ async function resolveDepartment(db: D1Database, request: Request) {
 // there - the "nothing is ever overwritten" promise on the page is literal.
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const url = new URL(request.url);
     const unitId = url.searchParams.get('unitId');
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const body = (await request.json()) as { unitId?: string; readingC?: number; correctiveAction?: string };
     const unitId = body.unitId;

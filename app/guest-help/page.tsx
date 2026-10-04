@@ -150,7 +150,7 @@ export default function GuestHelpPage() {
         // A missed poll just tries again next interval - nothing to show the guest for it.
       }
     }
-    poll();
+    void poll();
     const interval = window.setInterval(poll, 15000);
     return () => {
       cancelled = true;

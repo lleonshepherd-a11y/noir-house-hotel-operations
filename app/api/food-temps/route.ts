@@ -52,7 +52,7 @@ function mapRow(row: LogRow) {
 // scoped to who logged it.
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const url = new URL(request.url);
     const days = Math.min(Number(url.searchParams.get('days') || 1), 90);
@@ -82,7 +82,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const body = (await request.json()) as {
       checkType?: string;

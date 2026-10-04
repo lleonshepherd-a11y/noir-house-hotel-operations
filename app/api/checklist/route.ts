@@ -30,7 +30,7 @@ async function resolveDepartment(db: D1Database, request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const { id: departmentId, slug } = await resolveDepartment(db, request);
     const items = checklistForSlug(slug);
     const date = todayKey();
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const body = (await request.json()) as { itemKey?: string };
     const itemKey = body.itemKey;
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const url = new URL(request.url);
     const itemKey = url.searchParams.get('itemKey');

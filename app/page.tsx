@@ -737,7 +737,10 @@ export default function Home() {
     fetch(
       'https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m,weather_code&timezone=Europe%2FLondon',
     )
-      .then((response) => response.json())
+      .then(
+        (response): Promise<{ current?: { weather_code?: number; temperature_2m?: number } }> =>
+          response.json(),
+      )
       .then((data) => {
         const code = Number(data.current?.weather_code ?? 2);
         const kind = code <= 1 ? 'sun' : code >= 51 ? 'rain' : 'cloud';
@@ -955,7 +958,6 @@ export default function Home() {
         hour12: false,
       }).format(now)
     : '--:--:--';
-  const encouragementHour = now?.getHours() ?? 9;
   const encouragementMinuteOfDay = now ? now.getHours() * 60 + now.getMinutes() : 8 * 60;
   const isStaffMorningGreeting = encouragementMinuteOfDay >= 7 * 60 + 30 && encouragementMinuteOfDay < 9 * 60 + 30;
   const encouragementPeriod = isStaffMorningGreeting
@@ -989,12 +991,14 @@ export default function Home() {
     if (!token) return stop;
     flush();
     void fetch('/api/departments', { headers: { authorization: `Bearer ${token}` } })
-      .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((data: { departments: Array<{ id: string; name: string }> }) => setDepartmentDirectory(data.departments))
+      .then((response): Promise<{ departments: Array<{ id: string; name: string }> }> =>
+        response.ok ? response.json() : Promise.reject())
+      .then((data) => setDepartmentDirectory(data.departments))
       .catch(() => setMessageDeliveryNotice('Department session needs renewing'));
     void fetch('/api/staff-session', { headers: { authorization: `Bearer ${token}` } })
-      .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((data: { departmentName?: string | null }) => {
+      .then((response): Promise<{ departmentName?: string | null }> =>
+        response.ok ? response.json() : Promise.reject())
+      .then((data) => {
         if (data.departmentName) {
           setConnectedDepartment(data.departmentName);
           setDepartmentSessionStatus(`${data.departmentName} connected`);

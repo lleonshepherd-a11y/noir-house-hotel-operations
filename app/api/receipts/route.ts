@@ -11,7 +11,7 @@ const receiptColumns = {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const body = (await request.json()) as { messageId?: string; event?: keyof typeof receiptColumns };
     if (!body.messageId || !body.event || !receiptColumns[body.event]) {

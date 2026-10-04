@@ -23,7 +23,7 @@ function isValidColor(value: unknown): value is string {
 // anyone from any department can manage the shared list of event types.
 export async function GET() {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const hotel = await resolveHotel(db);
     if (!hotel) return Response.json({ categories: [] });
     const rows = await db.prepare(`SELECT id, label, color, position FROM wall_planner_categories
@@ -37,7 +37,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const hotel = await resolveHotel(db);
     if (!hotel) return Response.json({ error: 'No hotel configured' }, { status: 500 });
     const body = (await request.json()) as { label?: string; color?: string };
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
@@ -87,7 +87,7 @@ export async function PATCH(request: Request) {
 // the type appearing in the legend and the add-entry form.
 export async function DELETE(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) return Response.json({ error: 'id is required' }, { status: 400 });

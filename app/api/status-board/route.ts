@@ -17,7 +17,7 @@ function boardType(value: string | null): BoardType | null {
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const type = boardType(new URL(request.url).searchParams.get('type'));
     if (!type) return Response.json({ error: 'A valid board type is required' }, { status: 400 });
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const body = (await request.json()) as Record<string, unknown>;
     const type = boardType(typeof body.type === 'string' ? body.type : null);

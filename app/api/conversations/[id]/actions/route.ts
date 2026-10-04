@@ -9,7 +9,7 @@ const knownCommands: ReadonlySet<Command> = new Set(['watch', 'unwatch', 'step_i
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     if (!isManagement(identity)) return new Response('Forbidden', { status: 403 });
     const conversationId = (await context.params).id;

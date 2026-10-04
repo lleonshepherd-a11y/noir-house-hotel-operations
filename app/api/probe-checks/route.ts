@@ -18,7 +18,7 @@ async function resolveDepartment(db: D1Database, request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const date = todayKey();
     const row = await db.prepare('SELECT checked_at FROM probe_checks WHERE department_id = ? AND checked_date = ?')
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const date = todayKey();
     const now = new Date().toISOString();

@@ -7,7 +7,7 @@ function slugify(name: string) {
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const rows = await db.prepare('SELECT id, name, slug FROM departments WHERE hotel_id = ? ORDER BY created_at')
       .bind(identity.hotelId).all<{ id: string; name: string; slug: string }>();
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const body = (await request.json()) as { name?: string };
     const name = body.name?.trim();
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const url = new URL(request.url);
     const id = url.searchParams.get('id');

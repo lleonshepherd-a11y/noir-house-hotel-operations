@@ -4,7 +4,7 @@ import { isManagement } from '@/lib/backend/types';
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     if (!isManagement(identity)) return new Response('Forbidden', { status: 403 });
     const url = new URL(request.url);

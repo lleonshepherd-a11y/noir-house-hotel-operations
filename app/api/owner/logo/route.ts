@@ -6,7 +6,7 @@ const allowedTypes = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/sv
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const data = await request.formData();
     const file = data.get('file');
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const hotel = await db.prepare('SELECT logo_object_key FROM hotels WHERE id = ?')
       .bind(identity.hotelId).first<{ logo_object_key: string | null }>();

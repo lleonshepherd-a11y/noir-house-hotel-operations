@@ -31,7 +31,7 @@ function mapRow(row: EntryRow, departments: string[]) {
 // each belong to one department.
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const url = new URL(request.url);
     const year = Number(url.searchParams.get('year'));
     const month = Number(url.searchParams.get('month')); // 1-indexed
@@ -82,7 +82,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const body = (await request.json()) as {
       departments?: string[];
       date?: string;

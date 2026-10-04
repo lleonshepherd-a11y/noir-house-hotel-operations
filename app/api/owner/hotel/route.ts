@@ -3,7 +3,7 @@ import { requireOwnerSession } from '@/lib/backend/ownerSessions';
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const hotel = await db.prepare('SELECT name, logo_object_key FROM hotels WHERE id = ?')
       .bind(identity.hotelId).first<{ name: string; logo_object_key: string | null }>();
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const body = (await request.json()) as { name?: string };
     const name = body.name?.trim();

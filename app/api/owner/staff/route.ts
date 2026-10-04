@@ -11,7 +11,7 @@ interface StaffRow {
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const rows = await db.prepare(`SELECT s.id, s.display_name, s.role, d.name AS department_name
         FROM staff s JOIN departments d ON d.id = s.department_id
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const body = (await request.json()) as { displayName?: string; departmentId?: string; pin?: string; role?: string };
     const displayName = body.displayName?.trim();

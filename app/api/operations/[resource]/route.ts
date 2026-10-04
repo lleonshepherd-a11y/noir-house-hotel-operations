@@ -22,7 +22,7 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
   try {
     const name = operationName((await context.params).resource);
     if (!name) return new Response('Not found', { status: 404 });
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const url = new URL(request.url);
     const departmentId = url.searchParams.get('departmentId') ?? identity.departmentId;
@@ -40,7 +40,7 @@ export async function POST(request: Request, context: { params: Promise<{ resour
   try {
     const name = operationName((await context.params).resource);
     if (!name) return new Response('Not found', { status: 404 });
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const body = (await request.json()) as Record<string, unknown>;
     const departmentId = typeof body.departmentId === 'string' ? body.departmentId : identity.departmentId;
@@ -83,7 +83,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ resou
 }
 
 async function patchTask(request: Request) {
-  const db = await getDatabase();
+  const db = getDatabase();
   const identity = await requireStaffSession(db, bearerToken(request));
   const body = (await request.json()) as { id?: string; status?: string };
   if (!body.id) return Response.json({ error: 'id is required' }, { status: 400 });
@@ -112,7 +112,7 @@ async function patchTask(request: Request) {
 }
 
 async function patchGuestRequest(request: Request) {
-  const db = await getDatabase();
+  const db = getDatabase();
   const identity = await requireStaffSession(db, bearerToken(request));
   const body = (await request.json()) as { id?: string; reply?: string; status?: string };
   if (!body.id) return Response.json({ error: 'id is required' }, { status: 400 });

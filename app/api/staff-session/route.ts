@@ -3,7 +3,7 @@ import { endStaffSession, requireStaffSession, startDepartmentSession, startStaf
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const department = await db.prepare('SELECT name FROM departments WHERE id = ? AND hotel_id = ?')
       .bind(identity.departmentId, identity.hotelId)
@@ -41,6 +41,6 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const token = bearerToken(request);
   if (!token) return Response.json({ error: 'Staff session required' }, { status: 401 });
-  await endStaffSession(await getDatabase(), token);
+  await endStaffSession(getDatabase(), token);
   return new Response(null, { status: 204 });
 }

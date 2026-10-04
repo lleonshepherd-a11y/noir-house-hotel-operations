@@ -3,7 +3,7 @@ import { endOwnerSession, loginOwner, requireOwnerSession, signUpOwner } from '@
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireOwnerSession(db, bearerToken(request));
     const hotel = await db.prepare('SELECT name FROM hotels WHERE id = ?').bind(identity.hotelId).first<{ name: string }>();
     return Response.json({ identity, hotelName: hotel?.name ?? null });
@@ -33,6 +33,6 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const token = bearerToken(request);
   if (!token) return Response.json({ error: 'Owner session required' }, { status: 401 });
-  await endOwnerSession(await getDatabase(), token);
+  await endOwnerSession(getDatabase(), token);
   return new Response(null, { status: 204 });
 }

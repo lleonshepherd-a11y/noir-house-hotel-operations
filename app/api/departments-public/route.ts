@@ -12,7 +12,7 @@ import { getDatabase } from '@/lib/backend/runtime';
 // visually yet.
 export async function GET() {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const rows = await db.prepare('SELECT DISTINCT name FROM departments ORDER BY name').all<{ name: string }>();
     return Response.json({ departments: rows.results.map((row) => row.name) });
   } catch (error) {

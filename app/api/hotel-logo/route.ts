@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   try {
     const hotelId = new URL(request.url).searchParams.get('hotelId');
     if (!hotelId) return new Response('hotelId is required', { status: 400 });
-    const db = await getDatabase();
+    const db = getDatabase();
     const hotel = await db.prepare('SELECT logo_object_key FROM hotels WHERE id = ?')
       .bind(hotelId).first<{ logo_object_key: string | null }>();
     if (!hotel?.logo_object_key) return new Response('Not found', { status: 404 });

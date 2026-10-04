@@ -32,7 +32,7 @@ async function resolveDepartment(db: D1Database, request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const date = todayKey();
     const session = currentSession();
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const body = (await request.json()) as { name?: string; kind?: string };
     const name = (body.name || '').trim();
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const url = new URL(request.url);
     const unitId = url.searchParams.get('unitId');
@@ -128,7 +128,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const department = await resolveDepartment(db, request);
     const url = new URL(request.url);
     const unitId = url.searchParams.get('unitId');

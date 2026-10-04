@@ -73,7 +73,7 @@ async function departmentFeed(db: D1Database, identity: StaffIdentity, requested
 
 export async function GET(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const url = new URL(request.url);
     const conversationId = url.searchParams.get('conversationId');
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const identity = await requireStaffSession(db, bearerToken(request));
     const body = (await request.json()) as {
       conversationId?: string;

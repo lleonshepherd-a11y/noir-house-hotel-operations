@@ -25,7 +25,7 @@ async function sendAlert(title, message) {
 }
 
 export default {
-  async scheduled(event, env, ctx) {
+  async scheduled(event, env, _ctx) {
     try {
       const response = await fetch('https://dashboard.freedomservices.online/api/cron/escalate', {
         method: 'POST',

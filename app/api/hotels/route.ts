@@ -5,7 +5,7 @@ import { getDatabase } from '@/lib/backend/runtime';
 // (the fixed department dropdown on this same screen was already public).
 export async function GET() {
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     const rows = await db.prepare('SELECT id, name FROM hotels ORDER BY name').all<{ id: string; name: string }>();
     return Response.json({ hotels: rows.results });
   } catch (error) {
