@@ -160,8 +160,8 @@ window.addEventListener("error", e => {
   <h1>Office message flow</h1>
   Drag to orbit · scroll to zoom · click a room to see its queue.
   <div>
-    <span class="key" style="background:#4da3ff"></span>Normal
-    <span class="key" style="background:#ff5a4d"></span>Urgent
+    People wear their department's colour.
+    <span class="key" style="background:#ff5a4d"></span>Red marker = urgent
   </div>
   <div class="row" id="floorButtons">
     <button data-show="all" class="on">Both floors</button>
@@ -186,9 +186,11 @@ const FLOORS = [
 
 const FLOOR_SIZE  = { width: 30, depth: 17 };  // slab size (x, z)
 const ROOM_HEIGHT = 3;
-const CORRIDOR_Z  = 0;       // messages run along this line on every floor
-const STAIR_X     = 12.5;    // where messages change floor
-const MESSAGE_Y   = 0.45;    // how high above the floor messages travel
+const CORRIDOR_Z  = 0;       // centre line of the corridor on every floor
+const CORRIDOR_HALF_WIDTH = 1.1;  // how far either side of the centre people may walk
+const STAIR_X     = 12.5;    // centre of the stair ramp between floors
+const STAIR_RUN   = 1.6;     // the ramp climbs from STAIR_X - RUN to STAIR_X + RUN
+const LINE_Y      = 0.04;    // floor guide lines sit just above the floor
 
 // Departments. x/z = room centre, w/d = room size, floor = FLOORS level.
 // processEvery = seconds the team takes to clear one queued item.
@@ -285,13 +287,22 @@ const SAMPLE_MESSAGES = {
   ],
 };
 
-const SPAWN_EVERY      = 0.5;   // seconds between sending the next message from the outbox
-const MESSAGE_SPEED    = 5;     // world units per second
+// People and timing. Every "[min, max]" is a random range, so no two
+// people move, pause or set off in step.
+const SEND_GAP         = [0.2, 1.4];   // seconds between people setting off
+const RESEND_DELAY     = [2, 9];       // a cleared message waits this long before going out again
+const WALK_SPEED       = [1.6, 3.0];   // each person's own walking pace (world units per second)
+const URGENT_HURRY     = 1.35;         // urgent messages walk this much faster
+const PERSON_SCALE     = 1.3;          // size of the little people (1 = about a third of room height)
+const DOOR_PAUSE       = [0.3, 1.4];   // pause at the door before going in
+const CHAT_CHANCE      = 0.2;          // chance of stopping for a chat on the way
+const CHAT_PAUSE       = [1, 3];       // how long a chat lasts
+const WORK_JITTER      = [0.7, 1.3];   // each clear takes processEvery x a value in this range
+const SKIN_TONES       = ["#f1c7a5", "#e2b08a", "#c68b62", "#9a6544", "#6e4730"];
 const BUSY_THRESHOLD   = 6;     // rooms glow red at this queue length
 const LABEL_MAX_ITEMS  = 8;     // items listed in the click label
 
 const COLORS = {
-  normal:   "#4da3ff",
   urgent:   "#ff5a4d",
   line:     "#5b6b8c",
   stair:    "#8aa0c8",
@@ -417,13 +428,14 @@ function startOffice() {
   function line(name, points, hex, parent) {
     const l = BABYLON.MeshBuilder.CreateLines(name, { points }, scene);
     l.color = BABYLON.Color3.FromHexString(hex);
+    l.alpha = 0.45;            // faint: people wander around these, not along them
     l.isPickable = false;
     if (parent) l.parent = parent;
     return l;
   }
 
   FLOORS.forEach(f => {
-    const y = f.y + MESSAGE_Y;
+    const y = f.y + LINE_Y;
     line("corridor" + f.level, [
       new BABYLON.Vector3(-FLOOR_SIZE.width / 2 + 1, y, CORRIDOR_Z),
       new BABYLON.Vector3(STAIR_X, y, CORRIDOR_Z),
@@ -431,7 +443,7 @@ function startOffice() {
   });
 
   DEPARTMENTS.forEach(d => {
-    const y = floorY(d.floor) + MESSAGE_Y;
+    const y = floorY(d.floor) + LINE_Y;
     line(d.id + "-spur", [
       new BABYLON.Vector3(d.x, y, d.z),
       new BABYLON.Vector3(d.x, y, CORRIDOR_Z),
@@ -440,8 +452,8 @@ function startOffice() {
 
   for (let i = 0; i < FLOORS.length - 1; i++) {
     line("stair" + i, [
-      new BABYLON.Vector3(STAIR_X, FLOORS[i].y + MESSAGE_Y, CORRIDOR_Z),
-      new BABYLON.Vector3(STAIR_X, FLOORS[i + 1].y + MESSAGE_Y, CORRIDOR_Z),
+      new BABYLON.Vector3(STAIR_X - STAIR_RUN, FLOORS[i].y + LINE_Y, CORRIDOR_Z),
+      new BABYLON.Vector3(STAIR_X + STAIR_RUN, FLOORS[i + 1].y + LINE_Y, CORRIDOR_Z),
     ], COLORS.stair);
   }
 
@@ -449,38 +461,110 @@ function startOffice() {
      4. MESSAGES — spawn, route, move, queue and process.
      ===================================================================== */
 
-  const travelling = [];   // messages currently moving
+  const travelling = [];   // people currently walking a message somewhere
+  const leaving = [];      // people whose message was cleared, walking out and fading
   let messageCounter = 0;
+  let clock = 0;           // seconds since start (paused time doesn't count)
 
-  // The path a message takes: out of its room, along the corridor,
-  // up/down the stairs if needed, along the corridor, into the room.
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const randIn = range => rand(range[0], range[1]);
+  const V3 = (x, y, z) => new BABYLON.Vector3(x, y, z);
+
+  // ---- People --------------------------------------------------------
+
+  // Shared shapes, cloned for each person (cheap: clones share geometry).
+  const bodyShape = BABYLON.MeshBuilder.CreateCapsule("bodyShape",
+    { height: 0.62, radius: 0.15, tessellation: 12, subdivisions: 1 }, scene);
+  const headShape = BABYLON.MeshBuilder.CreateSphere("headShape", { diameter: 0.26, segments: 10 }, scene);
+  const markShape = BABYLON.MeshBuilder.CreateSphere("markShape", { diameter: 0.13, segments: 8 }, scene);
+  [bodyShape, headShape, markShape].forEach(m => { m.isPickable = false; m.setEnabled(false); });
+
+  // A small person: body in the department colour, a head, and a red marker if urgent.
+  function createPerson(deptColor, urgent) {
+    const root = new BABYLON.TransformNode("person" + messageCounter, scene);
+    root.scaling.setAll(PERSON_SCALE);
+    const part = (shape, y, material) => {
+      const m = shape.clone(shape.name + messageCounter, root);
+      m.setEnabled(true);
+      m.position.y = y;
+      m.material = material;
+      return m;
+    };
+    const body = part(bodyShape, 0.31, flatMaterial("body-" + deptColor, deptColor));
+    const tone = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
+    const head = part(headShape, 0.76, flatMaterial("skin-" + tone, tone));
+    const mark = urgent ? part(markShape, 1.06, flatMaterial("urgent-mark", COLORS.urgent)) : null;
+    return { root, body, head, mark, parts: [body, head, mark].filter(Boolean) };
+  }
+
+  // ---- Routes --------------------------------------------------------
+
+  // Which way a room's door faces: rooms on the +z side open towards -z, and vice versa.
+  const doorSide = d => (d.z > CORRIDOR_Z ? -1 : 1);
+
+  // A random spot just inside (inset > 0) or just outside (inset < 0) a room's door wall.
+  function doorPoint(d, doorX, inset) {
+    const wallZ = d.z + doorSide(d) * d.d / 2;
+    return V3(doorX, floorY(d.floor), wallZ - doorSide(d) * inset);
+  }
+
+  // Pick a corridor position: a lane that varies per person, not the centre line.
+  const lane = () => CORRIDOR_Z + rand(-CORRIDOR_HALF_WIDTH, CORRIDOR_HALF_WIDTH);
+
+  // Build a walk as a list of waypoints { p, pause }. Every call is different:
+  // own exit and entry spots, own lane, a little meandering, maybe a chat stop.
   function routeBetween(from, to) {
-    const fy = floorY(from.floor) + MESSAGE_Y;
-    const ty = floorY(to.floor) + MESSAGE_Y;
-    const pts = [
-      new BABYLON.Vector3(from.x, fy, from.z),
-      new BABYLON.Vector3(from.x, fy, CORRIDOR_Z),
-    ];
-    if (from.floor !== to.floor) {
-      pts.push(new BABYLON.Vector3(STAIR_X, fy, CORRIDOR_Z));
-      pts.push(new BABYLON.Vector3(STAIR_X, ty, CORRIDOR_Z));
+    const pts = [];
+    const add = (p, pause = 0) => pts.push({ p, pause });
+    const fy = floorY(from.floor), ty = floorY(to.floor);
+    const outX = from.x + rand(-from.w / 2 + 0.7, from.w / 2 - 0.7);
+    const inX  = to.x   + rand(-to.w / 2 + 0.7,   to.w / 2 - 0.7);
+
+    // Leave from somewhere in the sending room, out through the door.
+    add(V3(from.x + rand(-from.w / 3, from.w / 3), fy, from.z + rand(-from.d / 4, from.d / 4)));
+    add(doorPoint(from, outX, 0.45));
+    add(doorPoint(from, outX + rand(-0.3, 0.3), -0.35));
+
+    // Along the corridor, drifting between lanes, possibly stopping to chat.
+    const corridorLeg = (y, x1, x2) => {
+      const stops = 1 + Math.floor(Math.random() * 2);
+      for (let i = 1; i <= stops; i++) {
+        const t = i / (stops + 1) + rand(-0.12, 0.12);
+        add(V3(x1 + (x2 - x1) * t, y, lane()), Math.random() < CHAT_CHANCE ? randIn(CHAT_PAUSE) : 0);
+      }
+    };
+
+    if (from.floor === to.floor) {
+      add(V3(outX + rand(-0.4, 0.4), fy, lane()));
+      corridorLeg(fy, outX, inX);
+    } else {
+      // Walk to the stair ramp, climb or descend it, then carry on.
+      const goingUp = to.floor > from.floor;
+      const lowX = STAIR_X - STAIR_RUN, highX = STAIR_X + STAIR_RUN;
+      const startX = goingUp ? lowX : highX, endX = goingUp ? highX : lowX;
+      const stairZ = CORRIDOR_Z + rand(-0.5, 0.5);
+      add(V3(outX + rand(-0.4, 0.4), fy, lane()));
+      corridorLeg(fy, outX, startX);
+      add(V3(startX, fy, stairZ));
+      add(V3(endX, ty, stairZ + rand(-0.2, 0.2)));
+      corridorLeg(ty, endX, inX);
     }
-    pts.push(new BABYLON.Vector3(to.x, ty, CORRIDOR_Z));
-    pts.push(new BABYLON.Vector3(to.x, ty, to.z));
+
+    // Up to the door, a brief pause, then step inside.
+    add(V3(inX + rand(-0.4, 0.4), ty, lane()));
+    add(doorPoint(to, inX, -0.35), randIn(DOOR_PAUSE));
+    add(doorPoint(to, inX + rand(-0.2, 0.2), 0.5));
     return pts;
   }
 
-  // Build a message (sphere + route) from a sample entry.
+  // ---- Messages ------------------------------------------------------
+
+  // Build a message (a person + their route) from a sample entry.
   function createMessage(sample) {
     const from = rooms[sample.from].dept, to = rooms[sample.to].dept;
-    const sphere = BABYLON.MeshBuilder.CreateSphere("msg" + messageCounter,
-      { diameter: sample.urgent ? 0.5 : 0.38, segments: 12 }, scene);
-    sphere.material = flatMaterial(sample.urgent ? "msg-urgent" : "msg-normal",
-      sample.urgent ? COLORS.urgent : COLORS.normal);
-    sphere.isPickable = false;
-
+    const person = createPerson(from.color, sample.urgent);
     const path = routeBetween(from, to);
-    sphere.position.copyFrom(path[0]);
+    person.root.position.copyFrom(path[0].p);
 
     return {
       id: ++messageCounter,
@@ -488,26 +572,36 @@ function startOffice() {
       from, to,
       urgent: sample.urgent,
       text: sample.text,
-      sphere, path,
+      person, path,
       segment: 0,        // index of the path segment we're on
       along: 0,          // distance travelled along that segment
+      wait: 0,           // seconds left in a pause
+      speed: randIn(WALK_SPEED) * (sample.urgent ? URGENT_HURRY : 1),
+      phase: Math.random() * Math.PI * 2,   // offsets bobbing and pace drift
+      step: Math.random() * Math.PI * 2,    // walking-cycle position
+      spot: null,        // where they stand while waiting in the room
+      lookAt: Math.random() * Math.PI * 2,  // direction they face while waiting
+      nextGlance: rand(1, 5),
     };
   }
 
-  // Messages waiting to be sent (oldest first).
+  // Messages waiting to be sent: { sample, readyAt }.
   const outbox = [];
+  let nextSendIn = randIn(SEND_GAP);
 
-  // Send the next message in the outbox on its way.
+  // Send a random ready message on its way (random pick, so the order never repeats).
   function spawnMessage() {
-    const sample = outbox.shift();
-    if (!sample) return;
-    const m = createMessage(sample);
+    const ready = outbox.filter(o => o.readyAt <= clock);
+    if (!ready.length) return;
+    const pickOne = ready[Math.floor(Math.random() * ready.length)];
+    outbox.splice(outbox.indexOf(pickOne), 1);
+    const m = createMessage(pickOne.sample);
     travelling.push(m);
     if (openLabelFor === m.to.id) renderLabel(rooms[m.to.id]);   // show it as incoming
   }
 
-  // Turn SAMPLE_MESSAGES into messages: half start in their room's queue,
-  // the rest go in the outbox and set off over the first few seconds.
+  // Turn SAMPLE_MESSAGES into messages: half start waiting in their room,
+  // the rest go in the outbox and set off at scattered times.
   function seedQueues() {
     let n = 0;
     Object.entries(SAMPLE_MESSAGES).forEach(([toId, list]) => {
@@ -517,37 +611,93 @@ function startOffice() {
           console.warn("SAMPLE_MESSAGES: unknown department in", sample);
           return;
         }
-        if (n++ % 2 === 0) arrive(createMessage(sample)); else outbox.push(sample);
+        if (n++ % 2 === 0) arrive(createMessage(sample), true);
+        else outbox.push({ sample, readyAt: rand(0, 12) });
       });
     });
   }
 
-  // Move every travelling message forward by dt seconds.
+  // Shortest signed angle from a to b, so turning never spins the long way round.
+  const angleDelta = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
+
+  // Turn a person smoothly towards a heading.
+  function turnTowards(m, heading, dt, rate = 8) {
+    const r = m.person.root.rotation;
+    r.y += angleDelta(r.y, heading) * Math.min(1, dt * rate);
+  }
+
+  // Walking animation: a little bob and sway in time with their steps.
+  function animateWalk(m, dt, speed) {
+    m.step += dt * speed * 5.5;
+    m.person.body.position.y = 0.31 + Math.abs(Math.sin(m.step)) * 0.045;
+    m.person.head.position.y = 0.76 + Math.abs(Math.sin(m.step)) * 0.045;
+    m.person.body.rotation.z = Math.sin(m.step) * 0.07;
+    if (m.person.mark) m.person.mark.position.y = 1.06 + Math.abs(Math.sin(m.step)) * 0.045;
+  }
+
+  // Standing still: slow breathing, an occasional glance around.
+  function animateIdle(m, dt) {
+    const breathe = Math.sin(clock * 1.6 + m.phase) * 0.012;
+    m.person.body.position.y = 0.31 + breathe;
+    m.person.head.position.y = 0.76 + breathe;
+    m.person.body.rotation.z *= 0.9;
+    m.nextGlance -= dt;
+    if (m.nextGlance <= 0) {
+      m.lookAt += rand(-1.3, 1.3);
+      m.nextGlance = rand(2, 6);
+    }
+    turnTowards(m, m.lookAt, dt, 2.5);
+  }
+
+  // Pulse the urgent marker so it catches the eye.
+  function animateMark(m) {
+    if (m.person.mark) m.person.mark.scaling.setAll(1 + Math.sin(clock * 6 + m.phase) * 0.18);
+  }
+
+  // Move every walking person forward by dt seconds.
   function moveMessages(dt) {
     for (let i = travelling.length - 1; i >= 0; i--) {
       const m = travelling[i];
-      let step = MESSAGE_SPEED * dt * (m.urgent ? 1.4 : 1);
+      animateMark(m);
+
+      if (m.wait > 0) {            // pausing at a door or chatting
+        m.wait -= dt;
+        animateIdle(m, dt);
+        continue;
+      }
+
+      // Each person's pace drifts a little, like someone walking naturally.
+      const speed = m.speed * (1 + 0.15 * Math.sin(clock * 0.8 + m.phase));
+      let step = speed * dt;
 
       while (step > 0 && m.segment < m.path.length - 1) {
-        const a = m.path[m.segment], b = m.path[m.segment + 1];
-        const segLen = BABYLON.Vector3.Distance(a, b);
-        const left = segLen - m.along;
+        const a = m.path[m.segment].p, b = m.path[m.segment + 1].p;
+        const left = BABYLON.Vector3.Distance(a, b) - m.along;
         if (step < left) { m.along += step; step = 0; }
-        else { step -= left; m.segment++; m.along = 0; }
+        else {
+          step -= left; m.segment++; m.along = 0;
+          m.wait = m.path[m.segment].pause;   // stop here for a moment?
+          if (m.wait > 0) break;
+        }
       }
 
       if (m.segment >= m.path.length - 1) {
         travelling.splice(i, 1);
         arrive(m);
-      } else {
-        const a = m.path[m.segment], b = m.path[m.segment + 1];
-        BABYLON.Vector3.LerpToRef(a, b, m.along / BABYLON.Vector3.Distance(a, b), m.sphere.position);
+        continue;
       }
+
+      const a = m.path[m.segment].p, b = m.path[m.segment + 1].p;
+      const len = BABYLON.Vector3.Distance(a, b) || 1;
+      BABYLON.Vector3.LerpToRef(a, b, m.along / len, m.person.root.position);
+      turnTowards(m, Math.atan2(b.x - a.x, b.z - a.z), dt);
+      animateWalk(m, dt, speed);
     }
   }
 
-  // A message reached its room: add it to the queue (urgent ones jump ahead).
-  function arrive(m) {
+  // A message reached its room: join the queue (urgent ones go to the front).
+  // `instant` places them straight on their spot (used when seeding).
+  function arrive(m, instant = false) {
     const room = rooms[m.to.id];
     if (m.urgent) {
       const firstNormal = room.queue.findIndex(q => !q.urgent);
@@ -555,39 +705,92 @@ function startOffice() {
     } else {
       room.queue.push(m);
     }
-    m.sphere.parent = floorNodes[m.to.floor];   // hide with its floor
+    m.person.root.parent = floorNodes[m.to.floor];   // hide with its floor
+    m.offset = V3(rand(-0.18, 0.18), 0, rand(-0.18, 0.18));   // so nobody stands on a grid
     layoutQueue(room);
+    if (instant) {
+      m.person.root.position.copyFrom(m.spot);
+      m.person.root.rotation.y = m.lookAt;
+    }
     refreshRoom(room);
   }
 
-  // Arrange queued spheres in a 4 x 3 grid on the room floor, stacking upward if full.
+  // Give everyone in a room a loose spot: rough rows, front of the queue
+  // nearest the far wall, each with their own small offset.
   function layoutQueue(room) {
-    const d = room.dept, cols = 4, rows = 3, gap = 0.6;
+    const d = room.dept, cols = 4;
+    const rows = Math.max(3, Math.ceil(room.queue.length / cols));
+    const gapX = (d.w - 1.4) / (cols - 1), gapZ = (d.d - 1.6) / (rows - 1 || 1);
+    const backZ = d.z - doorSide(d) * (d.d / 2 - 0.8);
     room.queue.forEach((m, i) => {
-      const col = i % cols, row = Math.floor(i / cols) % rows, layer = Math.floor(i / (cols * rows));
-      m.sphere.position.set(
-        d.x + (col - (cols - 1) / 2) * gap,
-        floorY(d.floor) + 0.3 + layer * 0.5,
-        d.z + (row - (rows - 1) / 2) * gap
+      const col = i % cols, row = Math.floor(i / cols);
+      m.spot = V3(
+        d.x + (col - (cols - 1) / 2) * gapX + m.offset.x,
+        floorY(d.floor),
+        backZ + doorSide(d) * row * gapZ + m.offset.z
       );
     });
   }
 
-  // Each department clears the front of its queue at its own pace.
-  const processTimers = {};
+  // Waiting people stroll to their spot if the queue moved, otherwise idle.
+  function animateQueues(dt) {
+    Object.values(rooms).forEach(room => room.queue.forEach(m => {
+      animateMark(m);
+      const pos = m.person.root.position;
+      const toSpot = m.spot.subtract(pos);
+      const dist = toSpot.length();
+      if (dist > 0.03) {
+        const move = Math.min(dist, 1.1 * dt);
+        pos.addInPlace(toSpot.scale(move / dist));
+        turnTowards(m, Math.atan2(toSpot.x, toSpot.z), dt);
+        animateWalk(m, dt, 1.1);
+      } else {
+        animateIdle(m, dt);
+      }
+    }));
+  }
+
+  // A cleared message's person walks to the door and fades away.
+  function animateLeaving(dt) {
+    for (let i = leaving.length - 1; i >= 0; i--) {
+      const m = leaving[i];
+      m.fade -= dt / 1.4;
+      const pos = m.person.root.position;
+      const toDoor = m.exit.subtract(pos);
+      const dist = toDoor.length();
+      if (dist > 0.05) {
+        pos.addInPlace(toDoor.scale(Math.min(dist, 1.3 * dt) / dist));
+        turnTowards(m, Math.atan2(toDoor.x, toDoor.z), dt);
+        animateWalk(m, dt, 1.3);
+      }
+      m.person.parts.forEach(p => { p.visibility = Math.max(0, m.fade); });
+      if (m.fade <= 0) {
+        m.person.root.dispose();
+        leaving.splice(i, 1);
+      }
+    }
+  }
+
+  // Each department clears the front of its queue at its own, slightly irregular pace.
+  const nextClear = {};
+  DEPARTMENTS.forEach(d => { nextClear[d.id] = d.processEvery * rand(0.3, 1.2); });
+
   function processQueues(dt) {
     Object.values(rooms).forEach(room => {
-      processTimers[room.dept.id] = (processTimers[room.dept.id] || 0) + dt;
-      if (processTimers[room.dept.id] >= room.dept.processEvery) {
-        processTimers[room.dept.id] = 0;
-        const done = room.queue.shift();
-        if (done) {
-          done.sphere.dispose();
-          outbox.push(done.sample);   // send it again later
-          layoutQueue(room);
-          refreshRoom(room);
-        }
-      }
+      const id = room.dept.id;
+      nextClear[id] -= dt;
+      if (nextClear[id] > 0) return;
+      nextClear[id] = room.dept.processEvery * randIn(WORK_JITTER);
+      const done = room.queue.shift();
+      if (!done) return;
+
+      // Walk out and fade, then the message goes back in the outbox for later.
+      done.exit = doorPoint(room.dept, done.person.root.position.x, 0.3);
+      done.fade = 1;
+      leaving.push(done);
+      outbox.push({ sample: done.sample, readyAt: clock + randIn(RESEND_DELAY) });
+      layoutQueue(room);
+      refreshRoom(room);
     });
   }
 
@@ -717,13 +920,15 @@ function startOffice() {
 
   seedQueues();
 
-  let spawnTimer = 0;
   scene.onBeforeRenderObservable.add(() => {
     if (paused) return;
     const dt = Math.min(engine.getDeltaTime() / 1000, 0.1);   // clamp after tab switches
-    spawnTimer += dt;
-    if (spawnTimer >= SPAWN_EVERY) { spawnTimer = 0; spawnMessage(); }
+    clock += dt;
+    nextSendIn -= dt;
+    if (nextSendIn <= 0) { nextSendIn = randIn(SEND_GAP); spawnMessage(); }
     moveMessages(dt);
+    animateQueues(dt);
+    animateLeaving(dt);
     processQueues(dt);
   });
 
@@ -731,7 +936,7 @@ function startOffice() {
   window.addEventListener("resize", () => engine.resize());
 
   // Handy for poking at the scene from the browser console.
-  window.office = { engine, scene, camera, rooms, travelling, outbox, openLabel, closeLabel };
+  window.office = { engine, scene, camera, rooms, travelling, leaving, outbox, openLabel, closeLabel };
 }
 
 /* =====================================================================
