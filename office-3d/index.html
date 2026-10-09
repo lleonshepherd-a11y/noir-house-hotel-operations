@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Office Message Flow</title>
 
-<!-- Babylon.js core + GUI, straight from the Babylon CDN (same files the Playground uses). -->
-<script src="https://cdn.babylonjs.com/babylon.js"></script>
-<script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+<!-- Babylon.js core + GUI from the Babylon CDN (same files the Playground uses).
+     Pinned to one version so a future Babylon release can't change behaviour. -->
+<script src="https://cdn.babylonjs.com/v9.30.0/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/v9.30.0/gui/babylon.gui.min.js"></script>
 
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0f1420; font-family: system-ui, sans-serif; }
@@ -26,11 +27,51 @@
     padding: 4px 10px; font: inherit; cursor: pointer;
   }
   #hud button.on { background: #3d6cf0; border-color: #3d6cf0; }
+  /* Shown instead of a blank screen if the 3D view can't start. */
+  #startupError {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 16px;
+    color: #dfe6f3; background: #0f1420; font-size: 15px; line-height: 1.5; text-align: center;
+  }
+  #startupError[hidden] { display: none; }
+  #startupError div { max-width: 460px; }
+  #startupError code { display: block; margin-top: 10px; color: #ff8a80; font-size: 13px; }
   .key { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 8px; }
 </style>
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
+
+<div id="startupError" hidden><div>
+  <strong id="startupErrorTitle">The 3D view couldn't start.</strong>
+  <p id="startupErrorHelp"></p>
+  <code id="startupErrorDetail"></code>
+</div></div>
+
+<script>
+/* =====================================================================
+   0. STARTUP CHECK — turn a silent blank screen into a readable message.
+   ===================================================================== */
+function showStartupError(title, help, detail) {
+  document.getElementById("startupErrorTitle").textContent = title;
+  document.getElementById("startupErrorHelp").textContent = help;
+  document.getElementById("startupErrorDetail").textContent = detail || "";
+  document.getElementById("startupError").hidden = false;
+}
+window.addEventListener("error", e => {
+  if (!document.getElementById("startupError").hidden) return;   // keep the first, most specific message
+  const msg = String(e.message || e.error || "Unknown error");
+  if (/BABYLON is not defined/.test(msg)) {
+    showStartupError("Babylon.js didn't load.",
+      "The page loads Babylon from cdn.babylonjs.com. Check you're online, that a firewall or ad blocker " +
+      "isn't blocking that site, and that you opened the file in a normal browser tab (some file previews block scripts).", msg);
+  } else if (/WebGL/i.test(msg)) {
+    showStartupError("This browser can't draw 3D graphics.",
+      "WebGL is turned off or unavailable. Try Chrome, Edge or Firefox, and check hardware acceleration is switched on in the browser settings.", msg);
+  } else {
+    showStartupError("The 3D view hit an error while starting.", "The message below says what went wrong.", msg);
+  }
+});
+</script>
 
 <div id="hud">
   <h1>Office message flow</h1>
@@ -180,7 +221,18 @@ const COLORS = {
    ===================================================================== */
 
 const canvas = document.getElementById("renderCanvas");
-const engine = new BABYLON.Engine(canvas, true, { stencil: true });
+if (typeof BABYLON === "undefined") {
+  throw new ReferenceError("BABYLON is not defined");   // handled by the startup check above
+}
+let engine;
+try {
+  engine = new BABYLON.Engine(canvas, true, { stencil: true });
+} catch (err) {
+  showStartupError("This browser can't draw 3D graphics.",
+    "WebGL is turned off or unavailable. Try Chrome, Edge or Firefox, and check hardware acceleration is switched on in the browser settings.",
+    String(err && err.message || err));
+  throw err;
+}
 const scene  = new BABYLON.Scene(engine);
 scene.clearColor = BABYLON.Color4.FromHexString("#0f1420ff");
 
