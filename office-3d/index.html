@@ -47,6 +47,18 @@
    0. STARTUP — load Babylon.js, and show a readable message if anything fails.
    ===================================================================== */
 
+// Some embedded viewers and previews provide a cut-down console (e.g. no
+// console.info). Fill in any missing methods so logging can never stop the page.
+(function safeConsole() {
+  try {
+    if (typeof window.console !== "object" || !window.console) window.console = {};
+    const fallback = typeof console.log === "function" ? console.log.bind(console) : function () {};
+    ["log", "info", "warn", "error", "debug"].forEach(name => {
+      if (typeof console[name] !== "function") console[name] = fallback;
+    });
+  } catch (e) { /* console is read-only here; nothing more we can do */ }
+})();
+
 // Babylon.js core + GUI, pinned to one version. The Babylon CDN (the one the
 // Playground uses) is tried first; the others host identical files and are
 // only used if it's blocked or unreachable.
@@ -78,19 +90,31 @@ function loadScript(url) {
   });
 }
 
+// Log without ever throwing, even if the console is missing or stubbed.
+function safeLog(level, message) {
+  try { (console[level] || console.log)(message); } catch (e) { /* ignore */ }
+}
+
 // Try each URL in order until one loads and defines what we need.
+// Only a failed download or a missing global counts as a failure.
 async function loadFirstWorking(label, urls, isReady) {
   const failures = [];
   for (const url of urls) {
+    if (isReady()) return;   // already available (e.g. an earlier source worked)
     try {
       await loadScript(url);
-      if (!isReady()) throw new Error("loaded, but didn't define what we need");
-      console.info(`[office-3d] ${label} loaded from ${url}`);
-      return;
     } catch (err) {
-      console.error(`[office-3d] ${label} failed to load from ${url}: ${err.message}`);
+      safeLog("error", `[office-3d] ${label} failed to load from ${url}: ${err.message}`);
       failures.push(`${url} (${err.message})`);
+      continue;
     }
+    if (isReady()) {
+      safeLog("info", `[office-3d] ${label} loaded from ${url}`);
+      return;
+    }
+    const reason = "loaded, but didn't define what we need";
+    safeLog("error", `[office-3d] ${label} failed to load from ${url}: ${reason}`);
+    failures.push(`${url} (${reason})`);
   }
   throw new Error(`${label} could not be loaded from any source:\n` + failures.join("\n"));
 }
@@ -704,7 +728,7 @@ function startOffice() {
 loadBabylon()
   .then(startOffice)
   .catch(err => {
-    console.error("[office-3d] Startup failed:", err);
+    safeLog("error", "[office-3d] Startup failed: " + (err && err.stack || err));
     if (!document.getElementById("startupError").hidden) return;   // a more specific message is already up
     const blocked = /could not be loaded/.test(err.message);
     showStartupError(
