@@ -68,44 +68,100 @@ const MESSAGE_Y   = 0.45;    // how high above the floor messages travel
 
 // Departments. x/z = room centre, w/d = room size, floor = FLOORS level.
 // processEvery = seconds the team takes to clear one queued item.
-// topics = the kind of things other teams send to this department.
 const DEPARTMENTS = [
   // ---- Ground floor ----
-  { id: "reception",  name: "Reception",   floor: 0, x: -10, z:  4.2, w: 7, d: 5, color: "#e0b04c", processEvery: 5,
-    topics: ["Visitor arrived", "Courier at desk", "Meeting room booking", "Taxi request"] },
-  { id: "post",       name: "Post Room",   floor: 0, x:  -2, z:  4.2, w: 6, d: 5, color: "#9b8cf2", processEvery: 6,
-    topics: ["Parcel to send", "Recorded delivery", "Franking request"] },
-  { id: "it",         name: "IT Support",  floor: 0, x:   6, z:  4.2, w: 6, d: 5, color: "#4cc9b0", processEvery: 9,
-    topics: ["Password reset", "Printer offline", "New starter laptop", "VPN not connecting"] },
-  { id: "accounts",   name: "Accounts",    floor: 0, x: -10, z: -4.2, w: 7, d: 5, color: "#6fbf5f", processEvery: 10,
-    topics: ["Invoice approval", "Expense claim", "Supplier payment", "PO sign-off"] },
-  { id: "hr",         name: "HR",          floor: 0, x:  -2, z: -4.2, w: 6, d: 5, color: "#f08a6c", processEvery: 11,
-    topics: ["Holiday request", "Sick note", "Contract change", "New starter forms"] },
-  { id: "facilities", name: "Facilities",  floor: 0, x:   6, z: -4.2, w: 6, d: 5, color: "#c2a27a", processEvery: 7,
-    topics: ["Heating too low", "Light bulb out", "Desk move", "Spill in kitchen"] },
+  { id: "reception",  name: "Reception",   floor: 0, x: -10, z:  4.2, w: 7, d: 5, color: "#e0b04c", processEvery: 5 },
+  { id: "post",       name: "Post Room",   floor: 0, x:  -2, z:  4.2, w: 6, d: 5, color: "#9b8cf2", processEvery: 6 },
+  { id: "it",         name: "IT Support",  floor: 0, x:   6, z:  4.2, w: 6, d: 5, color: "#4cc9b0", processEvery: 9 },
+  { id: "accounts",   name: "Accounts",    floor: 0, x: -10, z: -4.2, w: 7, d: 5, color: "#6fbf5f", processEvery: 10 },
+  { id: "hr",         name: "HR",          floor: 0, x:  -2, z: -4.2, w: 6, d: 5, color: "#f08a6c", processEvery: 11 },
+  { id: "facilities", name: "Facilities",  floor: 0, x:   6, z: -4.2, w: 6, d: 5, color: "#c2a27a", processEvery: 7 },
 
   // ---- First floor ----
-  { id: "sales",      name: "Sales",            floor: 1, x: -11, z:  4.2, w: 5, d: 5, color: "#4da3ff", processEvery: 6,
-    topics: ["New lead", "Quote request", "Client callback"] },
-  { id: "marketing",  name: "Marketing",        floor: 1, x:  -5, z:  4.2, w: 5, d: 5, color: "#e36bb5", processEvery: 8,
-    topics: ["Brochure update", "Social post approval", "Event photos"] },
-  { id: "legal",      name: "Legal",            floor: 1, x:   1, z:  4.2, w: 5, d: 5, color: "#8f9bb3", processEvery: 12,
-    topics: ["Contract review", "NDA to sign", "Data request"] },
-  { id: "ops",        name: "Operations",       floor: 1, x:   7, z:  4.2, w: 5, d: 5, color: "#f2c94c", processEvery: 7,
-    topics: ["Stock check", "Rota change", "Supplier delay"] },
-  { id: "service",    name: "Customer Service", floor: 1, x: -11, z: -4.2, w: 5, d: 5, color: "#56ccf2", processEvery: 6,
-    topics: ["Complaint escalation", "Refund request", "Order query"] },
-  { id: "projects",   name: "Projects",         floor: 1, x:  -5, z: -4.2, w: 5, d: 5, color: "#a0d468", processEvery: 9,
-    topics: ["Milestone sign-off", "Scope change", "Resource request"] },
-  { id: "directors",  name: "Directors",        floor: 1, x:   1, z: -4.2, w: 5, d: 5, color: "#ff8c42", processEvery: 11,
-    topics: ["Budget sign-off", "Board paper", "Hiring approval"] },
+  { id: "sales",      name: "Sales",            floor: 1, x: -11, z:  4.2, w: 5, d: 5, color: "#4da3ff", processEvery: 6 },
+  { id: "marketing",  name: "Marketing",        floor: 1, x:  -5, z:  4.2, w: 5, d: 5, color: "#e36bb5", processEvery: 8 },
+  { id: "legal",      name: "Legal",            floor: 1, x:   1, z:  4.2, w: 5, d: 5, color: "#8f9bb3", processEvery: 12 },
+  { id: "ops",        name: "Operations",       floor: 1, x:   7, z:  4.2, w: 5, d: 5, color: "#f2c94c", processEvery: 7 },
+  { id: "service",    name: "Customer Service", floor: 1, x: -11, z: -4.2, w: 5, d: 5, color: "#56ccf2", processEvery: 6 },
+  { id: "projects",   name: "Projects",         floor: 1, x:  -5, z: -4.2, w: 5, d: 5, color: "#a0d468", processEvery: 9 },
+  { id: "directors",  name: "Directors",        floor: 1, x:   1, z: -4.2, w: 5, d: 5, color: "#ff8c42", processEvery: 11 },
 ];
 
-const SPAWN_EVERY      = 0.5;   // seconds between new messages
-const START_QUEUE      = [1, 5]; // each room starts with this many items (min, max)
-const MAX_IN_BUILDING  = 55;    // stop sending new messages above this many (queued + moving)
-const URGENT_CHANCE    = 0.15;  // 15% of messages are urgent
-const RECEPTION_BIAS   = 0.3;   // chance a message starts at reception
+// Sample messages, grouped by the department they are sent TO.
+// from = sending department id. Add, remove or edit lines freely.
+// When a department clears a message it goes back in the outbox and is
+// sent again later, so the building keeps moving with the same content.
+const SAMPLE_MESSAGES = {
+  reception: [
+    { from: "sales",      text: "Client from Harlow & Co arriving 10:30, meeting room 2", urgent: false },
+    { from: "hr",         text: "Two interview candidates at 2pm, send them up to HR",    urgent: false },
+    { from: "facilities", text: "Lift out of service until 3pm, direct visitors to stairs", urgent: true },
+  ],
+  post: [
+    { from: "legal",      text: "Signed lease to go recorded delivery today",             urgent: true },
+    { from: "marketing",  text: "200 brochures to post to the trade show list",           urgent: false },
+    { from: "accounts",   text: "Cheque run envelopes ready for collection",              urgent: false },
+  ],
+  it: [
+    { from: "reception",  text: "Front desk printer showing paper jam",                   urgent: false },
+    { from: "hr",         text: "Laptop + login needed for new starter Monday (J. Patel)", urgent: false },
+    { from: "sales",      text: "VPN dropping every 10 minutes on client calls",          urgent: true },
+    { from: "directors",  text: "Projector in boardroom won't connect",                   urgent: false },
+  ],
+  accounts: [
+    { from: "ops",        text: "Invoice #4471 from Brightline Supplies, £2,340",         urgent: false },
+    { from: "sales",      text: "Expense claim: client lunch £86.20",                     urgent: false },
+    { from: "directors",  text: "Approve Q3 payroll before Friday",                       urgent: true },
+    { from: "facilities", text: "Cleaning contract renewal, £1,150/month",                urgent: false },
+  ],
+  hr: [
+    { from: "service",    text: "Holiday request: Amy R., 12–16 Aug",                     urgent: false },
+    { from: "ops",        text: "Sick note received for Dan K. (3 days)",                 urgent: false },
+    { from: "directors",  text: "Offer letter for Head of Sales role",                    urgent: true },
+  ],
+  facilities: [
+    { from: "accounts",   text: "Heating not working in Accounts",                        urgent: true },
+    { from: "reception",  text: "Light out above main entrance",                          urgent: false },
+    { from: "projects",   text: "Move 4 desks to first floor by Thursday",                urgent: false },
+  ],
+  sales: [
+    { from: "reception",  text: "Call back Mark at Kestrel Hotels re: quote",             urgent: false },
+    { from: "service",    text: "Customer wants to upgrade to annual plan",               urgent: false },
+    { from: "marketing",  text: "12 new leads from Tuesday's webinar",                    urgent: false },
+  ],
+  marketing: [
+    { from: "sales",      text: "Updated price sheet needed for brochure",                urgent: false },
+    { from: "directors",  text: "Approve press release before 4pm",                       urgent: true },
+    { from: "projects",   text: "Case study photos from the Leeds project",               urgent: false },
+  ],
+  legal: [
+    { from: "sales",      text: "Review Harlow & Co contract, red-lined v3",              urgent: true },
+    { from: "hr",         text: "NDA for new contractor",                                 urgent: false },
+    { from: "service",    text: "Customer data access request (GDPR), 30-day deadline",   urgent: false },
+  ],
+  ops: [
+    { from: "facilities", text: "Stationery stock low: paper, toner",                     urgent: false },
+    { from: "projects",   text: "Supplier delivery delayed to next week",                 urgent: true },
+    { from: "hr",         text: "Rota change: cover needed Saturday",                     urgent: false },
+  ],
+  service: [
+    { from: "reception",  text: "Unhappy caller, order #8812 not arrived",                urgent: true },
+    { from: "sales",      text: "Refund approved for invoice #4390",                      urgent: false },
+    { from: "ops",        text: "Tracking numbers for today's dispatches",                urgent: false },
+  ],
+  projects: [
+    { from: "directors",  text: "Sign-off needed: phase 2 milestone",                     urgent: false },
+    { from: "sales",      text: "Client asking to add a second site to scope",            urgent: false },
+    { from: "it",         text: "Server migration window: Sunday 6am",                    urgent: false },
+  ],
+  directors: [
+    { from: "accounts",   text: "Q3 budget pack for sign-off",                            urgent: true },
+    { from: "hr",         text: "Hiring approval: 2 x customer service roles",            urgent: false },
+    { from: "projects",   text: "Board paper draft for review",                           urgent: false },
+  ],
+};
+
+const SPAWN_EVERY      = 0.5;   // seconds between sending the next message from the outbox
 const MESSAGE_SPEED    = 5;     // world units per second
 const BUSY_THRESHOLD   = 6;     // rooms glow red at this queue length
 const LABEL_MAX_ITEMS  = 8;     // items listed in the click label
@@ -261,8 +317,6 @@ for (let i = 0; i < FLOORS.length - 1; i++) {
 const travelling = [];   // messages currently moving
 let messageCounter = 0;
 
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-
 // The path a message takes: out of its room, along the corridor,
 // up/down the stairs if needed, along the corridor, into the room.
 function routeBetween(from, to) {
@@ -281,12 +335,13 @@ function routeBetween(from, to) {
   return pts;
 }
 
-// Build a message (sphere + route) from one department to another.
-function createMessage(from, to, urgent) {
+// Build a message (sphere + route) from a sample entry.
+function createMessage(sample) {
+  const from = rooms[sample.from].dept, to = rooms[sample.to].dept;
   const sphere = BABYLON.MeshBuilder.CreateSphere("msg" + messageCounter,
-    { diameter: urgent ? 0.5 : 0.38, segments: 12 }, scene);
-  sphere.material = flatMaterial(urgent ? "msg-urgent" : "msg-normal",
-    urgent ? COLORS.urgent : COLORS.normal);
+    { diameter: sample.urgent ? 0.5 : 0.38, segments: 12 }, scene);
+  sphere.material = flatMaterial(sample.urgent ? "msg-urgent" : "msg-normal",
+    sample.urgent ? COLORS.urgent : COLORS.normal);
   sphere.isPickable = false;
 
   const path = routeBetween(from, to);
@@ -294,38 +349,41 @@ function createMessage(from, to, urgent) {
 
   return {
     id: ++messageCounter,
-    from, to, urgent,
-    text: pick(to.topics),
+    sample,            // the original entry, re-sent after it's cleared
+    from, to,
+    urgent: sample.urgent,
+    text: sample.text,
     sphere, path,
     segment: 0,        // index of the path segment we're on
     along: 0,          // distance travelled along that segment
   };
 }
 
-// Pick a random sender and a different receiver.
-function randomPair() {
-  const from = Math.random() < RECEPTION_BIAS ? rooms.reception.dept : pick(DEPARTMENTS);
-  let to = pick(DEPARTMENTS);
-  while (to.id === from.id) to = pick(DEPARTMENTS);
-  return [from, to];
-}
+// Messages waiting to be sent (oldest first).
+const outbox = [];
 
-// Send a new message on its way.
+// Send the next message in the outbox on its way.
 function spawnMessage() {
-  const [from, to] = randomPair();
-  travelling.push(createMessage(from, to, Math.random() < URGENT_CHANCE));
+  const sample = outbox.shift();
+  if (!sample) return;
+  const m = createMessage(sample);
+  travelling.push(m);
+  if (openLabelFor === m.to.id) renderLabel(rooms[m.to.id]);   // show it as incoming
 }
 
-// Give every room some work already waiting, so the first view isn't empty.
+// Turn SAMPLE_MESSAGES into messages: half start in their room's queue,
+// the rest go in the outbox and set off over the first few seconds.
 function seedQueues() {
-  DEPARTMENTS.forEach(to => {
-    const [min, max] = START_QUEUE;
-    const n = min + Math.floor(Math.random() * (max - min + 1));
-    for (let i = 0; i < n; i++) {
-      let from = pick(DEPARTMENTS);
-      while (from.id === to.id) from = pick(DEPARTMENTS);
-      arrive(createMessage(from, to, Math.random() < URGENT_CHANCE));
-    }
+  let n = 0;
+  Object.entries(SAMPLE_MESSAGES).forEach(([toId, list]) => {
+    list.forEach(entry => {
+      const sample = { ...entry, to: toId };
+      if (!rooms[toId] || !rooms[sample.from]) {
+        console.warn("SAMPLE_MESSAGES: unknown department in", sample);
+        return;
+      }
+      if (n++ % 2 === 0) arrive(createMessage(sample)); else outbox.push(sample);
+    });
   });
 }
 
@@ -390,6 +448,7 @@ function processQueues(dt) {
       const done = room.queue.shift();
       if (done) {
         done.sphere.dispose();
+        outbox.push(done.sample);   // send it again later
         layoutQueue(room);
         refreshRoom(room);
       }
@@ -445,11 +504,18 @@ function renderLabel(room) {
       ` · clears 1 every ${room.dept.processEvery}s`,
     "",
   ];
+  const item = m => `${m.urgent ? "[URGENT] " : ""}${m.text} — from ${m.from.name}`;
+
   if (!q.length) lines.push("Nothing waiting.");
-  q.slice(0, LABEL_MAX_ITEMS).forEach((m, i) => {
-    lines.push(`${i + 1}. ${m.urgent ? "[URGENT] " : ""}${m.text} — from ${m.from.name}`);
-  });
+  q.slice(0, LABEL_MAX_ITEMS).forEach((m, i) => lines.push(`${i + 1}. ${item(m)}`));
   if (q.length > LABEL_MAX_ITEMS) lines.push(`…and ${q.length - LABEL_MAX_ITEMS} more`);
+
+  // Messages already heading to this department.
+  const incoming = travelling.filter(m => m.to.id === room.dept.id);
+  if (incoming.length) {
+    lines.push("", `ON THE WAY (${incoming.length})`);
+    incoming.forEach(m => lines.push(`→ ${item(m)}`));
+  }
   labelText.text = lines.join("\n");
 }
 
@@ -468,11 +534,20 @@ function closeLabel() {
 }
 
 // Click a room to open its label; click empty space to close it.
-scene.onPointerObservable.add(info => {
-  if (info.type !== BABYLON.PointerEventTypes.POINTERTAP) return;
-  const hit = info.pickInfo && info.pickInfo.hit ? info.pickInfo.pickedMesh : null;
-  const deptId = hit && hit.metadata && hit.metadata.deptId;
-  if (deptId) openLabel(deptId); else closeLabel();
+// A press that moves more than a few pixels is a camera drag, not a click.
+let downAt = null;
+canvas.addEventListener("pointerdown", e => { downAt = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener("pointerup", e => {
+  if (!downAt) return;
+  const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+  downAt = null;
+  if (moved > 6) return;
+
+  // Pick only room boxes on visible floors, ignoring everything else.
+  const rect = canvas.getBoundingClientRect();
+  const hit = scene.pick(e.clientX - rect.left, e.clientY - rect.top,
+    mesh => mesh.isEnabled() && !!(mesh.metadata && mesh.metadata.deptId));
+  if (hit && hit.hit) openLabel(hit.pickedMesh.metadata.deptId); else closeLabel();
 });
 window.addEventListener("keydown", e => { if (e.key === "Escape") closeLabel(); });
 
@@ -512,11 +587,7 @@ scene.onBeforeRenderObservable.add(() => {
   if (paused) return;
   const dt = Math.min(engine.getDeltaTime() / 1000, 0.1);   // clamp after tab switches
   spawnTimer += dt;
-  if (spawnTimer >= SPAWN_EVERY) {
-    spawnTimer = 0;
-    const queued = Object.values(rooms).reduce((n, r) => n + r.queue.length, 0);
-    if (queued + travelling.length < MAX_IN_BUILDING) spawnMessage();
-  }
+  if (spawnTimer >= SPAWN_EVERY) { spawnTimer = 0; spawnMessage(); }
   moveMessages(dt);
   processQueues(dt);
 });
