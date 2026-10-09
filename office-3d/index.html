@@ -314,7 +314,7 @@ const COLORS = {
 function startOffice() {
 
   /* =====================================================================
-     2. SCENE SETUP — engine, camera, lights, GUI layer.
+     2. SCENE SETUP — engine, camera, lights, shadows, GUI layer.
      ===================================================================== */
 
   const canvas = document.getElementById("renderCanvas");
@@ -339,80 +339,305 @@ function startOffice() {
   camera.upperBetaLimit = Math.PI / 2.05;   // don't go under the ground
   camera.wheelPrecision = 20;
 
-  new BABYLON.HemisphericLight("sky", new BABYLON.Vector3(0.3, 1, 0.2), scene).intensity = 0.85;
-  const sun = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, -0.4), scene);
-  sun.intensity = 0.4;
+  // Soft lighting: a cool sky fill so nothing goes black, plus a warm sun for shape.
+  const sky = new BABYLON.HemisphericLight("sky", new BABYLON.Vector3(0.2, 1, 0.1), scene);
+  sky.intensity   = 0.6;
+  sky.diffuse     = BABYLON.Color3.FromHexString("#e6ecfa");
+  sky.groundColor = BABYLON.Color3.FromHexString("#2a3248");
+
+  const sun = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.45, -1, -0.35), scene);
+  sun.position  = new BABYLON.Vector3(20, 40, 16);
+  sun.intensity = 0.95;
+  sun.diffuse   = BABYLON.Color3.FromHexString("#fff1de");
+  sun.autoCalcShadowZBounds = true;   // fit the shadow depth range to the scene, or most shadows get clipped
+
+  // Soft-edged shadows from the sun. Anything passed to castShadow() throws one.
+  const shadows = new BABYLON.ShadowGenerator(2048, sun);
+  shadows.usePercentageCloserFiltering = true;
+  shadows.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
+  shadows.bias = 0.0015;
+  shadows.normalBias = 0.02;
+  shadows.darkness = 0.35;            // 0 = black shadows, 1 = none; keep them gentle
+  const castShadow = mesh => shadows.addShadowCaster(mesh, false);
+
+  // Filmic tone mapping gives softer highlights and richer colour.
+  scene.imageProcessingConfiguration.toneMappingEnabled = true;
+  scene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+  scene.imageProcessingConfiguration.exposure = 1.2;
 
   // Full-screen 2D layer for room names and the click label.
   const ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("ui", true, scene);
 
-  // Small helper: a flat-coloured material, cached by key.
+  // Small helper: a matte material, cached by key. `glow` lifts it slightly out of shadow.
   const materialCache = {};
-  function flatMaterial(key, hex, alpha = 1) {
+  function matteMaterial(key, hex, glow = 0.06, alpha = 1) {
     if (materialCache[key]) return materialCache[key];
     const m = new BABYLON.StandardMaterial(key, scene);
     const c = BABYLON.Color3.FromHexString(hex);
     m.diffuseColor  = c;
-    m.emissiveColor = c.scale(0.35);
-    m.specularColor = BABYLON.Color3.Black();
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = new BABYLON.Color3(0.04, 0.04, 0.04);
     m.alpha = alpha;
     materialCache[key] = m;
     return m;
   }
 
+  // Mix a colour towards a light grey (amount 0..1), for floors in a department's tint.
+  const tint = (hex, amount) => BABYLON.Color3.Lerp(
+    BABYLON.Color3.FromHexString(hex), BABYLON.Color3.FromHexString("#e9ecf2"), amount).toHexString();
+
   /* =====================================================================
-     3. BUILDING — floors, rooms, corridor and stair lines.
+     3. BUILDING — room sizes, walls, furniture, stairs and corridor plants.
      ===================================================================== */
+
+  // Building settings (kept here, next to the code that uses them).
+  const ROOM_SIZE    = { minWidth: 4.4, maxWidth: 8, minDepth: 4.2, maxDepth: 6.2 };  // quietest -> busiest
+  const ROOM_AREA_X  = [-14.6, 9.4];   // rooms fill this stretch; the stair hall is beyond it
+  const ROOM_START_Z = 1.8;            // rooms start this far either side of the corridor centre
+  const ROOM_GAP     = 0.5;            // space between neighbouring rooms
+  const WALL_HEIGHT  = 1.4;            // low "cutaway" walls so you can see in from above
+  const WALL_THICK   = 0.12;
+  const DOOR_WIDTH   = 1.3;
+  const DESK         = { width: 1.1, depth: 0.6, gap: 0.12 };
+  const ROW_PITCH    = 1.85;           // aisle + desk + chair, front to back
+  const SPINE_HALF   = 0.6;            // half-width of the clear walkway from the door to the back
+  const STAIRS       = { x: 12, width: 2, fromZ: -6, toZ: 6, steps: 20 };   // ground at fromZ, first floor at toZ
+  const FURNITURE    = { desk: "#c9a77c", monitor: "#1c2130", plant: "#3f8f5a", pot: "#8a6a50",
+                         stairs: "#3a455f", corridor: "#252e45" };
+
+  const V3 = (x, y, z) => new BABYLON.Vector3(x, y, z);
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const randIn = range => rand(range[0], range[1]);
 
   // One parent node per floor, so a whole floor can be hidden at once.
   const floorNodes = FLOORS.map(f => new BABYLON.TransformNode("floor" + f.level, scene));
   const floorY = level => FLOORS[level].y;
 
-  // Floor slabs. Upper slabs are see-through so the ground floor stays visible.
+  // ---- Room sizes from busyness ---------------------------------------
+  // Busyness = messages sent to the department x seconds it takes to clear one.
+  // The busiest room gets ROOM_SIZE.max*, the quietest ROOM_SIZE.min*.
+  // Each room's x in DEPARTMENTS sets its order along the corridor, and the
+  // sign of its z sets which side of the corridor it's on.
+  const busynessOf = d => (SAMPLE_MESSAGES[d.id] || []).length * d.processEvery;
+  (function sizeAndPlaceRooms() {
+    const loads = DEPARTMENTS.map(busynessOf);
+    const lo = Math.min(...loads), hi = Math.max(...loads);
+    DEPARTMENTS.forEach((d, i) => {
+      const t = hi > lo ? (loads[i] - lo) / (hi - lo) : 0.5;
+      d.busyness = loads[i];
+      d.side = d.z >= CORRIDOR_Z ? 1 : -1;
+      d.w = ROOM_SIZE.minWidth + t * (ROOM_SIZE.maxWidth - ROOM_SIZE.minWidth);
+      d.d = ROOM_SIZE.minDepth + t * (ROOM_SIZE.maxDepth - ROOM_SIZE.minDepth);
+    });
+    // Each side of each floor is one row of rooms, squeezed if it's too long, then centred.
+    FLOORS.forEach(f => [1, -1].forEach(side => {
+      const row = DEPARTMENTS.filter(d => d.floor === f.level && d.side === side).sort((a, b) => a.x - b.x);
+      if (!row.length) return;
+      const gaps = ROOM_GAP * (row.length - 1);
+      const total = row.reduce((sum, d) => sum + d.w, 0);
+      const squeeze = Math.min(1, (ROOM_AREA_X[1] - ROOM_AREA_X[0] - gaps) / total);
+      let x = (ROOM_AREA_X[0] + ROOM_AREA_X[1]) / 2 - (total * squeeze + gaps) / 2;
+      row.forEach(d => {
+        d.w *= squeeze;
+        d.x = x + d.w / 2;
+        d.z = side * (ROOM_START_Z + d.d / 2);
+        x += d.w + ROOM_GAP;
+      });
+    }));
+  })();
+
+  // Inside a room, "u" is the distance in from the door wall (the corridor side).
+  const inwardOf  = d => d.side;
+  const doorWallZ = d => d.z - inwardOf(d) * d.d / 2;
+  const roomPoint = (d, x, u) => V3(x, floorY(d.floor), doorWallZ(d) + inwardOf(d) * u);
+  const uOf       = (d, p) => (p.z - doorWallZ(d)) * inwardOf(d);
+
+  // ---- Floors -----------------------------------------------------------
+  // Slabs, with a darker runner marking the corridor. Upper floors are see-through.
   FLOORS.forEach(f => {
+    const alpha = f.level === 0 ? 1 : 0.35;
     const slab = BABYLON.MeshBuilder.CreateBox("slab" + f.level,
       { width: FLOOR_SIZE.width, depth: FLOOR_SIZE.depth, height: 0.15 }, scene);
     slab.position.y = f.y - 0.08;
-    slab.material = flatMaterial("slab" + f.level, COLORS.slab, f.level === 0 ? 1 : 0.35);
+    slab.material = matteMaterial("slab" + f.level, COLORS.slab, 0.1, alpha);
+    slab.receiveShadows = true;
     slab.isPickable = false;
     slab.parent = floorNodes[f.level];
+
+    const runner = BABYLON.MeshBuilder.CreateBox("corridor" + f.level,
+      { width: FLOOR_SIZE.width - 0.6, depth: ROOM_START_Z * 2 - 0.2, height: 0.02 }, scene);
+    runner.position.set(0, f.y + 0.01, CORRIDOR_Z);
+    runner.material = matteMaterial("corridor" + f.level, FURNITURE.corridor, 0.1, alpha);
+    runner.receiveShadows = true;
+    runner.isPickable = false;
+    runner.parent = floorNodes[f.level];
   });
 
-  // Rooms: a solid coloured floor tile plus a glass box you can click.
-  const rooms = {};   // id -> { dept, glass, queue: [], anchor, nameTag }
+  // ---- Furniture shapes ---------------------------------------------------
+  // Built once, hidden, then stamped into rooms as instances (cheap to draw).
+  function part(w, h, d, x, y, z) {
+    const b = BABYLON.MeshBuilder.CreateBox("part", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    return b;
+  }
+  function shape(name, parts, material) {
+    const mesh = BABYLON.Mesh.MergeMeshes(parts, true);
+    mesh.name = name;
+    mesh.material = material;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    mesh.isVisible = false;           // the template stays hidden; its instances are drawn
+    return mesh;
+  }
+  function stamp(template, parent, position, rotationY = 0) {
+    const inst = template.createInstance(template.name + "-i");
+    inst.position.copyFrom(position);
+    inst.rotation.y = rotationY;
+    inst.isPickable = false;
+    inst.parent = parent;
+    castShadow(inst);                 // a hidden template casts nothing, so each instance is added
+    return inst;
+  }
 
-  DEPARTMENTS.forEach(dept => {
-    const y = floorY(dept.floor);
+  // Desk: top, two side panels and a modesty panel. The chair side is local -z.
+  const deskShape = shape("desk", [
+    part(DESK.width, 0.05, DESK.depth, 0, 0.46, 0),
+    part(0.05, 0.44, DESK.depth - 0.04, -DESK.width / 2 + 0.05, 0.22, 0),
+    part(0.05, 0.44, DESK.depth - 0.04,  DESK.width / 2 - 0.05, 0.22, 0),
+    part(DESK.width - 0.1, 0.28, 0.03, 0, 0.28, DESK.depth / 2 - 0.04),
+  ], matteMaterial("desk", FURNITURE.desk));
 
-    const tile = BABYLON.MeshBuilder.CreateBox(dept.id + "-tile",
-      { width: dept.w, depth: dept.d, height: 0.05 }, scene);
-    tile.position.set(dept.x, y + 0.03, dept.z);
-    tile.material = flatMaterial(dept.id + "-tile", dept.color, 0.55);
-    tile.isPickable = false;
-    tile.parent = floorNodes[dept.floor];
+  // Monitor on a stand, facing the chair.
+  const monitorShape = shape("monitor", [
+    part(0.46, 0.28, 0.03, 0, 0.7, 0.12),
+    part(0.06, 0.16, 0.06, 0, 0.55, 0.13),
+    part(0.2, 0.02, 0.14, 0, 0.495, 0.13),
+  ], matteMaterial("monitor", FURNITURE.monitor, 0.15));
 
-    const glass = BABYLON.MeshBuilder.CreateBox(dept.id + "-glass",
-      { width: dept.w, depth: dept.d, height: ROOM_HEIGHT }, scene);
-    glass.position.set(dept.x, y + ROOM_HEIGHT / 2, dept.z);
-    const glassMat = new BABYLON.StandardMaterial(dept.id + "-glassMat", scene);
-    glassMat.diffuseColor  = BABYLON.Color3.FromHexString(dept.color);
-    glassMat.emissiveColor = BABYLON.Color3.FromHexString(dept.color).scale(0.25);
-    glassMat.specularColor = BABYLON.Color3.Black();
-    glassMat.alpha = 0.16;
-    glass.material = glassMat;
-    glass.enableEdgesRendering();
-    glass.edgesWidth = 3;
-    glass.edgesColor = BABYLON.Color4.FromHexString(dept.color + "cc");
-    glass.metadata = { deptId: dept.id };   // used by the click handler
-    glass.parent = floorNodes[dept.floor];
+  // Chair, centred on its own origin, back towards local -z. One per department colour.
+  const chairShapes = {};
+  function chairShape(d) {
+    if (!chairShapes[d.id]) {
+      const dark = BABYLON.Color3.FromHexString(d.color).scale(0.55).toHexString();
+      chairShapes[d.id] = shape("chair-" + d.id, [
+        part(0.42, 0.06, 0.42, 0, 0.3, 0),
+        part(0.42, 0.36, 0.05, 0, 0.53, -0.19),
+        part(0.06, 0.27, 0.06, 0, 0.14, 0),
+        part(0.36, 0.03, 0.36, 0, 0.015, 0),
+      ], matteMaterial("chair-" + d.id, dark));
+    }
+    return chairShapes[d.id];
+  }
+
+  // Plant: a pot and a leafy top.
+  const potShape = shape("pot", [BABYLON.MeshBuilder.CreateCylinder("p",
+    { height: 0.32, diameterTop: 0.34, diameterBottom: 0.26, tessellation: 12 }, scene)],
+    matteMaterial("pot", FURNITURE.pot));
+  potShape.bakeTransformIntoVertices(BABYLON.Matrix.Translation(0, 0.16, 0));
+  const leavesShape = shape("leaves", [BABYLON.MeshBuilder.CreateSphere("p",
+    { diameter: 0.62, segments: 8 }, scene)], matteMaterial("leaves", FURNITURE.plant, 0.08));
+  leavesShape.bakeTransformIntoVertices(BABYLON.Matrix.Scaling(1, 1.2, 1).multiply(BABYLON.Matrix.Translation(0, 0.66, 0)));
+  function placePlant(parent, position) {
+    const turn = rand(0, Math.PI * 2);
+    stamp(potShape, parent, position, turn);
+    const leaves = stamp(leavesShape, parent, position, turn);
+    leaves.scaling.setAll(rand(0.85, 1.15));
+  }
+
+  // ---- Rooms --------------------------------------------------------------
+  // Each room: tinted floor, solid walls in the department colour with a doorway,
+  // desks in rows around a clear walkway, and an invisible box that takes clicks.
+  const rooms = {};   // id -> { dept, hit, wallMat, baseColor, anchor, nameTag, queue, doorX, spots }
+
+  DEPARTMENTS.forEach((d, index) => {
+    const y = floorY(d.floor), parent = floorNodes[d.floor], inward = inwardOf(d);
+    const baseColor = BABYLON.Color3.FromHexString(d.color);
+    const x0 = d.x - d.w / 2, x1 = d.x + d.w / 2;
+
+    // Door: nudged off-centre by a different amount per room, so rooms differ.
+    const doorX = d.x + [0, -0.22, 0.22][index % 3] * (d.w - DOOR_WIDTH - 1);
+
+    const floor = BABYLON.MeshBuilder.CreateBox(d.id + "-floor", { width: d.w, depth: d.d, height: 0.04 }, scene);
+    floor.position.set(d.x, y + 0.025, d.z);
+    floor.material = matteMaterial(d.id + "-floor", tint(d.color, 0.62), 0.08);
+    floor.receiveShadows = true;
+    floor.isPickable = false;
+    floor.parent = parent;
+
+    // Walls: opaque, in the department colour. Its own material so it can glow when busy.
+    const wallMat = new BABYLON.StandardMaterial(d.id + "-walls", scene);
+    wallMat.diffuseColor  = baseColor;
+    wallMat.emissiveColor = baseColor.scale(0.08);
+    wallMat.specularColor = new BABYLON.Color3(0.05, 0.05, 0.05);
+    const wall = (name, w, depth, x, z) => {
+      if (w <= 0.01) return;
+      const m = BABYLON.MeshBuilder.CreateBox(d.id + "-" + name, { width: w, height: WALL_HEIGHT, depth }, scene);
+      m.position.set(x, y + WALL_HEIGHT / 2, z);
+      m.material = wallMat;
+      m.receiveShadows = true;
+      m.isPickable = false;
+      m.parent = parent;
+      castShadow(m);
+    };
+    const zDoor = doorWallZ(d), zBack = d.z + inward * d.d / 2;
+    const leftLen = doorX - DOOR_WIDTH / 2 - x0, rightLen = x1 - (doorX + DOOR_WIDTH / 2);
+    wall("back",    d.w + WALL_THICK, WALL_THICK, d.x, zBack);
+    wall("left",    WALL_THICK, d.d, x0, d.z);
+    wall("right",   WALL_THICK, d.d, x1, d.z);
+    wall("front-l", leftLen,  WALL_THICK, x0 + leftLen / 2,  zDoor);
+    wall("front-r", rightLen, WALL_THICK, x1 - rightLen / 2, zDoor);
+
+    // Desks: rows across the room, each with an aisle in front of it. The walkway
+    // around doorX is kept clear. Busier (bigger) rooms get more rows and desks.
+    const deskTurn = inward > 0 ? Math.PI : 0;     // chair side faces into the room
+    const aisles = [];
+    for (let u = 0.75; u + 1.55 <= d.d - 0.1; u += ROW_PITCH) {
+      aisles.push(u);
+      const deskU = u + 0.35 + DESK.depth / 2;
+      [[x0 + WALL_THICK + 0.35, doorX - SPINE_HALF], [doorX + SPINE_HALF, x1 - WALL_THICK - 0.35]].forEach(([a, b]) => {
+        const n = Math.floor((b - a + DESK.gap) / (DESK.width + DESK.gap));
+        if (n < 1) return;
+        let x = (a + b) / 2 - (n * DESK.width + (n - 1) * DESK.gap) / 2 + DESK.width / 2;
+        for (let k = 0; k < n; k++, x += DESK.width + DESK.gap) {
+          stamp(deskShape, parent, roomPoint(d, x, deskU), deskTurn);
+          stamp(monitorShape, parent, roomPoint(d, x, deskU), deskTurn);
+          stamp(chairShape(d), parent, roomPoint(d, x + rand(-0.12, 0.12), deskU + 0.6 + rand(-0.05, 0.08)),
+            deskTurn + rand(-0.35, 0.35));
+        }
+      });
+    }
+
+    // A plant in the front corner away from the door.
+    const plantX = doorX < d.x ? x1 - 0.45 : x0 + 0.45;
+    placePlant(parent, roomPoint(d, plantX, 0.42));
+
+    // Places people stand while waiting: along the aisles, clear of the walkway,
+    // the walls and the plant. Front of the queue stands deepest in the room.
+    const spots = [];
+    aisles.forEach(u => {
+      for (let x = x0 + 0.85; x <= x1 - 0.85; x += 0.62) {
+        if (Math.abs(x - doorX) < 0.5) continue;
+        if (Math.abs(x - plantX) < 0.8 && u < 1) continue;
+        spots.push(roomPoint(d, x, u));
+      }
+    });
+    if (!spots.length) spots.push(roomPoint(d, doorX, 0.9));
+    spots.sort((a, b) => uOf(d, b) - uOf(d, a) || Math.abs(a.x - doorX) - Math.abs(b.x - doorX));
+
+    // Invisible box covering the room: this is what a click hits.
+    const hit = BABYLON.MeshBuilder.CreateBox(d.id + "-hit", { width: d.w, depth: d.d, height: WALL_HEIGHT + 0.4 }, scene);
+    hit.position.set(d.x, y + (WALL_HEIGHT + 0.4) / 2, d.z);
+    hit.isVisible = false;
+    hit.metadata = { deptId: d.id };   // used by the click handler
+    hit.parent = parent;
 
     // Invisible point above the room that the 2D labels follow.
-    const anchor = new BABYLON.TransformNode(dept.id + "-anchor", scene);
-    anchor.position.set(dept.x, y + ROOM_HEIGHT + 0.2, dept.z);
-    anchor.parent = floorNodes[dept.floor];
+    const anchor = new BABYLON.TransformNode(d.id + "-anchor", scene);
+    anchor.position.set(d.x, y + WALL_HEIGHT + 0.6, d.z);
+    anchor.parent = parent;
 
     // Always-on room name.
-    const nameTag = new BABYLON.GUI.TextBlock(dept.id + "-name", dept.name);
+    const nameTag = new BABYLON.GUI.TextBlock(d.id + "-name", d.name);
     nameTag.color = "#ffffff";
     nameTag.fontSize = 13;
     nameTag.outlineWidth = 3;
@@ -421,54 +646,49 @@ function startOffice() {
     ui.addControl(nameTag);
     nameTag.linkWithMesh(anchor);
 
-    rooms[dept.id] = { dept, glass, glassMat, anchor, nameTag, queue: [] };
+    rooms[d.id] = { dept: d, hit, wallMat, baseColor, anchor, nameTag, queue: [], doorX, spots };
   });
 
-  // Corridor line on each floor, a spur into every room, and a stair line between floors.
-  function line(name, points, hex, parent) {
-    const l = BABYLON.MeshBuilder.CreateLines(name, { points }, scene);
-    l.color = BABYLON.Color3.FromHexString(hex);
-    l.alpha = 0.45;            // faint: people wander around these, not along them
-    l.isPickable = false;
-    if (parent) l.parent = parent;
-    return l;
-  }
-
+  // ---- Corridor plants ------------------------------------------------------
+  // Along the corridor edges, never in front of a doorway.
   FLOORS.forEach(f => {
-    const y = f.y + LINE_Y;
-    line("corridor" + f.level, [
-      new BABYLON.Vector3(-FLOOR_SIZE.width / 2 + 1, y, CORRIDOR_Z),
-      new BABYLON.Vector3(STAIR_X, y, CORRIDOR_Z),
-    ], COLORS.line, floorNodes[f.level]);
+    [-13, -8.5, -4, 0.5, 5, 8.8].forEach((x, i) => {
+      const side = i % 2 ? 1 : -1;
+      const blocked = DEPARTMENTS.some(d => d.floor === f.level && d.side === side &&
+        Math.abs(rooms[d.id].doorX - x) < DOOR_WIDTH);
+      if (!blocked) placePlant(floorNodes[f.level], V3(x, f.y, CORRIDOR_Z + side * 1.45));
+    });
   });
 
-  DEPARTMENTS.forEach(d => {
-    const y = floorY(d.floor) + LINE_Y;
-    line(d.id + "-spur", [
-      new BABYLON.Vector3(d.x, y, d.z),
-      new BABYLON.Vector3(d.x, y, CORRIDOR_Z),
-    ], COLORS.line, floorNodes[d.floor]);
-  });
-
-  for (let i = 0; i < FLOORS.length - 1; i++) {
-    line("stair" + i, [
-      new BABYLON.Vector3(STAIR_X - STAIR_RUN, FLOORS[i].y + LINE_Y, CORRIDOR_Z),
-      new BABYLON.Vector3(STAIR_X + STAIR_RUN, FLOORS[i + 1].y + LINE_Y, CORRIDOR_Z),
-    ], COLORS.stair);
+  // ---- Stairs ---------------------------------------------------------------
+  // Open-tread stairs in the hall beyond the rooms, from the ground floor at
+  // STAIRS.fromZ up to the first floor at STAIRS.toZ.
+  const rise = (floorY(1) - floorY(0)) / STAIRS.steps;
+  const run  = (STAIRS.toZ - STAIRS.fromZ) / STAIRS.steps;
+  const stepShape = shape("step", [part(STAIRS.width, rise * 0.6, run * 1.05, 0, 0, 0)],
+    matteMaterial("stairs", FURNITURE.stairs, 0.1));
+  for (let i = 0; i < STAIRS.steps; i++) {
+    stamp(stepShape, null, V3(STAIRS.x, floorY(0) + rise * (i + 0.7), STAIRS.fromZ + run * (i + 0.5)));
   }
+  const slope = Math.atan2(floorY(1) - floorY(0), STAIRS.toZ - STAIRS.fromZ);
+  const stringerLen = Math.hypot(floorY(1) - floorY(0), STAIRS.toZ - STAIRS.fromZ);
+  [-1, 1].forEach(s => {
+    const stringer = BABYLON.MeshBuilder.CreateBox("stringer", { width: 0.08, height: 0.3, depth: stringerLen }, scene);
+    stringer.position.set(STAIRS.x + s * (STAIRS.width / 2 + 0.04), (floorY(0) + floorY(1)) / 2 + 0.15, (STAIRS.fromZ + STAIRS.toZ) / 2);
+    stringer.rotation.x = -slope;
+    stringer.material = matteMaterial("stairs", FURNITURE.stairs, 0.1);
+    stringer.isPickable = false;
+    castShadow(stringer);
+  });
 
   /* =====================================================================
-     4. MESSAGES — spawn, route, move, queue and process.
+     4. MESSAGES — people carrying messages: routes, walking, queues.
      ===================================================================== */
 
   const travelling = [];   // people currently walking a message somewhere
   const leaving = [];      // people whose message was cleared, walking out and fading
   let messageCounter = 0;
   let clock = 0;           // seconds since start (paused time doesn't count)
-
-  const rand = (min, max) => min + Math.random() * (max - min);
-  const randIn = range => rand(range[0], range[1]);
-  const V3 = (x, y, z) => new BABYLON.Vector3(x, y, z);
 
   // ---- People --------------------------------------------------------
 
@@ -483,78 +703,118 @@ function startOffice() {
   function createPerson(deptColor, urgent) {
     const root = new BABYLON.TransformNode("person" + messageCounter, scene);
     root.scaling.setAll(PERSON_SCALE);
-    const part = (shape, y, material) => {
-      const m = shape.clone(shape.name + messageCounter, root);
+    const piece = (source, y, material) => {
+      const m = source.clone(source.name + messageCounter, root);
       m.setEnabled(true);
       m.position.y = y;
       m.material = material;
+      castShadow(m);
       return m;
     };
-    const body = part(bodyShape, 0.31, flatMaterial("body-" + deptColor, deptColor));
+    const body = piece(bodyShape, 0.31, matteMaterial("body-" + deptColor, deptColor, 0.15));
     const tone = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
-    const head = part(headShape, 0.76, flatMaterial("skin-" + tone, tone));
-    const mark = urgent ? part(markShape, 1.06, flatMaterial("urgent-mark", COLORS.urgent)) : null;
+    const head = piece(headShape, 0.76, matteMaterial("skin-" + tone, tone, 0.15));
+    const mark = urgent ? piece(markShape, 1.06, matteMaterial("urgent-mark", COLORS.urgent, 0.7)) : null;
     return { root, body, head, mark, parts: [body, head, mark].filter(Boolean) };
   }
 
-  // ---- Routes --------------------------------------------------------
-
-  // Which way a room's door faces: rooms on the +z side open towards -z, and vice versa.
-  const doorSide = d => (d.z > CORRIDOR_Z ? -1 : 1);
-
-  // A random spot just inside (inset > 0) or just outside (inset < 0) a room's door wall.
-  function doorPoint(d, doorX, inset) {
-    const wallZ = d.z + doorSide(d) * d.d / 2;
-    return V3(doorX, floorY(d.floor), wallZ - doorSide(d) * inset);
+  function disposePerson(m) {
+    m.person.parts.forEach(p => shadows.removeShadowCaster(p, false));
+    m.person.root.dispose();
   }
 
-  // Pick a corridor position: a lane that varies per person, not the centre line.
-  const lane = () => CORRIDOR_Z + rand(-CORRIDOR_HALF_WIDTH, CORRIDOR_HALF_WIDTH);
+  // ---- Routes --------------------------------------------------------
+  // A route is first a few control points, then smoothed into a curve.
+  // Control points marked `hard` (doorways, stair ends) or with a pause
+  // are passed through exactly; everything between them is curved.
 
-  // Build a walk as a list of waypoints { p, pause }. Every call is different:
-  // own exit and entry spots, own lane, a little meandering, maybe a chat stop.
+  const lane = () => CORRIDOR_Z + rand(-CORRIDOR_HALF_WIDTH, CORRIDOR_HALF_WIDTH) * 0.85;
+  const doorInside  = room => roomPoint(room.dept, room.doorX + rand(-0.15, 0.15), 0.35);
+  const doorOutside = room => roomPoint(room.dept, room.doorX + rand(-0.2, 0.2), -0.6);
+  const randomSpot  = room => room.spots[Math.floor(Math.random() * room.spots.length)]
+    .add(V3(rand(-0.15, 0.15), 0, rand(-0.1, 0.1)));
+
+  // Inside a room: along the aisle to the walkway, along the walkway, then
+  // along the other aisle. Never through a desk.
+  function roomRoute(room, a, b) {
+    const d = room.dept, spineX = room.doorX + rand(-0.12, 0.12);
+    const ua = uOf(d, a), ub = uOf(d, b);
+    const pts = [a];
+    if (Math.abs(ua - ub) > 0.3) {
+      if (Math.abs(a.x - spineX) > 0.25) pts.push(roomPoint(d, spineX, ua));
+      if (Math.abs(b.x - spineX) > 0.25) pts.push(roomPoint(d, spineX, ub));
+    }
+    pts.push(b);
+    return pts;
+  }
+
+  // Turn control points into a smooth walk: { p, pause } points close together.
+  function smoothRoute(ctrl) {
+    const out = [];
+    let leg = [ctrl[0].p];
+    const flush = pause => {
+      const pts = leg.length >= 3 ? BABYLON.Curve3.CreateCatmullRomSpline(leg, 8, false).getPoints() : leg;
+      pts.forEach((p, i) => { if (!(out.length && i === 0)) out.push({ p, pause: 0 }); });
+      out[out.length - 1].pause = pause;
+    };
+    for (let i = 1; i < ctrl.length; i++) {
+      if (BABYLON.Vector3.DistanceSquared(ctrl[i].p, leg[leg.length - 1]) < 0.0004) continue;
+      leg.push(ctrl[i].p);
+      if (ctrl[i].pause > 0 || ctrl[i].hard || i === ctrl.length - 1) {
+        flush(ctrl[i].pause || 0);
+        leg = [ctrl[i].p];
+      }
+    }
+    if (!out.length) out.push({ p: ctrl[0].p, pause: 0 });
+    return out;
+  }
+  const asCtrl = pts => pts.map(p => ({ p, pause: 0 }));
+
+  // A whole trip, different every time: from a desk in the sending room, out
+  // of the door, wandering down the corridor (maybe stopping to chat), up or
+  // down the stairs if needed, a pause at the door, then in.
   function routeBetween(from, to) {
-    const pts = [];
-    const add = (p, pause = 0) => pts.push({ p, pause });
+    const fr = rooms[from.id], tr = rooms[to.id];
     const fy = floorY(from.floor), ty = floorY(to.floor);
-    const outX = from.x + rand(-from.w / 2 + 0.7, from.w / 2 - 0.7);
-    const inX  = to.x   + rand(-to.w / 2 + 0.7,   to.w / 2 - 0.7);
+    const ctrl = [];
+    const add = (p, pause = 0, hard = false) => ctrl.push({ p, pause, hard });
 
-    // Leave from somewhere in the sending room, out through the door.
-    add(V3(from.x + rand(-from.w / 3, from.w / 3), fy, from.z + rand(-from.d / 4, from.d / 4)));
-    add(doorPoint(from, outX, 0.45));
-    add(doorPoint(from, outX + rand(-0.3, 0.3), -0.35));
+    roomRoute(fr, randomSpot(fr), doorInside(fr)).forEach(p => add(p));
+    ctrl[ctrl.length - 1].hard = true;
+    add(doorOutside(fr), 0, true);
 
-    // Along the corridor, drifting between lanes, possibly stopping to chat.
-    const corridorLeg = (y, x1, x2) => {
+    // 1-2 loose waypoints along the corridor, each in its own lane.
+    const wander = (y, xa, xb) => {
       const stops = 1 + Math.floor(Math.random() * 2);
       for (let i = 1; i <= stops; i++) {
         const t = i / (stops + 1) + rand(-0.12, 0.12);
-        add(V3(x1 + (x2 - x1) * t, y, lane()), Math.random() < CHAT_CHANCE ? randIn(CHAT_PAUSE) : 0);
+        add(V3(xa + (xb - xa) * t, y, lane()), Math.random() < CHAT_CHANCE ? randIn(CHAT_PAUSE) : 0);
       }
     };
 
+    add(V3(fr.doorX + rand(-0.6, 0.6), fy, lane()));
     if (from.floor === to.floor) {
-      add(V3(outX + rand(-0.4, 0.4), fy, lane()));
-      corridorLeg(fy, outX, inX);
+      wander(fy, fr.doorX, tr.doorX);
     } else {
-      // Walk to the stair ramp, climb or descend it, then carry on.
-      const goingUp = to.floor > from.floor;
-      const lowX = STAIR_X - STAIR_RUN, highX = STAIR_X + STAIR_RUN;
-      const startX = goingUp ? lowX : highX, endX = goingUp ? highX : lowX;
-      const stairZ = CORRIDOR_Z + rand(-0.5, 0.5);
-      add(V3(outX + rand(-0.4, 0.4), fy, lane()));
-      corridorLeg(fy, outX, startX);
-      add(V3(startX, fy, stairZ));
-      add(V3(endX, ty, stairZ + rand(-0.2, 0.2)));
-      corridorLeg(ty, endX, inX);
+      // Into the stair hall, round to the foot (or head) of the stairs, climb, and back.
+      const up = to.floor > from.floor;
+      const hallX = ROOM_AREA_X[1] + 0.9;
+      const sx = STAIRS.x + rand(-STAIRS.width / 2 + 0.35, STAIRS.width / 2 - 0.35);
+      const foot = V3(sx, floorY(0), STAIRS.fromZ - 0.45), head = V3(sx, floorY(1), STAIRS.toZ + 0.45);
+      const endZ = up ? STAIRS.fromZ : STAIRS.toZ, startZ = up ? STAIRS.toZ : STAIRS.fromZ;
+      wander(fy, fr.doorX, hallX);
+      add(V3(hallX + rand(0, 0.5), fy, CORRIDOR_Z + Math.sign(endZ) * rand(1.8, 3)));
+      add(V3(hallX + rand(0.2, 0.6), fy, endZ + Math.sign(endZ) * rand(0.8, 1.2)));
+      add(up ? foot : head, 0, true);
+      add(up ? head : foot, 0, true);
+      add(V3(hallX + rand(0.2, 0.6), ty, startZ + Math.sign(startZ) * rand(0.8, 1.2)));
+      add(V3(hallX + rand(0, 0.5), ty, CORRIDOR_Z + Math.sign(startZ) * rand(1.8, 3)));
+      wander(ty, hallX, tr.doorX);
     }
-
-    // Up to the door, a brief pause, then step inside.
-    add(V3(inX + rand(-0.4, 0.4), ty, lane()));
-    add(doorPoint(to, inX, -0.35), randIn(DOOR_PAUSE));
-    add(doorPoint(to, inX + rand(-0.2, 0.2), 0.5));
-    return pts;
+    add(V3(tr.doorX + rand(-0.6, 0.6), ty, lane()));
+    add(doorOutside(tr), randIn(DOOR_PAUSE), true);
+    add(doorInside(tr), 0, true);
+    return smoothRoute(ctrl);
   }
 
   // ---- Messages ------------------------------------------------------
@@ -573,14 +833,15 @@ function startOffice() {
       urgent: sample.urgent,
       text: sample.text,
       person, path,
-      segment: 0,        // index of the path segment we're on
-      along: 0,          // distance travelled along that segment
+      segment: 0,        // index of the path point we're walking from
+      along: 0,          // distance travelled towards the next point
       wait: 0,           // seconds left in a pause
       speed: randIn(WALK_SPEED) * (sample.urgent ? URGENT_HURRY : 1),
       phase: Math.random() * Math.PI * 2,   // offsets bobbing and pace drift
       step: Math.random() * Math.PI * 2,    // walking-cycle position
-      spot: null,        // where they stand while waiting in the room
-      lookAt: Math.random() * Math.PI * 2,  // direction they face while waiting
+      spotIndex: null,   // which waiting spot they have in the room
+      spot: null,
+      lookAt: Math.random() * Math.PI * 2,  // direction they face while standing
       nextGlance: rand(1, 5),
     };
   }
@@ -617,6 +878,8 @@ function startOffice() {
     });
   }
 
+  // ---- Movement and animation ------------------------------------------
+
   // Shortest signed angle from a to b, so turning never spins the long way round.
   const angleDelta = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 
@@ -629,10 +892,11 @@ function startOffice() {
   // Walking animation: a little bob and sway in time with their steps.
   function animateWalk(m, dt, speed) {
     m.step += dt * speed * 5.5;
-    m.person.body.position.y = 0.31 + Math.abs(Math.sin(m.step)) * 0.045;
-    m.person.head.position.y = 0.76 + Math.abs(Math.sin(m.step)) * 0.045;
+    const bob = Math.abs(Math.sin(m.step)) * 0.045;
+    m.person.body.position.y = 0.31 + bob;
+    m.person.head.position.y = 0.76 + bob;
     m.person.body.rotation.z = Math.sin(m.step) * 0.07;
-    if (m.person.mark) m.person.mark.position.y = 1.06 + Math.abs(Math.sin(m.step)) * 0.045;
+    if (m.person.mark) m.person.mark.position.y = 1.06 + bob;
   }
 
   // Standing still: slow breathing, an occasional glance around.
@@ -654,44 +918,51 @@ function startOffice() {
     if (m.person.mark) m.person.mark.scaling.setAll(1 + Math.sin(clock * 6 + m.phase) * 0.18);
   }
 
-  // Move every walking person forward by dt seconds.
+  // Walk a person along m.path. Returns true once they reach the end.
+  function followPath(m, dt, speed) {
+    if (m.wait > 0) { m.wait -= dt; animateIdle(m, dt); return false; }
+    const path = m.path, pos = m.person.root.position;
+    let step = speed * dt;
+    while (step > 0 && m.segment < path.length - 1) {
+      const a = path[m.segment].p, b = path[m.segment + 1].p;
+      const left = BABYLON.Vector3.Distance(a, b) - m.along;
+      if (step < left) { m.along += step; step = 0; }
+      else {
+        step -= left; m.segment++; m.along = 0;
+        if (path[m.segment].pause > 0) {        // stop here for a moment
+          m.wait = path[m.segment].pause;
+          pos.copyFrom(path[m.segment].p);
+          return false;
+        }
+      }
+    }
+    if (m.segment >= path.length - 1) { pos.copyFrom(path[path.length - 1].p); return true; }
+    const a = path[m.segment].p, b = path[m.segment + 1].p;
+    BABYLON.Vector3.LerpToRef(a, b, m.along / (BABYLON.Vector3.Distance(a, b) || 1), pos);
+    turnTowards(m, Math.atan2(b.x - a.x, b.z - a.z), dt);
+    animateWalk(m, dt, speed);
+    return false;
+  }
+
+  // Start someone on a new walk.
+  function setPath(m, ctrl, delay = 0) {
+    m.path = smoothRoute(ctrl);
+    m.segment = 0;
+    m.along = 0;
+    m.wait = delay;
+  }
+
+  // Move every person who is out delivering a message.
   function moveMessages(dt) {
     for (let i = travelling.length - 1; i >= 0; i--) {
       const m = travelling[i];
       animateMark(m);
-
-      if (m.wait > 0) {            // pausing at a door or chatting
-        m.wait -= dt;
-        animateIdle(m, dt);
-        continue;
-      }
-
       // Each person's pace drifts a little, like someone walking naturally.
       const speed = m.speed * (1 + 0.15 * Math.sin(clock * 0.8 + m.phase));
-      let step = speed * dt;
-
-      while (step > 0 && m.segment < m.path.length - 1) {
-        const a = m.path[m.segment].p, b = m.path[m.segment + 1].p;
-        const left = BABYLON.Vector3.Distance(a, b) - m.along;
-        if (step < left) { m.along += step; step = 0; }
-        else {
-          step -= left; m.segment++; m.along = 0;
-          m.wait = m.path[m.segment].pause;   // stop here for a moment?
-          if (m.wait > 0) break;
-        }
-      }
-
-      if (m.segment >= m.path.length - 1) {
+      if (followPath(m, dt, speed)) {
         travelling.splice(i, 1);
         arrive(m);
-        continue;
       }
-
-      const a = m.path[m.segment].p, b = m.path[m.segment + 1].p;
-      const len = BABYLON.Vector3.Distance(a, b) || 1;
-      BABYLON.Vector3.LerpToRef(a, b, m.along / len, m.person.root.position);
-      turnTowards(m, Math.atan2(b.x - a.x, b.z - a.z), dt);
-      animateWalk(m, dt, speed);
     }
   }
 
@@ -706,66 +977,56 @@ function startOffice() {
       room.queue.push(m);
     }
     m.person.root.parent = floorNodes[m.to.floor];   // hide with its floor
-    m.offset = V3(rand(-0.18, 0.18), 0, rand(-0.18, 0.18));   // so nobody stands on a grid
-    layoutQueue(room);
-    if (instant) {
-      m.person.root.position.copyFrom(m.spot);
-      m.person.root.rotation.y = m.lookAt;
-    }
+    m.path = null;
+    layoutQueue(room, instant ? m : null);
     refreshRoom(room);
   }
 
-  // Give everyone in a room a loose spot: rough rows, front of the queue
-  // nearest the far wall, each with their own small offset.
-  function layoutQueue(room) {
-    const d = room.dept, cols = 4;
-    const rows = Math.max(3, Math.ceil(room.queue.length / cols));
-    const gapX = (d.w - 1.4) / (cols - 1), gapZ = (d.d - 1.6) / (rows - 1 || 1);
-    const backZ = d.z - doorSide(d) * (d.d / 2 - 0.8);
+  // Give everyone in the room a standing spot in an aisle. Anyone whose spot
+  // changed walks there along the aisles, after a short, personal delay.
+  function layoutQueue(room, placeNow = null) {
+    const d = room.dept, n = room.spots.length;
     room.queue.forEach((m, i) => {
-      const col = i % cols, row = Math.floor(i / cols);
-      m.spot = V3(
-        d.x + (col - (cols - 1) / 2) * gapX + m.offset.x,
-        floorY(d.floor),
-        backZ + doorSide(d) * row * gapZ + m.offset.z
-      );
+      if (m.spotIndex === i && m.spot) return;
+      m.spotIndex = i;
+      const crowd = Math.floor(i / n) * 0.22;      // more people than spots: stand a bit apart
+      m.spot = room.spots[i % n].add(V3(rand(-0.1, 0.1) + crowd, 0, rand(-0.08, 0.08)));
+      m.faceDesk = (inwardOf(d) > 0 ? 0 : Math.PI) + rand(-0.6, 0.6);
+      const pos = m.person.root.position;
+      if (m === placeNow) {
+        pos.copyFrom(m.spot);
+        m.person.root.rotation.y = m.lookAt = m.faceDesk;
+        m.path = null;
+        return;
+      }
+      setPath(m, asCtrl(roomRoute(room, pos.clone(), m.spot)), m.path ? 0 : rand(0, 0.8));
     });
   }
 
-  // Waiting people stroll to their spot if the queue moved, otherwise idle.
+  // Waiting people walk to their spot if needed, otherwise stand and idle.
   function animateQueues(dt) {
     Object.values(rooms).forEach(room => room.queue.forEach(m => {
       animateMark(m);
-      const pos = m.person.root.position;
-      const toSpot = m.spot.subtract(pos);
-      const dist = toSpot.length();
-      if (dist > 0.03) {
-        const move = Math.min(dist, 1.1 * dt);
-        pos.addInPlace(toSpot.scale(move / dist));
-        turnTowards(m, Math.atan2(toSpot.x, toSpot.z), dt);
-        animateWalk(m, dt, 1.1);
+      if (m.path) {
+        if (followPath(m, dt, m.speed * 0.55)) { m.path = null; m.lookAt = m.faceDesk; }
       } else {
         animateIdle(m, dt);
       }
     }));
   }
 
-  // A cleared message's person walks to the door and fades away.
+  // A cleared message's person walks out of the door and fades away.
   function animateLeaving(dt) {
     for (let i = leaving.length - 1; i >= 0; i--) {
       const m = leaving[i];
-      m.fade -= dt / 1.4;
-      const pos = m.person.root.position;
-      const toDoor = m.exit.subtract(pos);
-      const dist = toDoor.length();
-      if (dist > 0.05) {
-        pos.addInPlace(toDoor.scale(Math.min(dist, 1.3 * dt) / dist));
-        turnTowards(m, Math.atan2(toDoor.x, toDoor.z), dt);
-        animateWalk(m, dt, 1.3);
-      }
+      animateMark(m);
+      if (m.path && !followPath(m, dt, m.speed * 0.7)) continue;
+      m.path = null;
+      m.fade -= dt / 0.8;
+      animateIdle(m, dt);
       m.person.parts.forEach(p => { p.visibility = Math.max(0, m.fade); });
       if (m.fade <= 0) {
-        m.person.root.dispose();
+        disposePerson(m);
         leaving.splice(i, 1);
       }
     }
@@ -784,8 +1045,11 @@ function startOffice() {
       const done = room.queue.shift();
       if (!done) return;
 
-      // Walk out and fade, then the message goes back in the outbox for later.
-      done.exit = doorPoint(room.dept, done.person.root.position.x, 0.3);
+      // Walk out through the door and fade; the message goes back in the outbox for later.
+      const ctrl = asCtrl(roomRoute(room, done.person.root.position.clone(), doorInside(room)));
+      ctrl[ctrl.length - 1].hard = true;
+      ctrl.push({ p: doorOutside(room), pause: 0, hard: true });
+      setPath(done, ctrl, rand(0, 0.4));
       done.fade = 1;
       leaving.push(done);
       outbox.push({ sample: done.sample, readyAt: clock + randIn(RESEND_DELAY) });
@@ -794,13 +1058,12 @@ function startOffice() {
     });
   }
 
-  // Glow red when busy, and update the open label if it's this room.
+  // Walls glow red when the room is busy, and the open label updates if it's this room.
   function refreshRoom(room) {
     const busy = room.queue.length >= BUSY_THRESHOLD;
-    const base = BABYLON.Color3.FromHexString(busy ? COLORS.busy : room.dept.color);
-    room.glassMat.diffuseColor = base;
-    room.glassMat.emissiveColor = base.scale(busy ? 0.6 : 0.25);
-    room.glassMat.alpha = busy ? 0.28 : 0.16;
+    room.wallMat.emissiveColor = busy
+      ? BABYLON.Color3.FromHexString(COLORS.busy).scale(0.5)
+      : room.baseColor.scale(0.08);
     if (openLabelFor === room.dept.id) renderLabel(room);
   }
 
