@@ -5,11 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Office Message Flow</title>
 
-<!-- Babylon.js core + GUI from the Babylon CDN (same files the Playground uses).
-     Pinned to one version so a future Babylon release can't change behaviour. -->
-<script src="https://cdn.babylonjs.com/v9.30.0/babylon.js"></script>
-<script src="https://cdn.babylonjs.com/v9.30.0/gui/babylon.gui.min.js"></script>
-
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0f1420; font-family: system-ui, sans-serif; }
   #renderCanvas { width: 100%; height: 100%; display: block; outline: none; touch-action: none; }
@@ -34,7 +29,7 @@
   }
   #startupError[hidden] { display: none; }
   #startupError div { max-width: 460px; }
-  #startupError code { display: block; margin-top: 10px; color: #ff8a80; font-size: 13px; }
+  #startupError code { display: block; margin-top: 10px; color: #ff8a80; font-size: 13px; white-space: pre-wrap; text-align: left; }
   .key { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 8px; }
 </style>
 </head>
@@ -49,8 +44,63 @@
 
 <script>
 /* =====================================================================
-   0. STARTUP CHECK — turn a silent blank screen into a readable message.
+   0. STARTUP — load Babylon.js, and show a readable message if anything fails.
    ===================================================================== */
+
+// Babylon.js core + GUI, pinned to one version. The Babylon CDN (the one the
+// Playground uses) is tried first; the others host identical files and are
+// only used if it's blocked or unreachable.
+const BABYLON_VERSION = "9.30.0";
+const BABYLON_CORE_URLS = [
+  `https://cdn.babylonjs.com/v${BABYLON_VERSION}/babylon.js`,
+  `https://cdn.jsdelivr.net/npm/babylonjs@${BABYLON_VERSION}/babylon.js`,
+  `https://unpkg.com/babylonjs@${BABYLON_VERSION}/babylon.js`,
+];
+const BABYLON_GUI_URLS = [
+  `https://cdn.babylonjs.com/v${BABYLON_VERSION}/gui/babylon.gui.min.js`,
+  `https://cdn.jsdelivr.net/npm/babylonjs-gui@${BABYLON_VERSION}/babylon.gui.min.js`,
+  `https://unpkg.com/babylonjs-gui@${BABYLON_VERSION}/babylon.gui.min.js`,
+];
+const SCRIPT_TIMEOUT_MS = 15000;
+
+// Load one script tag; resolves when it has run, rejects on error or timeout.
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const tag = document.createElement("script");
+    const timer = setTimeout(() => {
+      tag.remove();
+      reject(new Error(`timed out after ${SCRIPT_TIMEOUT_MS / 1000}s`));
+    }, SCRIPT_TIMEOUT_MS);
+    tag.src = url;
+    tag.onload  = () => { clearTimeout(timer); resolve(); };
+    tag.onerror = () => { clearTimeout(timer); tag.remove(); reject(new Error("blocked or unreachable")); };
+    document.head.appendChild(tag);
+  });
+}
+
+// Try each URL in order until one loads and defines what we need.
+async function loadFirstWorking(label, urls, isReady) {
+  const failures = [];
+  for (const url of urls) {
+    try {
+      await loadScript(url);
+      if (!isReady()) throw new Error("loaded, but didn't define what we need");
+      console.info(`[office-3d] ${label} loaded from ${url}`);
+      return;
+    } catch (err) {
+      console.error(`[office-3d] ${label} failed to load from ${url}: ${err.message}`);
+      failures.push(`${url} (${err.message})`);
+    }
+  }
+  throw new Error(`${label} could not be loaded from any source:\n` + failures.join("\n"));
+}
+
+// Resolves once both Babylon core and Babylon GUI are ready to use.
+async function loadBabylon() {
+  await loadFirstWorking("Babylon.js", BABYLON_CORE_URLS, () => typeof BABYLON !== "undefined");
+  await loadFirstWorking("Babylon GUI", BABYLON_GUI_URLS, () => !!(window.BABYLON && BABYLON.GUI));
+}
+
 function showStartupError(title, help, detail) {
   document.getElementById("startupErrorTitle").textContent = title;
   document.getElementById("startupErrorHelp").textContent = help;
@@ -60,11 +110,7 @@ function showStartupError(title, help, detail) {
 window.addEventListener("error", e => {
   if (!document.getElementById("startupError").hidden) return;   // keep the first, most specific message
   const msg = String(e.message || e.error || "Unknown error");
-  if (/BABYLON is not defined/.test(msg)) {
-    showStartupError("Babylon.js didn't load.",
-      "The page loads Babylon from cdn.babylonjs.com. Check you're online, that a firewall or ad blocker " +
-      "isn't blocking that site, and that you opened the file in a normal browser tab (some file previews block scripts).", msg);
-  } else if (/WebGL/i.test(msg)) {
+  if (/WebGL/i.test(msg)) {
     showStartupError("This browser can't draw 3D graphics.",
       "WebGL is turned off or unavailable. Try Chrome, Edge or Firefox, and check hardware acceleration is switched on in the browser settings.", msg);
   } else {
@@ -216,436 +262,459 @@ const COLORS = {
   busy:     "#ff3b30",
 };
 
-/* =====================================================================
-   2. SCENE SETUP — engine, camera, lights, GUI layer.
-   ===================================================================== */
+// Everything below needs Babylon, so it only runs once loadBabylon() has finished.
+function startOffice() {
 
-const canvas = document.getElementById("renderCanvas");
-if (typeof BABYLON === "undefined") {
-  throw new ReferenceError("BABYLON is not defined");   // handled by the startup check above
-}
-let engine;
-try {
-  engine = new BABYLON.Engine(canvas, true, { stencil: true });
-} catch (err) {
-  showStartupError("This browser can't draw 3D graphics.",
-    "WebGL is turned off or unavailable. Try Chrome, Edge or Firefox, and check hardware acceleration is switched on in the browser settings.",
-    String(err && err.message || err));
-  throw err;
-}
-const scene  = new BABYLON.Scene(engine);
-scene.clearColor = BABYLON.Color4.FromHexString("#0f1420ff");
+  /* =====================================================================
+     2. SCENE SETUP — engine, camera, lights, GUI layer.
+     ===================================================================== */
 
-// Orbit camera aimed at the middle of the building.
-const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI / 3, Math.PI / 3.2, 42,
-  new BABYLON.Vector3(0, 3, 0), scene);
-camera.attachControl(canvas, true);
-camera.lowerRadiusLimit = 15;
-camera.upperRadiusLimit = 80;
-camera.upperBetaLimit = Math.PI / 2.05;   // don't go under the ground
-camera.wheelPrecision = 20;
-
-new BABYLON.HemisphericLight("sky", new BABYLON.Vector3(0.3, 1, 0.2), scene).intensity = 0.85;
-const sun = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, -0.4), scene);
-sun.intensity = 0.4;
-
-// Full-screen 2D layer for room names and the click label.
-const ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("ui", true, scene);
-
-// Small helper: a flat-coloured material, cached by key.
-const materialCache = {};
-function flatMaterial(key, hex, alpha = 1) {
-  if (materialCache[key]) return materialCache[key];
-  const m = new BABYLON.StandardMaterial(key, scene);
-  const c = BABYLON.Color3.FromHexString(hex);
-  m.diffuseColor  = c;
-  m.emissiveColor = c.scale(0.35);
-  m.specularColor = BABYLON.Color3.Black();
-  m.alpha = alpha;
-  materialCache[key] = m;
-  return m;
-}
-
-/* =====================================================================
-   3. BUILDING — floors, rooms, corridor and stair lines.
-   ===================================================================== */
-
-// One parent node per floor, so a whole floor can be hidden at once.
-const floorNodes = FLOORS.map(f => new BABYLON.TransformNode("floor" + f.level, scene));
-const floorY = level => FLOORS[level].y;
-
-// Floor slabs. Upper slabs are see-through so the ground floor stays visible.
-FLOORS.forEach(f => {
-  const slab = BABYLON.MeshBuilder.CreateBox("slab" + f.level,
-    { width: FLOOR_SIZE.width, depth: FLOOR_SIZE.depth, height: 0.15 }, scene);
-  slab.position.y = f.y - 0.08;
-  slab.material = flatMaterial("slab" + f.level, COLORS.slab, f.level === 0 ? 1 : 0.35);
-  slab.isPickable = false;
-  slab.parent = floorNodes[f.level];
-});
-
-// Rooms: a solid coloured floor tile plus a glass box you can click.
-const rooms = {};   // id -> { dept, glass, queue: [], anchor, nameTag }
-
-DEPARTMENTS.forEach(dept => {
-  const y = floorY(dept.floor);
-
-  const tile = BABYLON.MeshBuilder.CreateBox(dept.id + "-tile",
-    { width: dept.w, depth: dept.d, height: 0.05 }, scene);
-  tile.position.set(dept.x, y + 0.03, dept.z);
-  tile.material = flatMaterial(dept.id + "-tile", dept.color, 0.55);
-  tile.isPickable = false;
-  tile.parent = floorNodes[dept.floor];
-
-  const glass = BABYLON.MeshBuilder.CreateBox(dept.id + "-glass",
-    { width: dept.w, depth: dept.d, height: ROOM_HEIGHT }, scene);
-  glass.position.set(dept.x, y + ROOM_HEIGHT / 2, dept.z);
-  const glassMat = new BABYLON.StandardMaterial(dept.id + "-glassMat", scene);
-  glassMat.diffuseColor  = BABYLON.Color3.FromHexString(dept.color);
-  glassMat.emissiveColor = BABYLON.Color3.FromHexString(dept.color).scale(0.25);
-  glassMat.specularColor = BABYLON.Color3.Black();
-  glassMat.alpha = 0.16;
-  glass.material = glassMat;
-  glass.enableEdgesRendering();
-  glass.edgesWidth = 3;
-  glass.edgesColor = BABYLON.Color4.FromHexString(dept.color + "cc");
-  glass.metadata = { deptId: dept.id };   // used by the click handler
-  glass.parent = floorNodes[dept.floor];
-
-  // Invisible point above the room that the 2D labels follow.
-  const anchor = new BABYLON.TransformNode(dept.id + "-anchor", scene);
-  anchor.position.set(dept.x, y + ROOM_HEIGHT + 0.2, dept.z);
-  anchor.parent = floorNodes[dept.floor];
-
-  // Always-on room name.
-  const nameTag = new BABYLON.GUI.TextBlock(dept.id + "-name", dept.name);
-  nameTag.color = "#ffffff";
-  nameTag.fontSize = 13;
-  nameTag.outlineWidth = 3;
-  nameTag.outlineColor = "#0f1420";
-  nameTag.resizeToFit = true;
-  ui.addControl(nameTag);
-  nameTag.linkWithMesh(anchor);
-
-  rooms[dept.id] = { dept, glass, glassMat, anchor, nameTag, queue: [] };
-});
-
-// Corridor line on each floor, a spur into every room, and a stair line between floors.
-function line(name, points, hex, parent) {
-  const l = BABYLON.MeshBuilder.CreateLines(name, { points }, scene);
-  l.color = BABYLON.Color3.FromHexString(hex);
-  l.isPickable = false;
-  if (parent) l.parent = parent;
-  return l;
-}
-
-FLOORS.forEach(f => {
-  const y = f.y + MESSAGE_Y;
-  line("corridor" + f.level, [
-    new BABYLON.Vector3(-FLOOR_SIZE.width / 2 + 1, y, CORRIDOR_Z),
-    new BABYLON.Vector3(STAIR_X, y, CORRIDOR_Z),
-  ], COLORS.line, floorNodes[f.level]);
-});
-
-DEPARTMENTS.forEach(d => {
-  const y = floorY(d.floor) + MESSAGE_Y;
-  line(d.id + "-spur", [
-    new BABYLON.Vector3(d.x, y, d.z),
-    new BABYLON.Vector3(d.x, y, CORRIDOR_Z),
-  ], COLORS.line, floorNodes[d.floor]);
-});
-
-for (let i = 0; i < FLOORS.length - 1; i++) {
-  line("stair" + i, [
-    new BABYLON.Vector3(STAIR_X, FLOORS[i].y + MESSAGE_Y, CORRIDOR_Z),
-    new BABYLON.Vector3(STAIR_X, FLOORS[i + 1].y + MESSAGE_Y, CORRIDOR_Z),
-  ], COLORS.stair);
-}
-
-/* =====================================================================
-   4. MESSAGES — spawn, route, move, queue and process.
-   ===================================================================== */
-
-const travelling = [];   // messages currently moving
-let messageCounter = 0;
-
-// The path a message takes: out of its room, along the corridor,
-// up/down the stairs if needed, along the corridor, into the room.
-function routeBetween(from, to) {
-  const fy = floorY(from.floor) + MESSAGE_Y;
-  const ty = floorY(to.floor) + MESSAGE_Y;
-  const pts = [
-    new BABYLON.Vector3(from.x, fy, from.z),
-    new BABYLON.Vector3(from.x, fy, CORRIDOR_Z),
-  ];
-  if (from.floor !== to.floor) {
-    pts.push(new BABYLON.Vector3(STAIR_X, fy, CORRIDOR_Z));
-    pts.push(new BABYLON.Vector3(STAIR_X, ty, CORRIDOR_Z));
+  const canvas = document.getElementById("renderCanvas");
+  let engine;
+  try {
+    engine = new BABYLON.Engine(canvas, true, { stencil: true });
+  } catch (err) {
+    showStartupError("This browser can't draw 3D graphics.",
+      "WebGL is turned off or unavailable. Try Chrome, Edge or Firefox, and check hardware acceleration is switched on in the browser settings.",
+      String(err && err.message || err));
+    throw err;
   }
-  pts.push(new BABYLON.Vector3(to.x, ty, CORRIDOR_Z));
-  pts.push(new BABYLON.Vector3(to.x, ty, to.z));
-  return pts;
-}
+  const scene  = new BABYLON.Scene(engine);
+  scene.clearColor = BABYLON.Color4.FromHexString("#0f1420ff");
 
-// Build a message (sphere + route) from a sample entry.
-function createMessage(sample) {
-  const from = rooms[sample.from].dept, to = rooms[sample.to].dept;
-  const sphere = BABYLON.MeshBuilder.CreateSphere("msg" + messageCounter,
-    { diameter: sample.urgent ? 0.5 : 0.38, segments: 12 }, scene);
-  sphere.material = flatMaterial(sample.urgent ? "msg-urgent" : "msg-normal",
-    sample.urgent ? COLORS.urgent : COLORS.normal);
-  sphere.isPickable = false;
+  // Orbit camera aimed at the middle of the building.
+  const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI / 3, Math.PI / 3.2, 42,
+    new BABYLON.Vector3(0, 3, 0), scene);
+  camera.attachControl(canvas, true);
+  camera.lowerRadiusLimit = 15;
+  camera.upperRadiusLimit = 80;
+  camera.upperBetaLimit = Math.PI / 2.05;   // don't go under the ground
+  camera.wheelPrecision = 20;
 
-  const path = routeBetween(from, to);
-  sphere.position.copyFrom(path[0]);
+  new BABYLON.HemisphericLight("sky", new BABYLON.Vector3(0.3, 1, 0.2), scene).intensity = 0.85;
+  const sun = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, -0.4), scene);
+  sun.intensity = 0.4;
 
-  return {
-    id: ++messageCounter,
-    sample,            // the original entry, re-sent after it's cleared
-    from, to,
-    urgent: sample.urgent,
-    text: sample.text,
-    sphere, path,
-    segment: 0,        // index of the path segment we're on
-    along: 0,          // distance travelled along that segment
-  };
-}
+  // Full-screen 2D layer for room names and the click label.
+  const ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("ui", true, scene);
 
-// Messages waiting to be sent (oldest first).
-const outbox = [];
-
-// Send the next message in the outbox on its way.
-function spawnMessage() {
-  const sample = outbox.shift();
-  if (!sample) return;
-  const m = createMessage(sample);
-  travelling.push(m);
-  if (openLabelFor === m.to.id) renderLabel(rooms[m.to.id]);   // show it as incoming
-}
-
-// Turn SAMPLE_MESSAGES into messages: half start in their room's queue,
-// the rest go in the outbox and set off over the first few seconds.
-function seedQueues() {
-  let n = 0;
-  Object.entries(SAMPLE_MESSAGES).forEach(([toId, list]) => {
-    list.forEach(entry => {
-      const sample = { ...entry, to: toId };
-      if (!rooms[toId] || !rooms[sample.from]) {
-        console.warn("SAMPLE_MESSAGES: unknown department in", sample);
-        return;
-      }
-      if (n++ % 2 === 0) arrive(createMessage(sample)); else outbox.push(sample);
-    });
-  });
-}
-
-// Move every travelling message forward by dt seconds.
-function moveMessages(dt) {
-  for (let i = travelling.length - 1; i >= 0; i--) {
-    const m = travelling[i];
-    let step = MESSAGE_SPEED * dt * (m.urgent ? 1.4 : 1);
-
-    while (step > 0 && m.segment < m.path.length - 1) {
-      const a = m.path[m.segment], b = m.path[m.segment + 1];
-      const segLen = BABYLON.Vector3.Distance(a, b);
-      const left = segLen - m.along;
-      if (step < left) { m.along += step; step = 0; }
-      else { step -= left; m.segment++; m.along = 0; }
-    }
-
-    if (m.segment >= m.path.length - 1) {
-      travelling.splice(i, 1);
-      arrive(m);
-    } else {
-      const a = m.path[m.segment], b = m.path[m.segment + 1];
-      BABYLON.Vector3.LerpToRef(a, b, m.along / BABYLON.Vector3.Distance(a, b), m.sphere.position);
-    }
+  // Small helper: a flat-coloured material, cached by key.
+  const materialCache = {};
+  function flatMaterial(key, hex, alpha = 1) {
+    if (materialCache[key]) return materialCache[key];
+    const m = new BABYLON.StandardMaterial(key, scene);
+    const c = BABYLON.Color3.FromHexString(hex);
+    m.diffuseColor  = c;
+    m.emissiveColor = c.scale(0.35);
+    m.specularColor = BABYLON.Color3.Black();
+    m.alpha = alpha;
+    materialCache[key] = m;
+    return m;
   }
-}
 
-// A message reached its room: add it to the queue (urgent ones jump ahead).
-function arrive(m) {
-  const room = rooms[m.to.id];
-  if (m.urgent) {
-    const firstNormal = room.queue.findIndex(q => !q.urgent);
-    room.queue.splice(firstNormal === -1 ? room.queue.length : firstNormal, 0, m);
-  } else {
-    room.queue.push(m);
-  }
-  m.sphere.parent = floorNodes[m.to.floor];   // hide with its floor
-  layoutQueue(room);
-  refreshRoom(room);
-}
+  /* =====================================================================
+     3. BUILDING — floors, rooms, corridor and stair lines.
+     ===================================================================== */
 
-// Arrange queued spheres in a 4 x 3 grid on the room floor, stacking upward if full.
-function layoutQueue(room) {
-  const d = room.dept, cols = 4, rows = 3, gap = 0.6;
-  room.queue.forEach((m, i) => {
-    const col = i % cols, row = Math.floor(i / cols) % rows, layer = Math.floor(i / (cols * rows));
-    m.sphere.position.set(
-      d.x + (col - (cols - 1) / 2) * gap,
-      floorY(d.floor) + 0.3 + layer * 0.5,
-      d.z + (row - (rows - 1) / 2) * gap
-    );
-  });
-}
+  // One parent node per floor, so a whole floor can be hidden at once.
+  const floorNodes = FLOORS.map(f => new BABYLON.TransformNode("floor" + f.level, scene));
+  const floorY = level => FLOORS[level].y;
 
-// Each department clears the front of its queue at its own pace.
-const processTimers = {};
-function processQueues(dt) {
-  Object.values(rooms).forEach(room => {
-    processTimers[room.dept.id] = (processTimers[room.dept.id] || 0) + dt;
-    if (processTimers[room.dept.id] >= room.dept.processEvery) {
-      processTimers[room.dept.id] = 0;
-      const done = room.queue.shift();
-      if (done) {
-        done.sphere.dispose();
-        outbox.push(done.sample);   // send it again later
-        layoutQueue(room);
-        refreshRoom(room);
-      }
-    }
-  });
-}
-
-// Glow red when busy, and update the open label if it's this room.
-function refreshRoom(room) {
-  const busy = room.queue.length >= BUSY_THRESHOLD;
-  const base = BABYLON.Color3.FromHexString(busy ? COLORS.busy : room.dept.color);
-  room.glassMat.diffuseColor = base;
-  room.glassMat.emissiveColor = base.scale(busy ? 0.6 : 0.25);
-  room.glassMat.alpha = busy ? 0.28 : 0.16;
-  if (openLabelFor === room.dept.id) renderLabel(room);
-}
-
-/* =====================================================================
-   5. CLICK LABEL — floating panel showing a department's queue.
-   ===================================================================== */
-
-const label = new BABYLON.GUI.Rectangle("queueLabel");
-label.width = "280px";
-label.adaptHeightToChildren = true;
-label.cornerRadius = 10;
-label.thickness = 1;
-label.color = "#34425f";
-label.background = "rgba(15, 20, 32, 0.92)";
-label.linkOffsetY = -110;
-label.isVisible = false;
-ui.addControl(label);
-
-const labelText = new BABYLON.GUI.TextBlock("queueLabelText");
-labelText.color = "#dfe6f3";
-labelText.fontSize = 13;
-labelText.textWrapping = true;
-labelText.resizeToFit = true;
-labelText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-labelText.paddingTop = "10px";
-labelText.paddingBottom = "10px";
-labelText.paddingLeft = "12px";
-labelText.paddingRight = "12px";
-label.addControl(labelText);
-
-let openLabelFor = null;
-
-function renderLabel(room) {
-  const q = room.queue;
-  const urgentCount = q.filter(m => m.urgent).length;
-  const lines = [
-    room.dept.name.toUpperCase(),
-    `${q.length} queued` + (urgentCount ? ` · ${urgentCount} urgent` : "") +
-      ` · clears 1 every ${room.dept.processEvery}s`,
-    "",
-  ];
-  const item = m => `${m.urgent ? "[URGENT] " : ""}${m.text} — from ${m.from.name}`;
-
-  if (!q.length) lines.push("Nothing waiting.");
-  q.slice(0, LABEL_MAX_ITEMS).forEach((m, i) => lines.push(`${i + 1}. ${item(m)}`));
-  if (q.length > LABEL_MAX_ITEMS) lines.push(`…and ${q.length - LABEL_MAX_ITEMS} more`);
-
-  // Messages already heading to this department.
-  const incoming = travelling.filter(m => m.to.id === room.dept.id);
-  if (incoming.length) {
-    lines.push("", `ON THE WAY (${incoming.length})`);
-    incoming.forEach(m => lines.push(`→ ${item(m)}`));
-  }
-  labelText.text = lines.join("\n");
-}
-
-function openLabel(deptId) {
-  const room = rooms[deptId];
-  openLabelFor = deptId;
-  label.linkWithMesh(room.anchor);
-  label.color = room.dept.color;
-  renderLabel(room);
-  label.isVisible = true;
-}
-
-function closeLabel() {
-  openLabelFor = null;
-  label.isVisible = false;
-}
-
-// Click a room to open its label; click empty space to close it.
-// A press that moves more than a few pixels is a camera drag, not a click.
-let downAt = null;
-canvas.addEventListener("pointerdown", e => { downAt = { x: e.clientX, y: e.clientY }; });
-canvas.addEventListener("pointerup", e => {
-  if (!downAt) return;
-  const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
-  downAt = null;
-  if (moved > 6) return;
-
-  // Pick only room boxes on visible floors, ignoring everything else.
-  const rect = canvas.getBoundingClientRect();
-  const hit = scene.pick(e.clientX - rect.left, e.clientY - rect.top,
-    mesh => mesh.isEnabled() && !!(mesh.metadata && mesh.metadata.deptId));
-  if (hit && hit.hit) openLabel(hit.pickedMesh.metadata.deptId); else closeLabel();
-});
-window.addEventListener("keydown", e => { if (e.key === "Escape") closeLabel(); });
-
-/* =====================================================================
-   6. HUD CONTROLS — floor visibility and pause.
-   ===================================================================== */
-
-function showFloors(which) {
+  // Floor slabs. Upper slabs are see-through so the ground floor stays visible.
   FLOORS.forEach(f => {
-    const on = which === "all" || Number(which) === f.level;
-    floorNodes[f.level].setEnabled(on);
-    DEPARTMENTS.filter(d => d.floor === f.level).forEach(d => {
-      rooms[d.id].nameTag.isVisible = on;
-      if (!on && openLabelFor === d.id) closeLabel();
-    });
+    const slab = BABYLON.MeshBuilder.CreateBox("slab" + f.level,
+      { width: FLOOR_SIZE.width, depth: FLOOR_SIZE.depth, height: 0.15 }, scene);
+    slab.position.y = f.y - 0.08;
+    slab.material = flatMaterial("slab" + f.level, COLORS.slab, f.level === 0 ? 1 : 0.35);
+    slab.isPickable = false;
+    slab.parent = floorNodes[f.level];
   });
-  document.querySelectorAll("#floorButtons button").forEach(b =>
-    b.classList.toggle("on", b.dataset.show === which));
-}
-document.querySelectorAll("#floorButtons button").forEach(b =>
-  b.addEventListener("click", () => showFloors(b.dataset.show)));
 
-let paused = false;
-document.getElementById("pauseBtn").addEventListener("click", e => {
-  paused = !paused;
-  e.target.textContent = paused ? "Play" : "Pause";
-});
+  // Rooms: a solid coloured floor tile plus a glass box you can click.
+  const rooms = {};   // id -> { dept, glass, queue: [], anchor, nameTag }
+
+  DEPARTMENTS.forEach(dept => {
+    const y = floorY(dept.floor);
+
+    const tile = BABYLON.MeshBuilder.CreateBox(dept.id + "-tile",
+      { width: dept.w, depth: dept.d, height: 0.05 }, scene);
+    tile.position.set(dept.x, y + 0.03, dept.z);
+    tile.material = flatMaterial(dept.id + "-tile", dept.color, 0.55);
+    tile.isPickable = false;
+    tile.parent = floorNodes[dept.floor];
+
+    const glass = BABYLON.MeshBuilder.CreateBox(dept.id + "-glass",
+      { width: dept.w, depth: dept.d, height: ROOM_HEIGHT }, scene);
+    glass.position.set(dept.x, y + ROOM_HEIGHT / 2, dept.z);
+    const glassMat = new BABYLON.StandardMaterial(dept.id + "-glassMat", scene);
+    glassMat.diffuseColor  = BABYLON.Color3.FromHexString(dept.color);
+    glassMat.emissiveColor = BABYLON.Color3.FromHexString(dept.color).scale(0.25);
+    glassMat.specularColor = BABYLON.Color3.Black();
+    glassMat.alpha = 0.16;
+    glass.material = glassMat;
+    glass.enableEdgesRendering();
+    glass.edgesWidth = 3;
+    glass.edgesColor = BABYLON.Color4.FromHexString(dept.color + "cc");
+    glass.metadata = { deptId: dept.id };   // used by the click handler
+    glass.parent = floorNodes[dept.floor];
+
+    // Invisible point above the room that the 2D labels follow.
+    const anchor = new BABYLON.TransformNode(dept.id + "-anchor", scene);
+    anchor.position.set(dept.x, y + ROOM_HEIGHT + 0.2, dept.z);
+    anchor.parent = floorNodes[dept.floor];
+
+    // Always-on room name.
+    const nameTag = new BABYLON.GUI.TextBlock(dept.id + "-name", dept.name);
+    nameTag.color = "#ffffff";
+    nameTag.fontSize = 13;
+    nameTag.outlineWidth = 3;
+    nameTag.outlineColor = "#0f1420";
+    nameTag.resizeToFit = true;
+    ui.addControl(nameTag);
+    nameTag.linkWithMesh(anchor);
+
+    rooms[dept.id] = { dept, glass, glassMat, anchor, nameTag, queue: [] };
+  });
+
+  // Corridor line on each floor, a spur into every room, and a stair line between floors.
+  function line(name, points, hex, parent) {
+    const l = BABYLON.MeshBuilder.CreateLines(name, { points }, scene);
+    l.color = BABYLON.Color3.FromHexString(hex);
+    l.isPickable = false;
+    if (parent) l.parent = parent;
+    return l;
+  }
+
+  FLOORS.forEach(f => {
+    const y = f.y + MESSAGE_Y;
+    line("corridor" + f.level, [
+      new BABYLON.Vector3(-FLOOR_SIZE.width / 2 + 1, y, CORRIDOR_Z),
+      new BABYLON.Vector3(STAIR_X, y, CORRIDOR_Z),
+    ], COLORS.line, floorNodes[f.level]);
+  });
+
+  DEPARTMENTS.forEach(d => {
+    const y = floorY(d.floor) + MESSAGE_Y;
+    line(d.id + "-spur", [
+      new BABYLON.Vector3(d.x, y, d.z),
+      new BABYLON.Vector3(d.x, y, CORRIDOR_Z),
+    ], COLORS.line, floorNodes[d.floor]);
+  });
+
+  for (let i = 0; i < FLOORS.length - 1; i++) {
+    line("stair" + i, [
+      new BABYLON.Vector3(STAIR_X, FLOORS[i].y + MESSAGE_Y, CORRIDOR_Z),
+      new BABYLON.Vector3(STAIR_X, FLOORS[i + 1].y + MESSAGE_Y, CORRIDOR_Z),
+    ], COLORS.stair);
+  }
+
+  /* =====================================================================
+     4. MESSAGES — spawn, route, move, queue and process.
+     ===================================================================== */
+
+  const travelling = [];   // messages currently moving
+  let messageCounter = 0;
+
+  // The path a message takes: out of its room, along the corridor,
+  // up/down the stairs if needed, along the corridor, into the room.
+  function routeBetween(from, to) {
+    const fy = floorY(from.floor) + MESSAGE_Y;
+    const ty = floorY(to.floor) + MESSAGE_Y;
+    const pts = [
+      new BABYLON.Vector3(from.x, fy, from.z),
+      new BABYLON.Vector3(from.x, fy, CORRIDOR_Z),
+    ];
+    if (from.floor !== to.floor) {
+      pts.push(new BABYLON.Vector3(STAIR_X, fy, CORRIDOR_Z));
+      pts.push(new BABYLON.Vector3(STAIR_X, ty, CORRIDOR_Z));
+    }
+    pts.push(new BABYLON.Vector3(to.x, ty, CORRIDOR_Z));
+    pts.push(new BABYLON.Vector3(to.x, ty, to.z));
+    return pts;
+  }
+
+  // Build a message (sphere + route) from a sample entry.
+  function createMessage(sample) {
+    const from = rooms[sample.from].dept, to = rooms[sample.to].dept;
+    const sphere = BABYLON.MeshBuilder.CreateSphere("msg" + messageCounter,
+      { diameter: sample.urgent ? 0.5 : 0.38, segments: 12 }, scene);
+    sphere.material = flatMaterial(sample.urgent ? "msg-urgent" : "msg-normal",
+      sample.urgent ? COLORS.urgent : COLORS.normal);
+    sphere.isPickable = false;
+
+    const path = routeBetween(from, to);
+    sphere.position.copyFrom(path[0]);
+
+    return {
+      id: ++messageCounter,
+      sample,            // the original entry, re-sent after it's cleared
+      from, to,
+      urgent: sample.urgent,
+      text: sample.text,
+      sphere, path,
+      segment: 0,        // index of the path segment we're on
+      along: 0,          // distance travelled along that segment
+    };
+  }
+
+  // Messages waiting to be sent (oldest first).
+  const outbox = [];
+
+  // Send the next message in the outbox on its way.
+  function spawnMessage() {
+    const sample = outbox.shift();
+    if (!sample) return;
+    const m = createMessage(sample);
+    travelling.push(m);
+    if (openLabelFor === m.to.id) renderLabel(rooms[m.to.id]);   // show it as incoming
+  }
+
+  // Turn SAMPLE_MESSAGES into messages: half start in their room's queue,
+  // the rest go in the outbox and set off over the first few seconds.
+  function seedQueues() {
+    let n = 0;
+    Object.entries(SAMPLE_MESSAGES).forEach(([toId, list]) => {
+      list.forEach(entry => {
+        const sample = { ...entry, to: toId };
+        if (!rooms[toId] || !rooms[sample.from]) {
+          console.warn("SAMPLE_MESSAGES: unknown department in", sample);
+          return;
+        }
+        if (n++ % 2 === 0) arrive(createMessage(sample)); else outbox.push(sample);
+      });
+    });
+  }
+
+  // Move every travelling message forward by dt seconds.
+  function moveMessages(dt) {
+    for (let i = travelling.length - 1; i >= 0; i--) {
+      const m = travelling[i];
+      let step = MESSAGE_SPEED * dt * (m.urgent ? 1.4 : 1);
+
+      while (step > 0 && m.segment < m.path.length - 1) {
+        const a = m.path[m.segment], b = m.path[m.segment + 1];
+        const segLen = BABYLON.Vector3.Distance(a, b);
+        const left = segLen - m.along;
+        if (step < left) { m.along += step; step = 0; }
+        else { step -= left; m.segment++; m.along = 0; }
+      }
+
+      if (m.segment >= m.path.length - 1) {
+        travelling.splice(i, 1);
+        arrive(m);
+      } else {
+        const a = m.path[m.segment], b = m.path[m.segment + 1];
+        BABYLON.Vector3.LerpToRef(a, b, m.along / BABYLON.Vector3.Distance(a, b), m.sphere.position);
+      }
+    }
+  }
+
+  // A message reached its room: add it to the queue (urgent ones jump ahead).
+  function arrive(m) {
+    const room = rooms[m.to.id];
+    if (m.urgent) {
+      const firstNormal = room.queue.findIndex(q => !q.urgent);
+      room.queue.splice(firstNormal === -1 ? room.queue.length : firstNormal, 0, m);
+    } else {
+      room.queue.push(m);
+    }
+    m.sphere.parent = floorNodes[m.to.floor];   // hide with its floor
+    layoutQueue(room);
+    refreshRoom(room);
+  }
+
+  // Arrange queued spheres in a 4 x 3 grid on the room floor, stacking upward if full.
+  function layoutQueue(room) {
+    const d = room.dept, cols = 4, rows = 3, gap = 0.6;
+    room.queue.forEach((m, i) => {
+      const col = i % cols, row = Math.floor(i / cols) % rows, layer = Math.floor(i / (cols * rows));
+      m.sphere.position.set(
+        d.x + (col - (cols - 1) / 2) * gap,
+        floorY(d.floor) + 0.3 + layer * 0.5,
+        d.z + (row - (rows - 1) / 2) * gap
+      );
+    });
+  }
+
+  // Each department clears the front of its queue at its own pace.
+  const processTimers = {};
+  function processQueues(dt) {
+    Object.values(rooms).forEach(room => {
+      processTimers[room.dept.id] = (processTimers[room.dept.id] || 0) + dt;
+      if (processTimers[room.dept.id] >= room.dept.processEvery) {
+        processTimers[room.dept.id] = 0;
+        const done = room.queue.shift();
+        if (done) {
+          done.sphere.dispose();
+          outbox.push(done.sample);   // send it again later
+          layoutQueue(room);
+          refreshRoom(room);
+        }
+      }
+    });
+  }
+
+  // Glow red when busy, and update the open label if it's this room.
+  function refreshRoom(room) {
+    const busy = room.queue.length >= BUSY_THRESHOLD;
+    const base = BABYLON.Color3.FromHexString(busy ? COLORS.busy : room.dept.color);
+    room.glassMat.diffuseColor = base;
+    room.glassMat.emissiveColor = base.scale(busy ? 0.6 : 0.25);
+    room.glassMat.alpha = busy ? 0.28 : 0.16;
+    if (openLabelFor === room.dept.id) renderLabel(room);
+  }
+
+  /* =====================================================================
+     5. CLICK LABEL — floating panel showing a department's queue.
+     ===================================================================== */
+
+  const label = new BABYLON.GUI.Rectangle("queueLabel");
+  label.width = "280px";
+  label.adaptHeightToChildren = true;
+  label.cornerRadius = 10;
+  label.thickness = 1;
+  label.color = "#34425f";
+  label.background = "rgba(15, 20, 32, 0.92)";
+  label.linkOffsetY = -110;
+  label.isVisible = false;
+  ui.addControl(label);
+
+  const labelText = new BABYLON.GUI.TextBlock("queueLabelText");
+  labelText.color = "#dfe6f3";
+  labelText.fontSize = 13;
+  labelText.textWrapping = true;
+  labelText.resizeToFit = true;
+  labelText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+  labelText.paddingTop = "10px";
+  labelText.paddingBottom = "10px";
+  labelText.paddingLeft = "12px";
+  labelText.paddingRight = "12px";
+  label.addControl(labelText);
+
+  let openLabelFor = null;
+
+  function renderLabel(room) {
+    const q = room.queue;
+    const urgentCount = q.filter(m => m.urgent).length;
+    const lines = [
+      room.dept.name.toUpperCase(),
+      `${q.length} queued` + (urgentCount ? ` · ${urgentCount} urgent` : "") +
+        ` · clears 1 every ${room.dept.processEvery}s`,
+      "",
+    ];
+    const item = m => `${m.urgent ? "[URGENT] " : ""}${m.text} — from ${m.from.name}`;
+
+    if (!q.length) lines.push("Nothing waiting.");
+    q.slice(0, LABEL_MAX_ITEMS).forEach((m, i) => lines.push(`${i + 1}. ${item(m)}`));
+    if (q.length > LABEL_MAX_ITEMS) lines.push(`…and ${q.length - LABEL_MAX_ITEMS} more`);
+
+    // Messages already heading to this department.
+    const incoming = travelling.filter(m => m.to.id === room.dept.id);
+    if (incoming.length) {
+      lines.push("", `ON THE WAY (${incoming.length})`);
+      incoming.forEach(m => lines.push(`→ ${item(m)}`));
+    }
+    labelText.text = lines.join("\n");
+  }
+
+  function openLabel(deptId) {
+    const room = rooms[deptId];
+    openLabelFor = deptId;
+    label.linkWithMesh(room.anchor);
+    label.color = room.dept.color;
+    renderLabel(room);
+    label.isVisible = true;
+  }
+
+  function closeLabel() {
+    openLabelFor = null;
+    label.isVisible = false;
+  }
+
+  // Click a room to open its label; click empty space to close it.
+  // A press that moves more than a few pixels is a camera drag, not a click.
+  let downAt = null;
+  canvas.addEventListener("pointerdown", e => { downAt = { x: e.clientX, y: e.clientY }; });
+  canvas.addEventListener("pointerup", e => {
+    if (!downAt) return;
+    const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+    downAt = null;
+    if (moved > 6) return;
+
+    // Pick only room boxes on visible floors, ignoring everything else.
+    const rect = canvas.getBoundingClientRect();
+    const hit = scene.pick(e.clientX - rect.left, e.clientY - rect.top,
+      mesh => mesh.isEnabled() && !!(mesh.metadata && mesh.metadata.deptId));
+    if (hit && hit.hit) openLabel(hit.pickedMesh.metadata.deptId); else closeLabel();
+  });
+  window.addEventListener("keydown", e => { if (e.key === "Escape") closeLabel(); });
+
+  /* =====================================================================
+     6. HUD CONTROLS — floor visibility and pause.
+     ===================================================================== */
+
+  function showFloors(which) {
+    FLOORS.forEach(f => {
+      const on = which === "all" || Number(which) === f.level;
+      floorNodes[f.level].setEnabled(on);
+      DEPARTMENTS.filter(d => d.floor === f.level).forEach(d => {
+        rooms[d.id].nameTag.isVisible = on;
+        if (!on && openLabelFor === d.id) closeLabel();
+      });
+    });
+    document.querySelectorAll("#floorButtons button").forEach(b =>
+      b.classList.toggle("on", b.dataset.show === which));
+  }
+  document.querySelectorAll("#floorButtons button").forEach(b =>
+    b.addEventListener("click", () => showFloors(b.dataset.show)));
+
+  let paused = false;
+  document.getElementById("pauseBtn").addEventListener("click", e => {
+    paused = !paused;
+    e.target.textContent = paused ? "Play" : "Pause";
+  });
+
+  /* =====================================================================
+     7. MAIN LOOP
+     ===================================================================== */
+
+  seedQueues();
+
+  let spawnTimer = 0;
+  scene.onBeforeRenderObservable.add(() => {
+    if (paused) return;
+    const dt = Math.min(engine.getDeltaTime() / 1000, 0.1);   // clamp after tab switches
+    spawnTimer += dt;
+    if (spawnTimer >= SPAWN_EVERY) { spawnTimer = 0; spawnMessage(); }
+    moveMessages(dt);
+    processQueues(dt);
+  });
+
+  engine.runRenderLoop(() => scene.render());
+  window.addEventListener("resize", () => engine.resize());
+
+  // Handy for poking at the scene from the browser console.
+  window.office = { engine, scene, camera, rooms, travelling, outbox, openLabel, closeLabel };
+}
 
 /* =====================================================================
-   7. MAIN LOOP
+   8. START — wait for Babylon to load, then build the scene.
    ===================================================================== */
 
-seedQueues();
-
-let spawnTimer = 0;
-scene.onBeforeRenderObservable.add(() => {
-  if (paused) return;
-  const dt = Math.min(engine.getDeltaTime() / 1000, 0.1);   // clamp after tab switches
-  spawnTimer += dt;
-  if (spawnTimer >= SPAWN_EVERY) { spawnTimer = 0; spawnMessage(); }
-  moveMessages(dt);
-  processQueues(dt);
-});
-
-engine.runRenderLoop(() => scene.render());
-window.addEventListener("resize", () => engine.resize());
+loadBabylon()
+  .then(startOffice)
+  .catch(err => {
+    console.error("[office-3d] Startup failed:", err);
+    if (!document.getElementById("startupError").hidden) return;   // a more specific message is already up
+    const blocked = /could not be loaded/.test(err.message);
+    showStartupError(
+      blocked ? "Babylon.js didn't load." : "The 3D view hit an error while starting.",
+      blocked
+        ? "Every source was blocked or unreachable. Check you're online, that a firewall or ad blocker isn't " +
+          "blocking these sites, and that you opened the file in a normal browser tab (some file previews block scripts)."
+        : "The message below says what went wrong.",
+      err.message);
+  });
 </script>
 </body>
 </html>
