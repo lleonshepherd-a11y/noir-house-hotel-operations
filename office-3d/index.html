@@ -59,6 +59,19 @@
   } catch (e) { /* console is read-only here; nothing more we can do */ }
 })();
 
+// Some embedded viewers forbid gamepad access, and then navigator.getGamepads()
+// throws instead of returning a list. Babylon calls it while setting up input
+// in new BABYLON.Scene(), which would stop the page, so report "no gamepads".
+(function safeGamepads() {
+  try {
+    if (typeof navigator.getGamepads === "function") navigator.getGamepads();
+  } catch (e) {
+    try {
+      Object.defineProperty(navigator, "getGamepads", { value: () => [], configurable: true });
+    } catch (e2) { /* can't override here; startup will report the error */ }
+  }
+})();
+
 // Babylon.js core + GUI, pinned to one version. The Babylon CDN (the one the
 // Playground uses) is tried first; the others host identical files and are
 // only used if it's blocked or unreachable.
