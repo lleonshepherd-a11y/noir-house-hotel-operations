@@ -273,7 +273,7 @@ h1.title{margin:0;font-size:26px;font-weight:600;letter-spacing:-.022em;line-hei
 .res .ic{width:13px;height:13px}
 
 /* board */
-.board{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px}
+.board{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;overflow-x:auto;align-items:start;padding-bottom:6px}
 .bcol{background:#f8f8f9;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:300px;transition:background .15s,box-shadow .15s}
 .bcol.over{background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(94,106,210,.4)}
 .bcol h5{margin:2px 4px 4px;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500}
@@ -341,6 +341,95 @@ tbody tr:hover{background:#fafafa}
 .lr{transition:background .12s,transform .2s var(--ease)}
 .lr:hover{transform:translateX(2px)}
 
+/* ---------- No visible scrollbars anywhere (areas still scroll) ---------- */
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* ---------- Add buttons ---------- */
+.grp-row{display:flex;align-items:center;gap:2px}
+.grp-row .grp-h{flex:1}
+.grp-add,.addb{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--fg-3);flex:none;transition:background .12s,color .12s,opacity .15s}
+.grp-add:hover,.addb:hover{background:var(--hover);color:var(--fg)}
+.grp-add svg,.addb svg{width:14px;height:14px}
+.gh .addb{margin-left:auto}
+.bcol h5 .addb{margin-left:auto}
+.add-row{display:flex;align-items:center;gap:7px;width:100%;padding:7px 8px;border-radius:8px;color:var(--fg-3);font-size:13px;font-weight:500;transition:background .12s,color .12s}
+.add-row:hover{background:var(--hover);color:var(--fg)}
+.add-row svg{width:14px;height:14px}
+.lr.flash,.card.flash,.pcard.flash{animation:flash 1.8s var(--ease)}
+@keyframes flash{0%,35%{background:rgba(94,106,210,.12);box-shadow:0 0 0 2px rgba(94,106,210,.35)}}
+
+/* ---------- Projects roadmap ---------- */
+.rm-top{display:flex;align-items:center;gap:8px;padding:14px 20px 0;flex-wrap:wrap}
+.rm-top h1{margin:0 8px 0 0;font-size:18px;font-weight:600;letter-spacing:-.015em}
+.roadmap{display:grid;grid-template-columns:repeat(4,minmax(232px,1fr));gap:14px;overflow-x:auto;padding:16px 20px 48px}
+.qcol{display:flex;flex-direction:column;gap:8px;min-width:0;transition:opacity .2s}
+.qcol.past{opacity:.55}
+.qcol.past:hover{opacity:1}
+.qh{display:flex;align-items:center;gap:8px;padding:2px 4px 6px;font-weight:600;font-size:14px}
+.qh .y,.qh .n{color:var(--fg-3);font-weight:500}
+.qh .now{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:5px;padding:0 6px;line-height:18px}
+.qh .r{margin-left:auto;display:flex;gap:2px}
+.pcard{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px 11px;display:flex;flex-direction:column;gap:5px;cursor:pointer;text-align:left;box-shadow:var(--tile-sh);transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .2s}
+.pcard:hover{transform:translateY(-3px);box-shadow:var(--tile-sh-h);border-color:#dadade}
+.pcard.new{animation:pop .45s var(--ease)}
+.pcard .ph{display:flex;align-items:center;gap:8px;font-weight:500;font-size:14px}
+.pcard .ph .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .ph>svg{color:var(--fg-2)}
+.pcard .ics{display:flex;gap:7px;align-items:center}
+.pcard p{margin:0;color:var(--fg-2);font-size:13px;line-height:1.45}
+.pcard .ini{display:flex;align-items:center;gap:6px;color:var(--fg-3);font-size:12.5px;margin-top:6px}
+.pcard .ini svg{width:13px;height:13px}
+.pcard .ini .avs{margin-left:auto}
+.qadd{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border:1px dashed var(--line);border-radius:10px;color:var(--fg-3);font-weight:500;font-size:13px;transition:background .12s,color .12s,border-color .12s}
+.qadd:hover{background:var(--hover);color:var(--fg);border-color:#d4d4d8}
+.qadd svg{width:14px;height:14px}
+
+/* ---------- Create modal ---------- */
+.mod-bg{position:fixed;inset:0;z-index:70;background:rgba(20,20,25,.2);display:grid;place-items:start center;padding:11vh 16px 16px;animation:fade .14s}
+.mod{width:100%;max-width:680px;background:var(--panel);border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.06);animation:min .22s var(--ease)}
+@keyframes min{from{transform:translateY(10px) scale(.98);opacity:.2}}
+.mod.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.mod-h{display:flex;align-items:center;gap:6px;padding:12px 12px 0 16px;font-size:12.5px;color:var(--fg-2)}
+.mod-h .cb{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;padding:0 7px;line-height:22px;font-weight:500;color:var(--fg)}
+.mod-h .sep{color:var(--fg-4)}
+.mod-h .x{margin-left:auto}
+.mod .mt{display:block;width:100%;border:0;outline:none;font:inherit;font-size:19px;font-weight:600;letter-spacing:-.015em;padding:16px 16px 4px;color:var(--fg);background:transparent}
+.mod .mt::placeholder,.mod .mdsc::placeholder{color:var(--fg-4)}
+.mod .mdsc{display:block;width:100%;border:0;outline:none;resize:none;font:inherit;font-size:14px;line-height:1.55;padding:4px 16px 14px;min-height:72px;color:var(--fg);background:transparent}
+.mod-props{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 14px}
+.pp{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:7px;border:1px solid var(--line);font-size:12.5px;font-weight:500;background:var(--panel);transition:background .12s,transform .2s var(--ease),box-shadow .2s}
+.pp:hover{background:var(--hover);transform:translateY(-1px)}
+.pp.empty{color:var(--fg-3)}
+.pp.hl{border-color:rgba(94,106,210,.5);box-shadow:0 0 0 3px rgba(94,106,210,.12)}
+.mod-f{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-top:1px solid var(--line-2)}
+.mod-f .more{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg-2);margin-right:auto;cursor:pointer}
+.tgl{width:28px;height:16px;border-radius:9px;background:#dcdce0;position:relative;transition:background .2s;flex:none}
+.tgl::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .2s var(--ease)}
+.tgl.on{background:var(--accent)}.tgl.on::after{transform:translateX(12px)}
+.mod-f .hint{font-size:12px;color:var(--fg-3)}
+
+/* ---------- Dropdown menu ---------- */
+.menu{position:fixed;z-index:80;width:230px;max-height:300px;overflow-y:auto;background:var(--panel);border-radius:10px;box-shadow:0 14px 36px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.06);padding:4px;animation:vin .14s var(--ease)}
+.menu input{width:100%;border:0;border-bottom:1px solid var(--line-2);outline:none;font:inherit;font-size:13px;padding:7px 8px 9px;margin-bottom:4px;background:transparent}
+.mi{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:6px;text-align:left;font-size:13px}
+.mi:hover,.mi.sel{background:var(--hover)}
+.mi small{margin-left:auto;color:var(--fg-3);font-size:12px}
+.mi .tick{margin-left:auto;color:var(--accent)}
+
+/* ---------- Toasts ---------- */
+.toasts{position:fixed;left:16px;bottom:16px;z-index:90;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.13);padding:10px 10px 10px 12px;width:min(380px,calc(100vw - 32px));animation:tin .32s var(--ease)}
+.toast.out{animation:tout .25s ease-in forwards}
+.toast p{margin:0;flex:1;font-size:13px;line-height:1.4}
+.toast p b{font-weight:600}
+.toast small{display:block;color:var(--fg-3);font-size:12px}
+.toast .go{font-size:12.5px;font-weight:500;color:var(--accent);padding:4px 8px;border-radius:6px}
+.toast .go:hover{background:var(--accent-soft)}
+@keyframes tin{from{transform:translateY(12px);opacity:0}}
+@keyframes tout{to{transform:translateY(8px);opacity:0}}
+
 /* ---------- Responsive ---------- */
 @media (max-width:1240px){.agent{width:340px}.wrap{padding-inline:32px}}
 @media (max-width:1100px){
@@ -361,6 +450,8 @@ tbody tr:hover{background:#fafafa}
   .mtabs{display:flex!important}
 }
 @media (max-width:640px){
+  .mod-bg{padding:0;place-items:end stretch}.mod{max-width:none;border-radius:16px 16px 0 0}
+  .roadmap{padding-inline:16px}.rm-top{padding-inline:16px}
   .wrap{padding:24px 16px 48px}
   h1.title{font-size:22px}
   .opts{grid-template-columns:1fr}.opt+.opt{border-left:0;border-top:1px solid var(--line-2)}
@@ -387,7 +478,7 @@ tbody tr:hover{background:#fafafa}
       <button class="ws-btn"><span class="logo"><i></i></span>Helm<svg class="ic" style="width:13px;height:13px;color:var(--fg-3)" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>
       <div class="ws-r">
         <button class="ib" id="openSearch" aria-label="Search" title="Search  ⌘K"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg></button>
-        <button class="ib ring" aria-label="New task" title="New task"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        <button class="ib ring" id="newTaskSide" aria-label="New task" title="New task  (C)"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
       </div>
     </div>
     <div class="side-sc">
@@ -401,13 +492,13 @@ tbody tr:hover{background:#fafafa}
         <button class="grp-h">Workspace<svg viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
         <nav class="nav">
           <button class="ni" data-view="stages"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l3 6 6 .9-4.5 4.2 1 6L12 17l-5.5 3 1-6L3 9.9 9 9z"/></svg>Stages &amp; team</button>
-          <button class="ni" data-view="project"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Projects</button>
+          <button class="ni" data-view="projects"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Projects<span class="c" id="projCount"></span></button>
           <button class="ni" data-view="project" data-tab="Money"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Money</button>
           <button class="ni" data-view="project" data-tab="Funding"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M14.5 9.5c-.4-.9-1.3-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1.2 0-2.1-.6-2.5-1.5M12 6.5V8M12 16v1.5"/></svg>Funding</button>
         </nav>
       </div>
       <div class="grp">
-        <button class="grp-h">Favorites<svg viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+        <div class="grp-row"><button class="grp-h">Your projects<svg viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button><button class="grp-add" id="newProjSide" aria-label="New project" title="New project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div>
         <nav class="nav" id="favs"></nav>
       </div>
     </div>
@@ -426,6 +517,7 @@ tbody tr:hover{background:#fafafa}
       <div class="bar-r">
         <span class="pager" id="pager">1 / 3</span>
         <button class="ib" aria-label="Copy link" title="Copy link"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></button>
+        <button class="btn pri" id="newBtn"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2"><path d="M12 5v14M5 12h14"/></svg><span id="newLbl">New task</span></button>
         <button class="agent-tg on" id="agentTg"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg><span>Ask Helm</span></button>
       </div>
     </div>
@@ -519,6 +611,12 @@ tbody tr:hover{background:#fafafa}
           </div>
         </section>
 
+        <!-- ======== PROJECTS ROADMAP ======== -->
+        <section class="view" id="view-projects" hidden>
+          <div class="rm-top"><h1>Projects</h1><button class="prop">All initiatives<svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;color:var(--fg-3)"><path d="M7 10l5 5 5-5"/></svg></button><button class="prop">Quarter <span>2026–27</span></button><span class="muted" style="margin-left:auto;font-size:12.5px" id="rmCount"></span></div>
+          <div class="roadmap" id="roadmap"></div>
+        </section>
+
         <!-- ======== STAGES ======== -->
         <section class="view" id="view-stages" hidden>
           <div class="wrap">
@@ -563,11 +661,11 @@ tbody tr:hover{background:#fafafa}
   </main>
 </div>
 
+<div class="toasts" id="toasts" aria-live="polite"></div>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const CSS=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ---------- Linear-style status icons ---------- */
 function st(kind,p=.5){const C=2*Math.PI*3.5;
@@ -594,8 +692,10 @@ const LB={Launch:'#e5484d',Product:'#5e6ad2',Growth:'#d6409f',Ops:'#ea8a32',Fina
 const lbl=n=>`<span class="lbl" style="--c:${LB[n]}"><i></i>${n}</span>`;
 
 /* ---------- Sidebar favourites ---------- */
-$('#favs').innerHTML=[['Murmur',st('prog',.68),'project'],['Seed round',st('prog',.4),'project','Funding'],['Launch plan',st('risk',.68),'project','Issues'],['Ledgerly',st('todo'),''],['Atlas Agent',st('prog',.55),'']].map(([n,i,v,t])=>`<button class="ni"${v?` data-view="${v}"`:''}${t?` data-tab="${t}"`:''}>${i}${n}</button>`).join('');
-$$('.grp-h').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('closed')));
+const SIDEP=[['Murmur','prog',.68,'project'],['Ledgerly','prog',.3,'projects'],['Atlas Agent','prog',.55,'projects']];
+function renderSideProjects(){$('#favs').innerHTML=SIDEP.map(([n,k,p,v])=>`<button class="ni" data-view="${v}"${v==='projects'?` data-proj="${n}"`:''}>${st(k,p)}${n}</button>`).join('')}
+renderSideProjects();
+$$('.grp-h').forEach(h=>h.addEventListener('click',()=>h.closest('.grp').classList.toggle('closed')));
 $('#p1').outerHTML=st('review',.75);$('#p2').outerHTML=st('risk',.68);$('#p3').outerHTML=st('sign',.5);
 
 /* ---------- Briefing ---------- */
@@ -689,17 +789,28 @@ const STG=[['Set the company up','done',1,'Mar 2'],['Product plan','done',1,'Apr
 $('#milestones').innerHTML=STG.map(([n,k,p,d],i)=>`<div class="lr">${dia(k)}<div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${n}</b></div><div class="meta"><span class="mbar"><i style="--w:${p*100}%;--c:${k==='done'?'#5e6ad2':k==='now'?'#e0a500':'#b4b7bd'};animation-delay:${i*.04}s"></i></span><span class="pct">${Math.round(p*100)}%</span><span class="dt" style="width:60px">${d}</span></div></div>`).join('');
 $$('[data-r]').forEach(r=>r.addEventListener('click',()=>{const n=r.querySelector('span');const on=r.classList.toggle('on');n.textContent=+n.textContent+(on?1:-1)}));
 
-const ISS=[['CEO sign-off','sign',[['MUR-151','Launch video v3 · 45s cut','Growth','SP',3,'Today'],['MUR-149','Seed deck: updated use of funds','Finance','ML',3,'Thu'],['MUR-142','Ship offline mode to pilot','Product','JR',2,'Oct 12']]],
- ['In Progress','prog',[['MUR-118','Pen-test report from outside auditor','Launch','JR',4,'Oct 20'],['MUR-137','Accuracy fix for accents in noisy rooms','Product','JR',3,'Oct 14'],['MUR-144','Product Hunt launch page','Growth','SP',2,'Oct 20']]],
- ['In Review','review',[['MUR-133','Onboarding: three screens into one','Design','TN',2,'Oct 12'],['MUR-139','Help centre: top 20 questions','Ops','TO',1,'Oct 16']]],
- ['Done','done',[['MUR-121','Windows beta build 0.9','Product','JR',2,'Oct 8'],['MUR-104','Delaware C-corp and SAFE paperwork','Legal','TO',1,'Sep 30']]]];
-const pr=n=>n===4?urgent:pri(n);
-$('#issues').innerHTML=ISS.map(([g,k,rows])=>`<div class="gh">${st(k,.5)}${g}<span class="n">${rows.length}</span></div>`+rows.map(([id,t,l,o,p,d])=>`<div class="lr">${pr(p)}<span class="id">${id}</span>${st(k,.5)}<div class="ttl"><b>${t}</b></div><div class="meta">${lbl(l)}${av(o)}<span class="dt">${d}</span></div></div>`).join('')).join('');
-$('#board').innerHTML=ISS.map(([g,k,rows],ci)=>`<div class="bcol" data-col="${g}"><h5>${st(k,.5)}${g}<span>${rows.length}</span></h5>${rows.map(([id,t,l,o,p,d],ti)=>`<div class="card" draggable="true" id="b${ci}${ti}"><div class="top"><span>${id}</span>${av(o,'xs')}</div><p>${st(k,.5)}<span>${t}</span></p><div class="ft">${pr(p)}${lbl(l)}<span class="muted" style="font-size:12px;margin-left:auto">${d}</span></div></div>`).join('')}</div>`).join('');
-let drag=null;
-$$('.card').forEach(c=>{c.addEventListener('dragstart',e=>{drag=c;c.classList.add('dragging');e.dataTransfer.setData('text/plain',c.id)});c.addEventListener('dragend',()=>c.classList.remove('dragging'))});
-$$('.bcol').forEach(col=>{col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('over')});col.addEventListener('dragleave',()=>col.classList.remove('over'));col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('over');if(!drag||drag.parentElement===col)return;const from=drag.parentElement;col.appendChild(drag);const k=ISS.find(x=>x[0]===col.dataset.col)[1];drag.querySelector('p svg').outerHTML=st(k,.5);drag.classList.remove('landed');void drag.offsetWidth;drag.classList.add('landed');[from,col].forEach(x=>{const s=x.querySelector('h5 span');s.textContent=x.querySelectorAll('.card').length})})});
-
+const STAT={todo:'Todo',prog:'In Progress',review:'In Review',sign:'CEO sign-off',done:'Done'};
+const LIST_ORDER=['sign','prog','review','todo','done'],BOARD_ORDER=['todo','prog','review','sign'];
+const T=(id,t,l,o,p,d,s)=>({id,t,l,o,p,d,s});
+const TASKS=[T('MUR-151','Launch video v3 · 45s cut','Growth','SP',3,'Today','sign'),T('MUR-149','Seed deck: updated use of funds','Finance','ML',3,'Thu','sign'),T('MUR-142','Ship offline mode to pilot','Product','JR',2,'Oct 12','sign'),
+ T('MUR-118','Pen-test report from outside auditor','Launch','JR',4,'Oct 20','prog'),T('MUR-137','Accuracy fix for accents in noisy rooms','Product','JR',3,'Oct 14','prog'),T('MUR-144','Product Hunt launch page','Growth','SP',2,'Oct 20','prog'),
+ T('MUR-133','Onboarding: three screens into one','Design','TN',2,'Oct 12','review'),T('MUR-139','Help centre: top 20 questions','Ops','TO',1,'Oct 16','review'),
+ T('MUR-147','App Store listing copy','Growth','SP',2,'Oct 22','todo'),T('MUR-148','Team admin controls for pilots','Product','DW',2,'Nov 1','todo'),
+ T('MUR-121','Windows beta build 0.9','Product','JR',2,'Oct 8','done'),T('MUR-104','Delaware C-corp and SAFE paperwork','Legal','TO',1,'Sep 30','done')];
+let nextId=152;
+const ISS=LIST_ORDER.map(k=>[STAT[k],k,TASKS.filter(t=>t.s===k).map(t=>[t.id,t.t,t.l,t.o,t.p,t.d])]);
+const pr=n=>n===4?urgent:n===0?'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7h2M6 7h2M10 7h2" stroke="#b4b7bd" stroke-width="1.5" stroke-linecap="round"/></svg>':pri(n);
+const PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+function renderIssues(){$('#issues').innerHTML=LIST_ORDER.map(k=>{const rows=TASKS.filter(t=>t.s===k);return `<div class="gh">${st(k,.5)}${STAT[k]}<span class="n">${rows.length}</span><button class="addb" data-new-status="${k}" aria-label="Add task to ${STAT[k]}" title="Add task">${PLUS}</button></div>`+rows.map(t=>`<div class="lr" data-id="${t.id}">${pr(t.p)}<span class="id">${t.id}</span>${st(k,.5)}<div class="ttl"><b>${esc(t.t)}</b></div><div class="meta">${lbl(t.l)}${t.o?av(t.o):'<span class="av" style="--av:#f0f0f2;--avc:#8b8f97">?</span>'}<span class="dt">${t.d}</span></div></div>`).join('')}).join('')}
+function renderBoard(){$('#board').innerHTML=BOARD_ORDER.map(k=>{const rows=TASKS.filter(t=>t.s===k);return `<div class="bcol" data-col="${k}"><h5>${st(k,.5)}${STAT[k]}<span>${rows.length}</span><button class="addb" data-new-status="${k}" aria-label="Add task to ${STAT[k]}" title="Add task">${PLUS}</button></h5>${rows.map(t=>`<div class="card" draggable="true" data-id="${t.id}"><div class="top"><span>${t.id}</span>${t.o?av(t.o,'xs'):''}</div><p>${st(k,.5)}<span>${esc(t.t)}</span></p><div class="ft">${pr(t.p)}${lbl(t.l)}<span class="muted" style="font-size:12px;margin-left:auto">${t.d}</span></div></div>`).join('')}<button class="add-row" data-new-status="${k}">${PLUS}Add task</button></div>`}).join('')}
+function renderTasks(){renderIssues();renderBoard();$('[data-tab="Issues"] .c')&&0;const mine=TASKS.filter(t=>t.o==='AK'&&t.s!=='done').length;const mt=$('.ni[data-tab="Issues"] .c');if(mt)mt.textContent=mine||''}
+renderTasks();
+let dragId=null;
+const board=$('#board');
+board.addEventListener('dragstart',e=>{const c=e.target.closest('.card');if(!c)return;dragId=c.dataset.id;c.classList.add('dragging');e.dataTransfer.setData('text/plain',dragId)});
+board.addEventListener('dragend',e=>{const c=e.target.closest('.card');if(c)c.classList.remove('dragging');$$('.bcol.over').forEach(x=>x.classList.remove('over'))});
+board.addEventListener('dragover',e=>{const col=e.target.closest('.bcol');if(!col)return;e.preventDefault();$$('.bcol.over').forEach(x=>x!==col&&x.classList.remove('over'));col.classList.add('over')});
+board.addEventListener('drop',e=>{const col=e.target.closest('.bcol');if(!col)return;e.preventDefault();col.classList.remove('over');const t=TASKS.find(x=>x.id===dragId);if(!t||t.s===col.dataset.col)return;t.s=col.dataset.col;renderTasks();flash(`#board .card[data-id="${t.id}"]`);toast(`<b>${t.id}</b> moved to ${STAT[t.s]}`,t.o&&t.o!=='AK'?`${P[t.o][0]} was notified`:'')});
 const wave=n=>Array.from({length:n},(_,i)=>{const h=5+Math.abs(Math.sin(i*.6))*24;return `<rect x="${i*6}" y="${18-h/2}" width="3" height="${h}" rx="1.5" fill="#1c1d21" opacity=".5"/>`}).join('');
 const FILES=[['Launch film v3','Growth · 0:45','Video',`<svg viewBox="0 0 150 36" width="60%">${wave(25)}</svg>`,'0:45',1],
  ['Seed pitch deck v7','Finance · 24 slides','Deck','<div style="text-align:center"><div style="font-size:20px;font-weight:600;letter-spacing:-.03em">Murmur</div><div style="font-size:10px;color:var(--fg-3);letter-spacing:.12em;margin-top:3px">SEED · 2026</div></div>','',0],
@@ -715,6 +826,114 @@ $('#spend').innerHTML=[['Salaries',21400,'+$0'],['Paid ads',8300,'+$2,300'],['Cl
 $('#fundk').innerHTML=[['Pre-seed','$1.2M','Closed March'],['Seed committed','$1.6M','of $4M target'],['Term sheets','2','Northbeam, Harbour'],['In diligence','5','of 42 contacted']].map(([l,v,s])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s}</small></div>`).join('');
 $('#pipe').innerHTML=[['Northbeam Ventures','review','Term sheet','AK','$1.0M','Today'],['Harbour Capital','review','Term sheet','AK','$750k','Yesterday'],['Field Fund','prog','Diligence','ML','$500k','Mon'],['Kestrel Angels','prog','Diligence','ML','$250k','Oct 6'],['Oakline Partners','todo','Meeting booked','AK','$1.5M','Oct 4']].map(([n,k,s,o,t,d])=>`<tr><td style="font-weight:500">${n}</td><td><span style="display:flex;align-items:center;gap:7px">${st(k,.5)}${s}</span></td><td>${av(o,'xs')}</td><td class="num">${t}</td><td class="num muted">${d}</td></tr>`).join('');
 
+/* ---------- Projects roadmap ---------- */
+const PI={wave:'<path d="M5 10v4M8.5 7v10M12 4v16M15.5 8v8M19 10.5v3"/>',doc:'<path d="M7 3.5h7l4 4V20a.5.5 0 01-.5.5h-10A.5.5 0 017 20z"/><path d="M14 3.5V8h4"/>',chat:'<path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/>',bot:'<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9.5 13h0M14.5 13h0"/>',people:'<circle cx="9" cy="9" r="3"/><path d="M3.5 19c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5M16 6.5a3 3 0 010 5.5M17.5 14.7c1.7.6 2.7 2 3 4.3"/>',shield:'<path d="M12 3.5l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9v-5z"/>',rocket:'<path d="M14 4c3 0 6 3 6 6l-6 6-6-6c0-3 3-6 6-6z"/><path d="M8 10l-3 1-1 3 4-1M14 16l-1 3-3 1 1-4"/><circle cx="14" cy="10" r="1.5"/>',money:'<circle cx="12" cy="12" r="8"/><path d="M14.5 9.5c-.4-.9-1.3-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1.2 0-2.1-.6-2.5-1.5M12 6.5V8M12 16v1.5"/>',build:'<path d="M4 20V9l8-5 8 5v11M9 20v-6h6v6"/>',phone:'<rect x="7" y="3.5" width="10" height="17" rx="2.5"/><path d="M11 17.5h2"/>',box:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>'};
+const pic=k=>`<svg class="ic" viewBox="0 0 24 24">${PI[k]||PI.box}</svg>`;
+function hex(k){const c={done:'#5e6ad2',prog:'#e0a500',todo:'#b4b7bd',risk:'#e5484d'}[k];const path='M7 1.2l5 2.9v5.8l-5 2.9-5-2.9V4.1z';
+ if(k==='done')return `<svg width="14" height="14" viewBox="0 0 14 14" title="Completed"><path d="${path}" fill="${c}"/><path d="M4.6 7.1l1.6 1.6 3.2-3.3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+ if(k==='todo')return `<svg width="14" height="14" viewBox="0 0 14 14"><path d="${path}" fill="none" stroke="${c}" stroke-width="1.3" stroke-dasharray="2 1.6"/></svg>`;
+ return `<svg width="14" height="14" viewBox="0 0 14 14"><path d="${path}" fill="none" stroke="${c}" stroke-width="1.3"/><path d="M7 4.2l2.6 1.5v2.6L7 9.8z" fill="${c}"/></svg>`}
+function hicon(h){const c={ok:'#2f9e6e',risk:'#e0a500',off:'#e5484d',none:'#c4c6cc'}[h];return `<svg width="16" height="16" viewBox="0 0 16 16" aria-label="${h==='none'?'No update':HL[h][0]}"><circle cx="8" cy="8" r="7.2" fill="${c}" opacity=".16"/><path d="${h==='off'?'M3.5 9.5l2.5-3 2 2 4.5-4':'M3.5 8.5l2-2.5 2.5 4 2-3 2.5 1.5'}" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+const QS=[['Q3','2026',1],['Q4','2026',0,1],['Q1','2027'],['Q2','2027']];
+const PR=(q,n,d,i,h,s,p,ini,lead,view)=>({q,n,d,i,h,s,p,ini,lead,view});
+const PROJ=[PR('Q3 2026','Murmur first version','The smallest version people can use every day','wave','ok','done',3,'Murmur','JR'),PR('Q3 2026','Seed deck and data room','Story, model and diligence folder for the seed round','doc','ok','done',3,'Fundraising','ML'),PR('Q3 2026','Ledgerly interviews','30 interviews with finance teams. 22 done','chat','ok','prog',2,'Ledgerly','PS'),PR('Q3 2026','Company set-up','Delaware C-corp, bank, SAFE paperwork and payroll','build','none','done',1,'Operations','TO'),
+ PR('Q4 2026','Murmur private pilot','2,140 testers. Fix what blocks daily use','wave','risk','prog',3,'Murmur','JR','project'),PR('Q4 2026','Security review','Outside pen test and SOC 2 readiness','shield','off','prog',4,'Murmur','JR'),PR('Q4 2026','Murmur public launch','Staged release from 18 Nov with a Product Hunt day','rocket','risk','todo',4,'Murmur','SP'),PR('Q4 2026','Hire two engineers','One offer out. Senior or two mid-level pending','people','risk','prog',3,'Hiring','AK'),PR('Q4 2026','Close the seed round','$4M target, $1.6M committed, 2 term sheets','money','ok','prog',3,'Fundraising','AK'),
+ PR('Q1 2027','Ledgerly MVP','Reconciliation tool for 5 design partners','doc','none','todo',2,'Ledgerly','PS'),PR('Q1 2027','Atlas Agent pilot','Meeting agent piloted with 3 teams','bot','none','todo',2,'Atlas Agent','TO'),PR('Q1 2027','Murmur for teams','Admin controls and team billing','box','none','todo',3,'Murmur','DW'),
+ PR('Q2 2027','Murmur Android app','Match the iOS and desktop experience','phone','none','todo',2,'Murmur','DW'),PR('Q2 2027','Series A preparation','Metrics pack and investor shortlist','money','none','todo',1,'Fundraising','AK')];
+const INI_IC='<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>';
+function renderRoadmap(){const total=PROJ.length;$('#rmCount').textContent=`${total} projects`;$('#projCount').textContent=total;
+ $('#roadmap').innerHTML=QS.map(([qq,y,past,now])=>{const key=qq+' '+y,items=PROJ.filter(p=>p.q===key);return `<div class="qcol${past?' past':''}"><div class="qh">${qq}<span class="y">${y}</span><span class="n">${items.length}</span>${now?'<span class="now">Now</span>':''}<span class="r"><button class="addb" data-newproj="${key}" aria-label="New project in ${key}" title="New project in ${key}">${PLUS}</button><button class="addb" aria-label="More">${'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>'}</button></span></div>${items.map(p=>`<button class="pcard" data-pname="${esc(p.n)}"${p.view?` data-view="${p.view}"`:''}><div class="ph">${pic(p.i)}<span class="nm">${esc(p.n)}</span><span class="ics">${hicon(p.h)}${hex(p.s)}${pr(p.p)}</span></div><p>${esc(p.d)}</p><div class="ini">${INI_IC}${esc(p.ini)}<span class="avs">${av(p.lead,'xs')}</span></div></button>`).join('')}<button class="qadd" data-newproj="${key}">${PLUS}New project</button></div>`}).join('')}
+renderRoadmap();
+document.addEventListener('click',e=>{const c=e.target.closest('.pcard');if(c&&!c.dataset.view)toast(`<b>${c.dataset.pname}</b>`,'Only Murmur has a full project page in this mockup')});
+
+/* ---------- Toasts ---------- */
+function toast(h,sub,go){const box=$('#toasts'),t=document.createElement('div');t.className='toast';t.innerHTML=`<span class="ck" style="flex:none">${ICON.check}</span><p>${h}${sub?`<small>${sub}</small>`:''}</p>${go?'<button class="go">View</button>':''}`;box.appendChild(t);
+ if(go)t.querySelector('.go').addEventListener('click',()=>{go();kill()});const kill=()=>{t.classList.add('out');setTimeout(()=>t.remove(),250)};setTimeout(kill,5200);while(box.children.length>3)box.firstElementChild.remove()}
+function flash(sel){setTimeout(()=>{const el=$(sel);if(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');el.scrollIntoView({block:'nearest',behavior:RM?'auto':'smooth'})}},60)}
+
+/* ---------- Dropdown menu ---------- */
+let menuEl=null;
+function closeMenu(){if(menuEl){menuEl.remove();menuEl=null}}
+function openMenu(anchor,items,cur,onPick,search){closeMenu();const m=document.createElement('div');m.className='menu';m.setAttribute('role','listbox');document.body.appendChild(m);menuEl=m;
+ const draw=f=>{const list=items.filter(i=>!f||i.label.toLowerCase().includes(f.toLowerCase()));m.querySelector('.ml').innerHTML=list.map((i,ix)=>`<button class="mi${ix===0&&f?' sel':''}" data-v="${i.v}">${i.icon||''}<span>${i.label}</span>${String(i.v)===String(cur)?'<span class="tick">✓</span>':i.meta?`<small>${i.meta}</small>`:''}</button>`).join('')||'<div class="pal-empty">No matches</div>'};
+ m.innerHTML=(search?`<input placeholder="${search}" aria-label="${search}">`:'')+'<div class="ml"></div>';draw('');
+ const r=anchor.getBoundingClientRect();let top=r.bottom+6,left=r.left;if(left+230>innerWidth-8)left=innerWidth-238;if(top+300>innerHeight)top=Math.max(8,r.top-306);m.style.top=top+'px';m.style.left=Math.max(8,left)+'px';
+ m.addEventListener('click',e=>{const b=e.target.closest('.mi');if(!b)return;const it=items.find(i=>String(i.v)===b.dataset.v);closeMenu();onPick(it.v)});
+ const inp=m.querySelector('input');if(inp){inp.focus();inp.addEventListener('input',()=>draw(inp.value));inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const f=m.querySelector('.mi');if(f){e.preventDefault();f.click()}}})}}
+document.addEventListener('mousedown',e=>{if(menuEl&&!menuEl.contains(e.target)&&!e.target.closest('.pp'))closeMenu()});
+
+/* ---------- Create task / project ---------- */
+const PEOPLE=Object.keys(P).map(k=>({v:k,label:P[k][0]+(k==='AK'?' (you)':''),icon:av(k,'xs')}));
+const PRI_OPTS=[{v:0,label:'No priority',icon:pr(0)},{v:4,label:'Urgent',icon:urgent},{v:3,label:'High',icon:pri(3)},{v:2,label:'Medium',icon:pri(2)},{v:1,label:'Low',icon:pri(1)}];
+const PRI_N={0:'Priority',1:'Low',2:'Medium',3:'High',4:'Urgent'};
+const DUE=['Today','Tomorrow','Fri','Oct 24','Oct 31','Nov 7','Nov 18'].map(d=>({v:d,label:d}));
+let modal=null,ms=null;
+function closeModal(){if(modal){modal.remove();modal=null;ms=null;closeMenu()}}
+function pp(k,html,empty){return `<button type="button" class="pp${empty?' empty':''}" data-k="${k}">${html}</button>`}
+function taskProps(){const s=ms;return [
+ pp('s',`${st(s.s,.5)}${STAT[s.s]}`),pp('p',`${pr(s.p)}${PRI_N[s.p]}`,!s.p),
+ pp('o',s.o?`${av(s.o,'xs')}${P[s.o][0]}`:'<svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="9" r="3.5"/><path d="M5 19.5c1-3.3 3.8-5 7-5s6 1.7 7 5"/></svg>Assign to…',!s.o),
+ pp('l',s.l?lbl(s.l).replace('class="lbl"','class="lbl" style="border:0;padding:0;height:auto"'):'Label',!s.l),
+ pp('proj',`${st('prog',.68)}${s.proj}`),
+ pp('d',`<svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;color:var(--fg-3)"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>${s.d||'Due date'}`,!s.d)].join('')}
+function projProps(){const s=ms;return [
+ pp('s',`${hex(s.s)}${s.s==='todo'?'Planned':s.s==='prog'?'In progress':'Completed'}`),pp('lead',s.lead?`${av(s.lead,'xs')}Lead: ${P[s.lead][0]}`:'Lead',!s.lead),
+ pp('mem',s.mem.length?`<span class="avs">${s.mem.map(k=>av(k,'xs')).join('')}</span>${s.mem.length} member${s.mem.length>1?'s':''}`:'Members',!s.mem.length),
+ pp('q',`<svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;color:var(--fg-3)"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>${s.q}`),
+ pp('p',`${pr(s.p)}${PRI_N[s.p]}`,!s.p),pp('ini',`${INI_IC.replace('class="ic"','class="ic" style="width:14px;height:14px;color:var(--fg-3)"')}${s.ini}`)].join('')}
+function openCreate(type,pre={}){closeModal();closePal();closeSide();
+ ms=type==='task'?{type,title:'',desc:'',s:pre.s||'todo',p:pre.p??0,o:pre.o||null,l:pre.l||null,proj:'Murmur',d:pre.d||null,more:false}
+   :{type,title:'',desc:'',s:'todo',lead:'AK',mem:[],q:pre.q||'Q4 2026',p:0,ini:'Murmur',more:false};
+ const bg=document.createElement('div');bg.className='mod-bg';bg.innerHTML=`<div class="mod" role="dialog" aria-modal="true" aria-label="${type==='task'?'New task':'New project'}">
+  <div class="mod-h"><span class="cb">${type==='task'?`${st('prog',.68)}MUR`:'<span class="logo" style="width:14px;height:14px;border-radius:4px"><i style="width:5px;height:5px;border-width:1.2px"></i></span>Helm'}</span><span class="sep">›</span><span>${type==='task'?'New task':'New project'}</span><button class="ib x" aria-label="Close" data-close>${'<svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'}</button></div>
+  <input class="mt" id="mTitle" placeholder="${type==='task'?'Task title':'Project name'}" autocomplete="off">
+  <textarea class="mdsc" id="mDesc" placeholder="${type==='task'?'Add description… Use @ to mention a teammate':'Add a short summary…'}"></textarea>
+  <div class="mod-props" id="mProps"></div>
+  <div class="mod-f"><span class="more" id="mMore"><span class="tgl" id="mTgl"></span>Create more</span><span class="hint">⌘ Enter</span><button class="btn pri" id="mCreate">${type==='task'?'Create task':'Create project'}</button></div></div>`;
+ document.body.appendChild(bg);modal=bg;drawProps();
+ bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});
+ bg.querySelector('[data-close]').addEventListener('click',closeModal);
+ $('#mMore').addEventListener('click',()=>{ms.more=!ms.more;$('#mTgl').classList.toggle('on',ms.more)});
+ $('#mCreate').addEventListener('click',create);
+ [$('#mTitle'),$('#mDesc')].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey||el.id==='mTitle')){e.preventDefault();create()}}));
+ $('#mProps').addEventListener('click',e=>{const b=e.target.closest('.pp');if(!b)return;propMenu(b,b.dataset.k)});
+ setTimeout(()=>$('#mTitle').focus(),30);
+ if(pre.focusAssign)setTimeout(()=>propMenu($('#mProps [data-k="o"]'),'o'),120);}
+function drawProps(hl){$('#mProps').innerHTML=ms.type==='task'?taskProps():projProps();if(hl){const b=$(`#mProps [data-k="${hl}"]`);if(b){b.classList.add('hl');setTimeout(()=>b.classList.remove('hl'),700)}}}
+function propMenu(b,k){const set=(key,v)=>{ms[key]=v;drawProps(key)};
+ if(ms.type==='task'){
+  if(k==='s')openMenu(b,Object.keys(STAT).map(x=>({v:x,label:STAT[x],icon:st(x,.5)})),ms.s,v=>set('s',v));
+  if(k==='p')openMenu(b,PRI_OPTS,ms.p,v=>set('p',+v));
+  if(k==='o')openMenu(b,PEOPLE,ms.o,v=>set('o',v),'Assign to…');
+  if(k==='l')openMenu(b,Object.keys(LB).map(x=>({v:x,label:x,icon:`<span class="lbl" style="--c:${LB[x]};border:0;padding:0;height:auto"><i></i></span>`})),ms.l,v=>set('l',v),'Add label…');
+  if(k==='proj')openMenu(b,SIDEP.map(x=>({v:x[0],label:x[0],icon:st(x[1],x[2])})),ms.proj,v=>set('proj',v));
+  if(k==='d')openMenu(b,DUE,ms.d,v=>set('d',v));
+ }else{
+  if(k==='s')openMenu(b,[{v:'todo',label:'Planned',icon:hex('todo')},{v:'prog',label:'In progress',icon:hex('prog')},{v:'done',label:'Completed',icon:hex('done')}],ms.s,v=>set('s',v));
+  if(k==='lead')openMenu(b,PEOPLE,ms.lead,v=>set('lead',v),'Project lead…');
+  if(k==='mem')openMenu(b,PEOPLE.map(x=>({...x,meta:ms.mem.includes(x.v)?'Added':''})),null,v=>{ms.mem=ms.mem.includes(v)?ms.mem.filter(x=>x!==v):[...ms.mem,v];drawProps('mem')},'Add members…');
+  if(k==='q')openMenu(b,QS.map(([a,y])=>({v:a+' '+y,label:a+' '+y})),ms.q,v=>set('q',v));
+  if(k==='p')openMenu(b,PRI_OPTS,ms.p,v=>set('p',+v));
+  if(k==='ini')openMenu(b,['Murmur','Ledgerly','Atlas Agent','Fundraising','Hiring','Operations'].map(x=>({v:x,label:x,icon:INI_IC})),ms.ini,v=>set('ini',v));
+ }}
+function create(){const title=$('#mTitle').value.trim();if(!title){const m=$('.mod');m.classList.remove('shake');void m.offsetWidth;m.classList.add('shake');$('#mTitle').placeholder=ms.type==='task'?'Give the task a title':'Give the project a name';$('#mTitle').focus();return}
+ if(ms.type==='task'){const t=T('MUR-'+(nextId++),title,ms.l||'Product',ms.o,ms.p,ms.d||'No date',ms.s);TASKS.push(t);renderTasks();
+  const who=ms.o?(ms.o==='AK'?'Assigned to you':`Assigned to ${P[ms.o][0]}`):'Not assigned yet';
+  toast(`<b>${t.id}</b> ${esc(title)}`,ms.o&&ms.o!=='AK'?`${who} · ${P[ms.o][0].split(' ')[0]} was notified`:who,()=>{showView('project',{tab:'Issues'});flash(`#issues .lr[data-id="${t.id}"]`)});
+  addActivity(ms.o&&ms.o!=='AK'?`<b>You</b> assigned <b>${t.id} ${esc(title)}</b> to <b>${P[ms.o][0]}</b>`:`<b>You</b> created <b>${t.id} ${esc(title)}</b>`);
+  if(!$('#view-project').hidden){const tab=$('[data-ptab].on');if(tab&&tab.dataset.ptab==='Issues')flash(`#issues .lr[data-id="${t.id}"]`);if(tab&&tab.dataset.ptab==='Board')flash(`#board .card[data-id="${t.id}"]`)}
+ }else{const d=$('#mDesc').value.trim()||'No summary yet';PROJ.push(PR(ms.q,title,d,'box',ms.s==='done'?'ok':'none',ms.s,ms.p,ms.ini,ms.lead));renderRoadmap();SIDEP.push([title,ms.s==='done'?'done':'todo',0,'projects']);renderSideProjects();
+  const n=PROJ.length;toast(`<b>${esc(title)}</b> project created`,`${ms.q} · lead ${P[ms.lead][0]}${ms.mem.length?` · ${ms.mem.length} member${ms.mem.length>1?'s':''} notified`:''}`,()=>{showView('projects');flash(`.pcard[data-pname="${CSS.escape(title)}"]`)});
+  if(!$('#view-projects').hidden){const c=$$('.pcard').find(x=>x.dataset.pname===title);if(c){c.classList.add('new');flash(`.pcard[data-pname="${CSS.escape(title)}"]`)}}}
+ if(ms.more){$('#mTitle').value='';$('#mDesc').value='';$('#mTitle').focus()}else closeModal()}
+$('#newBtn').addEventListener('click',()=>$('#view-projects').hidden?openCreate('task',{}):openCreate('project',{}));
+$('#newTaskSide').addEventListener('click',()=>openCreate('task',{}));
+$('#newProjSide').addEventListener('click',e=>{e.stopPropagation();openCreate('project',{})});
+document.addEventListener('click',e=>{const a=e.target.closest('[data-new-status]');if(a){openCreate('task',{s:a.dataset.newStatus});return}const p=e.target.closest('[data-newproj]');if(p)openCreate('project',{q:p.dataset.newproj})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(menuEl){closeMenu();e.stopImmediatePropagation();return}if(modal){closeModal();e.stopImmediatePropagation();return}}
+ const typing=/INPUT|TEXTAREA/.test(document.activeElement.tagName)||document.activeElement.isContentEditable;
+ if(!typing&&!modal&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&e.key.toLowerCase()==='c'){e.preventDefault();openCreate('task',{})}},true);
+
 /* ---------- Stages ---------- */
 const STAGES=[["Set the company up to operate","CEO, startup lawyer, accountant","done","Mar"],["Turn the UI into a product plan","Founder, product designer, tech lead, prospective customers","done","Apr"],["Design the technical foundations","CTO, product designer, security adviser","done","May"],["Build the first usable version","Tech lead, engineers, designer, founder, AI specialist","done","Aug"],["Run a private pilot","Founder, product, engineers, pilot users, customer success","now","68%"],["Prepare for a public launch","Product, engineering, support, product marketer, lawyer","next","12%"],["Launch in stages","Founder, growth lead, customer success, engineering","next","18 Nov"],["Improve retention, find repeatable growth","Founder, product, engineering, customer success, sales","next","Q1 2027"],["Scale the company","Product and engineering, sales, success, operations, finance","next","Later"]];
 $('#stages').innerHTML=STAGES.map(([t,w,k,m],i)=>`<div class="lr">${dia(k)}<span class="id" style="width:22px">${i+1}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${k==='now'?'<span class="lbl" style="--c:#e0a500"><i></i>You are here</span>':''}<span class="dt" style="width:60px">${m}</span></div></div>`).join('');
@@ -728,11 +947,13 @@ function openTab(name){$$('[data-ptab]').forEach(b=>b.classList.toggle('on',b.da
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ptab]');if(b)openTab(b.dataset.ptab)});
 const CRUMB={home:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id">BRF-41</span><span class="t">Morning briefing</span>`,
  project:`${st('prog',.68)}<span class="id">MUR</span><span class="t">Murmur</span>`,
- stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`};
+ stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`,
+ projects:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="t">Projects</span><span class="id">Roadmap</span>`};
 function showView(v,opt={}){
- ['home','project','stages'].forEach(k=>$('#view-'+k).hidden=k!==v);
+ ['home','project','stages','projects'].forEach(k=>$('#view-'+k).hidden=k!==v);$('#newLbl').textContent=v==='projects'?'New project':'New task';
+ const ag=$('#agent'),wide=!matchMedia('(max-width:1100px)').matches;if(v==='projects'&&!ag.hidden){ag.hidden=true;$('#agentTg').classList.remove('on');ag.dataset.auto='1'}else if(v!=='projects'&&ag.dataset.auto&&wide){ag.hidden=false;$('#agentTg').classList.add('on');delete ag.dataset.auto}
  $$('.side [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v&&!b.dataset.scroll&&!b.dataset.tab&&b.closest('.nav')&&!b.closest('#favs')));
- $('#crumb').innerHTML=CRUMB[v];$('#htabs').hidden=v!=='project';$('#pager').textContent={home:'1 / 3',project:'2 / 3',stages:'3 / 3'}[v];
+ $('#crumb').innerHTML=CRUMB[v];$('#htabs').hidden=v!=='project';$('#pager').textContent={home:'1 / 4',projects:'2 / 4',project:'3 / 4',stages:'4 / 4'}[v];
  $('#scope').textContent=v==='project'?'Murmur':'All projects';q.placeholder=v==='project'?'Ask about Murmur, or @mention a teammate':'Ask Helm, or @mention a teammate';
  const el=$('#view-'+v);el.style.animation='none';void el.offsetWidth;el.style.animation='';
  if(v==='project')openTab(opt.tab||'Overview');
@@ -762,7 +983,7 @@ $('#openSearch').addEventListener('click',openPal);
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPal()}if(e.key==='Escape'){closePal();closeSide()}});
 
 if(matchMedia('(max-width:1100px)').matches){$('#agent').hidden=true;$('#agentTg').classList.remove('on')}
-showView(location.hash==='#project'?'project':location.hash==='#stages'?'stages':'home');
+showView(location.hash==='#project'?'project':location.hash==='#stages'?'stages':location.hash==='#projects'?'projects':'home');
 </script>
 </body>
 </html>

@@ -34,8 +34,11 @@ A light, Linear-style app: a compact sidebar on a grey canvas, one white panel w
 | --- | --- | --- |
 | Briefing | Default view | Priorities, decisions waiting on the CEO, blockers, spend vs plan, teams, activity and comments |
 | Murmur (project) | Sidebar → Favorites → Murmur | Properties, KPIs, latest update, the nine stages as milestones, plus Issues, Board, Files, Money and Funding tabs |
+| Projects | Sidebar → Workspace → Projects | Roadmap board by quarter with a + on every column to add a project |
 | Stages & team | Sidebar → Workspace → Stages & team | The nine company stages and the lean starting team |
 | Helm agent | "Ask Helm" in the header | Ask questions about the company. Answers show what they were based on |
+
+To add work: press **New task** in the header (or the C key) to create a task and assign it to a coworker, use the **+** on any board column or issue group, and use **New project**, the **+** next to "Your projects" in the sidebar, or the **+** on a quarter column to add a project.
 
 Things you can try: ask a suggested question in the agent panel, pick an option on a decision, hover over tiles and the spend chart, drag a board card to another column, reply to a comment with `@name`, and press ⌘K (Ctrl+K) to search.
 
