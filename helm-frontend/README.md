@@ -18,13 +18,16 @@ You need nothing installed to look at it:
 
 ## What's in it
 
+A light, Linear-style app: a compact sidebar on a grey canvas, one white panel with a thin header bar, and the Helm agent panel on the right.
+
 | Screen | How to get there | What it shows |
 | --- | --- | --- |
-| Home | Default view | Company priorities with progress rings, decisions waiting on the CEO, projects needing attention, cross-team blockers, spend vs plan chart, live activity, team pulse |
-| Murmur (project) | Sidebar → Projects → Murmur | Project header, 9-stage track, KPIs, team lanes, sign-offs, drag-and-drop board, chat with @mentions and #tags, spend, funding, files |
-| Stages & team | Sidebar → Stages & team | The nine company stages with who is involved, plus the lean starting team |
+| Briefing | Default view | Priorities, decisions waiting on the CEO, blockers, spend vs plan, teams, activity and comments |
+| Murmur (project) | Sidebar → Favorites → Murmur | Properties, KPIs, latest update, the nine stages as milestones, plus Issues, Board, Files, Money and Funding tabs |
+| Stages & team | Sidebar → Workspace → Stages & team | The nine company stages and the lean starting team |
+| Helm agent | "Ask Helm" in the header | Ask questions about the company. Answers show what they were based on |
 
-Things you can try: click a suggested question under the ask bar, pick an option on a decision, hover over the spend chart, drag a board card to another column, and send a chat message with `@name` or `#tag`.
+Things you can try: ask a suggested question in the agent panel, pick an option on a decision, hover over tiles and the spend chart, drag a board card to another column, reply to a comment with `@name`, and press ⌘K (Ctrl+K) to search.
 
 ## Files
 
