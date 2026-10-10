@@ -1208,6 +1208,38 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .ny-from{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .kpi small .down{color:var(--red)}
 .decm-b{padding:0 14px 14px}.decm-b .dec{margin:0;box-shadow:none}.decm-b .dec:hover{transform:none}
+
+/* ===== Sign-offs ===== */
+.so{padding:0;overflow:hidden;gap:0;cursor:pointer}
+.so .thumb{border:0;border-bottom:1px solid var(--line-2);border-radius:0;aspect-ratio:16/9;box-shadow:none}
+.so:hover .thumb .in{transform:scale(1.04)}
+.so-b{padding:14px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.so-b .ny-t{font-size:15px}
+.so-st{font-size:11.5px;font-weight:600;border-radius:999px;padding:0 8px;line-height:20px;background:#f1f1f3;color:var(--fg-2)}
+.so-st.approved{background:#f1f1f3;color:var(--fg)}
+.so-st.changes{background:#fff4e5;color:#a35f00}
+.so-st.late{background:var(--red-soft);color:var(--red)}
+.rv{max-width:1000px}
+.rv-g{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;border-top:1px solid var(--line-2)}
+.rv-stage{background:#f6f6f7;display:grid;place-items:center;padding:28px;min-height:420px;position:relative}
+.rv-stage .frame{width:100%;max-width:560px;aspect-ratio:16/10;background:var(--panel);border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;overflow:hidden;position:relative;box-shadow:0 18px 40px -18px rgba(16,17,20,.25)}
+.rv-stage .frame .in{transform:scale(1.7)}.rv-stage .frame .in.vid{transform:none}.rv-stage .frame .in.vid svg{width:72%}
+.rv-play{position:absolute;inset:auto 0 0 0;display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(transparent,rgba(255,255,255,.95))}
+.rv-play button{width:30px;height:30px;border-radius:50%;background:var(--fg);display:grid;place-items:center;flex:none}
+.rv-play .trk{flex:1;height:4px;border-radius:2px;background:#e1e1e5;overflow:hidden}
+.rv-play .trk i{display:block;height:100%;width:0;background:var(--fg);border-radius:2px}
+.rv-play.on .trk i{animation:rvp 6s linear forwards}
+@keyframes rvp{to{width:100%}}
+.rv-play time{font-size:11.5px;color:var(--fg-2);font-variant-numeric:tabular-nums}
+.rv-side{padding:18px;display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--line-2)}
+.rv-side h5{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--fg-3)}
+.rv-kv{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}.rv-kv span{color:var(--fg-3)}
+.rv-chk{margin:0;padding-left:18px;font-size:13px;color:var(--fg-2);line-height:1.7}
+.rv-side textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:13px;resize:vertical;outline:none;color:var(--fg)}
+.rv-side textarea:focus{border-color:#cfd0d6;box-shadow:0 0 0 3px rgba(94,106,210,.08)}
+.rv-btns{display:flex;gap:8px;margin-top:auto}.rv-btns .btn{flex:1;justify-content:center}
+.rv-done{font-size:13px;color:var(--fg-2);background:#f6f6f7;border-radius:10px;padding:10px 12px}
+@media (max-width:860px){.rv-g{grid-template-columns:1fr}.rv-side{border-left:0;border-top:1px solid var(--line-2)}.rv-stage{min-height:240px;padding:16px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1228,6 +1260,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
         <button class="ni on" data-view="home"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Briefing<span class="badge" id="navDec">3</span></button>
         <button class="ni" data-view="mytasks"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.3 4.6-4.8"/></svg>My tasks<span class="c">5</span></button>
         <button class="ni" data-view="decisions"><svg class="ic" viewBox="0 0 24 24"><path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 011.4.56l2.3 2.22a1 1 0 010 1.44l-2.3 2.22A2 2 0 0118 13H6a2 2 0 01-1.4-.56L2.3 10.22a1 1 0 010-1.44L4.6 6.56A2 2 0 016 6z"/></svg>Decisions<span class="c" id="navDec2">3</span></button>
+        <button class="ni" data-view="signoff"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Sign-offs<span class="c" id="soC"></span></button>
         <button class="ni" data-view="calendar"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Calendar<span class="c" id="calC"></span></button>
         <button class="ni" id="sideMsgs" data-view="messages"><svg class="ic" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 104 16.1L2.5 21.5z"/></svg>Messages<span class="badge" id="navMsg">3</span></button>
         <button class="ni" id="sideSp" data-view="spaces"><svg class="ic" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M10 7.5l-1 9M15.5 7.5l-1 9M7.5 10.2h9.5M7 13.8h9.5"/></svg>Spaces<span class="c" id="spC"></span></button>
@@ -1406,6 +1439,15 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
               <form class="mcmp sp-cmp" id="spForm"><textarea id="spIn" rows="2" placeholder="Message" aria-label="Write a message to the space"></textarea><div class="row"><button type="button" class="ib" aria-label="Attach file" title="Attach file"><svg class="ic" viewBox="0 0 24 24"><path d="M16.5 8.5l-7 7a2.5 2.5 0 01-3.5-3.5l7.5-7.5a4 4 0 015.5 5.5L11 18"/></svg></button><button type="button" class="ib" id="spAt" aria-label="Mention someone" title="Mention someone"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M15.5 12v1.5a2.5 2.5 0 005 0V12a8.5 8.5 0 10-3.3 6.7"/></svg></button><span class="hint">Enter to send · Shift + Enter for a new line</span><button class="snd" id="spSend" disabled aria-label="Send" style="margin-left:auto"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2.2"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div></form>
             </div>
             <aside class="sp-r" id="spAbout"></aside>
+          </div>
+        </section>
+
+        <!-- ======== SIGN-OFFS ======== -->
+        <section class="view" id="view-signoff" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Sign-offs</h1><p class="lead">Work that needs your approval before it ships. Open one, check it, then approve it or ask for changes.</p></div></div>
+            <div class="sp-tools"><div class="seg2" id="soFilt" style="margin:0"></div></div>
+            <div class="spgrid"><div class="cards" id="soCards"></div></div>
           </div>
         </section>
 
@@ -2572,7 +2614,7 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
  draw();setTimeout(()=>inp.focus(),30)}
 
 /* ---------- Step 2: same page header everywhere ---------- */
-{const EB={mytasks:'You',decisions:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
+{const EB={mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
  Object.entries(EB).forEach(([v,l])=>{const sec=document.getElementById('view-'+v);if(!sec)return;const h=sec.querySelector('h1.title');if(!h||h.closest('.sum'))return;
   const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
 
@@ -2582,10 +2624,10 @@ const NYL={urgent:'Urgent',decision:'Decision',sign:'Sign-off',reply:'Reply',blo
 const NY=[
  {id:'n1',k:'urgent',t:'Pick the launch date',d:'The security review is 8 days late. 18 Nov is at risk; 2 Dec still fits the App Store review.',who:'JR',when:'Thursday',due:'Due 20 Oct',act:'Decide',dec:0,go:()=>openDecision(0)},
  {id:'n2',k:'decision',t:'One senior engineer or two mid-level?',d:'Omar has an offer for senior. Two mid-level would cost about the same and start sooner.',who:'JR',when:'Yesterday',due:'Due Fri',act:'Decide',dec:1,go:()=>openDecision(1)},
- {id:'n3',k:'sign',t:'Approve launch video v3',d:'45-second cut with a shorter hook and new music. Needs locking by Wednesday to book the ads.',who:'SP',when:'Today',due:'Due Wed',act:'Decide',dec:2,go:()=>openDecision(2)},
+ {id:'n3',k:'sign',t:'Approve launch video v3',d:'45-second cut with a shorter hook and new music. Needs locking by Wednesday to book the ads.',who:'SP',when:'Today',due:'Due Wed',act:'Review',dec:2,go:()=>openSO('video')},
  {id:'n4',k:'reply',t:'Reply to the Northbeam term sheet',d:'$1.0M lead at a $16M cap. Maya has the redlines ready for you to check.',who:'ML',when:'Yesterday',due:'Due 24 Oct',act:'Open',go:()=>showView('fundraise')},
  {id:'n5',k:'blocked',t:'Pen-test report is stuck with the auditor',d:'Promised for Monday. Chase them, or accept that the launch moves to 2 Dec.',who:'JR',when:'8 days',due:'Waiting 8 days',act:'Chase',go:()=>{openProject('murmur','Issues');flash('#issues .lr[data-id="MUR-118"]')}},
- {id:'n6',k:'sign',t:'Approve the Q3 board pack',d:'Board meeting Tuesday 14 Oct. Two of three sections are ready for your sign-off.',who:'ML',when:'Today',due:'Due Fri',act:'Open',go:()=>showView('legal')}];
+ {id:'n6',k:'sign',t:'Approve the Q3 board pack',d:'Board meeting Tuesday 14 Oct. Two of three sections are ready for your sign-off.',who:'ML',when:'Today',due:'Due Fri',act:'Review',go:()=>openSO('board')}];
 let nyF='all';
 const NYG={all:()=>1,decision:x=>x.k==='decision'||x.k==='urgent',sign:x=>x.k==='sign'||x.k==='reply',blocked:x=>x.k==='blocked'};
 function renderNY(){const left=NY.filter(x=>!x.done);
@@ -2609,6 +2651,34 @@ document.addEventListener('click',e=>{const f=e.target.closest('[data-nyf]');if(
  const c=e.target.closest('[data-ny]');if(c){NY.find(y=>y.id===c.dataset.ny).go();return}
  const h=e.target.closest('[data-hp]');if(h)openProject(h.dataset.hp)});
 renderNY();renderHP();renderHM();
+
+/* ---------- Sign-offs (step 5) ---------- */
+const deckArt='<div style="text-align:center"><div style="font-size:20px;font-weight:600;letter-spacing:-.03em">Murmur</div><div style="font-size:10px;color:var(--fg-3);letter-spacing:.12em;margin-top:3px">SEED · 2026</div></div>';
+const SO=[
+ {id:'video',t:'Launch video v3',k:'Video',who:'SP',due:'Due Wed',proj:'Murmur',art:FILES[0][3],dur:'0:45',st:'wait',chk:['Hook lands in the first 3 seconds','Music licence covers paid ads','Captions are on for silent autoplay'],ny:'n3'},
+ {id:'board',t:'Q3 board pack',k:'Document',who:'ML',due:'Due Fri',proj:'Company',art:artDoc('Q3 2026','BOARD PACK'),st:'wait',chk:['Runway and burn match the Money page','Launch date options are both shown','Hiring plan matches the offer out'],ny:'n6'},
+ {id:'deck',t:'Seed pitch deck v8',k:'Deck',who:'ML',due:'Due Thu',proj:'Fundraising',art:deckArt,st:'wait',chk:['New use-of-funds slide','Retention chart uses September numbers','Team slide includes Nadia K.']},
+ {id:'contract',t:'Brightpath pilot contract',k:'Contract',who:'PS',due:'Overdue 1 day',late:1,proj:'Murmur',art:artLines([90,100,80,100,60]),st:'wait',chk:['40 seats at the pilot price','Data stays in the EU region','30-day exit clause']},
+ {id:'shots',t:'App Store screenshots',k:'Images',who:'TN',due:'Due 22 Oct',proj:'Murmur',art:FILES[7][3],st:'wait',chk:['Six sizes for iPhone and iPad','Captions match the website','No pilot customer names shown']},
+ {id:'pricing',t:'Pricing page copy',k:'Document',who:'SP',due:'Approved 6 Oct',proj:'Murmur',art:artLines([100,70,90,60,80]),st:'approved',chk:[]},
+ {id:'onb',t:'Onboarding screens',k:'Design',who:'TN',due:'Changes asked 2 Oct',proj:'Murmur',art:FILES[3][3],st:'changes',note:'Merge the second and third screens.',chk:[]}];
+let soF='wait';
+const SOL={wait:'Waiting',approved:'Approved',changes:'Changes asked'};
+function renderSO(){const n=k=>SO.filter(x=>x.st===k).length;$('#soC').textContent=n('wait')||'';
+ $('#soFilt').innerHTML=[['wait','Waiting on you'],['approved','Approved'],['changes','Changes asked']].map(([k,l])=>`<button class="${soF===k?'on':''}" data-sof="${k}">${l} <span style="opacity:.6;margin-left:3px">${n(k)}</span></button>`).join('');
+ $('#soCards').innerHTML=SO.filter(x=>x.st===soF).map(x=>`<div class="spc so" data-so="${x.id}" role="button" tabindex="0"><div class="thumb"><div class="in">${x.art}</div><span class="ty">${x.k}</span>${x.dur?`<span class="du">${x.dur}</span><span class="playc">${ICON.play}</span>`:''}</div><div class="so-b"><div class="ny-top"><span class="so-st ${x.st==='wait'&&x.late?'late':x.st}">${x.st==='wait'?(x.late?'Overdue':'Waiting'):SOL[x.st]}</span><span class="ny-due" style="${x.late?'color:var(--red)':''}">${x.due}</span></div><b class="ny-t">${esc(x.t)}</b><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.proj}</span>${x.st==='wait'?'<span class="ny-acts"><span class="btn sm">Review</span></span>':''}</div></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${soF==='wait'?'You’re all caught up on sign-offs.':'Nothing yet.'}</div>`}
+function openSO(id){const x=SO.find(y=>y.id===id);if(!x)return;closeModal();const bg=document.createElement('div');bg.className='mod-bg';
+ bg.innerHTML=`<div class="mod rv" role="dialog" aria-modal="true" aria-label="Review ${esc(x.t)}"><div class="mod-h" style="padding-bottom:12px"><span class="cb">${x.k}</span><span style="font-weight:600;color:var(--fg);font-size:14px">${esc(x.t)}</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+ <div class="rv-g"><div class="rv-stage"><div class="frame"><div class="in${x.dur?' vid':''}">${x.art}</div>${x.dur?`<div class="rv-play" id="rvPlay"><button aria-label="Play">${ICON.play.replace('#1c1d21','#fff')}</button><span class="trk"><i></i></span><time>${x.dur}</time></div>`:''}</div></div>
+ <div class="rv-side"><div><h5>Details</h5><div class="rv-kv"><span>From</span><b style="font-weight:500">${P[x.who][0]}</b></div><div class="rv-kv"><span>Project</span><b style="font-weight:500">${x.proj}</b></div><div class="rv-kv"><span>Due</span><b style="font-weight:500;${x.late?'color:var(--red)':''}">${x.due}</b></div></div>
+ ${x.chk.length?`<div><h5>What to check</h5><ul class="rv-chk">${x.chk.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`:''}
+ ${x.st==='wait'?`<div><h5>Note to ${P[x.who][0].split(' ')[0]}</h5><textarea id="rvNote" placeholder="Optional for approval. Needed if you ask for changes."></textarea></div><div class="rv-btns"><button class="btn" id="rvChg">Ask for changes</button><button class="btn pri" id="rvOk">Approve</button></div>`:`<div class="rv-done">${x.st==='approved'?'You approved this.':'You asked for changes: '+esc(x.note||'')}</div>`}</div></div></div>`;
+ document.body.appendChild(bg);modal=bg;bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+ const pl=bg.querySelector('#rvPlay');if(pl)pl.querySelector('button').addEventListener('click',()=>{pl.classList.remove('on');void pl.offsetWidth;pl.classList.add('on')});
+ const done=(st,note)=>{x.st=st;x.note=note;if(x.ny){const y=NY.find(z=>z.id===x.ny);if(y){y.done=true;renderNY()}}closeModal();renderSO();addActivity(st==='approved'?`<b>You</b> approved <b>${esc(x.t)}</b>`:`<b>You</b> asked for changes on <b>${esc(x.t)}</b>`);toast(st==='approved'?`<b>${esc(x.t)}</b> approved`:`Changes asked on <b>${esc(x.t)}</b>`,`${P[x.who][0]} has been told`)};
+ const ok=bg.querySelector('#rvOk');if(ok){ok.addEventListener('click',()=>done('approved',$('#rvNote').value.trim()));bg.querySelector('#rvChg').addEventListener('click',()=>{const n=$('#rvNote').value.trim();if(!n){const m=bg.querySelector('.mod');m.classList.remove('shake');void m.offsetWidth;m.classList.add('shake');$('#rvNote').focus();$('#rvNote').placeholder='Say what needs to change';return}done('changes',n)})}}
+document.addEventListener('click',e=>{const f=e.target.closest('[data-sof]');if(f){soF=f.dataset.sof;renderSO();return}const c=e.target.closest('[data-so]');if(c)openSO(c.dataset.so)});
+VIEWHOOK.signoff=renderSO;renderSO();
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
