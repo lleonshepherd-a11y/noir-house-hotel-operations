@@ -1089,6 +1089,24 @@ td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-we
 .ns-tip{font-size:12.5px;color:var(--fg-3);padding:18px 8px;text-align:center}
 @media (max-width:860px){.sp-files{padding:14px 12px 20px}.spf-h,.spf-r{grid-template-columns:minmax(0,1fr) 30px}.spf-h span:nth-child(2),.spf-h span:nth-child(3),.spf-r>.muted{display:none}.spf-r .ib{opacity:1}.sp-tabs{padding:0 6px}}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.sum-box{margin:16px 0 14px;border:1px solid var(--line);border-radius:14px;background:#fbfbfc;padding:6px;box-shadow:inset 0 1px 0 #fff}
+.sum-box-h{display:flex;align-items:center;gap:8px;padding:8px 10px 8px;font-size:12px;font-weight:600;color:var(--fg-2)}
+.sum-box-h .ic{width:14px;height:14px;color:var(--fg-3)}
+.sum-box-h span{margin-left:auto;font-weight:500;color:var(--fg-3)}
+.sb-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line-2);margin-top:6px;transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .2s}
+.sb-row:first-of-type{margin-top:0}
+.sb-row:hover{transform:translateY(-1px);box-shadow:var(--tile-sh-h);border-color:var(--line)}
+.sb-ic{width:32px;height:32px;border-radius:9px;background:#f1f1f3;display:grid;place-items:center;flex:none;color:var(--fg-2)}
+.sb-ic .ic{width:16px;height:16px}
+.sb-t{flex:1;min-width:0}
+.sb-t b{display:block;font-weight:600;font-size:14px}
+.sb-t small{display:block;font-size:12.5px;color:var(--fg-3);margin-top:1px}
+.sb-go{color:var(--fg-4);font-size:18px;line-height:1;transition:transform .2s var(--ease),color .15s}
+.sb-row:hover .sb-go{transform:translateX(2px);color:var(--fg-2)}
+.sb-row.hot{border-color:rgba(229,72,77,.28);background:#fffafa}
+.sb-row.hot .sb-ic{background:var(--red-soft);color:var(--red)}
+.sb-row.hot b{color:var(--red)}
+@media (max-width:640px){.sum-box{padding:4px}.sb-row{padding:10px}.sb-t b{font-size:13.5px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1167,7 +1185,12 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
                 <div><span class="sum-date">Saturday 10 October · Week 41</span><h1 class="title">Good morning, Alex</h1></div>
                 <button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button>
               </div>
-              <p class="sum-line">Two of three priorities are on track. The outside security review is 8 days late, which puts the 18 Nov launch at risk. Three decisions are waiting on you.</p>
+              <div class="sum-box">
+                <div class="sum-box-h"><svg class="ic" viewBox="0 0 24 24"><path d="M14.5 2.5H6.5a2 2 0 00-2 2v15a2 2 0 002 2h11a2 2 0 002-2v-12z"/><path d="M14 2.5v4a1.5 1.5 0 001.5 1.5h4M9 13h6M9 17h4"/></svg>Today’s summary<span>Updated 08:00</span></div>
+                <button class="sb-row" data-view="home" data-scroll="sec-prios"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.3 4.6-4.8"/></svg></span><span class="sb-t"><b>Two of three priorities are on track</b><small>Pilot customers and hiring are moving as planned</small></span><span class="sb-go">›</span></button>
+                <button class="sb-row hot" data-view="project" data-pkey="murmur"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.1"/></svg></span><span class="sb-t"><b>The outside security review is 8 days late</b><small>This puts the 18 Nov launch at risk. Decide by 20 Oct whether to move to 2 Dec</small></span><span class="sb-go">›</span></button>
+                <button class="sb-row" data-view="home" data-scroll="sec-decisions"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 011.4.56l2.3 2.22a1 1 0 010 1.44l-2.3 2.22A2 2 0 0118 13H6a2 2 0 01-1.4-.56L2.3 10.22a1 1 0 010-1.44L4.6 6.56A2 2 0 016 6z"/></svg></span><span class="sb-t"><b>Three decisions are waiting on you</b><small>Launch date, senior hire and the Northbeam term sheet</small></span><span class="sb-go">›</span></button>
+              </div>
               <div class="sum-q">
                 <button class="sq" data-view="home" data-scroll="sec-prios"><span class="sq-l">On track?</span><b>2 of 3</b><small>priorities on track</small><span class="sq-bar"><i></i><i></i><i class="r"></i></span></button>
                 <button class="sq hot" data-view="project" data-pkey="murmur"><span class="sq-l">Needs attention</span><b>Murmur launch</b><small>Security review 8 days late</small></button>
