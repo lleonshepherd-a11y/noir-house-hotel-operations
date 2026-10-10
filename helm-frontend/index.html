@@ -1240,6 +1240,28 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .rv-btns{display:flex;gap:8px;margin-top:auto}.rv-btns .btn{flex:1;justify-content:center}
 .rv-done{font-size:13px;color:var(--fg-2);background:#f6f6f7;border-radius:10px;padding:10px 12px}
 @media (max-width:860px){.rv-g{grid-template-columns:1fr}.rv-side{border-left:0;border-top:1px solid var(--line-2)}.rv-stage{min-height:240px;padding:16px}}
+
+/* ===== This week ===== */
+.wk-top{display:grid;grid-template-columns:250px repeat(4,minmax(0,1fr));gap:12px}
+.wk-ring{border:1px solid var(--line-2);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:16px;background:var(--panel)}
+.wk-ring b{display:block;font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
+.wk-ring small{color:var(--fg-3);font-size:12.5px}
+.ring{flex:none}.ring .bg{fill:none;stroke:#ececef}.ring .fg{fill:none;stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease)}
+.wk-top .kpi{display:flex;flex-direction:column;justify-content:center}
+.wk-c{gap:12px}
+.wk-h{display:flex;align-items:center;gap:12px}
+.wk-h .t2{flex:1;min-width:0}.wk-h .t2 b{display:block;font-size:15px;font-weight:600}.wk-h .t2 small{display:block;font-size:12.5px;color:var(--fg-3)}
+.wk-pct{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.wk-seg{display:flex;height:6px;border-radius:3px;overflow:hidden;background:#ececef;gap:2px}
+.wk-seg i{display:block;height:100%}
+.wk-leg{display:flex;gap:12px;font-size:12px;color:var(--fg-3)}.wk-leg span{display:inline-flex;align-items:center;gap:5px}.wk-leg i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.wk-open{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line-2);padding-top:10px}
+.wk-open div{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}
+.wk-open div span.t3{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-open div small{color:var(--fg-3);font-size:12px;flex:none}
+.wk-tag{font-size:11px;font-weight:600;border-radius:999px;padding:0 7px;line-height:18px;background:var(--red-soft);color:var(--red)}
+#wkMoved .lr{cursor:pointer}
+@media (max-width:1100px){.wk-top{grid-template-columns:repeat(2,minmax(0,1fr))}.wk-ring{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1259,6 +1281,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
       <nav class="nav">
         <button class="ni on" data-view="home"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Briefing<span class="badge" id="navDec">3</span></button>
         <button class="ni" data-view="mytasks"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.3 4.6-4.8"/></svg>My tasks<span class="c">5</span></button>
+        <button class="ni" data-view="week"><svg class="ic" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 11-2.6-6.1L20.5 8.5"/><path d="M20.5 3.5v5h-5"/><path d="M12 8v4.2l2.6 1.6"/></svg>This week<span class="c" id="wkC"></span></button>
         <button class="ni" data-view="decisions"><svg class="ic" viewBox="0 0 24 24"><path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 011.4.56l2.3 2.22a1 1 0 010 1.44l-2.3 2.22A2 2 0 0118 13H6a2 2 0 01-1.4-.56L2.3 10.22a1 1 0 010-1.44L4.6 6.56A2 2 0 016 6z"/></svg>Decisions<span class="c" id="navDec2">3</span></button>
         <button class="ni" data-view="signoff"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Sign-offs<span class="c" id="soC"></span></button>
         <button class="ni" data-view="calendar"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Calendar<span class="c" id="calC"></span></button>
@@ -1448,6 +1471,21 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
             <div class="ph2"><div><h1 class="title">Sign-offs</h1><p class="lead">Work that needs your approval before it ships. Open one, check it, then approve it or ask for changes.</p></div></div>
             <div class="sp-tools"><div class="seg2" id="soFilt" style="margin:0"></div></div>
             <div class="spgrid"><div class="cards" id="soCards"></div></div>
+          </div>
+        </section>
+
+        <!-- ======== THIS WEEK ======== -->
+        <section class="view" id="view-week" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">This week</h1><p class="lead" id="wkLead"></p></div></div>
+            <div class="sp-tools"><div class="seg2" id="wkFilt" style="margin:0"></div><span class="ny-hint" id="wkUpd"></span></div>
+            <div class="wk-top" id="wkTop"></div>
+            <div class="spgrid">
+              <div class="sp-sec" style="margin-top:34px">Teams <span>6</span></div>
+              <div class="cards" id="wkTeams"></div>
+              <div class="sp-sec" style="margin-top:34px" id="wkMovedH">Moving to next week</div>
+              <div class="list" id="wkMoved"></div>
+            </div>
           </div>
         </section>
 
@@ -2614,7 +2652,7 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
  draw();setTimeout(()=>inp.focus(),30)}
 
 /* ---------- Step 2: same page header everywhere ---------- */
-{const EB={mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
+{const EB={week:'You',mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
  Object.entries(EB).forEach(([v,l])=>{const sec=document.getElementById('view-'+v);if(!sec)return;const h=sec.querySelector('h1.title');if(!h||h.closest('.sum'))return;
   const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
 
@@ -2679,6 +2717,32 @@ function openSO(id){const x=SO.find(y=>y.id===id);if(!x)return;closeModal();cons
  const ok=bg.querySelector('#rvOk');if(ok){ok.addEventListener('click',()=>done('approved',$('#rvNote').value.trim()));bg.querySelector('#rvChg').addEventListener('click',()=>{const n=$('#rvNote').value.trim();if(!n){const m=bg.querySelector('.mod');m.classList.remove('shake');void m.offsetWidth;m.classList.add('shake');$('#rvNote').focus();$('#rvNote').placeholder='Say what needs to change';return}done('changes',n)})}}
 document.addEventListener('click',e=>{const f=e.target.closest('[data-sof]');if(f){soF=f.dataset.sof;renderSO();return}const c=e.target.closest('[data-so]');if(c)openSO(c.dataset.so)});
 VIEWHOOK.signoff=renderSO;renderSO();
+
+/* ---------- This week (step 6) ---------- */
+const ring=(p,sz=64,c='#5e6ad2',w=7)=>{const r=(sz-w)/2,C=2*Math.PI*r;return `<svg class="ring" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><circle class="bg" cx="${sz/2}" cy="${sz/2}" r="${r}" stroke-width="${w}"/><circle class="fg" cx="${sz/2}" cy="${sz/2}" r="${r}" stroke-width="${w}" stroke="${c}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-p)).toFixed(1)}" transform="rotate(-90 ${sz/2} ${sz/2})"/></svg>`};
+const WEEK={now:{label:'Week 41 · 5–11 October',upd:'Updated today 08:00',added:6,teams:[
+  ['Development','JR',24,15,6,3,[['MUR-118','Pen-test report from outside auditor','Late'],['MUR-137','Accuracy fix for accents in noisy rooms','Wed']]],
+  ['Marketing','SP',16,11,3,2,[['MUR-144','Product Hunt launch page','Tue'],['MUR-147','App Store listing copy','Thu']]],
+  ['Operations','TO',10,8,1,1,[['MUR-139','Help centre: top 20 questions','Fri']]],
+  ['Finance','ML',12,7,3,2,[['MUR-145','Approve the Q3 board pack','Fri'],['MUR-149','Seed deck: updated use of funds','Thu']]],
+  ['Design','TN',12,6,4,1,[['MUR-133','Onboarding: three screens into one','Mon'],['LED-19','Clickable prototype for Ledgerly','Wed']]],
+  ['Sales','PS',10,4,1,0,[['LED-21','Sign 2 more design partners','Fri'],['LED-20','Book the last 8 interviews','Fri']]]],
+ moved:[['MUR-118','Pen-test report from outside auditor','Development','JR','Waiting on the outside auditor'],['MUR-137','Accuracy fix for accents in noisy rooms','Development','JR','Needs more test recordings'],['ATL-34','Cut cloud cost per meeting below $0.40','Development','JR','Pushed for the security work'],['MUR-147','App Store listing copy','Marketing','SP','Waiting on final screenshots'],['MUR-144','Product Hunt launch page','Marketing','SP','Depends on the launch date'],['MUR-139','Help centre: top 20 questions','Operations','TO','Review moved to Priya'],['MUR-145','Approve the Q3 board pack','Finance','ML','Waiting on your sign-off'],['LED-23','Pricing survey for finance leads','Finance','ML','Survey list not ready'],['MUR-133','Onboarding: three screens into one','Design','TN','Changes asked on 2 Oct']]},
+ last:{label:'Week 40 · 28 September–4 October',upd:'Closed Sunday',added:4,teams:[['Development','JR',22,19,0,3,[]],['Marketing','SP',14,12,0,2,[]],['Operations','TO',9,9,0,0,[]],['Finance','ML',11,10,0,1,[]],['Design','TN',12,10,0,2,[]],['Sales','PS',10,8,0,2,[]]],moved:[]}};
+let wkF='now';
+function renderWK(){const w=WEEK[wkF],T=w.teams;const sum=k=>T.reduce((a,t)=>a+t[k],0);const pl=sum(2),dn=sum(3),pg=sum(4),mv=sum(5);const p=dn/pl;
+ $('#wkLead').textContent=`${w.label}. What each team planned, what’s done and what’s moving to next week.`;$('#wkUpd').textContent=w.upd;$('#wkC').textContent=wkF==='now'?Math.round(p*100)+'%':$('#wkC').textContent;
+ $('#wkFilt').innerHTML=[['now','This week'],['last','Last week']].map(([k,l])=>`<button class="${wkF===k?'on':''}" data-wkf="${k}">${l}</button>`).join('');
+ $('#wkTop').innerHTML=`<div class="wk-ring">${ring(p,72)}<div><b>${Math.round(p*100)}%</b><small>${dn} of ${pl} tasks done</small></div></div>`+[['Planned',pl,'At the start of the week'],['Done',dn,wkF==='now'?'With 2 working days left':'Week closed'],['In progress',pg,pg?'Being worked on now':'Nothing left open'],['Moving to next week',mv,`<span class="${mv>8?'down':''}">${mv>8?'More than usual':'Normal'}</span>`]].map(([l,n,s2])=>`<div class="kpi"><span>${l}</span><b>${n}</b><small>${s2}</small></div>`).join('');
+ $('#wkTeams').innerHTML=T.map(([n,lead,pl2,dn2,pg2,mv2,open])=>{const q=dn2/pl2,behind=q<.45&&wkF==='now';return `<div class="spc wk-c"><div class="wk-h">${ring(q,44,behind?'#e5484d':'#1c1d21',5)}<div class="t2"><b>${n}</b><small>${dn2} of ${pl2} done${mv2?` · ${mv2} moving`:''}</small></div>${behind?'<span class="wk-tag">Behind</span>':`<span class="wk-pct">${Math.round(q*100)}%</span>`}</div>
+  <div class="wk-seg"><i style="width:${dn2/pl2*100}%;background:#1c1d21"></i><i style="width:${pg2/pl2*100}%;background:#9a9da4"></i><i style="width:${mv2/pl2*100}%;background:${mv2?'#e5484d':'transparent'}"></i></div>
+  <div class="wk-leg"><span><i style="background:#1c1d21"></i>Done ${dn2}</span><span><i style="background:#9a9da4"></i>In progress ${pg2}</span><span><i style="background:#e5484d"></i>Moving ${mv2}</span></div>
+  ${open.length?`<div class="wk-open">${open.map(([id,t,d])=>`<div>${st(d==='Late'?'risk':'prog',.5)}<span class="t3">${esc(t)}</span><small style="${d==='Late'?'color:var(--red)':''}">${d}</small></div>`).join('')}</div>`:''}
+  <div class="spc-f">${av(lead,'xs')}<span>Lead: ${P[lead][0]}</span></div></div>`}).join('');
+ $('#wkMovedH').innerHTML=`Moving to next week <span>${w.moved.length||mv}</span>`;
+ $('#wkMoved').innerHTML=w.moved.map(([id,t,team,o,why])=>`<div class="lr" data-wkt="${id}">${st('prog',.5)}<span class="id">${id}</span><div class="ttl"><b>${esc(t)}</b><small>${esc(why)}</small></div><div class="meta"><span class="muted" style="font-size:12.5px">${team}</span>${av(o)}</div></div>`).join('')||'<div class="cal-empty">Everything moved last week was finished or re-planned.</div>'}
+document.addEventListener('click',e=>{const f=e.target.closest('[data-wkf]');if(f){wkF=f.dataset.wkf;renderWK();return}const r=e.target.closest('[data-wkt]');if(r){const id=r.dataset.wkt;openProject(keyOfTask(id),'Issues');flash(`#issues .lr[data-id="${id}"]`)}});
+VIEWHOOK.week=renderWK;renderWK();
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
