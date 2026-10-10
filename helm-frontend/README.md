@@ -16,6 +16,16 @@ You need nothing installed to look at it:
 
   Then open http://localhost:5173. Set `PORT=3000` to use a different port.
 
+## Deploy on Railway
+
+1. In Railway, choose **New Project → Deploy from GitHub repo** and pick `noir-house-hotel-operations`.
+2. Open the service's **Settings**:
+   - **Source → Branch:** `claude/nice-euler-o5jz2b`
+   - **Source → Root Directory:** `/helm-frontend`
+3. Under **Networking**, click **Generate Domain**.
+
+Railway runs `npm start`, which serves the site on the port Railway provides.
+
 ## What's in it
 
 A light, Linear-style app: a compact sidebar on a grey canvas, one white panel with a thin header bar, and the Helm agent panel on the right.
