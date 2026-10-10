@@ -1309,6 +1309,22 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .jc-n{margin-top:auto;padding-top:10px;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--fg-2);display:flex;justify-content:space-between}
 .jc-n span{color:var(--fg-3)}
 @media (max-width:1100px){.jump{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ===== Connections ===== */
+.cn{gap:12px}
+.cn .spc-h b{font-size:15px}
+.cn-ic{width:40px;height:40px;border-radius:11px;background:#f1f1f3;border:1px solid var(--line-2);display:grid;place-items:center;flex:none;color:var(--fg)}
+.cn-ic .ic{width:19px;height:19px}
+.cn-st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--fg-3)}
+.cn-st i{width:7px;height:7px;border-radius:50%;background:#c4c6cc}
+.cn-st.on{color:var(--fg-2)}.cn-st.on i{background:#30a46c}
+.cn-st.busy i{background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.cn-feeds{display:flex;gap:6px;flex-wrap:wrap}
+.cn-feeds span{font-size:11.5px;font-weight:500;color:var(--fg-2);border:1px solid var(--line);border-radius:6px;padding:0 7px;line-height:20px}
+.cn-f{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line-2);padding-top:12px;margin-top:auto}
+.cn-f .btn{margin-left:auto}
+.cn-m ul{margin:0;padding-left:18px;color:var(--fg-2);font-size:13.5px;line-height:1.75}
+.cn-m .note{font-size:12.5px;color:var(--fg-3);background:#f6f6f7;border-radius:10px;padding:10px 12px;margin-top:12px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1350,6 +1366,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
           <button class="ni" data-view="legal"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21.5h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><path d="M12 2.5l8.5 5.5h-17z"/></svg>Board &amp; legal</button>
           <button class="ni" data-view="feedback"><svg class="ic" viewBox="0 0 24 24"><path d="M14 9a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h8a2 2 0 012 2z"/><path d="M18 9h2a2 2 0 012 2v11l-4-4h-6a2 2 0 01-2-2v-1"/></svg>Customer feedback</button>
           <button class="ni" data-view="announce"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l16-5v12L3 14z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>Announcements</button>
+          <button class="ni" data-view="connections"><svg class="ic" viewBox="0 0 24 24"><path d="M9 7V3.5M15 7V3.5"/><path d="M6 7h12v4a6 6 0 01-12 0z"/><path d="M12 17v3.5"/></svg>Connections<span class="c" id="cnC"></span></button>
         </nav>
       </div>
       <div class="grp">
@@ -1538,6 +1555,15 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
               <div class="sp-sec" style="margin-top:34px" id="wkMovedH">Moving to next week</div>
               <div class="list" id="wkMoved"></div>
             </div>
+          </div>
+        </section>
+
+        <!-- ======== CONNECTIONS ======== -->
+        <section class="view" id="view-connections" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Connections</h1><p class="lead">The tools Helm reads from, so the numbers fill themselves in. Each one says exactly what it feeds.</p></div></div>
+            <div class="sp-tools"><div class="seg2" id="cnFilt" style="margin:0"></div><label class="sp-search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg><input id="cnQ" placeholder="Find a tool" autocomplete="off"></label></div>
+            <div class="spgrid" id="cnGrid"></div>
           </div>
         </section>
 
@@ -2718,7 +2744,7 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
  draw();setTimeout(()=>inp.focus(),30)}
 
 /* ---------- Step 2: same page header everywhere ---------- */
-{const EB={week:'You',mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
+{const EB={week:'You',mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',connections:'Workspace',settings:'Account'};
  Object.entries(EB).forEach(([v,l])=>{const sec=document.getElementById('view-'+v);if(!sec)return;const h=sec.querySelector('h1.title');if(!h||h.closest('.sum'))return;
   const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
 
@@ -2815,6 +2841,35 @@ function renderJump(){const sideIc=v=>{const n=document.querySelector('.side [da
  const prog=TASKS.filter(t=>t.s==='prog').length;
  $('#jump').innerHTML=[['initiatives','','Plan','Goals, initiatives and the roadmap by quarter.',`${PROJ.length} projects`,'4 initiatives'],['project','murmur','Build','The board, tasks and timeline for each project.',`${prog} in progress`,`${TASKS.filter(t=>t.s==='sign').length} need sign-off`],['fundraise','','Raise','Investor pipeline, cap table, SAFEs and data room.','$1.6M of $4M','2 term sheets'],['people','','Hire','The team, hiring pipeline and onboarding.','3 open roles','1 offer out']].map(([v,pk,t,d,a,b2])=>`<button class="jc" data-view="${v}"${pk?` data-pkey="${pk}"`:''}><span class="jc-h"><span class="jc-ic">${sideIc(v==='project'?'projects':v)}</span><span class="jc-ar"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span><b>${t}</b><p>${d}</p><span class="jc-n">${a}<span>${b2}</span></span></button>`).join('')}
 renderJump();
+
+/* ---------- Connections (step 9) ---------- */
+const CNI={bank:'<path d="M3 21h18M5 18v-7M9.5 18v-7M14.5 18v-7M19 18v-7"/><path d="M12 3l9 5H3z"/>',card:'<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/>',book:'<path d="M5 4.5h11a2 2 0 012 2v13H7a2 2 0 01-2-2z"/><path d="M5 17.5a2 2 0 012-2h11"/>',pay:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/><path d="M17 7v7M14.5 9.5h5"/>',cal:'<path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/>',chat:'<path d="M7.9 20A9 9 0 104 16.1L2.5 21.5z"/>',code:'<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',pen:'<path d="M12 19l7-7 3 3-7 7z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><circle cx="11" cy="11" r="2"/>',pie:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',drive:'<path d="M8 3h8l6 10.5-4 7H6l-4-7z"/><path d="M8 3l6 10.5H2M16 3l-6 10.5 4 7"/>'};
+const CN=[
+ {id:'bank',g:'Money',n:'Business bank account',ic:'bank',on:1,sync:'5 min ago',d:'Cash balance and every transaction, so runway and burn stay current.',feeds:['Money','Briefing']},
+ {id:'stripe',g:'Money',n:'Stripe',ic:'card',on:1,sync:'12 min ago',d:'Subscriptions and revenue, so MRR and growth update on their own.',feeds:['Metrics','Money']},
+ {id:'qb',g:'Money',n:'QuickBooks',ic:'book',on:0,d:'Your accounts and categories, so spend vs plan matches the books.',feeds:['Money']},
+ {id:'gusto',g:'Team',n:'Gusto payroll',ic:'pay',on:1,sync:'1 h ago',d:'Payroll, start dates and contractor payments.',feeds:['People','Money']},
+ {id:'gcal',g:'Team',n:'Google Calendar',ic:'cal',on:1,sync:'2 min ago',d:'Meetings and investor calls appear on the Helm calendar.',feeds:['Calendar']},
+ {id:'drive',g:'Team',n:'Google Drive',ic:'drive',on:0,d:'Decks, contracts and the data room folder, linked to projects.',feeds:['Files','Fundraising']},
+ {id:'slack',g:'Work',n:'Slack',ic:'chat',on:1,sync:'Live',d:'Get Helm notifications in Slack and share updates to channels.',feeds:['Messages','Notifications']},
+ {id:'github',g:'Work',n:'GitHub',ic:'code',on:0,d:'Pull requests and releases linked to tasks on the board.',feeds:['Projects','This week']},
+ {id:'figma',g:'Work',n:'Figma',ic:'pen',on:0,d:'Design files show as previews in project Files and sign-offs.',feeds:['Files','Sign-offs']},
+ {id:'carta',g:'Investors',n:'Carta',ic:'pie',on:0,d:'Cap table, SAFEs and option grants, kept in sync for diligence.',feeds:['Fundraising']}];
+let cnF='all';
+function renderCN(){const q=($('#cnQ').value||'').toLowerCase();const on=CN.filter(c=>c.on===1).length;$('#cnC').textContent=on+'/'+CN.length;
+ $('#cnFilt').innerHTML=[['all','All',CN.length],['on','Connected',on],['off','Not connected',CN.length-on]].map(([k,l,n])=>`<button class="${cnF===k?'on':''}" data-cnf="${k}">${l} <span style="opacity:.6;margin-left:3px">${n}</span></button>`).join('');
+ const rows=CN.filter(c=>(cnF==='all'||(cnF==='on'?c.on===1:c.on!==1))&&(c.n+' '+c.d).toLowerCase().includes(q));
+ const groups=[...new Set(rows.map(c=>c.g))];
+ $('#cnGrid').innerHTML=groups.map((g,gi)=>`<div class="sp-sec"${gi?' style="margin-top:34px"':''}>${g} <span>${rows.filter(c=>c.g===g).length}</span></div><div class="cards">${rows.filter(c=>c.g===g).map(c=>`<div class="spc cn"><div class="spc-h"><span class="cn-ic"><svg class="ic" viewBox="0 0 24 24">${CNI[c.ic]}</svg></span><span style="min-width:0"><b>${esc(c.n)}</b><small><span class="cn-st ${c.on===1?'on':c.on===2?'busy':''}"><i></i>${c.on===1?`Connected · synced ${c.sync}`:c.on===2?'Connecting…':'Not connected'}</span></small></span></div><p>${esc(c.d)}</p><div class="cn-feeds">${c.feeds.map(f=>`<span>${f}</span>`).join('')}</div><div class="cn-f"><span class="muted" style="font-size:12px">${c.on===1?'Read-only':'Takes about a minute'}</span><button class="btn sm${c.on?'':' pri'}" data-cn="${c.id}"${c.on===2?' disabled':''}>${c.on===1?'Manage':c.on===2?'Connecting':'Connect'}</button></div></div>`).join('')}</div>`).join('')||'<div class="cal-empty">No tools match.</div>'}
+function openCN(id){const c=CN.find(x=>x.id===id);closeModal();const bg=document.createElement('div');bg.className='mod-bg';
+ bg.innerHTML=`<div class="mod cn-m" role="dialog" aria-modal="true" aria-label="${esc(c.n)}" style="max-width:480px"><div class="mod-h" style="padding-bottom:12px"><span class="cn-ic" style="width:30px;height:30px;border-radius:8px"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px">${CNI[c.ic]}</svg></span><span style="font-weight:600;color:var(--fg);font-size:14px">${c.on?esc(c.n):'Connect '+esc(c.n)}</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+ <div style="padding:4px 16px 14px"><p style="margin:0 0 10px;font-size:13.5px;color:var(--fg-2)">${esc(c.d)}</p><b style="font-size:12.5px;color:var(--fg-3);font-weight:600">Helm will</b><ul><li>Read data only. It never moves money or changes anything.</li><li>Update ${c.feeds.join(' and ')}.</li><li>Show it to admins and the people you choose in Settings.</li></ul>${c.on?`<div class="note">Connected · last synced ${c.sync}.</div>`:''}</div>
+ <div class="mod-f"><span style="margin-right:auto"></span>${c.on?`<button class="btn" id="cnOff">Disconnect</button><button class="btn pri" data-close>Done</button>`:`<button class="btn" data-close>Cancel</button><button class="btn pri" id="cnGo">Connect</button>`}</div></div>`;
+ document.body.appendChild(bg);modal=bg;bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+ const go=bg.querySelector('#cnGo');if(go)go.addEventListener('click',()=>{c.on=2;closeModal();renderCN();setTimeout(()=>{c.on=1;c.sync='just now';renderCN();toast(`<b>${esc(c.n)}</b> connected`,`${c.feeds.join(' and ')} will now update on their own`)},1600)});
+ const off=bg.querySelector('#cnOff');if(off)off.addEventListener('click',()=>{c.on=0;closeModal();renderCN();toast(`<b>${esc(c.n)}</b> disconnected`,'Helm has stopped reading from it')})}
+document.addEventListener('click',e=>{const f=e.target.closest('[data-cnf]');if(f){cnF=f.dataset.cnf;renderCN();return}const b=e.target.closest('[data-cn]');if(b)openCN(b.dataset.cn)});
+$('#cnQ').addEventListener('input',renderCN);VIEWHOOK.connections=renderCN;renderCN();
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
