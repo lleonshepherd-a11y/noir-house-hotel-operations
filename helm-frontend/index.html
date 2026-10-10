@@ -1176,6 +1176,38 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .lr .ttl b{font-weight:500;letter-spacing:-.005em}
 .sum-date{font-size:12.5px;letter-spacing:.01em}
 @media (max-width:640px){h1.title{font-size:26px}.sum h1.title{font-size:30px}}
+
+/* ===== Briefing in the Spaces style ===== */
+.ny-hint{margin-left:auto;font-size:12.5px;color:var(--fg-3)}
+.spc.ny{cursor:pointer}
+.ny-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nytag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--fg-3)}
+.nytag .ic{width:14px;height:14px}
+.ny-due{font-size:12px;color:var(--fg-3);font-weight:500}
+.ny.urgent{border-color:rgba(229,72,77,.32);box-shadow:0 0 0 3px rgba(229,72,77,.05)}
+.ny.urgent .nytag,.ny.urgent .ny-due{color:var(--red)}
+.ny-t{font-size:15.5px;font-weight:600;letter-spacing:-.015em;line-height:1.35}
+.spc.ny p{min-height:39px}
+.ny-acts{margin-left:auto;display:flex;gap:6px;align-items:center}
+.btn.sm{height:28px;padding:0 11px;font-size:12.5px}
+.ny-done{width:28px;height:28px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;color:var(--fg-3);transition:all .15s}
+.ny-done:hover{color:#fff;background:var(--fg);border-color:var(--fg)}
+.ny-done .ic{width:14px;height:14px;stroke-width:2}
+.spc.gone{animation:nyout .32s var(--ease) forwards;pointer-events:none}
+@keyframes nyout{to{opacity:0;transform:scale(.96) translateY(4px)}}
+.ny-empty{grid-column:1/-1;border:1px dashed var(--line);border-radius:14px;padding:30px;text-align:center;color:var(--fg-3)}
+.ny-empty b{display:block;color:var(--fg);font-size:15px;margin-bottom:4px}
+.hp-foot{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--fg-3)}
+.hp-foot .mbar{flex:1;max-width:140px}
+.hp-foot .pct{font-variant-numeric:tabular-nums;color:var(--fg-2);font-weight:500}
+.hp-foot time{margin-left:auto}
+.hpt{font-size:11.5px;font-weight:600;border-radius:999px;padding:0 8px;line-height:20px;background:#f1f1f3;color:var(--fg-2)}
+.hpt.risk{background:var(--red-soft);color:var(--red)}
+#hmCards .kpi{cursor:pointer;text-align:left}
+#view-home .sum-flag{margin-bottom:6px}
+.ny-from{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.kpi small .down{color:var(--red)}
+.decm-b{padding:0 14px 14px}.decm-b .dec{margin:0;box-shadow:none}.decm-b .dec:hover{transform:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1248,34 +1280,29 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 
         <!-- ======== BRIEFING ======== -->
         <section class="view" id="view-home">
-          <div class="wrap">
-            <div class="sum">
-              <div class="sum-top">
-                <div><span class="sum-date">Saturday 10 October · Week 41</span><h1 class="title">Good morning, Alex</h1></div>
-                <button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button>
-              </div>
-              <div class="sum-box">
-                <div class="sum-box-h"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6.5a2 2 0 01-2 2H6a2 2 0 01-2-2v-13a2 2 0 012-2h9"/></svg>What needs you today<span class="sum-cnt">3 actions</span><span class="sum-upd">Updated 08:00</span></div>
-                <button class="sb-row hot" data-view="project" data-pkey="murmur"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.1"/></svg></span><span class="sb-t"><span class="sb-tag">Urgent</span><b>Security review is 8 days late</b><small>The 18 Nov launch is at risk. Pick the launch date by <b>20 Oct</b>.</small></span><span class="sb-act">Pick date<svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
-                <button class="sb-row" data-view="home" data-scroll="sec-decisions"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 011.4.56l2.3 2.22a1 1 0 010 1.44l-2.3 2.22A2 2 0 0118 13H6a2 2 0 01-1.4-.56L2.3 10.22a1 1 0 010-1.44L4.6 6.56A2 2 0 016 6z"/></svg></span><span class="sb-t"><span class="sb-tag">Your call</span><b id="decProp">3 decisions are waiting on you</b><small>Launch date · senior hire · Northbeam term sheet</small></span><span class="sb-act">Decide<svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
-                <button class="sb-row" data-view="home" data-scroll="sec-blocked"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></span><span class="sb-t"><span class="sb-tag">Blocked</span><b>2 items are stuck</b><small>Pen-test report from the auditor · senior hire waiting on your offer</small></span><span class="sb-act">Unblock<svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
-                <button class="sb-row ok" data-view="home" data-scroll="sec-prios"><span class="sb-ic"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.3 4.6-4.8"/></svg></span><span class="sb-t"><span class="sb-tag">On track</span><b>2 of 3 priorities are on track</b><small>Pilot customers 3 of 5 live · hiring has 1 offer out</small></span><span class="sb-act">View<svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
-                </div>
-
-              <div class="sum-n">
-                <button data-view="money"><span>Runway</span><b>14 mo</b></button>
-                <button data-view="money"><span>Cash</span><b>$2.07M</b></button>
-                <button data-view="money"><span>Burn in Sep</span><b>$38.2k</b><small class="down">$4.2k over plan</small></button>
-                <button data-view="fundraise"><span>Seed raised</span><b>$1.6M <em>of $4M</em></b><span class="sum-prog"><i style="width:40%"></i></span></button>
-              </div>
+          <div class="wrap wide">
+            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Saturday 10 October · Week 41</span><h1 class="title">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts"><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
+            <div class="sp-tools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
+            <div class="spgrid">
+              <div class="sp-sec">Needs you <span id="nyN">6</span></div>
+              <div class="cards" id="nyCards"></div>
+              <div class="sp-sec" style="margin-top:34px">Projects <span>3</span></div>
+              <div class="cards" id="hpCards"></div>
+              <div class="sp-sec" style="margin-top:34px">Money <span>September</span></div>
+              <div class="kpis" id="hmCards" style="margin-top:0"></div>
             </div>
-
+            <span id="decProp" hidden></span>
+            <div hidden>
             <div class="sh" id="sec-prios">Priorities <span class="n">3</span><button class="r">View all</button></div>
             <div class="list" id="prios"></div>
 
+            </div>
+            <div hidden>
             <div class="sh" id="sec-decisions">Needs your decision <span class="n" id="decN">3</span></div>
             <div id="decs"></div>
+            </div>
 
+            <div hidden>
             <div class="sh" id="sec-blocked">Blocked <span class="n">4</span><button class="r">Longest wait first</button></div>
             <div class="list" id="blocked"></div>
 
@@ -1285,6 +1312,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
             <div class="sh">Teams <span class="n">6</span></div>
             <div class="list" id="teams"></div>
 
+            </div>
             <div class="sh">Activity</div>
             <div class="act" id="act"></div>
             <div style="height:16px"></div>
@@ -1500,7 +1528,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
         <section class="view" id="view-decisions" hidden>
           <div class="wrap">
             <div class="ph2"><div><h1 class="title">Decisions</h1><p class="lead">What is waiting on you, and a record of everything decided, with the reason.</p></div></div>
-            <div class="sh">Waiting on you <span class="n" id="dlN"></span><button class="r" data-view="home" data-scroll="sec-decisions">Decide in the briefing</button></div><div class="list" id="dlOpen"></div>
+            <div class="sh">Waiting on you <span class="n" id="dlN"></span><button class="r" data-view="home">See the briefing</button></div><div class="list" id="dlOpen"></div>
             <div class="sh">Decision log <span class="n" id="dlN2"></span></div>
             <div class="tbl"><table><thead><tr><th>Date</th><th>Decision</th><th>Outcome</th><th>Decided by</th></tr></thead><tbody id="dlRows"></tbody></table></div>
           </div>
@@ -1996,7 +2024,7 @@ const PRI_OPTS=[{v:0,label:'No priority',icon:pr(0)},{v:4,label:'Urgent',icon:ur
 const PRI_N={0:'Priority',1:'Low',2:'Medium',3:'High',4:'Urgent'};
 const DUE=['Today','Tomorrow','Fri','Oct 24','Oct 31','Nov 7','Nov 18'].map(d=>({v:d,label:d}));
 let modal=null,ms=null;
-function closeModal(){if(modal){modal.remove();modal=null;ms=null;closeMenu()}}
+function closeModal(){if(modal){if(modal._onClose)modal._onClose();modal.remove();modal=null;ms=null;closeMenu()}}
 function pp(k,html,empty){return `<button type="button" class="pp${empty?' empty':''}" data-k="${k}">${html}</button>`}
 function taskProps(){const s=ms;return [
  pp('s',`${st(s.s,.5)}${STAT[s.s]}`),pp('p',`${pr(s.p)}${PRI_N[s.p]}`,!s.p),
@@ -2260,7 +2288,7 @@ const DECLOG=[['8 Oct','Ship offline mode to the pilot first','Approved','JR','P
 function logDecision(dec,ch){DECLOG.unshift(['Today',dec.t,ch,'AK','Decided from the briefing']);VIEWHOOK.decisions()}
 VIEWHOOK.decisions=()=>{const open=DECS.filter((d,i)=>{const el=document.querySelector(`.dec[data-dec="${i}"]`);return el&&!el.dataset.done});
  $('#dlN').textContent=open.length;$('#dlN2').textContent=DECLOG.length;
- $('#dlOpen').innerHTML=open.map(d=>`<div class="lr" data-view="home" data-scroll="sec-decisions">${st('sign',.5)}<div class="ttl"><b>${d.t}</b><small>Asked ${d.when} · from ${P[d.who][0]}</small></div><div class="meta">${av(d.who)}<span class="link" style="color:var(--accent);font-size:12.5px">Decide</span></div></div>`).join('')||'<div class="pal-empty" style="padding:14px 10px">Nothing is waiting on you.</div>';
+ $('#dlOpen').innerHTML=open.map(d=>`<div class="lr" data-decopen="${DECS.indexOf(d)}" style="cursor:pointer">${st('sign',.5)}<div class="ttl"><b>${d.t}</b><small>Asked ${d.when} · from ${P[d.who][0]}</small></div><div class="meta">${av(d.who)}<span class="link" style="color:var(--accent);font-size:12.5px">Decide</span></div></div>`).join('')||'<div class="pal-empty" style="padding:14px 10px">Nothing is waiting on you.</div>';
  $('#dlRows').innerHTML=DECLOG.map(([d,t,o,k,why],i)=>`<tr${i===0&&d==='Today'?' class="flashrow"':''}><td class="muted2" style="white-space:nowrap">${d}</td><td><b style="font-weight:500">${esc(t)}</b><small>${esc(why)}</small></td><td><span class="tag ${d==='Today'?'good':'n'}">${esc(o)}</span></td><td><span style="display:flex;align-items:center;gap:7px;white-space:nowrap">${av(k,'xs')}${P[k][0]}</span></td></tr>`).join('')};
 
 /* ---------- Metrics ---------- */
@@ -2547,6 +2575,40 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
 {const EB={mytasks:'You',decisions:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
  Object.entries(EB).forEach(([v,l])=>{const sec=document.getElementById('view-'+v);if(!sec)return;const h=sec.querySelector('h1.title');if(!h||h.closest('.sum'))return;
   const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
+
+/* ---------- Briefing: Needs you, Projects, Money (cards) ---------- */
+const NYI={urgent:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.1"/>',decision:'<path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 011.4.56l2.3 2.22a1 1 0 010 1.44l-2.3 2.22A2 2 0 0118 13H6a2 2 0 01-1.4-.56L2.3 10.22a1 1 0 010-1.44L4.6 6.56A2 2 0 016 6z"/>',sign:'<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',reply:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 016 6v5"/>',blocked:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>'};
+const NYL={urgent:'Urgent',decision:'Decision',sign:'Sign-off',reply:'Reply',blocked:'Blocked'};
+const NY=[
+ {id:'n1',k:'urgent',t:'Pick the launch date',d:'The security review is 8 days late. 18 Nov is at risk; 2 Dec still fits the App Store review.',who:'JR',when:'Thursday',due:'Due 20 Oct',act:'Decide',dec:0,go:()=>openDecision(0)},
+ {id:'n2',k:'decision',t:'One senior engineer or two mid-level?',d:'Omar has an offer for senior. Two mid-level would cost about the same and start sooner.',who:'JR',when:'Yesterday',due:'Due Fri',act:'Decide',dec:1,go:()=>openDecision(1)},
+ {id:'n3',k:'sign',t:'Approve launch video v3',d:'45-second cut with a shorter hook and new music. Needs locking by Wednesday to book the ads.',who:'SP',when:'Today',due:'Due Wed',act:'Decide',dec:2,go:()=>openDecision(2)},
+ {id:'n4',k:'reply',t:'Reply to the Northbeam term sheet',d:'$1.0M lead at a $16M cap. Maya has the redlines ready for you to check.',who:'ML',when:'Yesterday',due:'Due 24 Oct',act:'Open',go:()=>showView('fundraise')},
+ {id:'n5',k:'blocked',t:'Pen-test report is stuck with the auditor',d:'Promised for Monday. Chase them, or accept that the launch moves to 2 Dec.',who:'JR',when:'8 days',due:'Waiting 8 days',act:'Chase',go:()=>{openProject('murmur','Issues');flash('#issues .lr[data-id="MUR-118"]')}},
+ {id:'n6',k:'sign',t:'Approve the Q3 board pack',d:'Board meeting Tuesday 14 Oct. Two of three sections are ready for your sign-off.',who:'ML',when:'Today',due:'Due Fri',act:'Open',go:()=>showView('legal')}];
+let nyF='all';
+const NYG={all:()=>1,decision:x=>x.k==='decision'||x.k==='urgent',sign:x=>x.k==='sign'||x.k==='reply',blocked:x=>x.k==='blocked'};
+function renderNY(){const left=NY.filter(x=>!x.done);
+ $('#nyFilt').innerHTML=[['all','All'],['decision','Decisions'],['sign','Sign-off & replies'],['blocked','Blocked']].map(([k,l])=>`<button class="${nyF===k?'on':''}" data-nyf="${k}">${l} <span style="opacity:.6;margin-left:3px">${left.filter(NYG[k]).length}</span></button>`).join('');
+ const rows=left.filter(NYG[nyF]);$('#nyN').textContent=left.length;
+ $('#homeLead').textContent=left.length?`${left.length} thing${left.length>1?'s':''} need${left.length>1?'':'s'} you today.${left.some(x=>x.k==='urgent')?' Murmur’s launch is at risk because the outside security review is 8 days late.':''}`:'You’re all caught up. Nothing needs you right now.';
+ $('#nyCards').innerHTML=rows.map(x=>`<div class="spc ny ${x.k}" data-ny="${x.id}" role="button" tabindex="0"><div class="ny-top"><span class="nytag"><svg class="ic" viewBox="0 0 24 24">${NYI[x.k]}</svg>${NYL[x.k]}</span><span class="ny-due">${x.due}</span></div><b class="ny-t">${esc(x.t)}</b><p>${esc(x.d)}</p><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.when}</span><span class="ny-acts"><button class="ny-done" data-nydone="${x.id}" aria-label="Mark done" title="Mark done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><button class="btn sm${x.k==='urgent'?' pri':''}">${x.act}</button></span></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${nyF==='all'?'You’re all caught up.':'Nothing in this group needs you.'}</div>`}
+
+function openDecision(i){const d=document.querySelector(`.dec[data-dec="${i}"]`);if(!d)return;closeModal();const home=d.parentNode,next=d.nextSibling;
+ const bg=document.createElement('div');bg.className='mod-bg';bg.innerHTML=`<div class="mod decm" role="dialog" aria-modal="true" aria-label="Decision" style="max-width:620px"><div class="mod-h" style="padding-bottom:10px"><span class="cb">Decision</span><span style="color:var(--fg-3)">Pick one. ${DECS[i].from.split(' ')[0]} is told straight away.</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="decm-b"></div></div>`;
+ document.body.appendChild(bg);bg.querySelector('.decm-b').appendChild(d);modal=bg;
+ bg._onClose=()=>{home.insertBefore(d,next)};
+ bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+ if(d.dataset.done)return;
+ d.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{const ch=o.dataset.choice;setTimeout(()=>{if(modal===bg)closeModal();const x=NY.find(y=>y.dec===i);if(x){x.done=true;renderNY()}toast(`Decided: <b>${esc(ch)}</b>`,`${DECS[i].from} has been told and the plan is updated`)},1100)},{once:true}))}
+document.addEventListener('click',e=>{const r=e.target.closest('[data-decopen]');if(r)openDecision(+r.dataset.decopen)});
+function renderHP(){$('#hpCards').innerHTML=Object.entries(PINFO).map(([k,i])=>{const u=i.upd;const plain=i.lead_.replace(/<[^>]+>/g,'');return `<button class="spc" data-hp="${k}"><div class="spc-h"><span class="spt">${k==='murmur'?`<span class="wv" style="height:14px">${[5,9,13,7,11].map((h,j)=>`<u style="--h:${h}px;--i:${j}"></u>`).join('')}</span>`:pic(i.icon)}</span><span style="min-width:0"><b>${i.name}</b><small>Stage ${i.stage} of 9 · ${P[i.lead][0]}</small></span></div><p>${esc(plain)}</p><div class="spc-last"><b>${P[u[1]][0].split(' ')[0]}</b> ${esc(u[3])}</div><div class="hp-foot"><span class="hpt ${u[0]==='ok'?'':'risk'}">${HL[u[0]][0]}</span><span class="mbar"><i style="--w:${i.st[1]*100}%;--c:${u[0]==='ok'?'#5f636b':'#e5484d'}"></i></span><span class="pct">${Math.round(i.st[1]*100)}%</span><time>${i.end}</time></div></button>`}).join('')}
+function renderHM(){$('#hmCards').innerHTML=[['money','Runway','14 mo','Until December 2027',[19,18,17,16,15,14]],['money','Cash in the bank','$2.07M','Across 2 accounts',[2.6,2.5,2.4,2.3,2.2,2.07]],['money','Burn in September','$38.2k','<span class="down">$4.2k over plan</span>',[22,25,27,30,34,38]],['fundraise','Seed raised','$1.6M','40% of the $4M target',[0,0,1.2,1.2,1.4,1.6]]].map(([v,l,n,sub,d])=>`<button class="kpi" data-view="${v}"><span>${l}</span><b>${n}</b><small>${sub}</small>${sl(d)}</button>`).join('')}
+document.addEventListener('click',e=>{const f=e.target.closest('[data-nyf]');if(f){nyF=f.dataset.nyf;renderNY();return}
+ const d=e.target.closest('[data-nydone]');if(d){const x=NY.find(y=>y.id===d.dataset.nydone);const card=d.closest('.spc');card.classList.add('gone');setTimeout(()=>{x.done=true;renderNY()},300);toast(`<b>${esc(x.t)}</b> marked done`,'Undo',()=>{x.done=false;renderNY()});return}
+ const c=e.target.closest('[data-ny]');if(c){NY.find(y=>y.id===c.dataset.ny).go();return}
+ const h=e.target.closest('[data-hp]');if(h)openProject(h.dataset.hp)});
+renderNY();renderHP();renderHM();
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
