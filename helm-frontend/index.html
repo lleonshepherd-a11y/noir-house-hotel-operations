@@ -1294,6 +1294,21 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .tl-v .tl-dot{position:static;flex:none}
 .tl-v .t3{flex:1;min-width:0}.tl-v b{font-weight:600}.tl-v small{color:var(--fg-3);margin-left:auto;font-size:12px}
 @media (max-width:860px){.tl-h{display:none}.tl-v{display:block}.tl{padding:0 16px}.tl-key{display:none}}
+
+/* ===== Quick-jump cards ===== */
+.jump{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.jc{text-align:left;border:1px solid var(--line-2);border-radius:14px;padding:16px;background:var(--panel);display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .2s}
+.jc:hover{transform:translateY(-3px);box-shadow:var(--tile-sh-h);border-color:var(--line)}
+.jc-h{display:flex;align-items:center;justify-content:space-between}
+.jc-ic{width:34px;height:34px;border-radius:9px;background:#f1f1f3;display:grid;place-items:center;color:var(--fg)}
+.jc-ic .ic{width:17px;height:17px}
+.jc-ar{color:var(--fg-4);transition:transform .25s var(--ease),color .2s}.jc-ar .ic{width:16px;height:16px}
+.jc:hover .jc-ar{transform:translateX(3px);color:var(--fg)}
+.jc b{font-size:16px;font-weight:600;letter-spacing:-.015em}
+.jc p{margin:-6px 0 0;font-size:13px;color:var(--fg-3);line-height:1.45}
+.jc-n{margin-top:auto;padding-top:10px;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--fg-2);display:flex;justify-content:space-between}
+.jc-n span{color:var(--fg-3)}
+@media (max-width:1100px){.jump{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1378,6 +1393,8 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
               <div class="cards" id="hpCards"></div>
               <div class="sp-sec" style="margin-top:34px">Money <span>September</span></div>
               <div class="kpis" id="hmCards" style="margin-top:0"></div>
+              <div class="sp-sec" style="margin-top:34px">Jump to</div>
+              <div class="jump" id="jump"></div>
             </div>
             <span id="decProp" hidden></span>
             <div hidden>
@@ -2792,6 +2809,12 @@ function renderWK(){const w=WEEK[wkF],T=w.teams;const sum=k=>T.reduce((a,t)=>a+t
  $('#wkMoved').innerHTML=w.moved.map(([id,t,team,o,why])=>`<div class="lr" data-wkt="${id}">${st('prog',.5)}<span class="id">${id}</span><div class="ttl"><b>${esc(t)}</b><small>${esc(why)}</small></div><div class="meta"><span class="muted" style="font-size:12.5px">${team}</span>${av(o)}</div></div>`).join('')||'<div class="cal-empty">Everything moved last week was finished or re-planned.</div>'}
 document.addEventListener('click',e=>{const f=e.target.closest('[data-wkf]');if(f){wkF=f.dataset.wkf;renderWK();return}const r=e.target.closest('[data-wkt]');if(r){const id=r.dataset.wkt;openProject(keyOfTask(id),'Issues');flash(`#issues .lr[data-id="${id}"]`)}});
 VIEWHOOK.week=renderWK;renderWK();
+
+/* ---------- Quick-jump (step 8) ---------- */
+function renderJump(){const sideIc=v=>{const n=document.querySelector('.side [data-view="'+v+'"] svg.ic');return n?n.outerHTML:''};
+ const prog=TASKS.filter(t=>t.s==='prog').length;
+ $('#jump').innerHTML=[['initiatives','','Plan','Goals, initiatives and the roadmap by quarter.',`${PROJ.length} projects`,'4 initiatives'],['project','murmur','Build','The board, tasks and timeline for each project.',`${prog} in progress`,`${TASKS.filter(t=>t.s==='sign').length} need sign-off`],['fundraise','','Raise','Investor pipeline, cap table, SAFEs and data room.','$1.6M of $4M','2 term sheets'],['people','','Hire','The team, hiring pipeline and onboarding.','3 open roles','1 offer out']].map(([v,pk,t,d,a,b2])=>`<button class="jc" data-view="${v}"${pk?` data-pkey="${pk}"`:''}><span class="jc-h"><span class="jc-ic">${sideIc(v==='project'?'projects':v)}</span><span class="jc-ar"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span><b>${t}</b><p>${d}</p><span class="jc-n">${a}<span>${b2}</span></span></button>`).join('')}
+renderJump();
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
