@@ -10,7 +10,7 @@ Status: **Have** = built in the front end · **Partly** = started, needs more ·
 | --- | --- | --- |
 | Company priorities with progress | The 3–5 things that matter this quarter, visible to everyone | Have |
 | Stage roadmap (nine stages) | Shows where the company is and who is involved | Have |
-| Initiatives | Big goals (e.g. "Launch Murmur", "Close seed") that group projects, with health and target dates | Missing |
+| Initiatives | Big goals (e.g. "Launch Murmur", "Close seed") that group projects, with health and target dates | Have |
 | Decisions waiting on the founder | Stops the team waiting on the CEO | Have |
 | Decision log | A record of what was decided, when and why, for the team and the board | Missing |
 
@@ -24,7 +24,7 @@ Status: **Have** = built in the front end · **Partly** = started, needs more ·
 | Blockers: who is waiting on whom | The biggest cause of slow teams at seed | Have |
 | My tasks view | Each person sees only their own work | Partly (opens the issues list) |
 | Team check-ins / weekly updates | Each team posts a short update so the founder doesn't chase people | Partly (team pulse) |
-| Notes and meeting notes | 1:1s, board prep, investor calls, decisions in writing | Missing |
+| Notes and meeting notes | 1:1s, board prep, investor calls, decisions in writing | Have |
 
 ## 3. People and hiring
 
