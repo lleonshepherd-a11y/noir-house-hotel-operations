@@ -780,6 +780,80 @@ td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-we
 .agenda{margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.7;color:var(--fg-2)}
 @media (max-width:860px){.g2{grid-template-columns:1fr}}
 
+/* ---------- Stage 3 ---------- */
+.bell{position:relative}
+.bdot{position:absolute;top:2px;right:2px;min-width:15px;height:15px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px;box-shadow:0 0 0 2px var(--panel)}
+.npop{position:fixed;z-index:75;width:380px;max-width:calc(100vw - 16px);max-height:min(560px,calc(100vh - 80px));display:flex;flex-direction:column;background:var(--panel);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.06);animation:vin .18s var(--ease)}
+.npop-h{display:flex;align-items:center;gap:8px;padding:12px 14px 8px}
+.npop-h b{font-weight:600;font-size:14px}
+.npop-h .link{margin-left:auto;font-size:12.5px;color:var(--accent)}
+.npop .seg2{margin:0 14px 8px}
+.npop .seg2 button{height:26px;font-size:12.5px}
+.nlst{overflow-y:auto;padding:0 6px 8px}
+.nit{display:flex;gap:10px;width:100%;text-align:left;padding:10px 8px;border-radius:9px;position:relative;transition:background .12s,transform .2s var(--ease)}
+.nit:hover{background:var(--hover);transform:translateX(2px)}
+.nit .t{flex:1;min-width:0;font-size:13px;line-height:1.45}
+.nit .t b{font-weight:600}
+.nit small{display:block;color:var(--fg-3);font-size:12px;margin-top:2px}
+.nit.unread::after{content:"";position:absolute;right:10px;top:16px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.nit .nic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#f1f1f4;color:var(--fg-2)}
+.post{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:var(--panel);box-shadow:var(--tile-sh);transition:transform .28s var(--ease),box-shadow .28s var(--ease)}
+.post:hover{transform:translateY(-3px);box-shadow:var(--tile-sh-h)}
+.post .ph3{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--fg-3)}
+.post .ph3 b{color:var(--fg);font-weight:600}
+.post h3{margin:12px 0 4px;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.post p{margin:0;font-size:14.5px;line-height:1.6;color:var(--fg)}
+.post .pf{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--fg-3)}
+.post .pf .rxb{margin-right:2px}
+.post .pf .seen{margin-left:auto}
+.compose2{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:18px 0;box-shadow:var(--tile-sh);background:var(--panel)}
+.compose2 input{width:100%;border:0;outline:none;font:inherit;font-size:16px;font-weight:600;padding:2px 0 6px;color:var(--fg)}
+.compose2 textarea{width:100%;border:0;outline:none;resize:vertical;font:inherit;font-size:14px;line-height:1.55;min-height:60px;color:var(--fg)}
+.compose2 .row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line-2);padding-top:10px}
+.compose2 .row .muted2{flex:1}
+.fb{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:var(--panel);box-shadow:var(--tile-sh);transition:transform .28s var(--ease),box-shadow .28s var(--ease)}
+.fb:hover{transform:translateY(-3px);box-shadow:var(--tile-sh-h)}
+.vote{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;height:52px;border:1px solid var(--line);border-radius:9px;font-weight:600;font-size:13px;flex:none;transition:all .15s;font-variant-numeric:tabular-nums}
+.vote:hover{border-color:var(--accent);color:var(--accent)}
+.vote.on{background:var(--accent-soft);border-color:rgba(94,106,210,.4);color:var(--accent)}
+.fb .t{flex:1;min-width:0}
+.fb q{display:block;font-size:14.5px;line-height:1.55;quotes:"“" "”"}
+.fb .fm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--fg-3)}
+.fb .fm .r{margin-left:auto;display:flex;gap:6px}
+.tk2{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 7px;color:var(--fg);background:#fafafa}
+.tk2:hover{border-color:var(--accent);color:var(--accent)}
+.set-row{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-2)}
+.set-row label{font-weight:500;font-size:13.5px}
+.set-row small{display:block;color:var(--fg-3);font-size:12.5px;font-weight:400}
+.set-row input,.set-row select{height:36px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font:inherit;font-size:14px;max-width:360px;width:100%;outline:none;background:var(--panel);color:var(--fg)}
+.set-row input:focus,.set-row select:focus{border-color:#cfd0d6;box-shadow:0 0 0 3px rgba(94,106,210,.08)}
+.rsel{height:30px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font:inherit;font-size:13px;background:var(--panel);color:var(--fg)}
+.pm td,.pm th{text-align:center}.pm td:first-child,.pm th:first-child{text-align:left}
+.yes{color:var(--green);font-weight:700}.no{color:var(--fg-4)}
+.tglr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-2);cursor:pointer}
+.tglr .t{flex:1}
+.tglr small{display:block;color:var(--fg-3);font-size:12.5px}
+/* first-run setup */
+.wiz-bg{position:fixed;inset:0;z-index:95;background:rgba(244,244,245,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;padding:16px;animation:fade .2s}
+.wiz{width:100%;max-width:640px;max-height:calc(100vh - 32px);overflow-y:auto;background:var(--panel);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.05);padding:28px 30px 22px;animation:min .3s var(--ease)}
+.wsteps{display:flex;gap:6px;margin-bottom:22px}
+.wsteps i{flex:1;height:4px;border-radius:2px;background:var(--line-2);transition:background .3s}
+.wsteps i.on{background:var(--fg)}
+.wiz h2{margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em}
+.wiz .lead{margin:6px 0 18px;font-size:14.5px}
+.wiz .ff{padding:0 0 12px}
+.stg-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stg-pick button{text-align:left;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.35;transition:all .15s;background:var(--panel)}
+.stg-pick button:hover{border-color:#cfd0d6;transform:translateY(-2px);box-shadow:var(--tile-sh)}
+.stg-pick button.on{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.stg-pick b{display:block;font-size:12px;color:var(--fg-3);font-weight:600;margin-bottom:2px}
+.wf{display:flex;align-items:center;gap:10px;margin-top:22px}
+.wf .skip{margin-right:auto;color:var(--fg-3);font-size:13px}
+.wf .skip:hover{color:var(--fg)}
+.emails{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;min-height:44px;align-items:center}
+.emails input{flex:1;min-width:180px;border:0;outline:none;font:inherit;font-size:14px;height:30px}
+@media (max-width:640px){.set-row{grid-template-columns:1fr;gap:6px}.stg-pick{grid-template-columns:repeat(2,minmax(0,1fr))}.wiz{padding:22px 18px}}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -814,6 +888,8 @@ td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-we
           <button class="ni" data-view="money"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Money</button>
           <button class="ni" data-view="metrics"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19h16M7 15l3-4 3 2 4-6"/></svg>Metrics</button>
           <button class="ni" data-view="legal"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/></svg>Board &amp; legal</button>
+          <button class="ni" data-view="feedback"><svg class="ic" viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/><path d="M9 9.5h6M9 12.5h4"/></svg>Customer feedback</button>
+          <button class="ni" data-view="announce"><svg class="ic" viewBox="0 0 24 24"><path d="M4 10v4h3l6 4V6l-6 4z"/><path d="M16.5 9a4 4 0 010 6M19 7a7 7 0 010 10"/></svg>Announcements</button>
         </nav>
       </div>
       <div class="grp">
@@ -821,7 +897,7 @@ td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-we
         <nav class="nav" id="favs"></nav>
       </div>
     </div>
-    <div class="side-foot"><span class="av md" style="--av:#1c1d21;--avc:#fff">AK</span><div><b style="font-weight:500">Alex Kim</b><small>Founder &amp; CEO</small></div></div>
+    <button class="side-foot" data-view="settings" style="width:100%;text-align:left" title="Settings"><span class="av md" style="--av:#1c1d21;--avc:#fff">AK</span><div style="flex:1"><b style="font-weight:500">Alex Kim</b><small>Founder &amp; CEO · Settings</small></div><svg class="ic" style="color:var(--fg-3)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></button>
   </aside>
   <div class="scrim" id="scrim"></div>
 
@@ -835,6 +911,7 @@ td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-we
       <div class="htabs" id="htabs" hidden></div>
       <div class="bar-r">
         <span class="pager" id="pager">1 / 3</span>
+        <button class="ib bell" id="bell" aria-label="Notifications" title="Notifications"><svg class="ic" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/></svg><b class="bdot" id="bellN">5</b></button>
         <button class="ib" aria-label="Copy link" title="Copy link"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></button>
         <button class="btn pri" id="newBtn"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2"><path d="M12 5v14M5 12h14"/></svg><span id="newLbl">New task</span></button>
         <button class="agent-tg" id="agentTg" aria-haspopup="dialog" title="Write a message"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><span>Message</span></button>
@@ -1088,6 +1165,48 @@ td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-we
             <div data-p2="lg:Board"><div class="two2"><div id="boardList"></div><div class="side-card"><h4>Board</h4><div id="boardMem"></div></div></div></div>
             <div data-p2="lg:Compliance" hidden><div id="compList"></div></div>
             <div data-p2="lg:Contracts" hidden><div class="tbl"><table><thead><tr><th>Contract</th><th>Type</th><th class="num">Value</th><th>Renews</th><th>Owner</th></tr></thead><tbody id="ctRows"></tbody></table></div></div>
+          </div>
+        </section>
+
+        <!-- ======== FEEDBACK ======== -->
+        <section class="view" id="view-feedback" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Customer feedback</h1><p class="lead">What pilot customers and testers are saying, grouped by theme and linked to the work that fixes it.</p></div></div>
+            <div class="tiles" id="fbTiles"></div>
+            <div class="seg2" data-g="fb" id="fbThemes"></div>
+            <div id="fbList"></div>
+          </div>
+        </section>
+
+        <!-- ======== ANNOUNCEMENTS ======== -->
+        <section class="view" id="view-announce" hidden>
+          <div class="wrap">
+            <div class="ph2"><div><h1 class="title">Announcements</h1><p class="lead">Company-wide updates from the founders. Everyone gets them, and you can see who has read them.</p></div></div>
+            <div class="compose2"><input id="anT" placeholder="Announcement title" aria-label="Announcement title" autocomplete="off"><textarea id="anB" placeholder="What does everyone need to know?" aria-label="Announcement text"></textarea><div class="row"><span class="muted2">Goes to all 8 people</span><button class="btn pri" id="anPost">Post to everyone</button></div></div>
+            <div id="anList"></div>
+          </div>
+        </section>
+
+        <!-- ======== SETTINGS ======== -->
+        <section class="view" id="view-settings" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Settings</h1><p class="lead">Your company, who can see what, and how Helm notifies you.</p></div><div class="acts"><button class="btn" id="rerunSetup">Run first-time setup again</button></div></div>
+            <div class="seg2" data-g="st"><button data-t2="General" class="on">Company</button><button data-t2="Members">Members &amp; permissions</button><button data-t2="Notif">Notifications</button></div>
+            <div data-p2="st:General">
+              <div class="set-row"><label for="sName">Company name<small>Shown to your team and investors</small></label><input id="sName" value="Murmur Inc."></div>
+              <div class="set-row"><label for="sWhat">What you’re building</label><input id="sWhat" value="Voice dictation for every app"></div>
+              <div class="set-row"><label for="sStage">Current stage<small>Sets the stage track across Helm</small></label><select id="sStage"></select></div>
+              <div class="set-row"><label for="sCur">Currency</label><select id="sCur"><option>US dollar ($)</option><option>British pound (£)</option><option>Euro (€)</option></select></div>
+              <div class="set-row"><label for="sFy">Financial year starts</label><select id="sFy"><option>January</option><option>April</option><option>July</option><option>October</option></select></div>
+              <div class="set-row"><span></span><span><button class="btn pri" id="sSave">Save changes</button></span></div>
+            </div>
+            <div data-p2="st:Members" hidden>
+              <div class="ph2" style="margin-bottom:10px"><div class="muted2" id="memCount"></div><div class="acts"><button class="btn pri" id="memInvite">Invite people</button></div></div>
+              <div class="tbl"><table><thead><tr><th>Person</th><th>Access</th><th>Can see</th><th>Role</th></tr></thead><tbody id="memRows"></tbody></table></div>
+              <div class="sh">What each role can see</div>
+              <div class="tbl pm"><table><thead><tr><th>Area</th><th>Admin</th><th>Member</th><th>Guest</th></tr></thead><tbody id="permRows"></tbody></table></div>
+            </div>
+            <div data-p2="st:Notif" hidden><div id="nPrefs"></div></div>
           </div>
         </section>
 
@@ -1464,7 +1583,7 @@ function openCreate(type,pre={}){closeModal();closePal();closeSide();
  [$('#mTitle'),$('#mDesc')].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey||el.id==='mTitle')){e.preventDefault();create()}}));
  $('#mProps').addEventListener('click',e=>{const b=e.target.closest('.pp');if(!b)return;propMenu(b,b.dataset.k)});
  setTimeout(()=>$('#mTitle').focus(),30);
- if(pre.focusAssign)setTimeout(()=>propMenu($('#mProps [data-k="o"]'),'o'),120);}
+ if(pre.focusAssign)setTimeout(()=>propMenu($('#mProps [data-k="o"]'),'o'),120);if(pre.title)$('#mTitle').value=pre.title;}
 function drawProps(hl){$('#mProps').innerHTML=ms.type==='task'?taskProps():projProps();if(hl){const b=$(`#mProps [data-k="${hl}"]`);if(b){b.classList.add('hl');setTimeout(()=>b.classList.remove('hl'),700)}}}
 function propMenu(b,k){const set=(key,v)=>{ms[key]=v;drawProps(key)};
  if(ms.type==='task'){
@@ -1697,6 +1816,92 @@ VIEWHOOK.legal=()=>{
  const bp=$('#bpSend');if(bp)bp.addEventListener('click',()=>toast('<b>Board pack sent</b>','To Jordan R. and Sam Ortiz'))};
 /* =================== END STAGE 2 =================== */
 
+/* ===================== STAGE 3 ===================== */
+/* ---------- Notifications ---------- */
+const NOTIF=[['SP','<b>Sofia</b> mentioned you in <b>Launch</b>: “v3 of the launch video is up”','4m ago',1,()=>openConv('launch')],
+ ['JR','<b>Jordan</b> assigned you <b>MUR-146</b> Reply to the Northbeam term sheet','1h ago',1,()=>showView('mytasks')],
+ [null,'<b>Decision waiting:</b> one senior engineer or two mid-level?','2h ago',1,()=>showView('decisions'),'sign'],
+ [null,'<b>Filing due in 29 days:</b> 83(b) election for Nadia K.','Today',1,()=>{showView('legal');$('[data-g="lg"] [data-t2="Compliance"]').click()},'cal'],
+ ['ML','<b>Maya</b> shared <b>Seed deck v8</b> in Fundraising','3h ago',1,()=>openConv('fundraising')],
+ ['PS','<b>Priya</b> marked the <b>Brightpath</b> pilot as live','Yesterday',0,()=>showView('home')],
+ ['TN','<b>Tara</b> added App Store screenshots to <b>MUR-147</b>','Yesterday',0,()=>showView('project',{tab:'Issues'})]];
+let nTab='all';
+function bellCount(){const n=NOTIF.filter(x=>x[3]).length;$('#bellN').textContent=n;$('#bellN').hidden=!n}
+function renderNotif(){const list=NOTIF.filter(x=>nTab==='all'||x[3]);$('.nlst').innerHTML=list.map(x=>`<button class="nit${x[3]?' unread':''}" data-ni="${NOTIF.indexOf(x)}">${x[0]?av(x[0],'md'):`<span class="nic">${x[5]==='cal'?NAV_IC.cal:st('sign',.5)}</span>`}<span class="t">${x[1]}<small>${x[2]}</small></span></button>`).join('')||'<div class="pal-empty" style="padding:24px;text-align:center">You’re all caught up.</div>'}
+function closeNotif(){const p=$('.npop');if(p)p.remove()}
+$('#bell').addEventListener('click',e=>{e.stopPropagation();if($('.npop')){closeNotif();return}const r=e.currentTarget.getBoundingClientRect();const p=document.createElement('div');p.className='npop';p.innerHTML=`<div class="npop-h"><b>Notifications</b><button class="link" id="nAll">Mark all as read</button></div><div class="seg2" data-g="nt" style="margin-top:0"><button data-t2="all" class="${nTab==='all'?'on':''}">All</button><button data-t2="unread" class="${nTab==='unread'?'on':''}">Unread</button></div><div class="nlst"></div>`;document.body.appendChild(p);p.style.top=(r.bottom+8)+'px';p.style.left=Math.max(8,Math.min(r.right-380,innerWidth-388))+'px';renderNotif();
+ p.addEventListener('click',ev=>{const it=ev.target.closest('[data-ni]');if(it){const x=NOTIF[+it.dataset.ni];x[3]=0;bellCount();closeNotif();x[4]()}if(ev.target.closest('#nAll')){NOTIF.forEach(x=>x[3]=0);bellCount();renderNotif()}})});
+TABHOOK.nt=t=>{nTab=t;renderNotif()};
+document.addEventListener('mousedown',e=>{const p=$('.npop');if(p&&!p.contains(e.target)&&!e.target.closest('#bell'))closeNotif()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNotif()});
+bellCount();
+
+/* ---------- Announcements ---------- */
+const ANN=[{who:'AK',t:'Launch moves to 2 December',b:'We’re giving the security review the time it needs. Press and Product Hunt move by two weeks. Nothing else changes: keep shipping, and thank you for the push on the pilot.',when:'Today, 9:10',seen:6,rx:{'👍':4,'🙌':2}},
+ {who:'AK',t:'Welcome Dan to the team',b:'Dan joined this week as a product engineer and will start on team admin controls for our pilots. Say hello in General.',when:'6 Oct',seen:8,rx:{'🎉':7}},
+ {who:'JR',t:'Windows beta is out',b:'Build 0.9 is with all 2,140 testers. Please report anything odd in the Launch space.',when:'3 Oct',seen:8,rx:{'🔥':5,'👍':3}}];
+function renderAnn(){$('#anList').innerHTML=ANN.map((a,i)=>`<div class="post"><div class="ph3">${av(a.who,'md')}<span><b>${P[a.who][0]}</b> · ${a.when}</span></div><h3>${esc(a.t)}</h3><p>${esc(a.b)}</p><div class="pf">${Object.entries(a.rx).map(([e,n])=>`<button class="rxb${a.mine&&a.mine[e]?' on':''}" data-anrx="${i}|${e}">${e} ${n}</button>`).join('')}<button class="rxb" data-anrx="${i}|👍" aria-label="React">+</button><span class="seen">Seen by ${a.seen} of 8</span></div></div>`).join('')}
+$('#anList').addEventListener('click',e=>{const b=e.target.closest('[data-anrx]');if(!b)return;const [i,emo]=b.dataset.anrx.split('|');const a=ANN[+i];a.mine=a.mine||{};if(a.mine[emo]){a.rx[emo]--;delete a.mine[emo];if(!a.rx[emo])delete a.rx[emo]}else{a.rx[emo]=(a.rx[emo]||0)+1;a.mine[emo]=1}renderAnn()});
+$('#anPost').addEventListener('click',()=>{const t=$('#anT').value.trim(),b=$('#anB').value.trim();if(!t||!b){toast('Add a title and a message first');($('#anT').value.trim()?$('#anB'):$('#anT')).focus();return}ANN.unshift({who:'AK',t,b,when:'Just now',seen:1,rx:{}});$('#anT').value='';$('#anB').value='';renderAnn();$('#anList .post').classList.add('flash');toast('<b>Announcement posted</b>','Everyone on the team was notified')});
+renderAnn();
+
+/* ---------- Customer feedback ---------- */
+const FB=[['Northwind','Head of operations','Slack','In our open-plan office the accuracy drops a lot. It’s the one thing stopping a wider roll-out.','Accuracy','neg',24,'MUR-137'],
+ ['Brightpath','Team lead','Call','The Slack integration is brilliant. My team uses it for every stand-up note now.','Integrations','pos',18,null],
+ ['Northwind','IT admin','Email','We need to add and remove people ourselves before we can pay for 60 seats.','Admin controls','neg',15,'MUR-148'],
+ ['Pilot tester','Designer','In-app','Took me three tries to get through onboarding. Too many screens before I could dictate.','Onboarding','neg',11,'MUR-133'],
+ ['Kestrel Labs','Founder','Call','What will this cost per seat after the pilot? Need a number for our budget.','Pricing','neu',9,null],
+ ['Pilot tester','Engineer','In-app','Works great in VS Code. Would love a shortcut to dictate a commit message.','Integrations','pos',7,null],
+ ['Brightpath','Ops manager','Email','Accents are handled much better since the last update. Thank you!','Accuracy','pos',6,null]].map(([c,r,src,txt,th,sen,v,tk],i)=>({id:i,c,r,src,txt,th,sen,v,tk,mine:false}));
+let fbTheme='All';
+function renderFB(){const themes=['All',...new Set(FB.map(f=>f.th))];
+ $('#fbThemes').innerHTML=themes.map(t=>`<button data-t2="${t}" class="${t===fbTheme?'on':''}">${t} <span style="opacity:.6;margin-left:3px">${t==='All'?FB.length:FB.filter(f=>f.th===t).length}</span></button>`).join('');
+ const list=FB.filter(f=>fbTheme==='All'||f.th===fbTheme).sort((a,b)=>b.v-a.v);
+ $('#fbList').innerHTML=list.map(f=>`<div class="fb"><button class="vote${f.mine?' on':''}" data-vote="${f.id}" aria-label="Vote"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 2.5l4 5H2z" fill="currentColor"/></svg>${f.v}</button><div class="t"><q>${esc(f.txt)}</q><div class="fm">${gav(f.c,'xs')}<span><b style="color:var(--fg);font-weight:500">${esc(f.c)}</b> · ${esc(f.r)} · via ${f.src}</span><span class="tag n">${f.th}</span><span class="tag ${f.sen==='pos'?'good':f.sen==='neg'?'bad':'n'}">${f.sen==='pos'?'Positive':f.sen==='neg'?'Problem':'Question'}</span><span class="r">${f.tk?`<button class="tk2" data-fbtk="${f.tk}">${f.tk}</button>`:`<button class="btn" style="height:26px;font-size:12.5px" data-fbnew="${f.id}">Create task</button>`}</span></div></div></div>`).join('');
+ const tot=FB.reduce((a,f)=>a+f.v,0),top=Object.entries(FB.reduce((m,f)=>(m[f.th]=(m[f.th]||0)+f.v,m),{})).sort((a,b)=>b[1]-a[1])[0];
+ $('#fbTiles').innerHTML=[['Feedback this month','418','From 2,140 testers and 3 pilots'],['Top theme',top[0],`${Math.round(top[1]/tot*100)}% of votes`],['Net promoter score','46','<span class="up">+6</span> vs August'],['Linked to tasks',`${FB.filter(f=>f.tk).length} of ${FB.length}`,'The rest need an owner']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('')}
+TABHOOK.fb=t=>{fbTheme=t;renderFB()};
+$('#fbList').addEventListener('click',e=>{const v=e.target.closest('[data-vote]');if(v){const f=FB[+v.dataset.vote];f.mine=!f.mine;f.v+=f.mine?1:-1;renderFB();return}
+ const t=e.target.closest('[data-fbtk]');if(t){showView('project',{tab:'Issues'});flash(`#issues .lr[data-id="${t.dataset.fbtk}"]`);return}
+ const n=e.target.closest('[data-fbnew]');if(n){const f=FB[+n.dataset.fbnew];openCreate('task',{l:'Product',title:f.txt.length>70?f.txt.slice(0,67)+'…':f.txt});const id='MUR-'+nextId;const chk=setInterval(()=>{if(!modal){clearInterval(chk);if(TASKS.some(x=>x.id===id)){f.tk=id;renderFB()}}},300)}});
+renderFB();
+
+/* ---------- Settings ---------- */
+VIEWHOOK.settings=()=>{if(!$('#sStage').options.length)$('#sStage').innerHTML=STAGES.map((x,i)=>`<option${i===4?' selected':''}>${i+1}. ${x[0]}</option>`).join('')};
+$('#sSave').addEventListener('click',()=>toast('<b>Settings saved</b>',$('#sName').value));
+const MEM=[['AK','Admin','Everything'],['JR','Admin','Everything'],['ML','Member','Everything except salaries'],['SP','Member','Everything except salaries'],['PS','Member','Everything except salaries'],['DW','Member','Everything except salaries'],['TN','Guest','Murmur project only'],['TO','Guest','Murmur project and Messages'],['Sam Ortiz','Guest','Fundraising and Board & legal']];
+function renderMem(){$('#memCount').textContent=`${MEM.length} people · ${MEM.filter(m=>m[1]==='Guest').length} guests`;
+ $('#memRows').innerHTML=MEM.map(([k,r,see],i)=>`<tr><td><span style="display:flex;align-items:center;gap:10px">${P[k]?av(k):gav(k)}<span><b style="font-weight:500">${P[k]?P[k][0]:esc(k)}</b><small>${P[k]?(k==='TN'||k==='TO'?'Contractor':'Team'):k.includes('@')?'Invite sent':'Investor · Field Fund'}</small></span></span></td><td><span class="tag ${r==='Admin'?'good':r==='Guest'?'warn':'n'}">${r}</span></td><td class="muted2">${see}</td><td><select class="rsel" data-mem="${i}" aria-label="Role">${['Admin','Member','Guest'].map(o=>`<option${o===r?' selected':''}>${o}</option>`).join('')}</select></td></tr>`).join('')}
+$('#memRows').addEventListener('change',e=>{const s2=e.target.closest('[data-mem]');if(!s2)return;const m=MEM[+s2.dataset.mem];m[1]=s2.value;m[2]=s2.value==='Admin'?'Everything':s2.value==='Member'?'Everything except salaries':'Only what you share with them';renderMem();toast(`<b>${P[m[0]]?P[m[0]][0]:m[0]}</b> is now ${s2.value==='Admin'?'an':'a'} ${s2.value}`)});
+$('#memInvite').addEventListener('click',()=>openForm('Invite people',[{k:'e',label:'Email address',ph:'name@company.com'},{k:'r',label:'Role',opts:['Member','Guest','Admin']}],v=>{MEM.push([v.e,v.r,v.r==='Guest'?'Only what you share with them':v.r==='Admin'?'Everything':'Everything except salaries']);renderMem();toast(`<b>Invite sent</b>`,v.e)},'Send invite'));
+renderMem();
+$('#permRows').innerHTML=[['Briefing, projects and tasks',1,1,'Shared projects only'],['Messages',1,1,'Spaces they’re added to'],['Notes',1,1,'Shared notes only'],['Money and budgets',1,1,0],['Salaries and offers',1,0,0],['Fundraising and cap table',1,'View only','Investors: view only'],['Board & legal',1,'View only','Board members only'],['Settings and billing',1,0,0]].map(([a,...r])=>`<tr><td style="font-weight:500">${a}</td>${r.map(x=>`<td>${x===1?'<span class="yes">✓</span>':x===0?'<span class="no">—</span>':`<span class="muted2">${x}</span>`}</td>`).join('')}</tr>`).join('');
+$('#nPrefs').innerHTML=[['Someone mentions me','In Messages, notes and tasks',1],['A task is assigned to me','Or its due date changes',1],['A decision is waiting on me','Reminder after 24 hours',1],['Filing and contract deadlines','30, 7 and 1 day before',1],['Daily briefing email','Every weekday at 8:00',1],['Every message in spaces I’m in','Can get noisy',0]].map(([t,s2,on],i)=>`<div class="tglr" data-tg="${i}"><span class="t">${t}<small>${s2}</small></span><span class="tgl${on?' on':''}"></span></div>`).join('');
+$('#nPrefs').addEventListener('click',e=>{const r=e.target.closest('[data-tg]');if(r){const t=r.querySelector('.tgl');t.classList.toggle('on');toast(t.classList.contains('on')?'Notifications on':'Notifications off',r.querySelector('.t').firstChild.textContent)}});
+
+/* ---------- First-run setup ---------- */
+let wz={step:0,name:'Murmur Inc.',what:'Voice dictation for every app',stage:4,pri:['Launch Murmur publicly','Onboard 5 pilot customers','Hire two engineers'],emails:['jordan@murmur.app','sofia@murmur.app']};
+function openWizard(){closeWizard();const bg=document.createElement('div');bg.className='wiz-bg';bg.innerHTML='<div class="wiz" role="dialog" aria-modal="true" aria-label="Set up Helm"></div>';document.body.appendChild(bg);drawWiz()}
+function closeWizard(){const b=$('.wiz-bg');if(b)b.remove()}
+function drawWiz(){const w=$('.wiz');if(!w)return;const s2=wz.step;const steps=`<div class="wsteps">${[0,1,2,3].map(i=>`<i class="${i<=s2?'on':''}"></i>`).join('')}</div>`;let body='';
+ if(s2===0)body=`<h2>Welcome to Helm</h2><p class="lead">Let’s set up your company. It takes about a minute, and you can change anything later in Settings.</p><div class="ff"><label for="wzName">Company name</label><input id="wzName" value="${esc(wz.name)}"></div><div class="ff"><label for="wzWhat">What are you building?</label><input id="wzWhat" value="${esc(wz.what)}"></div>`;
+ if(s2===1)body=`<h2>Which stage are you at?</h2><p class="lead">Helm shows the right work for each stage. Pick where you are today.</p><div class="stg-pick">${STAGES.map((x,i)=>`<button class="${i===wz.stage?'on':''}" data-wst="${i}"><b>Stage ${i+1}</b>${x[0]}</button>`).join('')}</div>`;
+ if(s2===2)body=`<h2>Your top priorities</h2><p class="lead">The three things that matter most this quarter. They go at the top of your briefing.</p>${wz.pri.map((p,i)=>`<div class="ff"><label for="wzP${i}">Priority ${i+1}</label><input id="wzP${i}" value="${esc(p)}"></div>`).join('')}`;
+ if(s2===3)body=`<h2>Invite your team</h2><p class="lead">Add the people you work with. You can give investors and contractors guest access later.</p><div class="emails" id="wzEm">${wz.emails.map((e,i)=>`<span class="tochip">${esc(e)}<button type="button" data-wrm="${i}" aria-label="Remove ${esc(e)}">×</button></span>`).join('')}<input id="wzIn" placeholder="Type an email and press Enter" autocomplete="off"></div>`;
+ w.innerHTML=steps+body+`<div class="wf"><button class="skip" id="wzSkip">Skip setup for now</button>${s2?'<button class="btn" id="wzBack">Back</button>':''}<button class="btn pri" id="wzNext">${s2===3?'Finish set-up':'Continue'}</button></div>`;
+ const keep=()=>{if(s2===0){wz.name=$('#wzName').value;wz.what=$('#wzWhat').value}if(s2===2)wz.pri=wz.pri.map((p,i)=>$('#wzP'+i).value)};
+ $('#wzNext').addEventListener('click',()=>{keep();if(s2<3){wz.step++;drawWiz()}else finishWiz()});
+ const bk=$('#wzBack');if(bk)bk.addEventListener('click',()=>{keep();wz.step--;drawWiz()});
+ $('#wzSkip').addEventListener('click',()=>{try{localStorage.setItem('helm-setup-done','1')}catch(e){}closeWizard()});
+ w.querySelectorAll('[data-wst]').forEach(b=>b.addEventListener('click',()=>{wz.stage=+b.dataset.wst;drawWiz()}));
+ const em=$('#wzIn');if(em){em.focus();em.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===',')&&em.value.trim()){e.preventDefault();wz.emails.push(em.value.trim().replace(/,$/,''));drawWiz()}});w.querySelectorAll('[data-wrm]').forEach(b=>b.addEventListener('click',()=>{wz.emails.splice(+b.dataset.wrm,1);drawWiz()}))}
+ const f=w.querySelector('input');if(f&&s2!==3)f.focus()}
+function finishWiz(){try{localStorage.setItem('helm-setup-done','1')}catch(e){}closeWizard();VIEWHOOK.settings();$('#sName').value=wz.name;$('#sWhat').value=wz.what;$('#sStage').selectedIndex=wz.stage;wz.step=0;showView('home');toast(`<b>${esc(wz.name)}</b> is set up`,`Stage ${wz.stage+1} · ${wz.emails.length} invite${wz.emails.length===1?'':'s'} sent`)}
+$('#rerunSetup').addEventListener('click',()=>{wz.step=0;openWizard()});
+let setupDone=false;try{setupDone=!!localStorage.getItem('helm-setup-done')}catch(e){setupDone=true}
+if(!setupDone)setTimeout(openWizard,300);
+/* =================== END STAGE 3 =================== */
+
 /* ---------- Stages ---------- */
 const STAGES=[["Set the company up to operate","CEO, startup lawyer, accountant","done","Mar"],["Turn the UI into a product plan","Founder, product designer, tech lead, prospective customers","done","Apr"],["Design the technical foundations","CTO, product designer, security adviser","done","May"],["Build the first usable version","Tech lead, engineers, designer, founder, AI specialist","done","Aug"],["Run a private pilot","Founder, product, engineers, pilot users, customer success","now","68%"],["Prepare for a public launch","Product, engineering, support, product marketer, lawyer","next","12%"],["Launch in stages","Founder, growth lead, customer success, engineering","next","18 Nov"],["Improve retention, find repeatable growth","Founder, product, engineering, customer success, sales","next","Q1 2027"],["Scale the company","Product and engineering, sales, success, operations, finance","next","Later"]];
 $('#stages').innerHTML=STAGES.map(([t,w,k,m],i)=>`<div class="lr">${dia(k)}<span class="id" style="width:22px">${i+1}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${k==='now'?'<span class="lbl" style="--c:#e0a500"><i></i>You are here</span>':''}<span class="dt" style="width:60px">${m}</span></div></div>`).join('');
@@ -1708,7 +1913,7 @@ $('#htabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'o
 $('#mtabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'on'}">${t}</button>`).join('');
 function openTab(name){$$('[data-ptab]').forEach(b=>b.classList.toggle('on',b.dataset.ptab===name));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==name);$('#content').scrollTop=0}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ptab]');if(b)openTab(b.dataset.ptab)});
-const CRUMB={messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id">BRF-41</span><span class="t">Morning briefing</span>`,
+const CRUMB={settings:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"/></svg><span class="t">Settings</span>`,messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id">BRF-41</span><span class="t">Morning briefing</span>`,
  project:`${st('prog',.68)}<span class="id">MUR</span><span class="t">Murmur</span>`,
  stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`,
  projects:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="t">Projects</span><span class="id">Roadmap</span>`};
