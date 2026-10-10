@@ -740,6 +740,46 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
 .obi small{color:var(--fg-3);font-size:12px}
 @media (max-width:860px){.notes{grid-template-columns:1fr}.nl{max-height:260px;border-right:0;border-bottom:1px solid var(--line-2)}.ned-in{padding:22px 16px 60px}.two2{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+/* ---------- Every tile responds to hover ---------- */
+.drg,.side-card,.obl,.ni2,.dec,.mt-card,.bill,.ev{transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .2s,background .15s}
+.drg:hover,.side-card:hover,.obl:hover,.mt-card:hover,.ev:hover{transform:translateY(-3px);box-shadow:var(--tile-sh-h);border-color:#dadade}
+.tbl{transition:box-shadow .28s var(--ease)}
+.tbl:hover{box-shadow:var(--tile-sh-h)}
+/* ---------- Stage 2 ---------- */
+td small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px;font-weight:400}
+.r1{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-2)}
+.r1:last-child{border-bottom:0}
+.r1 .t{flex:1;min-width:0}
+.r1 .t b{display:block;font-weight:500;font-size:13.5px}
+.r1 .t small{display:block;color:var(--fg-3);font-size:12.5px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.mt-card{border:1px solid var(--line);border-radius:12px;padding:16px 18px 10px;background:var(--panel);box-shadow:var(--tile-sh);position:relative;min-width:0}
+.mt-card h4{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.mt-card h4 span{margin-left:auto;font-weight:500;font-size:12.5px;color:var(--fg-3)}
+.mt-card .big{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.mt-card svg.lc{width:100%;height:auto;margin-top:8px;overflow:visible}
+.lc text{font-size:10.5px;fill:var(--fg-3);font-family:var(--font)}
+.lc .g{stroke:var(--line-2)}
+.lc .ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;animation:draw 1.4s var(--ease) both}
+.lc .tg{stroke:var(--fg-4);stroke-dasharray:4 4;fill:none}
+.kpi .tgt{font-size:12px;color:var(--fg-3);margin-top:6px;display:flex;justify-content:space-between}
+.bill{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line-2);font-size:13.5px;border-radius:8px}
+.bill:last-child{border-bottom:0}
+.bill:hover{background:#fafafa;transform:translateX(2px)}
+.bill .t{flex:1;min-width:0}
+.bill small{display:block;color:var(--fg-3);font-size:12px}
+.bill .amt2{font-weight:600;font-variant-numeric:tabular-nums}
+.dt-ic{width:42px;height:44px;border-radius:9px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;background:var(--panel)}
+.dt-ic b{font-size:15px;font-weight:600;line-height:1}
+.dt-ic span{font-size:10px;text-transform:uppercase;color:var(--red);font-weight:600;letter-spacing:.04em}
+.ev{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--panel);box-shadow:var(--tile-sh)}
+.ev .t{flex:1;min-width:0}
+.ev b{font-weight:600;font-size:14px}
+.ev small{display:block;color:var(--fg-3);font-size:12.5px;margin-top:2px}
+.ev.next{border-color:rgba(94,106,210,.4);box-shadow:0 0 0 3px rgba(94,106,210,.08),var(--tile-sh)}
+.agenda{margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.7;color:var(--fg-2)}
+@media (max-width:860px){.g2{grid-template-columns:1fr}}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -758,8 +798,8 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
     <div class="side-sc">
       <nav class="nav">
         <button class="ni on" data-view="home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg>Briefing<span class="badge" id="navDec">3</span></button>
-        <button class="ni" data-view="project" data-tab="Issues"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="2.5"/></svg>My tasks<span class="c">5</span></button>
-        <button class="ni" data-view="home" data-scroll="sec-decisions"><svg class="ic" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M18 11c0 4-6 3-11 6"/></svg>Decisions<span class="c" id="navDec2">3</span></button>
+        <button class="ni" data-view="mytasks"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="2.5"/></svg>My tasks<span class="c">5</span></button>
+        <button class="ni" data-view="decisions"><svg class="ic" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M18 11c0 4-6 3-11 6"/></svg>Decisions<span class="c" id="navDec2">3</span></button>
         <button class="ni" id="sideMsgs" data-view="messages"><svg class="ic" viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg>Messages<span class="badge" id="navMsg">3</span></button>
         <button class="ni" data-view="notes"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a.5.5 0 01-.5.5h-10A.5.5 0 017 20z"/><path d="M14 3.5V8h4M9.5 12h5M9.5 15.5h5"/></svg>Notes</button>
       </nav>
@@ -771,7 +811,9 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
           <button class="ni" data-view="stages"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l3 6 6 .9-4.5 4.2 1 6L12 17l-5.5 3 1-6L3 9.9 9 9z"/></svg>Stages &amp; team</button>
           <button class="ni" data-view="people"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5M16 6.5a3 3 0 010 5.5M17.5 14.7c1.7.6 2.7 2 3 4.3"/></svg>People &amp; hiring</button>
           <button class="ni" data-view="fundraise"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M14.5 9.5c-.4-.9-1.3-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1.2 0-2.1-.6-2.5-1.5M12 6.5V8M12 16v1.5"/></svg>Fundraising</button>
-          <button class="ni" data-view="project" data-tab="Money"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Money</button>
+          <button class="ni" data-view="money"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Money</button>
+          <button class="ni" data-view="metrics"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19h16M7 15l3-4 3 2 4-6"/></svg>Metrics</button>
+          <button class="ni" data-view="legal"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/></svg>Board &amp; legal</button>
         </nav>
       </div>
       <div class="grp">
@@ -993,6 +1035,62 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
           </div>
         </section>
 
+        <!-- ======== MY TASKS ======== -->
+        <section class="view" id="view-mytasks" hidden>
+          <div class="wrap">
+            <div class="ph2"><div><h1 class="title">My tasks</h1><p class="lead" id="mtLead"></p></div></div>
+            <div class="sh">Assigned to me <span class="n" id="mtN1"></span></div><div class="list" id="mtMine"></div>
+            <div class="sh">Waiting for my sign-off <span class="n" id="mtN2"></span></div><div class="list" id="mtSign"></div>
+            <div class="sh">I assigned to others <span class="n" id="mtN3"></span></div><div class="list" id="mtOthers"></div>
+          </div>
+        </section>
+
+        <!-- ======== DECISIONS ======== -->
+        <section class="view" id="view-decisions" hidden>
+          <div class="wrap">
+            <div class="ph2"><div><h1 class="title">Decisions</h1><p class="lead">What is waiting on you, and a record of everything decided, with the reason.</p></div></div>
+            <div class="sh">Waiting on you <span class="n" id="dlN"></span><button class="r" data-view="home" data-scroll="sec-decisions">Decide in the briefing</button></div><div class="list" id="dlOpen"></div>
+            <div class="sh">Decision log <span class="n" id="dlN2"></span></div>
+            <div class="tbl"><table><thead><tr><th>Date</th><th>Decision</th><th>Outcome</th><th>Decided by</th></tr></thead><tbody id="dlRows"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- ======== METRICS ======== -->
+        <section class="view" id="view-metrics" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Metrics</h1><p class="lead">The numbers investors ask about, each against its target. Updated weekly.</p></div><div class="acts"><span class="prop">Last 12 weeks</span></div></div>
+            <div class="tiles" id="mtTiles"></div>
+            <div class="g2" id="mtCharts"></div>
+            <div class="sh">All metrics</div>
+            <div class="tbl"><table><thead><tr><th>Metric</th><th class="num">Now</th><th class="num">Target</th><th class="num">Last month</th><th>Status</th></tr></thead><tbody id="mtRows"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- ======== MONEY ======== -->
+        <section class="view" id="view-money" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Money</h1><p class="lead">Cash, burn, revenue and where the money goes, by team.</p></div></div>
+            <div class="tiles" id="mnTiles"></div>
+            <div style="margin-top:14px"><div class="chart" id="burn3"></div></div>
+            <div class="two2" style="margin-top:10px">
+              <div><div class="sh">Budget by team <span class="n">October</span></div><div class="tbl"><table><thead><tr><th>Team</th><th style="width:34%">Used</th><th class="num">Spent</th><th class="num">Budget</th><th>Status</th></tr></thead><tbody id="budRows"></tbody></table></div></div>
+              <div><div class="sh">Upcoming bills <span class="n" id="billN"></span></div><div class="side-card" style="padding:6px 12px" id="bills"></div><div class="sh">Accounts</div><div class="side-card" style="padding:6px 12px" id="accts"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======== BOARD & LEGAL ======== -->
+        <section class="view" id="view-legal" hidden>
+          <div class="wrap wide">
+            <div class="ph2"><div><h1 class="title">Board &amp; legal</h1><p class="lead">Board meetings, filing deadlines and contracts, so nothing is missed.</p></div></div>
+            <div class="tiles" id="lgTiles"></div>
+            <div class="seg2" data-g="lg"><button data-t2="Board" class="on">Board meetings</button><button data-t2="Compliance">Compliance calendar</button><button data-t2="Contracts">Contracts</button></div>
+            <div data-p2="lg:Board"><div class="two2"><div id="boardList"></div><div class="side-card"><h4>Board</h4><div id="boardMem"></div></div></div></div>
+            <div data-p2="lg:Compliance" hidden><div id="compList"></div></div>
+            <div data-p2="lg:Contracts" hidden><div class="tbl"><table><thead><tr><th>Contract</th><th>Type</th><th class="num">Value</th><th>Renews</th><th>Owner</th></tr></thead><tbody id="ctRows"></tbody></table></div></div>
+          </div>
+        </section>
+
         <!-- ======== STAGES ======== -->
         <section class="view" id="view-stages" hidden>
           <div class="wrap">
@@ -1074,7 +1172,7 @@ $$('.dec').forEach(d=>d.querySelectorAll('.opt').forEach(o=>o.addEventListener('
  if(d.dataset.done)return;d.dataset.done=1;o.classList.add('picked');const dec=DECS[+d.dataset.dec],ch=o.dataset.choice;
  setTimeout(()=>{d.querySelector('.opts').outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${ch}.</b> ${dec.from} has been told and the plan is updated.</span></div>`},350);
  openDec--;['#decN','#navDec','#navDec2'].forEach(s=>$(s).textContent=openDec);$('#decProp').textContent=openDec+' decision'+(openDec===1?'':'s');$('#navDec').hidden=!openDec;
- addActivity(`<b>You</b> decided <b>${ch}</b> on “${dec.t}”`)})));
+ logDecision(dec,ch);addActivity(`<b>You</b> decided <b>${ch}</b> on “${dec.t}”`)})));
 
 const BLK=[['Development','Outside auditor','Pen-test report for Murmur','Blocks App Store submission',8],['Marketing','Design','Final product screenshots','For the App Store page',3],['Sales','Legal','Pilot contract template','Northwind signs once it’s ready',2],['Engineering hire','You','Senior or two mid-level','Candidate’s offer expires Friday',1]];
 $('#blocked').innerHTML=BLK.map(([a,b,t,s,d])=>`<div class="lr blk">${st(d>5?'risk':'sign',.5)}<span class="who">${a}${ICON.arrow}<span style="${b==='You'?'color:var(--accent)':''}">${b}</span></span><div class="ttl"><b>${t}</b><small>${s}</small></div><span class="days ${d>5?'late':''}">${d}d</span></div>`).join('');
@@ -1263,7 +1361,7 @@ const T=(id,t,l,o,p,d,s)=>({id,t,l,o,p,d,s});
 const TASKS=[T('MUR-151','Launch video v3 · 45s cut','Growth','SP',3,'Today','sign'),T('MUR-149','Seed deck: updated use of funds','Finance','ML',3,'Thu','sign'),T('MUR-142','Ship offline mode to pilot','Product','JR',2,'Oct 12','sign'),
  T('MUR-118','Pen-test report from outside auditor','Launch','JR',4,'Oct 20','prog'),T('MUR-137','Accuracy fix for accents in noisy rooms','Product','JR',3,'Oct 14','prog'),T('MUR-144','Product Hunt launch page','Growth','SP',2,'Oct 20','prog'),
  T('MUR-133','Onboarding: three screens into one','Design','TN',2,'Oct 12','review'),T('MUR-139','Help centre: top 20 questions','Ops','TO',1,'Oct 16','review'),
- T('MUR-147','App Store listing copy','Growth','SP',2,'Oct 22','todo'),T('MUR-148','Team admin controls for pilots','Product','DW',2,'Nov 1','todo'),
+ T('MUR-146','Reply to the Northbeam term sheet','Finance','AK',4,'24 Oct','prog'),T('MUR-145','Approve the Q3 board pack','Finance','AK',3,'Fri','todo'),T('MUR-147','App Store listing copy','Growth','SP',2,'Oct 22','todo'),T('MUR-148','Team admin controls for pilots','Product','DW',2,'Nov 1','todo'),
  T('MUR-121','Windows beta build 0.9','Product','JR',2,'Oct 8','done'),T('MUR-104','Delaware C-corp and SAFE paperwork','Legal','TO',1,'Sep 30','done')];
 let nextId=152;
 const ISS=LIST_ORDER.map(k=>[STAT[k],k,TASKS.filter(t=>t.s===k).map(t=>[t.id,t.t,t.l,t.o,t.p,t.d])]);
@@ -1542,6 +1640,63 @@ const NEWACT={projects:()=>openCreate('project',{}),initiatives:()=>openCreate('
  people:()=>openForm('Add candidate',[{k:'n',label:'Name',ph:'Full name'},{k:'r',label:'Role',opts:['Senior engineer','Product engineer','Customer success lead']},{k:'src',label:'Source',opts:['Referral','Inbound','LinkedIn','YC Work at a Startup']}],v=>{CANDS.push({id:'c'+Date.now(),n:v.n,r:v.r,s:'Applied',src:v.src,rt:3,nx:'Review CV'});renderHire();renderPPTiles();$('[data-g="pp"] [data-t2="Hiring"]').click();flash(`#hireBoard .card[data-id="${CANDS[CANDS.length-1].id}"]`);toast(`<b>${esc(v.n)}</b> added to Applied`,v.r)},'Add candidate')};
 /* =================== END STAGE 1 =================== */
 
+/* ===================== STAGE 2 ===================== */
+const VIEWHOOK={};
+/* simple line chart */
+function lineChart(labels,vals,{target,color='#5e6ad2',fmt=v=>v}={}){const W=520,H=150,L=36,R=8,T=10,B=22;const all=[...vals,target||0];const mx=Math.max(...all)*1.12,mn=0;
+ const x=i=>L+i*(W-L-R)/(labels.length-1),y=v=>T+(1-(v-mn)/(mx-mn))*(H-T-B);const d=vals.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');const id='lc'+Math.random().toString(36).slice(2,7);
+ let g='';[0,mx/2,mx].forEach(v=>g+=`<line class="g" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end">${fmt(v)}</text>`);
+ labels.forEach((l,i)=>{if(i%2===0||i===labels.length-1)g+=`<text x="${x(i)}" y="${H-5}" text-anchor="middle">${l}</text>`});
+ const lx=x(vals.length-1),ly=y(vals[vals.length-1]);
+ return `<svg class="lc" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".14"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>${g}${target?`<line class="tg" x1="${L}" x2="${W-R}" y1="${y(target)}" y2="${y(target)}"/><text x="${W-R}" y="${y(target)-5}" text-anchor="end" style="fill:var(--fg-2)">Target ${fmt(target)}</text>`:''}<path d="${d} L${lx} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id})"/><path class="ln" pathLength="1" d="${d}" style="stroke:${color}"/><circle cx="${lx}" cy="${ly}" r="3.5" fill="${color}" stroke="#fff" stroke-width="2"/></svg>`}
+const WK=['Jul 20','Jul 27','Aug 3','Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'];
+
+/* ---------- My tasks ---------- */
+function mtRow(t){return `<div class="lr" data-mytask="${t.id}">${pr(t.p)}<span class="id">${t.id}</span>${st(t.s,.5)}<div class="ttl"><b>${esc(t.t)}</b><small>${STAT[t.s]}</small></div><div class="meta">${lbl(t.l)}${t.o?av(t.o):''}<span class="dt">${t.d}</span></div></div>`}
+VIEWHOOK.mytasks=()=>{const mine=TASKS.filter(t=>t.o==='AK'&&t.s!=='done'),sign=TASKS.filter(t=>t.s==='sign'),oth=TASKS.filter(t=>t.o&&t.o!=='AK'&&t.s!=='done'&&t.s!=='sign').slice(0,6);
+ $('#mtLead').textContent=`${mine.length} assigned to you · ${sign.length} waiting for your sign-off`;[['#mtMine','#mtN1',mine],['#mtSign','#mtN2',sign],['#mtOthers','#mtN3',oth]].forEach(([a,b,l])=>{$(b).textContent=l.length;$(a).innerHTML=l.map(mtRow).join('')||`<div class="pal-empty" style="padding:14px 10px">Nothing here. <button class="link" data-new-status="todo" style="color:var(--accent)">Create a task</button></div>`})};
+$('#view-mytasks').addEventListener('click',e=>{const r=e.target.closest('[data-mytask]');if(r){const id=r.dataset.mytask;showView('project',{tab:'Issues'});flash(`#issues .lr[data-id="${id}"]`)}});
+
+/* ---------- Decisions ---------- */
+const DECLOG=[['8 Oct','Ship offline mode to the pilot first','Approved','JR','Pilot users asked for it most'],['2 Oct','Raise a priced seed instead of more SAFEs','$4M priced seed','AK','Cleaner cap table for Series A'],['26 Sep','Hire a product designer as a contractor','Contractor for 6 months','AK','Keeps burn down until launch'],['19 Sep','Move launch prep into stage 6 early','Started early','AK','Press needs 6 weeks of notice'],['12 Sep','Use one speech model provider for the pilot','One provider','JR','Simpler to measure accuracy']];
+function logDecision(dec,ch){DECLOG.unshift(['Today',dec.t,ch,'AK','Decided from the briefing']);VIEWHOOK.decisions()}
+VIEWHOOK.decisions=()=>{const open=DECS.filter((d,i)=>{const el=document.querySelector(`.dec[data-dec="${i}"]`);return el&&!el.dataset.done});
+ $('#dlN').textContent=open.length;$('#dlN2').textContent=DECLOG.length;
+ $('#dlOpen').innerHTML=open.map(d=>`<div class="lr" data-view="home" data-scroll="sec-decisions">${st('sign',.5)}<div class="ttl"><b>${d.t}</b><small>Asked ${d.when} · from ${P[d.who][0]}</small></div><div class="meta">${av(d.who)}<span class="link" style="color:var(--accent);font-size:12.5px">Decide</span></div></div>`).join('')||'<div class="pal-empty" style="padding:14px 10px">Nothing is waiting on you.</div>';
+ $('#dlRows').innerHTML=DECLOG.map(([d,t,o,k,why],i)=>`<tr${i===0&&d==='Today'?' class="flashrow"':''}><td class="muted2" style="white-space:nowrap">${d}</td><td><b style="font-weight:500">${esc(t)}</b><small>${esc(why)}</small></td><td><span class="tag ${d==='Today'?'good':'n'}">${esc(o)}</span></td><td><span style="display:flex;align-items:center;gap:7px;white-space:nowrap">${av(k,'xs')}${P[k][0]}</span></td></tr>`).join('')};
+
+/* ---------- Metrics ---------- */
+const MET=[{n:'Weekly active users',v:[620,710,790,880,940,1010,1120,1260,1390,1520,1710,1912],tgt:2500,f:v=>Math.round(v).toLocaleString('en-US'),c:'#5e6ad2',last:1390},
+ {n:'Week-4 retention',v:[48,50,51,53,55,54,57,58,60,61,63,64],tgt:60,f:v=>Math.round(v)+'%',c:'#2f9e6e',last:60},
+ {n:'Monthly recurring revenue',v:[0,0,0,400,400,900,900,1500,1500,2400,2400,3200],tgt:10000,f:v=>v>=1000?'$'+(v/1000).toFixed(1)+'k':'$'+Math.round(v),c:'#d6409f',last:2400},
+ {n:'Waitlist',v:[4200,5100,6300,7400,8600,9800,11000,12400,13700,14900,16110,18420],tgt:25000,f:v=>v>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v)),c:'#e0a500',last:13700}];
+function renderMetrics(){$('#mtTiles').innerHTML=MET.map(m=>{const now=m.v[m.v.length-1],pct=Math.min(1,now/m.tgt),ok=now>=m.tgt*(m.n.includes('retention')?1:.6);return `<div class="kpi"><span>${m.n}</span><b>${m.f(now)}</b><small><span class="${now>=m.last?'up':'down'}">${now>=m.last?'+':''}${m.n.includes('retention')?(now-m.last)+' pts':Math.round((now-m.last)/Math.max(1,m.last)*100)+'%'}</span> vs last month</small><div class="bar2"><i style="--w:${pct*100}%;--c:${m.c}"></i></div><div class="tgt"><span>Target ${m.f(m.tgt)}</span><span>${Math.round(pct*100)}%</span></div></div>`}).join('');
+ $('#mtCharts').innerHTML=MET.map(m=>`<div class="mt-card"><h4>${m.n}<span>12 weeks</span></h4><div class="big">${m.f(m.v[m.v.length-1])}</div>${lineChart(WK,m.v,{target:m.tgt,color:m.c,fmt:m.f})}</div>`).join('');
+ const rows=[['Weekly active users','1,912','2,500','1,390','risk'],['Daily active users','1,140','1,500','820','ok'],['Week-4 retention','64%','60%','60%','ok'],['Monthly recurring revenue','$3.2k','$10k','$2.4k','risk'],['Paying pilot customers','3','5','2','ok'],['Waitlist','18,420','25,000','13,700','ok'],['Waitlist growth, week on week','14%','10%','9%','ok'],['Dictation accuracy (noisy rooms)','91%','95%','89%','risk'],['Gross margin','58%','70%','55%','risk']];
+ $('#mtRows').innerHTML=rows.map(r=>`<tr><td style="font-weight:500">${r[0]}</td><td class="num"><b style="font-weight:600">${r[1]}</b></td><td class="num muted2">${r[2]}</td><td class="num muted2">${r[3]}</td><td>${r[4]==='ok'?'<span class="tag good">On track</span>':'<span class="tag warn">Behind</span>'}</td></tr>`).join('')}
+VIEWHOOK.metrics=renderMetrics;
+
+/* ---------- Money ---------- */
+VIEWHOOK.money=()=>{
+ $('#mnTiles').innerHTML=[['Cash in the bank','$2.07M','Across 2 accounts'],['Monthly burn','$38.2k','<span class="down">+12%</span> vs August'],['Runway','14 mo','Until December 2027'],['Revenue','$3.2k MRR','<span class="up">+33%</span> vs August']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('');
+ if(!$('#burn3').innerHTML)burnChart('#burn3');
+ const B=[['Development',14200,15000],['Marketing',9100,7500],['Operations',4300,5000],['Design',3800,4000],['Sales',3600,4000],['Admin & legal',3200,3500]];
+ $('#budRows').innerHTML=B.map(([n,sp,bu],i)=>{const r=sp/bu;return `<tr><td style="font-weight:500">${n}</td><td><span class="mbar" style="width:100%;display:block"><i style="--w:${Math.min(100,r*100)}%;--c:${r>1?'#e5484d':r>.9?'#e0a500':'#5e6ad2'};animation-delay:${i*.05}s"></i></span></td><td class="num">$${sp.toLocaleString('en-US')}</td><td class="num muted2">$${bu.toLocaleString('en-US')}</td><td>${r>1?'<span class="tag bad">Over by $'+(sp-bu).toLocaleString('en-US')+'</span>':r>.9?'<span class="tag warn">Near limit</span>':'<span class="tag good">On budget</span>'}</td></tr>`}).join('');
+ const BL=[['14','Oct','AWS','Cloud and speech model','$4,700'],['15','Oct','Figma and Linear','Design and product tools','$640'],['20','Oct','Legal retainer','Outside counsel','$1,500'],['31','Oct','Payroll','6 full-time staff','$21,400'],['1','Nov','Contractors','Tara N. and Tom O.','$6,200'],['1','Mar','Delaware franchise tax','Annual filing','$400']];
+ $('#billN').textContent=BL.length;$('#bills').innerHTML=BL.map(([d,m,n,s2,a])=>`<div class="bill"><span class="dt-ic"><span>${m}</span><b>${d}</b></span><span class="t">${n}<small>${s2}</small></span><span class="amt2">${a}</span></div>`).join('');
+ $('#accts').innerHTML=[['Operating account','Business checking','$412,300'],['Treasury','Savings, 4.1% yield','$1,660,000']].map(([n,s2,a])=>`<div class="bill"><span class="hash-ic" style="width:32px;height:32px;border-radius:9px;background:#f1f1f4;display:grid;place-items:center">${pic('money')}</span><span class="t">${n}<small>${s2}</small></span><span class="amt2">${a}</span></div>`).join('')};
+
+/* ---------- Board & legal ---------- */
+VIEWHOOK.legal=()=>{
+ $('#lgTiles').innerHTML=[['Next board meeting','14 Oct','Tuesday, 10:00 · board pack due Fri'],['Filings due','3','Next: 83(b) for Nadia K. by 8 Nov'],['Contracts renewing','2','In the next 60 days'],['Board members','3','2 founders, 1 investor']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('');
+ $('#boardList').innerHTML=`<div class="ev next"><span class="dt-ic"><span>Oct</span><b>14</b></span><div class="t"><b>Q3 board meeting</b><small>Tuesday 10:00 · Video call · Board pack 2 of 3 sections ready</small><ol class="agenda"><li>Launch date: 18 Nov or 2 Dec</li><li>Seed round progress and terms</li><li>Hiring plan and option grants</li></ol></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn pri" data-view="notes">Open prep note</button><button class="btn" id="bpSend">Send board pack</button></div></div>`+[['Jul','15','Q2 board meeting','Approved: option pool of 1M shares, priced seed round'],['Apr','16','Q1 board meeting','Approved: hire a product designer, pre-seed SAFE terms'],['Mar','2','First board meeting','Approved: incorporation, founder vesting, bank accounts']].map(([m,d,t,s2])=>`<div class="ev"><span class="dt-ic"><span style="color:var(--fg-3)">${m}</span><b>${d}</b></span><div class="t"><b>${t}</b><small>${s2}</small></div><button class="btn">Minutes</button></div>`).join('');
+ $('#boardMem').innerHTML=[['AK','Alex Kim','Founder & CEO'],['JR','Jordan R.','Co-founder & CTO']].map(([k,n,r])=>`<div class="r1">${av(k)}<div class="t"><b>${n}</b><small>${r}</small></div></div>`).join('')+`<div class="r1">${gav('Sam Ortiz')}<div class="t"><b>Sam Ortiz</b><small>Investor observer · Field Fund</small></div></div>`;
+ const C=[['8','Nov','83(b) election for Nadia K.','Must be filed within 30 days of her share grant','bad','Due in 29 days'],['31','Dec','Option grants approved by the board','Grants for Dan W. and Nadia K.','warn','Board meeting 14 Oct'],['31','Jan','1099 forms for contractors','Tara N. and Tom O.','n','Next year'],['1','Mar','Delaware franchise tax and annual report','Use the assumed par value method','n','Next year'],['15','Apr','Federal tax return','Accountant prepares','n','Next year'],['1','Jun','SOC 2 Type I audit','Needed for larger pilot customers','warn','Prep starts after launch']];
+ $('#compList').innerHTML=C.map(([d,m,t,s2,k,w])=>`<div class="ev"><span class="dt-ic"><span${k==='n'?' style="color:var(--fg-3)"':''}>${m}</span><b>${d}</b></span><div class="t"><b>${t}</b><small>${s2}</small></div><span class="tag ${k}">${w}</span></div>`).join('');
+ $('#ctRows').innerHTML=[['Northwind pilot agreement','Customer','$18,000 / year','1 Nov 2026','PS',1],['AWS enterprise agreement','Vendor','$56,000 / year','30 Nov 2026','JR',1],['Office lease','Property','$2,900 / month','31 Mar 2027','ML',0],['Support vendor (Helpdesk Co)','Vendor','$2,400 / month','Pending signature','TO',0],['Brightpath pilot agreement','Customer','$12,000 / year','12 Sep 2027','PS',0]].map(([n,t,v,r,o,soon])=>`<tr><td style="font-weight:500">${n}</td><td class="muted2">${t}</td><td class="num">${v}</td><td>${soon?`<span class="tag warn">${r}</span>`:`<span class="muted2">${r}</span>`}</td><td>${av(o,'xs')}</td></tr>`).join('');
+ const bp=$('#bpSend');if(bp)bp.addEventListener('click',()=>toast('<b>Board pack sent</b>','To Jordan R. and Sam Ortiz'))};
+/* =================== END STAGE 2 =================== */
+
 /* ---------- Stages ---------- */
 const STAGES=[["Set the company up to operate","CEO, startup lawyer, accountant","done","Mar"],["Turn the UI into a product plan","Founder, product designer, tech lead, prospective customers","done","Apr"],["Design the technical foundations","CTO, product designer, security adviser","done","May"],["Build the first usable version","Tech lead, engineers, designer, founder, AI specialist","done","Aug"],["Run a private pilot","Founder, product, engineers, pilot users, customer success","now","68%"],["Prepare for a public launch","Product, engineering, support, product marketer, lawyer","next","12%"],["Launch in stages","Founder, growth lead, customer success, engineering","next","18 Nov"],["Improve retention, find repeatable growth","Founder, product, engineering, customer success, sales","next","Q1 2027"],["Scale the company","Product and engineering, sales, success, operations, finance","next","Later"]];
 $('#stages').innerHTML=STAGES.map(([t,w,k,m],i)=>`<div class="lr">${dia(k)}<span class="id" style="width:22px">${i+1}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${k==='now'?'<span class="lbl" style="--c:#e0a500"><i></i>You are here</span>':''}<span class="dt" style="width:60px">${m}</span></div></div>`).join('');
@@ -1558,9 +1713,9 @@ const CRUMB={messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg
  stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`,
  projects:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="t">Projects</span><span class="id">Roadmap</span>`};
 function showView(v,opt={}){
- curView=v;$$('.view').forEach(el=>el.hidden=el.id!=='view-'+v);if(v==='messages'&&matchMedia('(max-width:860px)').matches)$('#msgPage').classList.remove('thread-open');$('#newLbl').textContent=NEWLBL[v]||'New task';
+ curView=v;$$('.view').forEach(el=>el.hidden=el.id!=='view-'+v);if(VIEWHOOK[v])VIEWHOOK[v]();if(v==='messages'&&matchMedia('(max-width:860px)').matches)$('#msgPage').classList.remove('thread-open');$('#newLbl').textContent=NEWLBL[v]||'New task';
  $$('.side [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v&&!b.dataset.scroll&&!b.dataset.tab&&b.closest('.nav')&&!b.closest('#favs')));
- $('#crumb').innerHTML=CRUMB[v]||`<span class="t">${(document.querySelector('.side [data-view="'+v+'"]')||{textContent:v}).textContent.trim()}</span>`;$('#htabs').hidden=v!=='project';$('#pager').textContent='';
+ $('#crumb').innerHTML=CRUMB[v]||`<span class="t">${(()=>{const b=document.querySelector('.side [data-view="'+v+'"]');return b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():v})()}</span>`;$('#htabs').hidden=v!=='project';$('#pager').textContent='';
  const el=$('#view-'+v);el.style.animation='none';void el.offsetWidth;el.style.animation='';
  if(v==='project')openTab(opt.tab||'Overview');
  if(opt.scroll){const t=$('#'+opt.scroll);if(t)t.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})}else $('#content').scrollTop=0;

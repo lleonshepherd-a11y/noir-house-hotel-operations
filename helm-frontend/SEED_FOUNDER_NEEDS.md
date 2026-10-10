@@ -12,7 +12,7 @@ Status: **Have** = built in the front end · **Partly** = started, needs more ·
 | Stage roadmap (nine stages) | Shows where the company is and who is involved | Have |
 | Initiatives | Big goals (e.g. "Launch Murmur", "Close seed") that group projects, with health and target dates | Have |
 | Decisions waiting on the founder | Stops the team waiting on the CEO | Have |
-| Decision log | A record of what was decided, when and why, for the team and the board | Missing |
+| Decision log | A record of what was decided, when and why, for the team and the board | Have |
 
 ## 2. Execution: getting the work done
 
@@ -22,7 +22,7 @@ Status: **Have** = built in the front end · **Partly** = started, needs more ·
 | Tasks with owner, priority, due date | Assign work to coworkers | Have |
 | Board (drag between stages) | See flow and blockers | Have |
 | Blockers: who is waiting on whom | The biggest cause of slow teams at seed | Have |
-| My tasks view | Each person sees only their own work | Partly (opens the issues list) |
+| My tasks view | Each person sees only their own work | Have |
 | Team check-ins / weekly updates | Each team posts a short update so the founder doesn't chase people | Partly (team pulse) |
 | Notes and meeting notes | 1:1s, board prep, investor calls, decisions in writing | Have |
 
