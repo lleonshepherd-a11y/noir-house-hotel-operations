@@ -36,7 +36,7 @@ A light, Linear-style app: a compact sidebar on a grey canvas, one white panel w
 | Murmur (project) | Sidebar → Favorites → Murmur | Properties, KPIs, latest update, the nine stages as milestones, plus Issues, Board, Files, Money and Funding tabs |
 | Projects | Sidebar → Workspace → Projects | Roadmap board by quarter with a + on every column to add a project |
 | Stages & team | Sidebar → Workspace → Stages & team | The nine company stages and the lean starting team |
-| Messages | "Messages" in the header or sidebar | Spaces and direct messages between colleagues, with a search bar at the top, with @mentions, #task links, reactions and unread counts |
+| Messages | "Messages" in the header or sidebar opens a drawer | Spaces and direct messages between colleagues, with a search bar at the top, with @mentions, #task links, reactions and unread counts |
 
 To add work: press **New task** in the header (or the C key) to create a task and assign it to a coworker, use the **+** on any board column or issue group, and use **New project**, the **+** next to "Your projects" in the sidebar, or the **+** on a quarter column to add a project.
 
