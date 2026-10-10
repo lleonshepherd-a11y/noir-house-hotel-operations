@@ -566,6 +566,36 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
 .sysm{align-self:center;margin:10px 0 4px;font-size:12px;color:var(--fg-3);background:#f6f6f7;border-radius:999px;padding:3px 10px;animation:vin .3s var(--ease)}
 @media (max-width:640px){.agent{left:8px;width:auto}}
 
+/* ---------- Messages page (feed) ---------- */
+#view-messages{height:100%}
+.msgpage{display:grid;grid-template-columns:340px minmax(0,1fr);height:100%}
+.mp-left{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line-2);padding-top:6px}
+.mp-right{display:flex;flex-direction:column;min-height:0}
+.mp-right .msg-h{border-top:0!important;margin-top:0!important;padding:12px 16px}
+.mp-right #msgBack{display:none}
+.mp-right .th{padding:16px 24px 8px}
+.mp-right .mcmp{margin:0 16px 16px}
+/* ---------- Compose drawer ---------- */
+.to-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 12px 0;padding:6px 8px;border:1px solid var(--line);border-radius:10px;min-height:42px;transition:border-color .15s,box-shadow .15s}
+.to-row:focus-within{border-color:#cfd0d6;box-shadow:0 0 0 3px rgba(94,106,210,.08)}
+.to-l{font-size:12.5px;color:var(--fg-3);margin:0 2px}
+.to-chips{display:contents}
+.tochip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 3px 0 6px;border-radius:7px;background:#f1f1f4;font-size:12.5px;font-weight:500;animation:pop .3s var(--ease)}
+.tochip button{width:18px;height:18px;border-radius:4px;color:var(--fg-3);display:grid;place-items:center;font-size:13px}
+.tochip button:hover{background:#e4e4e8;color:var(--fg)}
+#toIn{flex:1;min-width:120px;border:0;outline:none;background:transparent;font:inherit;font-size:13.5px;height:28px;color:var(--fg)}
+.to-list{padding:6px;max-height:300px;overflow-y:auto}
+.to-list h6{margin:6px 8px 4px;font-size:12px;font-weight:500;color:var(--fg-3)}
+.to-list .mi{padding:7px 8px}
+.to-list .mi small{margin-left:auto;color:var(--fg-3);font-size:12px}
+.cbody{flex:1;display:flex;padding:10px 12px;min-height:0}
+#cIn{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;font-size:14px;line-height:1.55;resize:none;outline:none;min-height:150px;color:var(--fg);background:var(--panel);box-shadow:var(--tile-sh);transition:border-color .15s,box-shadow .15s}
+#cIn:focus{border-color:#cfd0d6;box-shadow:0 0 0 3px rgba(94,106,210,.08)}
+.cfoot{display:flex;align-items:center;gap:4px;padding:0 12px 12px}
+.cfoot .hint{flex:1;min-width:0;font-size:12.5px;color:var(--fg-3);margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfoot .btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+@media (max-width:860px){.msgpage{grid-template-columns:1fr}.msgpage .mp-right{display:none}.msgpage.thread-open .mp-left{display:none}.msgpage.thread-open .mp-right{display:flex}.mp-right #msgBack{display:grid}.mp-right .th{padding:14px 14px 6px}.mp-right .mcmp{margin:0 10px 10px}}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -586,7 +616,7 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
         <button class="ni on" data-view="home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg>Briefing<span class="badge" id="navDec">3</span></button>
         <button class="ni" data-view="project" data-tab="Issues"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="2.5"/></svg>My tasks<span class="c">5</span></button>
         <button class="ni" data-view="home" data-scroll="sec-decisions"><svg class="ic" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M18 11c0 4-6 3-11 6"/></svg>Decisions<span class="c" id="navDec2">3</span></button>
-        <button class="ni" id="sideMsgs"><svg class="ic" viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg>Messages<span class="badge" id="navMsg">3</span></button>
+        <button class="ni" id="sideMsgs" data-view="messages"><svg class="ic" viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg>Messages<span class="badge" id="navMsg">3</span></button>
       </nav>
       <div class="grp">
         <button class="grp-h">Workspace<svg viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
@@ -618,7 +648,7 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
         <span class="pager" id="pager">1 / 3</span>
         <button class="ib" aria-label="Copy link" title="Copy link"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></button>
         <button class="btn pri" id="newBtn"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2"><path d="M12 5v14M5 12h14"/></svg><span id="newLbl">New task</span></button>
-        <button class="agent-tg" id="agentTg" aria-haspopup="dialog"><svg class="ic" viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span>Messages</span><b class="tg-badge" id="tgBadge">3</b></button>
+        <button class="agent-tg" id="agentTg" aria-haspopup="dialog" title="Write a message"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><span>Message</span></button>
       </div>
     </div>
 
@@ -717,6 +747,38 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
           <div class="roadmap" id="roadmap"></div>
         </section>
 
+        <!-- ======== MESSAGES FEED ======== -->
+        <section class="view" id="view-messages" hidden>
+          <div class="msgpage" id="msgPage">
+            <div class="mp-left">
+              <div class="mtop"><b>Messages</b><span class="r"><button class="msg-btn" id="msgNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Message</button></span></div>
+              <label class="msearch"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg><input id="msgQ" type="text" placeholder="Search spaces, people and messages" autocomplete="off" aria-label="Search messages"><button type="button" class="clr" id="msgQClr" hidden aria-label="Clear search"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
+        <div id="msgList" style="display:flex;flex-direction:column;min-height:0;flex:1">
+          <div class="cl" id="convList"></div>
+        </div>
+        
+            </div>
+            <div class="mp-right">
+              <div id="msgThread" hidden style="display:flex;flex-direction:column;min-height:0;flex:1">
+          <div class="msg-h" style="border-top:1px solid var(--line-2);margin-top:6px"><button class="ib" id="msgBack" aria-label="Back to conversations"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><span id="thHead" style="display:flex;align-items:center;gap:9px;min-width:0"></span><span class="r"><span class="avs" id="thMembers"></span><button class="addp" id="addPeople" aria-label="Add people" title="Add people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></span></div>
+          <div class="th" id="thBody"></div>
+          <form class="mcmp" id="mForm">
+            <div id="acBox"></div>
+            <textarea id="mIn" rows="2" placeholder="Message" aria-label="Write a message"></textarea>
+            <div class="row">
+              <button type="button" class="ib" aria-label="Attach file" title="Attach file"><svg class="ic" viewBox="0 0 24 24"><path d="M16.5 8.5l-7 7a2.5 2.5 0 01-3.5-3.5l7.5-7.5a4 4 0 015.5 5.5L11 18"/></svg></button>
+              <button type="button" class="ib" id="emoBtn" aria-label="Emoji" title="Emoji"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 14c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5M9.5 10h0M14.5 10h0"/></svg></button>
+              <button type="button" class="ib" id="atBtn" aria-label="Mention someone" title="Mention someone" style="font-weight:600;font-size:14px">@</button>
+              <span class="hint">@ to mention · # to link a task</span>
+              <button class="snd" id="mSend" disabled aria-label="Send"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2.2"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+            </div>
+          </form>
+        </div>
+      
+            </div>
+          </div>
+        </section>
+
         <!-- ======== STAGES ======== -->
         <section class="view" id="view-stages" hidden>
           <div class="wrap">
@@ -733,27 +795,12 @@ mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1p
 
       <!-- ======== MESSAGES ======== -->
       <div class="mscrim" id="mscrim" hidden></div>
-      <aside class="agent" id="agent" aria-label="Messages" hidden>
-        <div class="mtop"><b>Messages</b><span class="r"><button class="msg-btn" id="msgNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Message</button><button class="ib" id="agentClose" aria-label="Close messages"><svg class="ic" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></span></div>
-        <label class="msearch"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg><input id="msgQ" type="text" placeholder="Search spaces, people and messages" autocomplete="off" aria-label="Search messages"><button type="button" class="clr" id="msgQClr" hidden aria-label="Clear search"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
-        <div id="msgList" style="display:flex;flex-direction:column;min-height:0;flex:1">
-          <div class="cl" id="convList"></div>
-        </div>
-        <div id="msgThread" hidden style="display:flex;flex-direction:column;min-height:0;flex:1">
-          <div class="msg-h" style="border-top:1px solid var(--line-2);margin-top:6px"><button class="ib" id="msgBack" aria-label="Back to conversations"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><span id="thHead" style="display:flex;align-items:center;gap:9px;min-width:0"></span><span class="r"><span class="avs" id="thMembers"></span><button class="addp" id="addPeople" aria-label="Add people" title="Add people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></span></div>
-          <div class="th" id="thBody"></div>
-          <form class="mcmp" id="mForm">
-            <div id="acBox"></div>
-            <textarea id="mIn" rows="2" placeholder="Message" aria-label="Write a message"></textarea>
-            <div class="row">
-              <button type="button" class="ib" aria-label="Attach file" title="Attach file"><svg class="ic" viewBox="0 0 24 24"><path d="M16.5 8.5l-7 7a2.5 2.5 0 01-3.5-3.5l7.5-7.5a4 4 0 015.5 5.5L11 18"/></svg></button>
-              <button type="button" class="ib" id="emoBtn" aria-label="Emoji" title="Emoji"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 14c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5M9.5 10h0M14.5 10h0"/></svg></button>
-              <button type="button" class="ib" id="atBtn" aria-label="Mention someone" title="Mention someone" style="font-weight:600;font-size:14px">@</button>
-              <span class="hint">@ to mention · # to link a task</span>
-              <button class="snd" id="mSend" disabled aria-label="Send"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2.2"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
-            </div>
-          </form>
-        </div>
+      <aside class="agent" id="agent" aria-label="New message" role="dialog" hidden>
+        <div class="mtop"><b>New message</b><span class="r"><button class="ib" id="agentClose" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></div>
+        <div class="to-row" id="toRow"><span class="to-l">To</span><span class="to-chips" id="toChips"></span><input id="toIn" placeholder="Type a name or a space" autocomplete="off" aria-label="Who is this message to"></div>
+        <div class="to-list" id="toList"></div>
+        <div class="cbody"><textarea id="cIn" placeholder="Write your message… Use @ to mention someone" aria-label="Message"></textarea></div>
+        <div class="cfoot"><button type="button" class="ib" aria-label="Attach file" title="Attach file"><svg class="ic" viewBox="0 0 24 24"><path d="M16.5 8.5l-7 7a2.5 2.5 0 01-3.5-3.5l7.5-7.5a4 4 0 015.5 5.5L11 18"/></svg></button><span class="hint" id="cHint">Pick who it’s to</span><button type="button" class="btn pri" id="cSend" disabled>Send<svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke-width:2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
       </aside>
     </div>
   </main>
@@ -867,7 +914,7 @@ const fmt=t=>esc(t).replace(/@(\w+)/g,'<span class="mn">@$1</span>').replace(/#(
 const last=c=>c.msgs[c.msgs.length-1];
 let gN=0;
 function unreadTotal(){return CONVS.reduce((a,c)=>a+c.unread,0)}
-function syncBadges(){const n=unreadTotal();[$('#tgBadge'),$('#navMsg')].forEach(b=>{b.textContent=n;b.hidden=!n})}
+function syncBadges(){const n=unreadTotal();[$('#navMsg')].forEach(b=>{b.textContent=n;b.hidden=!n})}
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
@@ -879,20 +926,21 @@ function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div cl
 function renderThread(scroll=true){const c=CONVS.find(x=>x.id===cur);const b=$('#thBody');
  b.innerHTML=(c.msgs.length?'<div class="day">Today</div>':`<div class="typing" style="justify-content:center;padding:30px 0">This is the start of your conversation with ${P[c.dm][0]}.</div>`)+c.msgs.map((m,i)=>msgHTML(c,m,i,c.msgs[i-1])).join('')+(c.seen?`<div class="seen">Seen by ${c.dm?FIRST(c.dm):'the team'}</div>`:'');
  if(scroll)b.scrollTop=b.scrollHeight}
-function openConv(id){cur=id;const c=CONVS.find(x=>x.id===id);c.unread=0;renderConvList();
+function openConv(id,show){cur=id;const c=CONVS.find(x=>x.id===id);c.unread=0;renderConvList();
  $('#thHead').innerHTML=c.ch?`${spIc(c)}<span style="min-width:0"><b>${c.ch}</b><span class="sub" style="display:block">${c.desc} · ${c.mem.length} people</span></span>`:`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span><span><b>${P[c.dm][0]}</b><span class="sub" style="display:block">${c.on?'Online':'Away'}</span></span>`;
  $('#thMembers').innerHTML=(c.ch?c.mem:['AK',c.dm]).slice(0,4).map(k=>av(k,'xs')).join('');
  $('#mIn').placeholder=c.ch?`Message ${c.ch}`:`Message ${FIRST(c.dm)}`;
- $('#msgList').hidden=true;$('#msgThread').hidden=false;renderThread();openMsgs();setTimeout(()=>$('#mIn').focus(),30)}
-function backToList(){$('#msgThread').hidden=true;$('#msgList').hidden=false;cur=null;renderConvList()}
-function openMsgs(){const a=$('#agent');a.classList.remove('closing');if(a.hidden){a.hidden=false;$('#mscrim').hidden=false}$('#agentTg').classList.add('on')}
+ if(show!==false&&$('#view-messages').hidden)showView('messages');$('#msgThread').hidden=false;$('#msgPage').classList.add('thread-open');renderThread();if(show!==false)setTimeout(()=>$('#mIn').focus(),30)}
+function backToList(){$('#msgPage').classList.remove('thread-open')}
+function openMsgs(){showView('messages')}
+function openCompose(pre){resetCompose(pre);const a=$('#agent');a.classList.remove('closing');if(a.hidden){a.hidden=false;$('#mscrim').hidden=false}$('#agentTg').classList.add('on')}
 function closeMsgs(){const a=$('#agent');if(a.hidden)return;$('#agentTg').classList.remove('on');$('#mscrim').hidden=true;if(RM){a.hidden=true;return}a.classList.add('closing');setTimeout(()=>{if(a.classList.contains('closing')){a.hidden=true;a.classList.remove('closing')}},230)}
 $('#mscrim').addEventListener('click',closeMsgs);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#agent').hidden&&!modal&&!menuEl&&!$('.pal-bg')&&!acItems.length&&!(msgQ&&msgQ.value)){closeMsgs()}});
 $('#convList').addEventListener('click',e=>{const r=e.target.closest('[data-conv]');if(r){if(msgQ.value){msgQ.value='';$('#msgQClr').hidden=true}openConv(r.dataset.conv)}if(e.target.closest('#dmAdd'))pickDM(e.target.closest('#dmAdd'));if(e.target.closest('#spaceAdd'))toast('<b>New space</b>','Spaces group people around a project or topic')});
 $('#msgBack').addEventListener('click',backToList);
-$('#agentTg').addEventListener('click',()=>$('#agent').hidden?openMsgs():closeMsgs());
-$('#sideMsgs').addEventListener('click',()=>{openMsgs();closeSide();setTimeout(()=>msgQ.focus(),60)});
+$('#agentTg').addEventListener('click',()=>$('#agent').hidden?openCompose():closeMsgs());
+
 $('#agentClose').addEventListener('click',closeMsgs);
 $('#addPeople').addEventListener('click',e=>{const c=CONVS.find(x=>x.id===cur);if(!c)return;const inConv=c.ch?c.mem:['AK',c.dm];
  openMenu(e.currentTarget,PEOPLE.filter(p=>!inConv.includes(p.v)),null,v=>{
@@ -900,7 +948,38 @@ $('#addPeople').addEventListener('click',e=>{const c=CONVS.find(x=>x.id===cur);i
   else{const mem=['AK',c.dm,v],name=`${FIRST(c.dm)}, ${FIRST(v)}`;const g={id:'g'+(++gN),ch:name,ic:[FIRST(c.dm)[0]+FIRST(v)[0],'#ececee','#3f4148'],desc:'Group conversation',mem,unread:0,msgs:[['sys',now(),`You started a group with ${P[c.dm][0]} and ${P[v][0]}`]]};CONVS.splice(CONVS.filter(x=>x.ch).length,0,g);openConv(g.id);toast(`Group created with <b>${FIRST(c.dm)}</b> and <b>${FIRST(v)}</b>`,'Both were notified')}
  },'Add people…')});
 function pickDM(anchor){openMenu(anchor,PEOPLE.filter(p=>p.v!=='AK'),null,v=>openConv(v),'Message someone…')}
-$('#msgNew').addEventListener('click',e=>pickDM(e.currentTarget));
+/* ---------- Compose drawer (the "Message" button) ---------- */
+let toSel=[],toOpts=[],toI=0;const toIn=$('#toIn'),cIn=$('#cIn');
+function toOptions(q){const ql=(q||'').toLowerCase();
+ const people=Object.keys(P).filter(k=>k!=='AK').map(k=>{const dm=CONVS.find(c=>c.dm===k)||{};return {t:'p',v:k,label:P[k][0],html:`<span class="pres">${av(k)}<i class="${dm.on?'on':''}"></i></span><span>${P[k][0]}</span><small>${dm.on?'Online':''}</small>`}});
+ const spaces=CONVS.filter(c=>c.ch&&c.desc!=='Group conversation').map(c=>({t:'s',v:c.id,label:c.ch,html:`${spIc(c)}<span>${c.ch}</span><small>Space · ${c.mem.length} people</small>`}));
+ return [...people,...spaces].filter(o=>!toSel.some(x=>x.t===o.t&&x.v===o.v)&&o.label.toLowerCase().includes(ql))}
+function drawTo(){$('#toChips').innerHTML=toSel.map((x,i)=>`<span class="tochip">${x.t==='p'?av(x.v,'xs'):spIc(CONVS.find(c=>c.id===x.v)).replace('class="sp-ic"','class="sp-ic" style="width:18px;height:18px;font-size:10px;border-radius:5px"')}${esc(x.label)}<button type="button" data-rm="${i}" aria-label="Remove ${esc(x.label)}">×</button></span>`).join('');
+ const q=toIn.value.trim();toOpts=toOptions(q);if(toI>=toOpts.length)toI=0;
+ const show=q||!toSel.length||document.activeElement===toIn;
+ $('#toList').innerHTML=show?`<h6>${q?'Matches':'People and spaces'}</h6>`+(toOpts.length?toOpts.slice(0,9).map((o,i)=>`<button type="button" class="mi${i===toI?' sel':''}" data-to="${i}">${o.html}</button>`).join(''):'<div class="pal-empty">No one with that name</div>'):'';updSend()}
+function updSend(){const ok=toSel.length&&cIn.value.trim();$('#cSend').disabled=!ok;$('#cHint').textContent=toSel.length?`To ${toSel.map(x=>x.t==='p'?FIRST(x.v):x.label).join(', ')}`:'Pick who it’s to'}
+function addTo(o){if(!o)return;toSel.push(o);toIn.value='';toI=0;drawTo();toIn.focus()}
+function resetCompose(pre){toSel=pre?[pre]:[];toIn.value='';cIn.value='';toI=0;const a=$('#agent');a.classList.remove('closing');if(a.hidden){a.hidden=false;$('#mscrim').hidden=false}$('#agentTg').classList.add('on');drawTo();setTimeout(()=>(toSel.length?cIn:toIn).focus(),40)}
+$('#toList').addEventListener('mousedown',e=>{const b=e.target.closest('[data-to]');if(b){e.preventDefault();addTo(toOpts[+b.dataset.to])}});
+$('#toChips').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b){toSel.splice(+b.dataset.rm,1);drawTo();toIn.focus()}});
+$('#toRow').addEventListener('click',e=>{if(e.target===e.currentTarget)toIn.focus()});
+toIn.addEventListener('input',()=>{toI=0;drawTo()});toIn.addEventListener('focus',drawTo);toIn.addEventListener('blur',()=>setTimeout(drawTo,120));
+toIn.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){toI=Math.min(toI+1,toOpts.length-1);drawTo();e.preventDefault()}else if(e.key==='ArrowUp'){toI=Math.max(toI-1,0);drawTo();e.preventDefault()}else if(e.key==='Enter'){e.preventDefault();if(toIn.value.trim()&&toOpts[toI])addTo(toOpts[toI]);else if(toSel.length)cIn.focus()}else if(e.key==='Backspace'&&!toIn.value&&toSel.length){toSel.pop();drawTo()}});
+cIn.addEventListener('input',updSend);
+cIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey||!e.shiftKey)){e.preventDefault();sendCompose()}});
+$('#cSend').addEventListener('click',sendCompose);
+function sendCompose(){const txt=cIn.value.trim();if(!toSel.length||!txt)return;
+ const sp=toSel.filter(x=>x.t==='s'),ppl=toSel.filter(x=>x.t==='p').map(x=>x.v);let conv;
+ if(sp.length===1&&!ppl.length)conv=CONVS.find(c=>c.id===sp[0].v);
+ else if(ppl.length===1&&!sp.length)conv=CONVS.find(c=>c.dm===ppl[0]);
+ else{const mem=['AK',...new Set([...ppl,...sp.flatMap(x=>CONVS.find(c=>c.id===x.v).mem)])].filter((v,i,a)=>a.indexOf(v)===i);
+  conv={id:'g'+(++gN),ch:ppl.map(FIRST).join(', ')||sp.map(x=>x.label).join(', '),ic:[ppl.slice(0,2).map(k=>FIRST(k)[0]).join('')||'G','#ececee','#3f4148'],desc:'Group conversation',mem,unread:0,msgs:[]};CONVS.splice(CONVS.filter(c=>c.ch).length,0,conv)}
+ conv.msgs.push(['AK',now(),txt]);renderConvList();if(cur===conv.id)renderThread();
+ const names=toSel.map(x=>x.t==='p'?P[x.v][0]:x.label).join(', '),id=conv.id;closeMsgs();
+ toast(`Message sent to <b>${esc(names)}</b>`,ppl.length>1?'Everyone was notified':'They’ll see it in Messages',()=>openConv(id));
+ if(ppl.length===1&&!sp.length&&!RM){const k=ppl[0];setTimeout(()=>{conv.msgs.push([k,now(),REPLY[k]||'Thanks!']);if(cur===id&&!$('#view-messages').hidden)renderThread();else{conv.unread++;renderConvList();toast(`<b>${P[k][0]}</b> replied`,REPLY[k],()=>openConv(id))}},3800)}}
+$('#msgNew').addEventListener('click',()=>openCompose());
 // search
 const msgQ=$('#msgQ');
 const hl=(t,q)=>{const e=esc(t),i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+esc(q).length)+'</mark>'+e.slice(i+esc(q).length)};
@@ -910,11 +989,11 @@ function renderSearch(q){const ql=q.toLowerCase();
  let h='';if(conv.length)h+='<h6>Spaces and people</h6>'+conv.map(convRow).join('');
  if(hits.length)h+=`<h6>Messages <span style="margin-left:6px;color:var(--fg-4)">${hits.length}</span></h6>`+hits.slice(-12).reverse().map(([c,m,i])=>`<button class="sr" data-hit="${c.id}" data-i="${i}">${m[0]==='AK'?`<span class="av md" style="--av:${P.AK[1]};--avc:${P.AK[2]}">AK</span>`:av(m[0],'md')}<span class="st2"><b>${m[0]==='AK'?'You':P[m[0]][0]}</b><span>in ${c.ch||P[c.dm][0]} · ${m[1]}</span><p>${hl(m[2],q)}</p></span></button>`).join('');
  $('#convList').innerHTML=h||`<div class="pal-empty" style="text-align:center;padding:30px 10px">Nothing found for “${esc(q)}”.<br>Try a name, a space or a word from a message.</div>`}
-msgQ.addEventListener('input',()=>{const v=msgQ.value.trim();$('#msgQClr').hidden=!v;if(!$('#msgThread').hidden&&v){$('#msgThread').hidden=true;$('#msgList').hidden=false;cur=null}renderConvList()});
+msgQ.addEventListener('input',()=>{const v=msgQ.value.trim();$('#msgQClr').hidden=!v;renderConvList()});
 msgQ.addEventListener('keydown',e=>{if(e.key==='Escape'&&msgQ.value){msgQ.value='';msgQ.dispatchEvent(new Event('input'));e.stopPropagation()}if(e.key==='Enter'){const f=$('#convList [data-conv],#convList [data-hit]');if(f)f.click()}});
 $('#msgQClr').addEventListener('click',()=>{msgQ.value='';msgQ.dispatchEvent(new Event('input'));msgQ.focus()});
 $('#convList').addEventListener('click',e=>{const h=e.target.closest('[data-hit]');if(!h)return;const i=h.dataset.i;msgQ.value='';$('#msgQClr').hidden=true;openConv(h.dataset.hit);setTimeout(()=>{const m=$(`#thBody .m[data-i="${i}"]`);if(m){m.classList.add('flash');m.scrollIntoView({block:'center'})}},40)});
-document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!modal){e.preventDefault();openMsgs();msgQ.focus()}});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!modal){e.preventDefault();showView('messages');setTimeout(()=>msgQ.focus(),40)}});
 // reactions
 $('#thBody').addEventListener('click',e=>{const c=CONVS.find(x=>x.id===cur);if(!c)return;
  const add=e.target.closest('[data-addrx],[data-rx]');if(add){const i=+add.dataset.i,emo=add.dataset.addrx||add.dataset.rx,m=c.msgs[i];m[3]=m[3]||{};const x=m[3];x.rx=x.rx||{};x.mine=x.mine||{};
@@ -1119,14 +1198,14 @@ $('#htabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'o
 $('#mtabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'on'}">${t}</button>`).join('');
 function openTab(name){$$('[data-ptab]').forEach(b=>b.classList.toggle('on',b.dataset.ptab===name));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==name);$('#content').scrollTop=0}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ptab]');if(b)openTab(b.dataset.ptab)});
-const CRUMB={home:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id">BRF-41</span><span class="t">Morning briefing</span>`,
+const CRUMB={messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id">BRF-41</span><span class="t">Morning briefing</span>`,
  project:`${st('prog',.68)}<span class="id">MUR</span><span class="t">Murmur</span>`,
  stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`,
  projects:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="t">Projects</span><span class="id">Roadmap</span>`};
 function showView(v,opt={}){
- ['home','project','stages','projects'].forEach(k=>$('#view-'+k).hidden=k!==v);$('#newLbl').textContent=v==='projects'?'New project':'New task';
+ ['home','project','stages','projects','messages'].forEach(k=>$('#view-'+k).hidden=k!==v);if(v==='messages'&&matchMedia('(max-width:860px)').matches)$('#msgPage').classList.remove('thread-open');$('#newLbl').textContent=v==='projects'?'New project':'New task';
  $$('.side [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v&&!b.dataset.scroll&&!b.dataset.tab&&b.closest('.nav')&&!b.closest('#favs')));
- $('#crumb').innerHTML=CRUMB[v];$('#htabs').hidden=v!=='project';$('#pager').textContent={home:'1 / 4',projects:'2 / 4',project:'3 / 4',stages:'4 / 4'}[v];
+ $('#crumb').innerHTML=CRUMB[v];$('#htabs').hidden=v!=='project';$('#pager').textContent={home:'1 / 5',projects:'2 / 5',project:'3 / 5',stages:'4 / 5',messages:'5 / 5'}[v];
  const el=$('#view-'+v);el.style.animation='none';void el.offsetWidth;el.style.animation='';
  if(v==='project')openTab(opt.tab||'Overview');
  if(opt.scroll){const t=$('#'+opt.scroll);if(t)t.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})}else $('#content').scrollTop=0;
@@ -1154,7 +1233,7 @@ function closePal(){const b=$('.pal-bg');if(b)b.remove()}
 $('#openSearch').addEventListener('click',openPal);
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPal()}if(e.key==='Escape'){closePal();closeSide()}});
 
-renderConvList();
+renderConvList();openConv('launch',false);
 if(matchMedia('(max-width:1100px)').matches){$('#agent').hidden=true;$('#agentTg').classList.remove('on')}
 showView(location.hash==='#project'?'project':location.hash==='#stages'?'stages':location.hash==='#projects'?'projects':'home');
 </script>
