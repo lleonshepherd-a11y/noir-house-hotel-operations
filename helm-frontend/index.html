@@ -405,6 +405,27 @@ tbody tr:hover{background:#fafafa}
 .emo button:hover{background:var(--hover)}
 .tg-badge{min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;display:grid;place-items:center;padding:0 5px;font-variant-numeric:tabular-nums}
 
+.mtop{display:flex;align-items:center;gap:8px;padding:10px 10px 0 14px}
+.mtop b{font-weight:600;font-size:14px}
+.mtop .r{margin-left:auto;display:flex;gap:2px}
+.mtop .ib{width:28px;height:28px}
+.msearch{display:flex;align-items:center;gap:8px;margin:10px 10px 4px;height:34px;padding:0 8px 0 10px;border:1px solid var(--line);border-radius:9px;background:#fafafa;transition:border-color .15s,box-shadow .15s,background .15s}
+.msearch:focus-within{background:var(--panel);border-color:#cfd0d6;box-shadow:0 0 0 3px rgba(94,106,210,.08)}
+.msearch svg{color:var(--fg-3);width:15px;height:15px}
+.msearch input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:inherit;font-size:13.5px;color:var(--fg)}
+.msearch input::placeholder{color:var(--fg-3)}
+.msearch .clr{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:var(--fg-3)}
+.msearch .clr:hover{background:var(--hover);color:var(--fg)}
+.sp-ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-weight:600;font-size:12.5px;flex:none;background:var(--bg2);color:var(--fg2)}
+.sr{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:8px;border-radius:8px;transition:background .12s}
+.sr:hover{background:var(--hover)}
+.sr .st2{flex:1;min-width:0}
+.sr .st2 b{font-weight:600;font-size:13px}
+.sr .st2 span{font-size:12px;color:var(--fg-3);margin-left:6px}
+.sr .st2 p{margin:2px 0 0;font-size:13px;color:var(--fg-2);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+mark{background:rgba(255,196,0,.32);color:inherit;border-radius:3px;padding:0 1px}
+.m.flash{animation:flash 1.8s var(--ease)}
+
 /* ---------- No visible scrollbars anywhere (areas still scroll) ---------- */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
@@ -698,12 +719,13 @@ tbody tr:hover{background:#fafafa}
 
       <!-- ======== MESSAGES ======== -->
       <aside class="agent" id="agent" aria-label="Messages">
+        <div class="mtop"><b>Messages</b><span class="r"><button class="ib" id="msgNew" aria-label="New message" title="New message"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button><button class="ib" id="agentClose" aria-label="Close messages"><svg class="ic" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></span></div>
+        <label class="msearch"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg><input id="msgQ" type="text" placeholder="Search spaces, people and messages" autocomplete="off" aria-label="Search messages"><button type="button" class="clr" id="msgQClr" hidden aria-label="Clear search"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
         <div id="msgList" style="display:flex;flex-direction:column;min-height:0;flex:1">
-          <div class="msg-h"><b>Messages</b><span class="r"><button class="ib" id="msgSearch" aria-label="Search messages" title="Search messages"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg></button><button class="ib" id="msgNew" aria-label="New message" title="New message"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button><button class="ib" id="agentClose" aria-label="Close messages"><svg class="ic" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></span></div>
           <div class="cl" id="convList"></div>
         </div>
         <div id="msgThread" hidden style="display:flex;flex-direction:column;min-height:0;flex:1">
-          <div class="msg-h"><button class="ib" id="msgBack" aria-label="Back to conversations"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><span id="thHead" style="display:flex;align-items:center;gap:9px;min-width:0"></span><span class="r"><span class="avs" id="thMembers" style="margin-right:4px"></span><button class="ib" id="agentClose2" aria-label="Close messages"><svg class="ic" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></span></div>
+          <div class="msg-h" style="border-top:1px solid var(--line-2);margin-top:6px"><button class="ib" id="msgBack" aria-label="Back to conversations"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><span id="thHead" style="display:flex;align-items:center;gap:9px;min-width:0"></span><span class="r"><span class="avs" id="thMembers" style="margin-right:4px"></span></span></div>
           <div class="th" id="thBody"></div>
           <form class="mcmp" id="mForm">
             <div id="acBox"></div>
@@ -809,13 +831,13 @@ $('#replyForm').addEventListener('submit',e=>{e.preventDefault();const i=$('#rep
 /* ---------- Messages (people only) ---------- */
 const FIRST=k=>P[k][0].split(' ')[0];
 const CONVS=[
- {id:'launch',ch:'launch',desc:'Murmur launch team',mem:['AK','SP','JR','ML','TN','PS'],unread:0,msgs:[
+ {id:'launch',ch:'Launch',ic:['L','#fde2ea','#9b2c4f'],desc:'Murmur launch team',mem:['AK','SP','JR','ML','TN','PS'],unread:0,msgs:[
   ['SP','9:41','@Alex v3 of the launch video is up. Shorter hook, new music.',{file:'launch-v3.mp4 · 0:45'}],
   ['JR','10:02','Offline mode passed QA. Linking #MUR-142 for sign-off.',{rx:{'👍':2}}],
   ['AK','10:15','Love it. @Maya can we get the seed numbers in before Thursday?'],
   ['ML','10:21','Yes. The new use-of-funds slide is in deck v8.',{rx:{'🙌':1}}]]},
- {id:'fundraising',ch:'fundraising',desc:'Seed round',mem:['AK','ML'],unread:2,msgs:[['ML','Yesterday','Northbeam sent their term sheet. It’s in the data room.'],['ML','8:52','Harbour want a follow-up call Thursday at 14:00. Does that work for you?']]},
- {id:'general',ch:'general',desc:'Whole team',mem:Object.keys(P),unread:0,msgs:[['TO','Mon','Office is closed Friday afternoon for the team lunch.'],['PS','Mon','Brightpath went live this morning 🎉',{rx:{'🎉':5}}]]},
+ {id:'fundraising',ch:'Fundraising',ic:['F','#dcf3e8','#1d6b4a'],desc:'Seed round',mem:['AK','ML'],unread:2,msgs:[['ML','Yesterday','Northbeam sent their term sheet. It’s in the data room.'],['ML','8:52','Harbour want a follow-up call Thursday at 14:00. Does that work for you?']]},
+ {id:'general',ch:'General',ic:['G','#e1e7fb','#2c3e8f'],desc:'Whole team',mem:Object.keys(P),unread:0,msgs:[['TO','Mon','Office is closed Friday afternoon for the team lunch.'],['PS','Mon','Brightpath went live this morning 🎉',{rx:{'🎉':5}}]]},
  {id:'JR',dm:'JR',on:true,unread:1,msgs:[['JR','10:40','The auditor says the pen-test report lands Monday. I’ll confirm the launch date once it’s in.']]},
  {id:'SP',dm:'SP',on:true,unread:0,msgs:[['SP','Yesterday','Can you look at the video before Wednesday?'],['AK','Yesterday','Will do tonight.']]},
  {id:'ML',dm:'ML',on:true,unread:0,msgs:[['ML','Tue','Runway is 14 months with September’s numbers.']]},
@@ -824,16 +846,16 @@ const CONVS=[
  {id:'TO',dm:'TO',on:false,unread:0,msgs:[['TO','Oct 5','Support vendor contract is attached to MUR-139.']]},
  {id:'DW',dm:'DW',on:false,unread:0,msgs:[]}];
 const REPLY={JR:'On it. I’ll update the task when it’s done.',SP:'Perfect, thanks! I’ll send v4 tomorrow.',ML:'Got it. I’ll add it to the deck.',PS:'Sounds good, I’ll tell the customer.',TO:'Done ✅',TN:'Will do. I’ll share a Figma link shortly.',DW:'Thanks, picking it up now.'};
-const CH_IC='<span class="hash-ic">#</span>';
+const spIc=c=>`<span class="sp-ic" style="--bg2:${c.ic[0]?c.ic[1]:'#f3f3f5'};--fg2:${c.ic[2]}">${c.ic[0]}</span>`;
 let cur=null;
 const fmt=t=>esc(t).replace(/@(\w+)/g,'<span class="mn">@$1</span>').replace(/#(MUR-\d+)/g,'<span class="tk">$1</span>');
 const last=c=>c.msgs[c.msgs.length-1];
 function unreadTotal(){return CONVS.reduce((a,c)=>a+c.unread,0)}
 function syncBadges(){const n=unreadTotal();[$('#tgBadge'),$('#navMsg')].forEach(b=>{b.textContent=n;b.hidden=!n})}
 function convRow(c){const l=last(c);const prev=l?`${l[0]==='AK'?'You: ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`:'Say hello 👋';
- const ic=c.ch?CH_IC:`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
+ const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
-function renderConvList(){$('#convList').innerHTML=`<h6>Channels<button class="addb" aria-label="New channel" title="New channel">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+CONVS.filter(c=>c.dm).map(convRow).join('');syncBadges()}
+function renderConvList(){if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+CONVS.filter(c=>c.dm).map(convRow).join('');syncBadges()}
 function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;const first=!prev||prev[0]!==k||prev[1]!==t;
  const rx=x.rx?`<div class="rx">${Object.entries(x.rx).map(([e,n])=>`<button class="rxb${x.mine&&x.mine[e]?' on':''}" data-rx="${e}" data-i="${i}">${e} ${n}</button>`).join('')}</div>`:'';
  const file=x.file?`<span class="fileatt"><i>${ICON.play}</i>${esc(x.file)}</span>`:'';
@@ -842,21 +864,34 @@ function renderThread(scroll=true){const c=CONVS.find(x=>x.id===cur);const b=$('
  b.innerHTML=(c.msgs.length?'<div class="day">Today</div>':`<div class="typing" style="justify-content:center;padding:30px 0">This is the start of your conversation with ${P[c.dm][0]}.</div>`)+c.msgs.map((m,i)=>msgHTML(c,m,i,c.msgs[i-1])).join('')+(c.seen?`<div class="seen">Seen by ${c.dm?FIRST(c.dm):'the team'}</div>`:'');
  if(scroll)b.scrollTop=b.scrollHeight}
 function openConv(id){cur=id;const c=CONVS.find(x=>x.id===id);c.unread=0;renderConvList();
- $('#thHead').innerHTML=c.ch?`${CH_IC}<span style="min-width:0"><b>${c.ch}</b><span class="sub" style="display:block">${c.desc} · ${c.mem.length} people</span></span>`:`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span><span><b>${P[c.dm][0]}</b><span class="sub" style="display:block">${c.on?'Online':'Away'}</span></span>`;
+ $('#thHead').innerHTML=c.ch?`${spIc(c)}<span style="min-width:0"><b>${c.ch}</b><span class="sub" style="display:block">${c.desc} · ${c.mem.length} people</span></span>`:`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span><span><b>${P[c.dm][0]}</b><span class="sub" style="display:block">${c.on?'Online':'Away'}</span></span>`;
  $('#thMembers').innerHTML=c.ch?c.mem.slice(0,4).map(k=>av(k,'xs')).join(''):'';
- $('#mIn').placeholder=c.ch?`Message #${c.ch}`:`Message ${FIRST(c.dm)}`;
+ $('#mIn').placeholder=c.ch?`Message ${c.ch}`:`Message ${FIRST(c.dm)}`;
  $('#msgList').hidden=true;$('#msgThread').hidden=false;renderThread();openMsgs();setTimeout(()=>$('#mIn').focus(),30)}
 function backToList(){$('#msgThread').hidden=true;$('#msgList').hidden=false;cur=null;renderConvList()}
 function openMsgs(){$('#agent').hidden=false;$('#agentTg').classList.add('on');delete $('#agent').dataset.auto}
 function closeMsgs(){$('#agent').hidden=true;$('#agentTg').classList.remove('on')}
-$('#convList').addEventListener('click',e=>{const r=e.target.closest('[data-conv]');if(r)openConv(r.dataset.conv);if(e.target.closest('#dmAdd'))pickDM(e.target.closest('#dmAdd'))});
+$('#convList').addEventListener('click',e=>{const r=e.target.closest('[data-conv]');if(r){if(msgQ.value){msgQ.value='';$('#msgQClr').hidden=true}openConv(r.dataset.conv)}if(e.target.closest('#dmAdd'))pickDM(e.target.closest('#dmAdd'));if(e.target.closest('#spaceAdd'))toast('<b>New space</b>','Spaces group people around a project or topic')});
 $('#msgBack').addEventListener('click',backToList);
 $('#agentTg').addEventListener('click',()=>$('#agent').hidden?openMsgs():closeMsgs());
 $('#sideMsgs').addEventListener('click',()=>{openMsgs();closeSide()});
-['#agentClose','#agentClose2'].forEach(x=>$(x).addEventListener('click',closeMsgs));
+$('#agentClose').addEventListener('click',closeMsgs);
 function pickDM(anchor){openMenu(anchor,PEOPLE.filter(p=>p.v!=='AK'),null,v=>openConv(v),'Message someone…')}
 $('#msgNew').addEventListener('click',e=>pickDM(e.currentTarget));
-$('#msgSearch').addEventListener('click',openPal);
+// search
+const msgQ=$('#msgQ');
+const hl=(t,q)=>{const e=esc(t),i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+esc(q).length)+'</mark>'+e.slice(i+esc(q).length)};
+function renderSearch(q){const ql=q.toLowerCase();
+ const conv=CONVS.filter(c=>(c.ch||P[c.dm][0]).toLowerCase().includes(ql));
+ const hits=[];CONVS.forEach(c=>c.msgs.forEach((m,i)=>{if(m[2].toLowerCase().includes(ql))hits.push([c,m,i])}));
+ let h='';if(conv.length)h+='<h6>Spaces and people</h6>'+conv.map(convRow).join('');
+ if(hits.length)h+=`<h6>Messages <span style="margin-left:6px;color:var(--fg-4)">${hits.length}</span></h6>`+hits.slice(-12).reverse().map(([c,m,i])=>`<button class="sr" data-hit="${c.id}" data-i="${i}">${m[0]==='AK'?`<span class="av md" style="--av:${P.AK[1]};--avc:${P.AK[2]}">AK</span>`:av(m[0],'md')}<span class="st2"><b>${m[0]==='AK'?'You':P[m[0]][0]}</b><span>in ${c.ch||P[c.dm][0]} · ${m[1]}</span><p>${hl(m[2],q)}</p></span></button>`).join('');
+ $('#convList').innerHTML=h||`<div class="pal-empty" style="text-align:center;padding:30px 10px">Nothing found for “${esc(q)}”.<br>Try a name, a space or a word from a message.</div>`}
+msgQ.addEventListener('input',()=>{const v=msgQ.value.trim();$('#msgQClr').hidden=!v;if(!$('#msgThread').hidden&&v){$('#msgThread').hidden=true;$('#msgList').hidden=false;cur=null}renderConvList()});
+msgQ.addEventListener('keydown',e=>{if(e.key==='Escape'&&msgQ.value){msgQ.value='';msgQ.dispatchEvent(new Event('input'));e.stopPropagation()}if(e.key==='Enter'){const f=$('#convList [data-conv],#convList [data-hit]');if(f)f.click()}});
+$('#msgQClr').addEventListener('click',()=>{msgQ.value='';msgQ.dispatchEvent(new Event('input'));msgQ.focus()});
+$('#convList').addEventListener('click',e=>{const h=e.target.closest('[data-hit]');if(!h)return;const i=h.dataset.i;msgQ.value='';$('#msgQClr').hidden=true;openConv(h.dataset.hit);setTimeout(()=>{const m=$(`#thBody .m[data-i="${i}"]`);if(m){m.classList.add('flash');m.scrollIntoView({block:'center'})}},40)});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!modal){e.preventDefault();openMsgs();msgQ.focus()}});
 // reactions
 $('#thBody').addEventListener('click',e=>{const c=CONVS.find(x=>x.id===cur);if(!c)return;
  const add=e.target.closest('[data-addrx],[data-rx]');if(add){const i=+add.dataset.i,emo=add.dataset.addrx||add.dataset.rx,m=c.msgs[i];m[3]=m[3]||{};const x=m[3];x.rx=x.rx||{};x.mine=x.mine||{};
@@ -886,7 +921,7 @@ $('#mForm').addEventListener('submit',e=>{e.preventDefault();const t=mIn.value.t
  const b=$('#thBody');b.lastElementChild.querySelector('p').classList.add('new');
  // mentioned colleagues get notified; the other person replies (sample behaviour)
  const ment=[...t.matchAll(/@(\w+)/g)].map(m=>Object.keys(P).find(k=>FIRST(k).toLowerCase()===m[1].toLowerCase())).filter(Boolean);
- if(ment.length&&c.ch)toast(`Message sent to <b>#${c.ch}</b>`,`${ment.map(FIRST).join(', ')} ${ment.length>1?'were':'was'} notified`);
+ if(ment.length&&c.ch)toast(`Message sent to <b>${c.ch}</b>`,`${ment.map(FIRST).join(', ')} ${ment.length>1?'were':'was'} notified`);
  const who=c.dm||ment.find(k=>k!=='AK')||c.mem.find(k=>k!=='AK');
  if(RM||!who)return;const id=c.id;
  setTimeout(()=>{if(c.dm){c.seen=true;if(cur===id)renderThread()}},700);
