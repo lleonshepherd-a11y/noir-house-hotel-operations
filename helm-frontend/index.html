@@ -1262,6 +1262,38 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .wk-tag{font-size:11px;font-weight:600;border-radius:999px;padding:0 7px;line-height:18px;background:var(--red-soft);color:var(--red)}
 #wkMoved .lr{cursor:pointer}
 @media (max-width:1100px){.wk-top{grid-template-columns:repeat(2,minmax(0,1fr))}.wk-ring{grid-column:1/-1}}
+
+/* ===== Timeline ===== */
+.tl-key{display:flex;gap:14px;cursor:default}.tl-key span{display:inline-flex;align-items:center;gap:6px}
+.k{width:9px;height:9px;border-radius:50%;display:inline-block}.k.done{background:#1c1d21}.k.next{border:1.5px solid #9a9da4;background:var(--panel)}.k.late{background:var(--red)}
+.tl{border:1px solid var(--line-2);border-radius:14px;padding:0 24px;background:var(--panel);position:relative}
+.tl-h{position:relative;height:250px}
+.tl-track{position:absolute;left:0;right:0;top:50%;height:2px;background:#e7e7ea;border-radius:2px}
+.tl-fill{position:absolute;left:0;top:50%;height:2px;background:#1c1d21;border-radius:2px}
+.tl-m{position:absolute;top:calc(50% + 10px);font-size:11px;color:var(--fg-4);transform:translateX(-50%);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.tl-mt{position:absolute;top:calc(50% - 4px);width:1px;height:10px;background:#d6d7dc}
+.tl-today{position:absolute;top:16px;bottom:16px;width:0;border-left:1.5px dashed var(--accent)}
+.tl-today span{position:absolute;top:-2px;left:6px;font-size:11px;font-weight:600;color:var(--accent);white-space:nowrap}
+.tl-p{position:absolute;top:50%;width:0;height:0}
+.tl-dot{position:absolute;left:-7px;top:-6px;width:14px;height:14px;border-radius:50%;background:var(--panel);border:2px solid #9a9da4;z-index:2;transition:transform .2s var(--ease)}
+.tl-p.done .tl-dot{background:#1c1d21;border-color:#1c1d21}
+.tl-p.late .tl-dot{background:var(--red);border-color:var(--red);box-shadow:0 0 0 4px rgba(229,72,77,.15)}
+.tl-p.risk .tl-dot{border-color:var(--red);background:#fff}
+.tl-p.alt .tl-dot{border-style:dashed}
+.tl-p.goal .tl-dot{background:var(--accent);border-color:var(--accent)}
+.tl-p:hover .tl-dot{transform:scale(1.25)}
+.tl-stem{position:absolute;left:-.5px;width:1px;background:#e1e1e5}
+.tl-lab{position:absolute;white-space:nowrap;font-size:12.5px;line-height:1.35;transform:translateX(-50%);text-align:center}
+.tl-lab b{display:block;font-weight:600;font-size:12.5px}
+.tl-lab small{display:block;color:var(--fg-3);font-size:11.5px}
+.tl-lab em{font-style:normal;font-weight:600;color:var(--red);font-size:11px}
+.tl-lab.l{transform:none;text-align:left;left:-6px}.tl-lab.r{transform:translateX(-100%);text-align:right;left:6px}
+.tl-v{display:none;padding:14px 0}
+.tl-v div{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:13px;position:relative}
+.tl-v div:not(:last-child)::after{content:"";position:absolute;left:6px;top:24px;bottom:-8px;width:2px;background:#ececef}
+.tl-v .tl-dot{position:static;flex:none}
+.tl-v .t3{flex:1;min-width:0}.tl-v b{font-weight:600}.tl-v small{color:var(--fg-3);margin-left:auto;font-size:12px}
+@media (max-width:860px){.tl-h{display:none}.tl-v{display:block}.tl{padding:0 16px}.tl-key{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1396,6 +1428,9 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
               <div class="props" id="pprops"></div>
               <div class="res" id="pRes"></div>
               <div class="kpis" id="kpis"></div>
+
+              <div class="sh">Timeline <span class="n" id="tlN"></span><span class="r tl-key"><span><i class="k done"></i>Done</span><span><i class="k next"></i>Coming up</span><span><i class="k late"></i>Late or at risk</span></span></div>
+              <div class="tl" id="ptl"></div>
 
               <div class="sh">Latest update</div>
               <div class="update">
@@ -2053,8 +2088,22 @@ function renderProject(){const i=PI_();
  const u=i.upd;$('#uhealth').className='health '+u[0];$('#uhealth').innerHTML=health(u[0]);$('#uWho').innerHTML=`${av(u[1])}<b style="font-weight:500">${P[u[1]][0]}</b><span class="muted">${u[2]}</span>`;$('#uWho').style.cssText='display:contents';$('#uText').textContent=u[3];
  $('#milestones').innerHTML=i.ms.map(([n,k,p,d],j)=>`<div class="lr">${dia(k)}<div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${n}</b></div><div class="meta"><span class="mbar"><i style="--w:${p*100}%;--c:${k==='done'?'#5f636b':k==='now'?'#5e6ad2':'#d4d5da'};animation-delay:${j*.04}s"></i></span><span class="pct">${Math.round(p*100)}%</span><span class="dt" style="width:60px">${d}</span></div></div>`).join('');
  $$('[data-ptab]').forEach(b=>b.hidden=!i.tabs.includes(b.dataset.ptab));
- renderIssues();renderBoard();renderFiles();
+ renderIssues();renderBoard();renderFiles();renderTL();
  $$('#favs .ni').forEach(b=>b.classList.toggle('on',curView==='project'&&b.dataset.pkey===curProj))}
+
+/* ---------- Project timeline (step 7) ---------- */
+PINFO.murmur.tl=[['Private pilot starts','2026-09-01','done'],['Pen-test report','2026-10-02','late','8 days late'],['Windows beta','2026-10-08','done'],['Security fixes','2026-11-01','next'],['App Store submission','2026-11-04','next'],['Press briefings','2026-11-10','next'],['Public launch','2026-11-18','risk','At risk'],['Fallback launch','2026-12-02','alt','If we move']];
+PINFO.ledgerly.tl=[['First 10 interviews','2026-08-29','done'],['Landing page','2026-09-12','done'],['MVP scope sign-off','2026-10-15','next'],['Prototype sessions','2026-10-21','next'],['30 interviews done','2026-10-24','next'],['Design partner LOIs','2026-10-30','next'],['Build starts','2026-11-09','goal']];
+PINFO.atlas.tl=[['Architecture plan','2026-08-15','done'],['Internal alpha','2026-09-19','done'],['Summary quality review','2026-10-14','next'],['Cost target','2026-10-17','risk','Above target'],['Data agreement signed','2026-10-23','next'],['Pilot plan','2026-11-03','next'],['Pilot starts','2026-11-30','goal']];
+function renderTL(){const tl=PI_().tl;if(!tl){$('#ptl').innerHTML='';return}const D=x=>new Date(x+'T00:00').getTime();const t0=Math.min(...tl.map(x=>D(x[1])))-7*864e5,t1=Math.max(...tl.map(x=>D(x[1])))+7*864e5;const X=t=>((t-t0)/(t1-t0)*100);
+ const fmtD=x=>{const d=new Date(x+'T00:00');return `${d.getDate()} ${MON[d.getMonth()]}`};const today=X(TODAY.getTime());
+ let months='';{const d=new Date(t0);d.setDate(1);d.setMonth(d.getMonth()+1);while(d.getTime()<t1){const x=X(d.getTime());months+=`<span class="tl-mt" style="left:${x}%"></span><span class="tl-m" style="left:${x}%">${MON[d.getMonth()]}</span>`;d.setMonth(d.getMonth()+1)}}
+ const LV=[[-1,86],[1,40],[-1,40],[1,86]];
+ const pts=tl.map((x,i)=>{const [lab,dt,k,note]=x;const px=X(D(dt));const [side,dist]=LV[i%4];const al=px<8?' l':px>92?' r':'';
+  const lab2=`<span class="tl-lab${al}" style="${side<0?`bottom:${dist}px`:`top:${dist}px`}"><b>${esc(lab)}</b><small>${fmtD(dt)}${note?` · <em>${note}</em>`:''}</small></span>`;
+  return `<div class="tl-p ${k}" style="left:${px}%" title="${esc(lab)} · ${fmtD(dt)}"><span class="tl-dot"></span><span class="tl-stem" style="${side<0?`bottom:6px;height:${dist-8}px`:`top:6px;height:${dist-8}px`}"></span>${lab2}</div>`}).join('');
+ $('#ptl').innerHTML=`<div class="tl-h"><div class="tl-track"></div><div class="tl-fill" style="width:${Math.min(today,100)}%"></div>${months}<div class="tl-today" style="left:${today}%"><span>Today</span></div>${pts}</div><div class="tl-v">${tl.map(([lab,dt,k,note])=>`<div class="tl-p ${k}"><span class="tl-dot"></span><span class="t3"><b>${esc(lab)}</b>${note?` <em style="font-style:normal;color:var(--red);font-weight:600;font-size:12px">· ${note}</em>`:''}</span><small>${fmtD(dt)}</small></div>`).join('')}</div>`;
+ const late=tl.filter(x=>x[2]==='late'||x[2]==='risk').length;$('#tlN').textContent=`${tl.length} steps${late?` · ${late} need attention`:''}`}
 function openProject(k,tab){if(PINFO[k])curProj=k;showView('project',{tab:tab||'Overview'})}
 document.addEventListener('click',e=>{const r=e.target.closest('[data-rtab]');if(r)openTab(r.dataset.rtab)});
 burnChart('#burn2');
