@@ -1150,6 +1150,18 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .sum-n b{font-size:22px;letter-spacing:-.02em;margin-top:2px}
 @media (max-width:860px){.sum-n button{padding:12px 12px 12px 0;margin:0}.sum-n button:nth-child(-n+2){border-bottom:1px solid var(--line-2)}}
 @media (max-width:640px){.wrap{padding-top:32px}.sh{margin-top:42px}.sb-row.hot::before{left:-6px}}
+
+/* ===== Step 2: one look for every page ===== */
+.eyebrow{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--fg-3);margin-bottom:8px}
+.eyebrow .ic{width:14px;height:14px}
+.ph2{align-items:flex-end;padding-bottom:6px}
+.ph2 .lead{margin-top:8px}
+.seg2{gap:2px;padding:3px;background:#f3f3f5;border-radius:10px;width:fit-content;max-width:100%}
+.seg2 button{height:28px;padding:0 12px;border-radius:7px;border:0;background:none;color:var(--fg-3)}
+.seg2 button:hover{background:rgba(255,255,255,.6);color:var(--fg)}
+.seg2 button.on,#calFilt button.on{background:var(--panel);color:var(--fg);box-shadow:0 1px 2px rgba(16,17,20,.08),0 0 0 1px rgba(16,17,20,.04);border:0}
+#calFilt button:not(.on){opacity:1;text-decoration:none;color:var(--fg-4)}
+#calFilt button:not(.on) i{opacity:.35}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2516,6 +2528,11 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
  res.addEventListener('click',e=>{const r=e.target.closest('[data-nsopen]');if(r){closeModal();openSpace(r.dataset.nsopen);toast(`Opened <b>${esc(CONVS.find(c=>c.id===r.dataset.nsopen).ch)}</b>`,'No duplicate space created')}});
  go.addEventListener('click',()=>{const q=inp.value.trim();closeModal();createSpaceForm(shared,q.charAt(0).toUpperCase()+q.slice(1))});
  draw();setTimeout(()=>inp.focus(),30)}
+
+/* ---------- Step 2: same page header everywhere ---------- */
+{const EB={mytasks:'You',decisions:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',settings:'Account'};
+ Object.entries(EB).forEach(([v,l])=>{const sec=document.getElementById('view-'+v);if(!sec)return;const h=sec.querySelector('h1.title');if(!h||h.closest('.sum'))return;
+  const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
