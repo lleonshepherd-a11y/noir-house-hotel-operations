@@ -1645,7 +1645,7 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
         <!-- ======== BRIEFING ======== -->
         <section class="view" id="view-home">
           <div class="wrap wide">
-            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Saturday 10 October · Week 41</span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><svg viewBox="0 0 40 40" class="hc-face"><circle cx="20" cy="20" r="18.5"/><g class="hc-ticks"><line x1="20" y1="3" x2="20" y2="6" transform="rotate(0 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(30 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(60 20 20)"/><line x1="20" y1="3" x2="20" y2="6" transform="rotate(90 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(120 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(150 20 20)"/><line x1="20" y1="3" x2="20" y2="6" transform="rotate(180 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(210 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(240 20 20)"/><line x1="20" y1="3" x2="20" y2="6" transform="rotate(270 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(300 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(330 20 20)"/></g><line id="hcH" class="hc-h" x1="20" y1="20" x2="20" y2="11.5"/><line id="hcM" class="hc-m" x1="20" y1="20" x2="20" y2="7"/><line id="hcS" class="hc-s" x1="20" y1="22.5" x2="20" y2="6.5"/><circle cx="20" cy="20" r="1.4" class="hc-dot"/></svg><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
+            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Saturday 10 October · Week 41</span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
             <div class="sp-tools" id="nyTools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
             <div class="spgrid">
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
@@ -2249,7 +2249,7 @@ function sendCompose(){const txt=cIn.value.trim();if(!toSel.length||!txt)return;
  conv.msgs.push(['AK',now(),txt]);renderConvList();if(cur===conv.id)renderThread();
  const names=toSel.map(x=>x.t==='p'?P[x.v][0]:x.label).join(', '),id=conv.id;closeMsgs();
  toast(`Message sent to <b>${esc(names)}</b>`,ppl.length>1?'Everyone was notified':'They’ll see it in Messages',()=>openConv(id));
- if(ppl.length===1&&!sp.length&&!RM){const k=ppl[0];setTimeout(()=>{conv.msgs.push([k,now(),REPLY[k]||'Thanks!']);if(cur===id&&!$('#view-messages').hidden)renderThread();else{conv.unread++;renderConvList();toast(`<b>${P[k][0]}</b> replied`,REPLY[k],()=>openConv(id))}},3800)}}
+ if(ppl.length===1&&!sp.length&&!RM){const k=ppl[0];setTimeout(()=>{conv.msgs.push([k,now(),REPLY[k]||'Thanks!']);if(cur===id&&!$('#view-messages').hidden)renderThread();else{conv.unread++;renderConvList();0}},3800)}}
 $('#msgNew').addEventListener('click',()=>openCompose());
 // search
 const msgQ=$('#msgQ');
@@ -2299,9 +2299,9 @@ $('#mForm').addEventListener('submit',e=>{e.preventDefault();const t=mIn.value.t
  if(RM||!who)return;const id=c.id;
  setTimeout(()=>{if(c.dm){c.seen=true;if(cur===id)renderThread()}},700);
  setTimeout(()=>{if(cur===id){$('#thBody').insertAdjacentHTML('beforeend',`<div class="typing" id="typ">${av(who,'xs')}<span class="dots"><i></i><i></i><i></i></span>${FIRST(who)} is typing</div>`);$('#thBody').scrollTop=1e6}},1300);
- setTimeout(()=>{c.seen=false;c.msgs.push([who,now(),REPLY[who]||'Thanks!']);if(cur===id)renderThread();else{c.unread++;renderConvList();toast(`<b>${P[who][0]}</b> replied`,REPLY[who],()=>openConv(id))}},3300)});
+ setTimeout(()=>{c.seen=false;c.msgs.push([who,now(),REPLY[who]||'Thanks!']);if(cur===id)renderThread();else{c.unread++;renderConvList();0}},3300)});
 // a colleague messages you a little later (sample)
-setTimeout(()=>{const c=CONVS.find(x=>x.id==='TN');c.msgs.push(['TN',now(),'The App Store screenshots are ready for review. Want me to add them to #MUR-147?']);if(cur==='TN')renderThread();else{c.unread++;renderConvList();toast('<b>Tara N.</b> sent you a message','The App Store screenshots are ready for review…',()=>openConv('TN'))}},RM?999999:9000);
+/* incoming demo message turned off */
 
 /* ---------- Project ---------- */
 const sl=v=>{const mn=Math.min(...v),mx=Math.max(...v),pts=v.map((y,i)=>`${(i/(v.length-1)*196+2).toFixed(1)},${(21-(y-mn)/(mx-mn||1)*18).toFixed(1)}`);return `<svg viewBox="0 0 200 24" preserveAspectRatio="none"><polyline class="sl" pathLength="1" points="${pts.join(' ')}" vector-effect="non-scaling-stroke"/></svg>`};
@@ -3005,7 +3005,7 @@ spIn.addEventListener('input',spGrow);spIn.addEventListener('keydown',e=>{if(e.k
 $('#spAt').addEventListener('click',()=>{spIn.value+=(spIn.value&&!spIn.value.endsWith(' ')?' ':'')+'@';spGrow();spIn.focus()});
 $('#spForm').addEventListener('submit',e=>{e.preventDefault();const t=spIn.value.trim();if(!t||!spCur)return;const c=CONVS.find(x=>x.id===spCur);c.msgs.push(['AK',now(),t]);spIn.value='';spGrow();renderSpace();renderConvList();
  const who=c.mem.find(k=>k!=='AK');if(!who||RM)return;const id=c.id;setTimeout(()=>{if(spCur===id){spTyping=who;renderSpace()}},900);
- setTimeout(()=>{spTyping=null;c.msgs.push([who,now(),SPR[id]||REPLY[who]||'Thanks, on it.']);if(spCur===id&&curView==='spaces')renderSpace();else{c.unread++;renderConvList();toast(`<b>${P[who][0]}</b> in ${esc(c.ch)}`,SPR[id]||REPLY[who]||'',()=>openSpace(id))}},3200)});
+ setTimeout(()=>{spTyping=null;c.msgs.push([who,now(),SPR[id]||REPLY[who]||'Thanks, on it.']);if(spCur===id&&curView==='spaces')renderSpace();else{c.unread++;renderConvList();0}},3200)});
 const SPR={launch:'Got it. I’ll add it to the launch checklist.',fundraising:'Noted. I’ll update the pipeline after the call.',general:'👍',northbeam:'I’ll send the latest numbers over today.',brightpath:'I’ll share that with Kim this afternoon.'};
 
 /* ---------- Space tabs, files, preview, search-first new space ---------- */
