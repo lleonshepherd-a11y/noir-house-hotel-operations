@@ -46,6 +46,25 @@ Railway runs `npm start`. The health check is `/health`.
 | Audit log | Every change, upload, invite and wages access is recorded with who did it and when. |
 | Security | Changes need a custom request header, which blocks cross-site form posts. Uploaded files are served with a sandbox policy, and only safe file types open in the browser. |
 
+## Accountability
+
+Every task has one owner, who is accountable for it, plus a due date. Open any task to change these, or to set two optional links:
+
+- **Waits for:** another task that has to finish first.
+- **When done, hand to:** the person who takes over next.
+
+Helm then follows each task through:
+
+| When | What happens |
+| --- | --- |
+| Due today or tomorrow | The owner gets a reminder. |
+| 1 day late | The owner is nudged to update it or say what's in the way. |
+| 2 days late, or no movement for 5 days | The project lead is told. |
+| 5 days late | It goes to the CEO: a "Blocked" card on the Briefing, a notification, and a Slack post if Slack is connected (checked hourly on the server). |
+| Done | The next person, and anyone whose task was waiting on it, is told it's their turn. |
+
+Each project page has a **Held up** panel. It shows what's late, who has it, how long it's been, and which milestone it puts at risk, with **Chase** and **Reassign** buttons. Chase sends the owner a direct message. A project's health (on track, at risk or off track) is worked out from its late tasks.
+
 ## Connections
 
 The CEO connects tools on the **Connections** page. Helm only reads from them. The one exception is Slack: Helm posts new announcements to the channel you choose. Helm checks each tool again every 30 minutes, and you can press **Sync now** at any time. Tokens are stored encrypted, and only the CEO's browser receives what Helm reads.

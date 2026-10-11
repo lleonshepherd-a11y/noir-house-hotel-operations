@@ -279,6 +279,33 @@ async function api(req, res, url) {
   return send(res, 404, { error: "Not found" });
 }
 
+/* ---------------- Accountability: hourly check for stuck tasks ---------------- */
+// Tasks store due dates as short labels ("Oct 20", "Fri", "Today"). This mirrors the app's reading of them.
+const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function dueISO(d, now = new Date()) {
+  if (!d) return null; const pad = (n) => String(n).padStart(2, "0"); const iso = (x) => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+  if (d === "Today") return iso(now);
+  const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(d); if (wd >= 0) { const x = new Date(now); x.setDate(x.getDate() + ((wd - x.getDay() + 7) % 7)); return iso(x); }
+  let m = /^([A-Z][a-z]{2}) (\d+)$/.exec(d) || /^(\d+) ([A-Z][a-z]{2})$/.exec(d); if (!m) return null;
+  const [mon, day] = isNaN(m[1]) ? [m[1], +m[2]] : [m[2], +m[1]]; const mi = MON3.indexOf(mon); if (mi < 0) return null;
+  let y = now.getFullYear(); if (mi < now.getMonth() - 6) y++; return `${y}-${pad(mi + 1)}-${pad(day)}`;
+}
+async function accountabilityCheck() {
+  const tasks = readSec("TASKS") || [], P = readSec("P") || {}, today = new Date(); today.setHours(0, 0, 0, 0);
+  const sent = JSON.parse(getSetting("acct_sent") || "{}"), day = today.toISOString().slice(0, 10), out = [];
+  for (const t of tasks) {
+    if (!t || t.s === "done") continue; const due = dueISO(t.d); if (!due) continue;
+    const late = Math.round((today - new Date(due + "T00:00")) / 864e5); if (late < 5) continue;
+    const key = t.id + ":" + day; if (sent[key]) continue; sent[key] = 1;
+    out.push(`*${t.id}* ${t.t} is ${late} days late with ${String((P[t.o] || [t.o])[0]).replace(/\.$/, "")}.`);
+  }
+  if (out.length) { const ok = await cx.notify(":rotating_light: *Stuck tasks*\n" + out.join("\n") + "\n_Open Helm to chase or reassign._"); if (ok) audit(null, "posted stuck tasks to Slack"); }
+  for (const k of Object.keys(sent)) if (!k.endsWith(day)) delete sent[k];
+  setSetting("acct_sent", JSON.stringify(sent));
+}
+setInterval(() => accountabilityCheck().catch(() => {}), 60 * 60e3).unref();
+setTimeout(() => accountabilityCheck().catch(() => {}), 15e3).unref();
+
 const page = async (res, f) => { let html = await readFile(join(ROOT, f), "utf8"); if (f === "index.html") html = html.replace("<head>", "<head>\n<script>window.HELM_BACKEND=1</script>"); res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SEC_HEADERS }); res.end(html); };
 createServer(async (req, res) => {
   const url = new URL(req.url, `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host || "localhost"}`);

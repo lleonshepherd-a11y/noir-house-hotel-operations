@@ -347,5 +347,7 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
     send(res, 404, { error: "Not found" }); return true;
   }
 
-  return { route, onAnnouncements };
+  // Used by the accountability check to tell Slack when a task is escalated.
+  async function notify(text) { if (row("slack")?.status !== "on") return false; try { await slackPost(text); return true; } catch { return false; } }
+  return { route, onAnnouncements, notify };
 }

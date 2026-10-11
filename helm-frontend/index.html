@@ -2043,6 +2043,33 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 .bar .btn:not(.pri):hover{background:#1f1f1f!important}
 
 @media (max-width:640px){.bar #crumb .crumb-sec{display:none}:root[data-theme=dark] .bar{padding:0 12px;height:52px}}
+
+/* Message box: opens in the middle of the screen */
+.agent{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;width:560px!important;max-width:calc(100vw - 32px)!important;height:min(640px,calc(100dvh - 64px))!important;transform:translate(-50%,-50%);border-radius:16px!important;animation:msgpop .26s cubic-bezier(.2,.8,.2,1)!important;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.08)!important}
+.agent.closing{animation:msgout .18s ease-in forwards!important}
+@keyframes msgpop{from{opacity:0;transform:translate(-50%,-48%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes msgout{to{opacity:0;transform:translate(-50%,-48%) scale(.97)}}
+:root[data-theme=dark] .mscrim{background:rgba(0,0,0,.55)!important;backdrop-filter:blur(3px)}
+@media (max-width:640px){.agent{width:auto!important;left:16px!important;right:16px!important;transform:translateY(-50%);height:min(600px,calc(100dvh - 40px))!important}
+ @keyframes msgpop{from{opacity:0;transform:translateY(-48%) scale(.97)}to{opacity:1;transform:translateY(-50%)}}
+ @keyframes msgout{to{opacity:0;transform:translateY(-48%)}}}
+
+/* Briefing bolt: blue with a soft pulse */
+@media (prefers-reduced-motion:no-preference){#crumb>.ic[style*="2d9bff"]{animation:boltpulse 2.2s ease-in-out infinite!important;transform-origin:center}}
+@keyframes boltpulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(45,155,255,0))}50%{transform:scale(1.14);filter:drop-shadow(0 0 6px rgba(45,155,255,.75))}}
+/* Accountability */
+.held{border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.held-r{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-top:1px solid rgba(255,255,255,.06)}
+.held-r:first-child{border-top:0}
+.held-r .hic{width:22px;height:22px;display:grid;place-items:center;color:#c9c9ce}.held-r .hic .ic{width:18px;height:18px}
+.held-r.lv-ceo .hic,.held-r.lv-lead .hic{color:#ff8a8e}
+.held-r b{font-weight:600;color:#fff;font-size:14px}.held-r b span{color:#8a8a8f;font-weight:500;margin-right:6px}
+.held-r small{display:block;color:#8e8e93;font-size:12.5px;margin-top:3px}
+.held-r small em{font-style:normal;color:#ff8a8e}
+.held-r .acts2{display:flex;gap:6px}
+.held-ok{padding:16px;color:#8e8e93;font-size:13.5px;border:1px dashed rgba(255,255,255,.1);border-radius:12px}
+.lr[data-id],#board .card{cursor:pointer}
+.lr .late-b{margin-left:8px;font-size:11.5px;font-weight:600;color:#ff8a8e}
 </style>
 </head>
 <body>
@@ -3429,7 +3456,7 @@ $('#htabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'o
 $('#mtabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'on'}">${t}</button>`).join('');
 function openTab(name){$$('[data-ptab]').forEach(b=>b.classList.toggle('on',b.dataset.ptab===name));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==name);$('#content').scrollTop=0}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ptab]');if(b)openTab(b.dataset.ptab)});
-const CRUMB={settings:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"/></svg><span class="t">Settings</span>`,messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:#2d9bff"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id" style="color:#2d9bff">BRF-41</span><span class="t">Morning briefing</span>`,
+const CRUMB={settings:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"/></svg><span class="t">Settings</span>`,messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:#2d9bff"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id" style="color:#fff">BRF-41</span><span class="t">Morning briefing</span>`,
  get project(){const i=PI_();return `${st(i.st[0],i.st[1])}<span class="id">${i.key}</span><span class="t">${i.name}</span>`},
  get spaces(){const c=spCur&&CONVS.find(x=>x.id===spCur);return `<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><rect x=\"3\" y=\"11\" width=\"14\" height=\"10\" rx=\"2.2\"/><path d=\"M6 8.5V8a2 2 0 012-2h10a2 2 0 012 2v7\"/><path d=\"M9.5 3.5h9.3A2.2 2.2 0 0121 5.7V12\"/></svg><span class="t"${c?' style="color:var(--fg-3);cursor:pointer" data-spback':''}>Spaces</span>${c?`<span class="sep">›</span><span class="t">${esc(c.ch)}</span>`:''}`},
  stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`,
@@ -4021,6 +4048,74 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-gt]');if(b
 /* Breadcrumb section in the top bar */
 {const SEC={mytasks:'Today',calendar:'Today',messages:'Today',spaces:'Today',notes:'Today',signoff:'Today',projects:'Company',initiatives:'Company',stages:'Company',week:'Company',project:'Company',people:'Company',wages:'Company',fundraise:'Company',money:'Company',metrics:'Company',legal:'Company',decisions:'Company',feedback:'More',announce:'More',settings:'Account',connections:'Account'};
  const sv=showView;showView=function(v,o){const r=sv(v,o);try{const c=$('#crumb');if(c&&SEC[v]&&!c.querySelector('.crumb-sec')){c.insertAdjacentHTML('afterbegin',`<span class="crumb-sec">${SEC[v]}</span>`)}}catch(e){}return r}}
+/* ================= Accountability: owners, hand-offs, stuck tasks, chasing ================= */
+const ISO=d=>iso(d),LBL=isoStr=>{const d=new Date(isoStr+'T00:00');return `${MON[d.getMonth()]} ${d.getDate()}`};
+const dayDiff=(a,b)=>Math.round((new Date(a+'T00:00')-new Date(b+'T00:00'))/864e5);
+// sample: a few tasks that show each case
+if(!TASKS.some(t=>t.mv)){const set=(id,o)=>{const t=TASKS.find(x=>x.id===id);if(t)Object.assign(t,o)};const T0=ISO(TODAY);
+ TASKS.forEach(t=>{if(!t.mv)t.mv=ISO(new Date(TODAY.getTime()-864e5))});
+ set('MUR-118',{d:'Oct 2',mv:'2026-10-01'});set('MUR-147',{w:'MUR-118'});set('MUR-133',{d:'Oct 8',mv:'2026-10-03'});
+ set('LED-18',{d:'Oct 11'});set('ATL-35',{mv:'2026-10-04'});set('LED-19',{nx:'DW'});set('MUR-142',{nx:'SP'})}
+function milestoneFor(k,due){const tl=(PINFO[k]||{}).tl||[];const T0=ISO(TODAY),from=due&&due>T0?due:T0;const m=tl.filter(x=>x[2]!=='done'&&x[1]>from).sort((a,b)=>a[1]<b[1]?-1:1)[0];if(!m)return '';const d=new Date(m[1]+'T00:00');return `${m[0]} (${d.getDate()} ${MON[d.getMonth()]})`}
+function acct(){const T0=ISO(TODAY);return TASKS.filter(t=>t.s!=='done').map(t=>{const due=taskDate(t.d);const dd=due?dayDiff(due,T0):null;const late=dd!=null&&dd<0?-dd:0;const idle=t.mv?dayDiff(T0,t.mv):0;
+ let lvl=null;if(late>=5)lvl='ceo';else if(late>=2||idle>=5)lvl='lead';else if(late>=1)lvl='late';else if(dd===0||dd===1)lvl='soon';
+ const k=keyOfTask(t.id);const dep=t.w?TASKS.find(x=>x.id===t.w&&x.s!=='done'):null;return {t,k,due,dd,late,idle,lvl,dep,lead:(PINFO[k]||{}).lead,ms:milestoneFor(k,due)}})}
+const nm=k=>P[k]?P[k][0]:k,fn1=k=>nm(k).split(' ')[0];
+function whyText(a){return a.late?`${a.late} day${a.late>1?'s':''} late`:a.idle>=5?`no movement for ${a.idle} days`:a.dd===0?'due today':a.dd===1?'due tomorrow':''}
+// notifications each person gets
+function acctNotifs(W){const out=[],ceo=roleOf(W)==='CEO';const A=acct();
+ A.forEach(a=>{const t=a.t,go=()=>{openProject(a.k,'Overview');setTimeout(()=>{const h=$('#pHeld');if(h)h.scrollIntoView({block:'center'})},120)};
+  if(t.o===W&&a.lvl==='soon')out.push([ceoKey(),`Reminder: <b>${t.id}</b> ${esc(t.t)} is ${whyText(a)}`,'Today',1,go,null,'acct:soon:'+t.id]);
+  if(t.o===W&&a.late)out.push([ceoKey(),`<b>${t.id}</b> ${esc(t.t)} is <b>${whyText(a)}</b>. Update it or say what's in the way.`,'Today',1,go,null,'acct:late:'+t.id+':'+a.late]);
+  if(a.lead===W&&t.o!==W&&(a.lvl==='lead'||a.lvl==='ceo'))out.push([t.o,`<b>${t.id}</b> with <b>${fn1(t.o)}</b> is ${whyText(a)}${a.ms?` · holds up ${esc(a.ms)}`:''}`,'Today',1,go,null,'acct:lead:'+t.id]);
+  if(ceo&&t.o!==W&&a.lvl==='ceo')out.push([t.o,`<b>Blocked:</b> ${t.id} ${esc(t.t)} is stuck with <b>${fn1(t.o)}</b>, ${whyText(a)}${a.ms?` · holds up ${esc(a.ms)}`:''}`,'Today',1,go,null,'acct:ceo:'+t.id]);
+  if(a.dep&&t.o===W){const da=A.find(x=>x.t===a.dep);if(da&&da.late)out.push([a.dep.o,`<b>${t.id}</b> is waiting on <b>${a.dep.id}</b> with ${fn1(a.dep.o)} (${whyText(da)})`,'Today',1,go,null,'acct:wait:'+t.id])}});
+ TASKS.filter(t=>t.s==='done'&&t.ho&&dayDiff(ISO(TODAY),t.ho)<=7).forEach(t=>{const go=()=>openProject(keyOfTask(t.id),'Issues');
+  if(t.nx===W)out.push([t.o,`<b>${fn1(t.o)}</b> finished <b>${t.id}</b> ${esc(t.t)}. It's over to you.`,'Today',1,go,null,'acct:ho:'+t.id]);
+  TASKS.filter(x=>x.w===t.id&&x.o===W&&x.s!=='done').forEach(x=>out.push([t.o,`<b>${t.id}</b> is done, so <b>${x.id}</b> ${esc(x.t)} can start now.`,'Today',1,go,null,'acct:go:'+x.id]))});
+ return out}
+// merge into the bell
+{const base=notifList;notifList=function(){const b=base();const A=acctNotifs(VIEWER).map(x=>{x[3]=NREAD.has(x[6])?0:1;return x});return isOwnCEO()?b:[...A,...b]}}
+function acctBell(){if(!isOwnCEO()){bellCount();return}for(let i=NOTIF.length-1;i>=0;i--)if(String(NOTIF[i][6]||'').startsWith('acct:'))NOTIF.splice(i,1);
+ const A=acctNotifs('AK').map(x=>{const id=x[6],fn=x[4];x[3]=NREAD.has(id)?0:1;x[4]=()=>{NREAD.add(id);fn()};return x});NOTIF.unshift(...A);bellCount()}
+// chase and reassign
+function chase(id){const t=TASKS.find(x=>x.id===id);if(!t)return;if(t.o==='AK'){toast('<b>This one is yours</b>','Update it from the task');return}const a=acct().find(x=>x.t===t);
+ let c=CONVS.find(x=>!x.ch&&x.dm===t.o);if(!c){c={id:t.o,dm:t.o,unread:0,msgs:[]};CONVS.push(c)}const now=new Date();
+ c.msgs.push(['AK',`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,`Quick check on ${t.id} ${t.t}: it's ${a?whyText(a):'open'}${a&&a.ms?` and it's holding up ${a.ms}`:''}. What do you need to get it done?`,{}]);
+ t.ch=ISO(TODAY);saveSoon();try{renderConvList()}catch(e){}toast(`<b>${esc(fn1(t.o))}</b> chased`,'Sent as a direct message',()=>openConv(t.o))}
+function reassign(id){const t=TASKS.find(x=>x.id===id);if(!t)return;const keys=Object.keys(P);openForm(`Reassign ${t.id}`,[{k:'o',label:'New owner',opts:keys.map(nm),v:nm(t.o)}],v=>{const k=keys.find(x=>nm(x)===v.o);if(!k||k===t.o)return;const old=t.o;t.o=k;t.mv=ISO(TODAY);acctAll();saveSoon();toast(`<b>${t.id}</b> moved to ${esc(fn1(k))}`,`${fn1(k)} and ${fn1(old)} were told`)},'Reassign')}
+// task panel: owner, due, status, waits for, hands to
+function openTask(id){const t=TASKS.find(x=>x.id===id);if(!t)return;const k=keyOfTask(t.id),keys=Object.keys(P),same=TASKS.filter(x=>x!==t&&keyOfTask(x.id)===k&&x.s!=='done');const due=taskDate(t.d);
+ openForm(`${t.id} · ${t.t}`,[{k:'s',label:'Status',opts:Object.values(STAT),v:STAT[t.s]},{k:'o',label:'Owner (accountable for it)',opts:keys.map(nm),v:nm(t.o)},{k:'d',label:'Due date',type:'date',v:due||''},
+  {k:'w',label:'Waits for',opts:['Nothing',...same.map(x=>`${x.id} · ${x.t}`)],v:t.w?(same.find(x=>x.id===t.w)?`${t.w} · ${same.find(x=>x.id===t.w).t}`:'Nothing'):'Nothing',hint:'If that task is late, this one shows as held up.'},
+  {k:'nx',label:'When done, hand to',opts:['No one',...keys.map(nm)],v:t.nx?nm(t.nx):'No one',hint:'They get a notification that it is their turn.'}],
+  v=>{const s2=Object.keys(STAT).find(x=>STAT[x]===v.s)||t.s,o2=keys.find(x=>nm(x)===v.o)||t.o;const moved=s2!==t.s||o2!==t.o;
+   t.s=s2;t.o=o2;if(v.d)t.d=LBL(v.d);t.w=v.w==='Nothing'?undefined:v.w.split(' · ')[0];t.nx=v.nx==='No one'?undefined:keys.find(x=>nm(x)===v.nx);if(moved)t.mv=ISO(TODAY);
+   let sub='Saved';if(s2==='done'){t.ho=ISO(TODAY);const waiting=TASKS.filter(x=>x.w===t.id&&x.s!=='done');const told=[...new Set([t.nx,...waiting.map(x=>x.o)].filter(Boolean))].map(fn1);if(told.length)sub=`${told.join(' and ')} ${told.length>1?'were':'was'} told it's their turn`}
+   acctAll();saveSoon();toast(`<b>${t.id}</b> updated`,sub)},'Save',{label:'Chase owner',fn:()=>chase(t.id)})}
+document.addEventListener('click',e=>{if(e.target.closest('button,a,input,select,[data-nydone]'))return;const r=e.target.closest('.lr[data-id],#board .card[data-id]');if(r&&TASKS.find(x=>x.id===r.dataset.id))openTask(r.dataset.id)});
+document.addEventListener('click',e=>{const c=e.target.closest('[data-chase]');if(c){e.stopPropagation();chase(c.dataset.chase);return}const r=e.target.closest('[data-reas]');if(r){e.stopPropagation();reassign(r.dataset.reas)}},true);
+// "Held up" panel on each project
+function renderHeld(){const host=$('#view-project');if(!host)return;let box=$('#pHeld');const tlH=[...host.querySelectorAll('.sh')].find(x=>/Timeline/.test(x.textContent));if(!box){box=document.createElement('div');box.id='pHeld';if(tlH)tlH.before(box);else return}
+ const A=acct().filter(a=>a.k===curProj&&(a.lvl==='late'||a.lvl==='lead'||a.lvl==='ceo'||(a.dep&&acct().find(x=>x.t===a.dep&&x.late))));
+ const IC={wait:'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.17a2 2 0 00-.59-1.42L12 12l-4.41 4.41A2 2 0 007 17.83V22"/><path d="M7 2v4.17a2 2 0 00.59 1.42L12 12l4.41-4.41A2 2 0 0017 6.17V2"/>',late:'<path d="M21.73 18l-8-14a2 2 0 00-3.48 0l-8 14A2 2 0 004 21h16a2 2 0 001.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/>'};
+ box.innerHTML=`<div class="sh">Held up <span class="n">${A.length}</span><span class="r" style="cursor:default">Who owns what's late, and what it affects</span></div>`+(A.length?`<div class="held">${A.map(a=>{const t=a.t,why=a.late||a.idle>=5?whyText(a):`waiting on ${a.dep.id} with ${fn1(a.dep.o)}`;
+  return `<div class="held-r lv-${a.lvl||'none'}"><span class="hic"><svg class="ic" viewBox="0 0 24 24">${a.late||a.idle>=5?IC.late:IC.wait}</svg></span><span style="min-width:0"><b><span>${t.id}</span>${esc(t.t)}</b><small>${av(t.o,'xs')} With ${esc(nm(t.o))} · <em>${why}</em>${a.ms?` · holds up ${esc(a.ms)}`:''}${a.lvl==='ceo'?' · escalated to you':a.lvl==='lead'?` · ${a.lead===t.o?'escalated':'lead '+esc(fn1(a.lead))+' told'}`:''}</small></span><span class="acts2">${t.o!=='AK'?`<button class="btn sm" data-chase="${t.id}">Chase</button>`:''}<button class="btn sm" data-reas="${t.id}">Reassign</button></span></div>`}).join('')}</div>`:'<div class="held-ok">Nothing is held up. Every task is on time.</div>')}
+{const rp=renderProject;renderProject=function(){const r=rp.apply(this,arguments);try{renderHeld()}catch(e){}return r}}
+// project health worked out from its tasks
+function acctHealth(){const A=acct();Object.keys(PINFO).forEach(k=>{const mine=A.filter(a=>a.k===k);const ceo=mine.some(a=>a.lvl==='ceo'),lates=mine.filter(a=>a.late).length,lead=mine.some(a=>a.lvl==='lead');const h=ceo||lates>=3?'off':lates||lead?'risk':'ok';if(PINFO[k].upd)PINFO[k].upd[0]=h})}
+{const rh=renderHP;renderHP=function(){try{acctHealth()}catch(e){}return rh.apply(this,arguments)}}
+// stuck tasks reach the CEO's Briefing
+{const rn=renderNY;renderNY=function(){try{if(isOwnCEO()){for(let i=NY.length-1;i>=0;i--)if(NY[i].auto)NY.splice(i,1);const A=acct().filter(a=>a.lvl==='ceo'&&a.t.o!=='AK');
+  A.forEach(a=>{NY.push({auto:1,id:'acct-'+a.t.id,k:'blocked',t:`${a.t.id} is stuck with ${fn1(a.t.o)}`,d:`${esc(a.t.t)}. ${whyText(a)}${a.ms?`, holds up ${a.ms}`:''}.`,who:a.t.o,when:`${a.late} days`,due:`${a.late} days late`,act:'Chase',go:()=>chase(a.t.id),done:!!(window.ACKNY&&ACKNY.has(a.t.id))})});
+  if(A.length)NY.forEach(x=>{if(!x.auto&&x.k==='blocked')x.hide=1})}}catch(e){}
+ const keep=NY.filter(x=>x.hide);keep.forEach(x=>{x._d=x.done;x.done=true});const r=rn.apply(this,arguments);keep.forEach(x=>{x.done=x._d;delete x._d});return r}}
+// late badge on task rows
+function acctBadges(){const A=acct();$$('.lr[data-id]').forEach(r=>{const a=A.find(x=>x.t.id===r.dataset.id);r.querySelectorAll('.late-b').forEach(x=>x.remove());if(a&&a.late){const tt=r.querySelector('.tt,.t,b')||r.children[2];if(tt)tt.insertAdjacentHTML('beforeend',`<span class="late-b">${a.late}d late</span>`)}})}
+function acctAll(){try{acctHealth()}catch(e){}try{acctBell()}catch(e){}try{if(curView==='home'){renderNY();renderHP()}if(curView==='project'){renderProject();renderIssues();renderBoard()}if(VIEWHOOK[curView]&&curView!=='home'&&curView!=='project')VIEWHOOK[curView]()}catch(e){}try{acctBadges()}catch(e){}}
+{const sv=showView;showView=function(v,o){const r=sv(v,o);try{acctBadges()}catch(e){}return r}}
+window.ACKNY=new Set();document.addEventListener('click',e=>{const d=e.target.closest('[data-nydone^="acct-"]');if(d)ACKNY.add(d.dataset.nydone.slice(5))},true);
+acctHealth();acctBell();try{renderNY();renderHP()}catch(e){}
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
 </script>
 </body>
