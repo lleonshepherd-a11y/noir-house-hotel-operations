@@ -1903,6 +1903,48 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 :root[data-theme=dark] .view .kpis>* b,:root[data-theme=dark] .view .tiles>* b{font-size:30px;font-weight:500;letter-spacing:-.035em;line-height:1.2;margin-top:4px;color:#fff}
 :root[data-theme=dark] .view .kpis>* svg,:root[data-theme=dark] .view .tiles>* svg{margin-top:12px}
 @media (max-width:640px){:root[data-theme=dark] .view .kpis,:root[data-theme=dark] .view .tiles{gap:10px!important}:root[data-theme=dark] .view .kpis>*,:root[data-theme=dark] .view .tiles>*{border-radius:20px!important;min-height:124px;padding:16px!important}:root[data-theme=dark] .view .kpis>* b,:root[data-theme=dark] .view .tiles>* b{font-size:24px}}
+
+/* Square profile pictures (Linear style) */
+.av,.avs .av,.av.md,.av.sm{border-radius:6px!important}
+.av.xs{border-radius:4px!important}
+.av.lg{border-radius:10px!important}
+.avs .av{box-shadow:0 0 0 2px #000}
+
+/* Threads in spaces and messages: simple, roomy, Linear style */
+.th{padding:18px 22px 8px;gap:0}
+.th .m{grid-template-columns:36px minmax(0,1fr);gap:0 14px;padding:6px 8px;margin-inline:-8px;border-radius:10px}
+.th .m.first{margin-top:16px}
+.th .m>.av,.th .m>.av.md{width:36px;height:36px;font-size:12.5px;border-radius:8px!important;align-self:start;margin-top:2px}
+.th .m .mh{gap:8px;font-size:15px;align-items:baseline}
+.th .m .mh b{font-weight:600;color:#fff}
+.th .m .mh time{font-size:12.5px;color:#7d7d84}
+.th .m p{font-size:14.5px;line-height:1.6;color:#c9c9ce;margin-top:2px}
+.th .m.mine p{color:#c9c9ce}
+:root[data-theme=dark] .th .m:hover{background:rgba(255,255,255,.025)}
+.th .sysm{align-self:stretch;display:flex;align-items:center;gap:10px;margin:14px 0 6px;padding:0;background:none!important;border-radius:0;font-size:13px;color:#7d7d84}
+.th .sysm::before{content:'';flex:none;width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.08) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M12 6v6l4 2'/%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3C/svg%3E") center/11px no-repeat}
+.th .rx{margin-top:6px}
+.th .fileatt{margin-top:8px}
+.th .mact{top:-10px}
+
+/* Main pages read like the front page: small, quiet section labels */
+.view .sh{font-size:13px!important;font-weight:600!important;color:#8a8a8f!important;letter-spacing:0!important}
+.view .sh .n{color:#5f5f66!important;font-weight:500}
+.view .sh .r,.view .sh .addr{font-size:12.5px}
+
+/* Title cards: separate charcoal boxes (Linear "Getting started" style) */
+:root[data-theme=dark] .view .cards,:root[data-theme=dark] .view .jump{gap:20px!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+:root[data-theme=dark] .view .cards>*,:root[data-theme=dark] .view .jump>*{margin:0!important;background:#161718!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;box-shadow:none!important;transform:none!important;transition:background .2s,border-color .2s!important}
+:root[data-theme=dark] .view .cards>*:hover,:root[data-theme=dark] .view .jump>*:hover{background:#1b1c1e!important;border-color:rgba(255,255,255,.14)!important;box-shadow:none!important}
+/* Jump to: icon on an empty top panel, divider, then title and text */
+:root[data-theme=dark] .view .jump>.jc{padding:0!important;gap:0!important;overflow:hidden}
+.view .jump>.jc .jc-h{height:118px;align-items:flex-start;padding:28px 24px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.view .jump>.jc .jc-ic{width:auto;height:auto;background:none!important;color:#fff}
+.view .jump>.jc .jc-ic .ic{width:20px;height:20px;stroke-width:1.8}
+.view .jump>.jc>b{padding:24px 24px 0;font-size:17px;font-weight:600;color:#fff}
+.view .jump>.jc>p{padding:8px 24px 0;margin:0;font-size:14.5px;line-height:1.55;color:#9a9aa0}
+.view .jump>.jc>.jc-n{margin:auto 24px 0;padding:14px 0 22px;border-top:0;font-size:12.5px;gap:8px;white-space:nowrap}.view .jump>.jc>.jc-n>*{overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (max-width:640px){.view .jump>.jc .jc-h{height:84px;padding:22px 22px 0}.view .jump>.jc>b{padding:18px 22px 0}.view .jump>.jc>p{padding:6px 22px 0}.view .jump>.jc>.jc-n{margin:auto 22px 0;padding:12px 0 18px}}
 </style>
 </head>
 <body>
