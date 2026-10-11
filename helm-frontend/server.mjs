@@ -36,7 +36,7 @@ const audit = (uid, what) => q("INSERT INTO audit(at,user_id,what) VALUES(?,?,?)
 /* ---------------- Roles: who can read and write each part of the workspace ---------------- */
 const STAFF = ["CEO", "Manager", "Member"], CEO = ["CEO"], MGR = ["CEO", "Manager"], ALL = ["CEO", "Manager", "Member", "Guest"];
 const ACL = {
-  TASKS: [ALL, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
+  TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
   TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, ALL], stamps: [ALL, ALL],
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
   NY: [CEO, CEO], SO: [CEO, CEO], dec: [CEO, CEO], DECLOG: [CEO, CEO],

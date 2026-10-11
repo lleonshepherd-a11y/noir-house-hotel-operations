@@ -1,51 +1,64 @@
-# Helm: founder console (front-end prototype)
+# Helm: founder console
 
-A clickable front end for Helm, a dashboard that shows a founder their whole company: priorities, decisions, blockers, team pulse, money, funding, files and chat. All data is sample data. There is no backend yet.
+Helm shows a founder their whole company in one place: what needs them today, projects and tasks, the team, money, wages, fundraising, board and legal, messages and spaces.
 
-## Run it locally
+It has two parts in this folder:
 
-You need nothing installed to look at it:
+- `index.html`: the app the team uses.
+- `server.mjs`: the backend. It handles accounts, roles, the database, file storage and live updates. It needs no extra packages, only Node.js 22.13 or newer.
 
-- **Quickest:** double-click `index.html` to open it in Chrome, Safari or Edge.
-- **As a local site** (needs Node.js 18 or newer):
+## Run it on your computer
 
-  ```bash
-  cd helm-frontend
-  node serve.mjs
-  ```
+```bash
+cd helm-frontend
+npm start
+```
 
-  Then open http://localhost:5173. Set `PORT=3000` to use a different port.
+Open http://localhost:5173. The first person to open it sets up the workspace and becomes the CEO. The app starts with sample data so you can see how it works.
+
+To look at the app on its own, without accounts or saving to a server, open `index.html` in a browser or run `npm run demo`.
 
 ## Deploy on Railway
 
 1. In Railway, choose **New Project → Deploy from GitHub repo** and pick `noir-house-hotel-operations`.
-2. Open the service's **Settings**:
+2. In the service's **Settings**:
    - **Source → Branch:** `claude/nice-euler-o5jz2b`
    - **Source → Root Directory:** `/helm-frontend`
-3. Under **Networking**, click **Generate Domain**.
+3. Add a **Volume** to the service and mount it at `/data`. This is where the database and uploaded files live. Without a volume, everything is wiped on each deploy.
+4. In **Variables**, add `DATA_DIR=/data`.
+5. Under **Networking**, click **Generate Domain**, then open that address and set up your account.
 
-Railway runs `npm start`, which serves the site on the port Railway provides.
+Railway runs `npm start`. The health check is `/health`.
 
-## What's in it
+## What the backend does
 
-A light, Linear-style app: a compact sidebar on a grey canvas, one white panel with a thin header bar, and a Messages panel on the right for colleagues to message each other.
+| Area | How it works |
+| --- | --- |
+| Accounts | Email and password. Passwords are stored as scrypt hashes. Sessions use a secure, HTTP-only cookie that lasts 30 days. Login is rate-limited to 10 tries per 15 minutes. |
+| First run | The first person creates the workspace and becomes the CEO. |
+| Inviting people | Settings → Members & permissions → **Invite** (for someone already on the team list) or **Invite people** (for someone new). Helm makes a one-time link to send them. They choose a password and they're in. |
+| Roles | CEO, Manager, Member and Guest. Roles are checked on the server: a Member's browser is never sent money, wages, fundraising, board and legal, connections or decisions data, and the server refuses any change to those areas. Changing someone's role in Settings updates their account. |
+| Wages | Never sent with the rest of the data. Wages open only after the server checks the 4-digit PIN, and only for the CEO and the people given access. The PIN is stored hashed. The first PIN is 1234; change it from the Wages page. |
+| Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. |
+| Messages | Spaces and direct messages are stored on the server. People only receive the spaces they're in and their own direct messages, and can only post as themselves. New messages reach everyone straight away. |
+| Live updates | When someone changes something, everyone else's screen updates within a second. |
+| Files | Uploads (space files, contract and minutes PDFs, data room documents) are stored on the server, up to 25 MB each. Each file is only available to roles allowed to see that area. |
+| Audit log | Every change, upload, invite and wages access is recorded with who did it and when. |
+| Security | Changes need a custom request header, which blocks cross-site form posts. Uploaded files are served with a sandbox policy, and only safe file types open in the browser. |
 
-| Screen | How to get there | What it shows |
-| --- | --- | --- |
-| Briefing | Default view | Priorities, decisions waiting on the CEO, blockers, spend vs plan, teams, activity and comments |
-| Murmur (project) | Sidebar → Favorites → Murmur | Properties, KPIs, latest update, the nine stages as milestones, plus Issues, Board, Files, Money and Funding tabs |
-| Projects | Sidebar → Workspace → Projects | Roadmap board by quarter with a + on every column to add a project |
-| Stages & team | Sidebar → Workspace → Stages & team | The nine company stages and the lean starting team |
-| Messages | Sidebar → Messages | The feed of all conversations: search, spaces and direct messages on the left, the open conversation on the right |
-| Message | "Message" button at the top | A drawer to write a new message to a person, several people or a space |
+## Not built yet
 
-To add work: press **New task** in the header (or the C key) to create a task and assign it to a coworker, use the **+** on any board column or issue group, and use **New project**, the **+** next to "Your projects" in the sidebar, or the **+** on a quarter column to add a project.
-
-Things you can try: send a message with `@name` or `#MUR-142`, pick an option on a decision, hover over tiles and the spend chart, drag a board card to another column, reply to a comment with `@name`, and press ⌘K (Ctrl+K) to search.
+- **Real connections.** The bank, Stripe, payroll, Google Calendar and Slack each need an account and API keys from that company. The server already reports which keys are set (for example `STRIPE_SECRET_KEY`); pulling their data in is the next step.
+- **Email.** Invite links are shown to the CEO to send themselves, and notifications appear in the app. Sending emails needs an email service such as Resend or Postmark.
+- **Password reset by email.** For now the CEO can send a new invite.
+- **Editing at the same moment.** If two people edit the same area at once, the last save wins. Messages are merged safely.
 
 ## Files
 
-- `index.html`: the whole app (HTML, CSS and JavaScript in one file, no build step)
-- `serve.mjs`: an optional zero-dependency local server
-
-The next step to make it a real product is splitting this into components (for example React) and connecting it to a backend for projects, tasks, people and spend.
+| File | What it is |
+| --- | --- |
+| `index.html` | The app |
+| `server.mjs` | The backend |
+| `login.html` | The sign-in, first-run setup and join-from-invite page |
+| `serve.mjs` | A simple server for the demo only (no accounts) |
+| `SEED_FOUNDER_NEEDS.md` | What a seed-stage company needs from Helm |

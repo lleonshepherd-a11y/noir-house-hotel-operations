@@ -1,13 +1,14 @@
 {
-  "name": "helm-frontend",
-  "version": "0.1.0",
+  "name": "helm",
+  "version": "0.2.0",
   "private": true,
-  "description": "Helm founder console front-end prototype",
+  "description": "Helm founder console: front end plus a zero-dependency Node backend (accounts, roles, SQLite, files, live updates)",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13"
   },
   "scripts": {
-    "start": "node serve.mjs"
+    "start": "node --disable-warning=ExperimentalWarning server.mjs",
+    "demo": "node serve.mjs"
   }
 }

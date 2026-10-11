@@ -1,8 +1,8 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "deploy": {
-    "startCommand": "node serve.mjs",
-    "healthcheckPath": "/",
+    "startCommand": "node --disable-warning=ExperimentalWarning server.mjs",
+    "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE"
   }
 }

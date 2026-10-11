@@ -2261,7 +2261,7 @@ const ICON={doc:'<svg class="ic" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a.5
  play:'<svg viewBox="0 0 12 14" width="11" height="12"><path d="M1 .8l10 6.2-10 6.2z" fill="var(--ink)"/></svg>'};
 
 const P={AK:['Alex Kim','var(--ink)','#fff'],JR:['Jordan R.','#e1e7fb','#2c3e8f'],SP:['Sofia P.','#fde2ea','#9b2c4f'],ML:['Maya L.','#dcf3e8','#1d6b4a'],TN:['Tara N.','#d9f1f2','#1d5f66'],PS:['Priya S.','#fbe9d3','#8a5212'],TO:['Tom O.','#ece5fb','#5b3fa0'],DW:['Dan W.','var(--soft)','var(--ink2)']};
-const av=(k,s='')=>`<span class="av ${s}" style="--av:${P[k][1]};--avc:${P[k][2]}" title="${P[k][0]}">${k}</span>`;
+const av=(k,s='')=>`<span class="av ${s}" style="--av:${P[k][1]};--avc:${P[k][2]}" title="${esc(P[k][0])}">${window.HELM_BACKEND?esc(P[k][0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()):k}</span>`;
 const LB={Launch:'#e5484d',Product:'#5e6ad2',Growth:'#8b8f97',Ops:'#8b8f97',Finance:'#5f636b',Design:'#8b8f97',Legal:'#8b8f97',Hiring:'#8b8f97'};
 Object.keys(LB).forEach(k=>LB[k]='#b4b7bd');LB.Launch='#e5484d';
 const lbl=n=>`<span class="lbl" style="--c:${LB[n]}"><i></i>${n}</span>`;
@@ -2728,10 +2728,10 @@ const NOTE0=[
  {id:'n3',t:'1:1 with Jordan',proj:'People',who:'AK',u:NOW-DAY,pin:false,b:'<p>Jordan is stretched across both launch blockers. Agreed to move the help-centre review to Priya.</p><ul class="chk"><li class="done">Move MUR-139 to Priya</li><li>Decide the senior hire by Friday</li></ul>'},
  {id:'n4',t:'Pilot feedback themes',proj:'Murmur',who:'PS',u:NOW-2*DAY,pin:false,b:'<h2>Top themes</h2><ul><li>Accuracy in noisy rooms (31% of feedback)</li><li>People love the Slack integration</li><li>Two pilots want team admin controls before paying</li></ul>'},
  {id:'n5',t:'Launch checklist',proj:'Murmur',who:'SP',u:NOW-3*DAY,pin:true,b:'<ul class="chk"><li class="done">Product Hunt page drafted</li><li class="done">Launch video v3</li><li>App Store screenshots</li><li>Press list confirmed</li><li>Support rota for launch week</li></ul>'}];
-let NOTES=null;try{NOTES=JSON.parse(localStorage.getItem(NOTES_KEY))}catch(e){}
+let NOTES=null;try{if(!window.HELM_BACKEND)NOTES=JSON.parse(localStorage.getItem(NOTES_KEY))}catch(e){}
 if(!Array.isArray(NOTES)||!NOTES.length)NOTES=NOTE0;
 let noteCur=NOTES[0].id,nT;
-function saveNotes(){try{localStorage.setItem(NOTES_KEY,JSON.stringify(NOTES))}catch(e){}}
+function saveNotes(){if(window.HELM_BACKEND){saveSoon();return}try{localStorage.setItem(NOTES_KEY,JSON.stringify(NOTES))}catch(e){}}
 const plain=h=>{const d=document.createElement('div');d.innerHTML=h.replace(/<\/(h2|p|li|div)>|<br\s*\/?>/g,'$& ');return d.textContent.replace(/\s+/g,' ').trim()};
 function relT(ts){const m=Math.round((Date.now()-ts)/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago'}
 function renderNoteList(){const q=$('#nq').value.trim().toLowerCase();const items=NOTES.filter(n=>!q||(n.t+' '+plain(n.b)).toLowerCase().includes(q)).sort((a,b)=>b.u-a.u);
@@ -3094,7 +3094,7 @@ function drawWiz(){const w=$('.wiz');if(!w)return;const s2=wz.step;const steps=`
  const f=w.querySelector('input');if(f&&s2!==3)f.focus()}
 function finishWiz(){try{localStorage.setItem('helm-setup-done','1')}catch(e){}closeWizard();VIEWHOOK.settings();$('#sName').value=wz.name;$('#sWhat').value=wz.what;$('#sStage').selectedIndex=wz.stage;wz.step=0;showView('home');toast(`<b>${esc(wz.name)}</b> is set up`,`Stage ${wz.stage+1} · ${wz.emails.length} invite${wz.emails.length===1?'':'s'} sent`)}
 $('#rerunSetup').addEventListener('click',()=>{wz.step=0;openWizard()});
-let setupDone=false;try{setupDone=!!localStorage.getItem('helm-setup-done')}catch(e){setupDone=true}
+let setupDone=false;try{setupDone=!!window.HELM_BACKEND||!!localStorage.getItem('helm-setup-done')}catch(e){setupDone=true}
 if(!setupDone)setTimeout(openWizard,300);
 /* =================== END STAGE 3 =================== */
 
@@ -3546,7 +3546,7 @@ applyRole();
 /* ---------- Saving: keeps every change on this device ---------- */
 const SAVE_KEY='helm-data-v1';
 const DEC_DONE=window.DEC_DONE||{};
-const ARR={MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD};
+const ARR={NOTES:()=>NOTES,MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD};
 function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:CN.map(x=>x.on===2?0:x.on),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,WG};
  for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'&&typeof v==='string'&&v.startsWith('blob:')?undefined:v)}
 let saveT=null,saveOK=true;
@@ -3566,7 +3566,7 @@ function applyData(d){
  if(d.stamps)Object.assign(STAMP,d.stamps);if(d.WG)Object.assign(WG,d.WG);
  Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
  ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
- const R=[renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
+ const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
  R.forEach(fn=>{try{fn&&fn()}catch(e){}});return true}
 const hadSaved=loadSaved();
 
@@ -3604,7 +3604,7 @@ function bkInvite(pkey,name){openForm(pkey?`Invite ${name}`:'Invite people',[{k:
 function bkUI(){
  const st=$('#view-settings .ph2 .acts');if(st){$('#resetData').hidden=true;if(!$('#signOut')){const b=document.createElement('button');b.className='btn';b.id='signOut';b.textContent='Sign out';st.prepend(b);b.addEventListener('click',async()=>{await bkSave();await bkApi('/api/logout',{method:'POST'});location.href='/login'})}}
  const foot=$('.side-foot');if(foot&&!$('#bkDot')){const d=document.createElement('span');d.id='bkDot';d.className='bkdot';foot.appendChild(d)}
- const sm=$('.side-foot small');if(sm)sm.textContent=`${BK.me.role} · Settings`;
+ const sm=$('.side-foot small');if(sm)sm.textContent=`${BK.me.role} · Settings`;const fa=$('.side-foot .av');if(fa)fa.textContent=P.AK[0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
  if(BK.me.role==='CEO'){const mi=$('#memInvite');if(mi){const n=mi.cloneNode(true);mi.replaceWith(n);n.addEventListener('click',()=>bkInvite())}bkUsers()}
  const pb=$$('[data-preview]');pb.forEach(b=>{if(BK.me.role!=='CEO')b.remove()})}
 if(BK.on){const rm=renderMem;renderMem=function(){rm();if(!BK.me||BK.me.role!=='CEO')return;$$('#memRows tr').forEach((tr,i)=>{const k=MEM[i]&&MEM[i][0];const acc=BK.users.find(u=>u.pkey===k);const cell=tr.lastElementChild;if(!cell||!P[k])return;if(acc)cell.insertAdjacentHTML('afterbegin',`<span class="tag n" style="margin-right:6px">${acc.pending?'Invite sent':'Has account'}</span>`);else if(k!=='AK')cell.insertAdjacentHTML('afterbegin',`<button class="btn sm" data-binv="${k}" style="margin-right:6px">Invite</button>`)})}
