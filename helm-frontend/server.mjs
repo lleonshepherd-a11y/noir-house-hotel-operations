@@ -61,6 +61,8 @@ const ACL = {
 const canRead = (sec, role) => ACL[sec]?.[0].includes(role);
 const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
 const FILE_AREA = { space: ALL, legal: CEO, dataroom: CEO, wages: CEO, project: STAFF };
+// Wages files follow wages access: Managers the CEO lets see wages can open them; only the CEO adds them.
+const canFile = (area, u, write) => area === "wages" && !write ? wagesOK(u) : !!FILE_AREA[area]?.includes(u.role);
 
 /* ---------------- Checking what people send before it is saved ----------------
    Nothing that looks like HTML is stored in names, titles, ids or labels, and each
@@ -502,13 +504,13 @@ async function api(req, res, url) {
     if (!pkey) { pkey = nextKey(b.name || b.email); P[pkey] = [String(b.name || b.email.split("@")[0]).slice(0, 80), "#efeff1", "#3f4148"]; writeSec("P", P, u.id); }
     { const mem = readSec("MEM") || []; if (!mem.some((x) => x[0] === pkey)) { mem.push([pkey, role]); writeSec("MEM", mem, u.id); } }
     const token = randomBytes(24).toString("hex");
-    q("INSERT INTO users(email,name,pkey,role,invite,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), (P[pkey] || [b.name])[0], pkey, role, token, Date.now());
+    q("INSERT INTO users(email,name,pkey,role,invite,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), String((P[pkey] || [b.name || b.email.split("@")[0]])[0]).slice(0, 80), pkey, role, token, Date.now());
     audit(u.id, "invited " + b.email + " as " + role);
     return send(res, 200, { link: `${publicOrigin(url)}/join?t=${token}`, pkey: swapKeys(pkey, "AK", u.pkey) });
   }
 
   if (p === "/api/files" && m === "POST") {
-    const area = url.searchParams.get("area") || "space"; if (!FILE_AREA[area]?.includes(u.role)) return send(res, 403, { error: "Not allowed" });
+    const area = url.searchParams.get("area") || "space"; if (!canFile(area, u, true)) return send(res, 403, { error: "Not allowed" });
     let space = null;
     if (area === "space") { space = url.searchParams.get("space"); const conv = (readSec("CONVS") || []).find((c) => c.ch && c.id === space); if (!conv || !canSeeConv(conv, u)) return send(res, 403, { error: "You’re not in that space." }); }
     let name = "file"; try { name = decodeURIComponent(String(req.headers["x-file-name"] || "file")); } catch {}
@@ -525,7 +527,7 @@ async function api(req, res, url) {
   }
   const fm = /^\/api\/files\/([a-f0-9]{32})$/.exec(p);
   if (fm && m === "GET") {
-    const f = q("SELECT * FROM files WHERE id=?").get(fm[1]); if (!f || !FILE_AREA[f.area]?.includes(u.role)) return send(res, 404, { error: "Not found" });
+    const f = q("SELECT * FROM files WHERE id=?").get(fm[1]); if (!f || !canFile(f.area, u, false)) return send(res, 404, { error: "Not found" });
     if (f.area === "space" && u.role !== "CEO") { // only members of the space (or whoever uploaded it) can open a space file
       const conv = f.space && (readSec("CONVS") || []).find((c) => c.ch && c.id === f.space);
       if (!(conv ? canSeeConv(conv, u) : f.owner === u.id || u.role === "Manager")) return send(res, 404, { error: "Not found" });
@@ -576,6 +578,6 @@ createServer(async (req, res) => {
   } catch (e) {
     if (!res.headersSent) send(res, e.code === 413 ? 413 : e.code === 400 ? 400 : 500, { error: e.code === 413 ? "Too large" : e.code === 400 ? "Bad request" : "Server error" }, e.code === 413 ? { connection: "close" } : {});
     if (e.code === 413) res.on("finish", () => req.destroy()); // stop reading the rest of an oversized upload
-    if (!e.code) console.error(e);
+    if (e.code !== 413 && e.code !== 400) console.error(e);
   }
 }).listen(PORT, () => console.log(`Helm running at http://localhost:${PORT} (data in ${DATA})`));
