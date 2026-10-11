@@ -3257,18 +3257,14 @@ applyRole();
 /* ---------- Spaces by membership, member view tidy, Workspace 'more' ---------- */
 function inSpace(c){return typeof VIEWER==='undefined'||VIEWER==='AK'||!c.mem||c.mem.includes(VIEWER)}
 let wsOpen=false;
-function layoutWorkspace(){const nav=$('#wsHead').closest('.grp').querySelector('.nav');const vis=[...nav.querySelectorAll(':scope > [data-view]')].filter(b=>!b.hidden);
- vis.forEach((b,i)=>b.classList.toggle('wsx',i>=8));const extra=vis.length-8;let m=$('#wsMore');
- if(!m){m=document.createElement('button');m.id='wsMore';m.className='ni wsmore';nav.appendChild(m)}
- m.hidden=extra<=0;m.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><path d="M${wsOpen?'6 15l6-6 6 6':'6 9l6 6 6-6'}"/></svg>${wsOpen?'Show less':`${extra} more`}`;
- nav.classList.toggle('ws-open',wsOpen);$('#wsHead').classList.toggle('open',wsOpen)}
+function layoutWorkspace(){const g=$('#wsHead').closest('.grp');g.classList.toggle('closed',!wsOpen);$('#wsHead').classList.toggle('open',wsOpen);const m=$('#wsMore');if(m)m.remove();g.querySelectorAll('.wsx').forEach(b=>b.classList.remove('wsx'))}
 $('#wsHead').addEventListener('click',e=>{e.stopImmediatePropagation();const g=$('#wsHead').closest('.grp');g.classList.remove('closed');wsOpen=!wsOpen;layoutWorkspace()},true);
 document.addEventListener('click',e=>{if(e.target.closest('#wsMore')){wsOpen=!wsOpen;layoutWorkspace()}});
 {const ar=applyRole;applyRole=function(){ar();const _c=VIEWER==='AK';NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=P[VIEWER][0].split(' ')[0];$('#hello').textContent=`Good morning, ${nm}`;const ceo=VIEWER==='AK';
  ['#navDec'].forEach(x=>{const e=$(x);if(e&&!ceo)e.hidden=true});
  renderSideSpaces();renderConvList();if(curView==='spaces'&&typeof spShow==='function'){spCur=null;spShow()}
  layoutWorkspace()}}
-{const sv=showView;showView=function(v,o){const r=sv(v,o);const b=document.querySelector('.side [data-view="'+v+'"].wsx');if(b&&!wsOpen){wsOpen=true;layoutWorkspace()}return r}}
+{const sv=showView;showView=function(v,o){const r=sv(v,o);const b=$('#wsHead').closest('.grp').querySelector('.nav > [data-view="'+v+'"]');if(b&&!wsOpen){wsOpen=true;layoutWorkspace()}return r}}
 applyRole();
 
 /* ---------- Saving: keeps every change on this device ---------- */
