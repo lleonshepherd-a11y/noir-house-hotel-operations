@@ -1506,6 +1506,13 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 .wsmore:hover{color:var(--fg)!important}
 #wsHead svg{transition:transform .2s var(--ease)}
 #wsHead:not(.open) svg{transform:rotate(-90deg)}
+
+/* lighter black on hover for every card */
+:root[data-theme=dark] .pc,:root[data-theme=dark] .card,:root[data-theme=dark] .ev,:root[data-theme=dark] .spc,:root[data-theme=dark] .jc,:root[data-theme=dark] .kpi,:root[data-theme=dark] .dec,:root[data-theme=dark] .mt-card,:root[data-theme=dark] .so,:root[data-theme=dark] .cn,:root[data-theme=dark] .side-card,:root[data-theme=dark] .calside,:root[data-theme=dark] .dri,:root[data-theme=dark] .bill,:root[data-theme=dark] .obi,:root[data-theme=dark] .post,:root[data-theme=dark] .cev,:root[data-theme=dark] .spi,:root[data-theme=dark] .ci{transition:background .18s ease,border-color .18s ease,transform .25s var(--ease),box-shadow .25s var(--ease)}
+:root[data-theme=dark] .pc:hover,:root[data-theme=dark] .card:hover,:root[data-theme=dark] .ev:hover,:root[data-theme=dark] .spc:hover,:root[data-theme=dark] .jc:hover,:root[data-theme=dark] .kpi:hover,:root[data-theme=dark] .dec:hover,:root[data-theme=dark] .mt-card:hover,:root[data-theme=dark] .so:hover,:root[data-theme=dark] .cn:hover,:root[data-theme=dark] .side-card:hover,:root[data-theme=dark] .calside:hover,:root[data-theme=dark] .dri:hover,:root[data-theme=dark] .bill:hover,:root[data-theme=dark] .obi:hover,:root[data-theme=dark] .post:hover,:root[data-theme=dark] .cev:hover,:root[data-theme=dark] .spi:hover,:root[data-theme=dark] .ci:hover{background:#141417!important;border-color:rgba(255,255,255,.16)!important}
+:root[data-theme=dark] .cards>*:hover,:root[data-theme=dark] .kpis>*:hover,:root[data-theme=dark] .tiles>*:hover,:root[data-theme=dark] .jump>*:hover{background:#121215!important}
+:root[data-theme=dark] tbody tr:hover td{background:rgba(255,255,255,.035)}
+:root[data-theme=dark] .lr:hover{background:rgba(255,255,255,.045)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
