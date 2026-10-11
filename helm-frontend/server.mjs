@@ -44,7 +44,7 @@ const ACL = {
   NY: [CEO, CEO], SO: [CEO, CEO], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
-  INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO],
+  INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO], TS: [CEO, CEO],
   ROLES: [CEO, CEO], CANDS: [CEO, CEO], OB: [CEO, CEO], CN: [CEO, CEO],
   CX: [CEO, []], // what the connections read (Gmail, Drive, Stripe…); only the server writes it
   CONVS: [ALL, ALL], // filtered and merged per person below

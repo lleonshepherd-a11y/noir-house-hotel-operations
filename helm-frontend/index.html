@@ -1870,6 +1870,25 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
  #crumb>.ic[style*="2d9bff"]{animation:pulseic 2.4s ease-in-out infinite}
  @keyframes pulseic{0%,100%{opacity:1}50%{opacity:.55}}
 }
+
+/* Same spacing on every page */
+.view>.wrap{padding-top:32px!important}
+.view .sh{margin-top:40px}
+.view .ph2+.sh,.view .ph2+.tiles+.sh{margin-top:28px}
+#view-people [data-p2] .sh{margin-top:20px!important}
+#ipBanner:not(:empty){margin-bottom:6px}
+/* Last charcoal tiles to black */
+:root[data-theme=dark] #ptl.tl,:root[data-theme=dark] .update,:root[data-theme=dark] .bcol,:root[data-theme=dark] .nl{background:#000!important;border-color:rgba(255,255,255,.1)!important}
+:root[data-theme=dark] .bcol{border:1px solid rgba(255,255,255,.1)!important}
+:root[data-theme=dark] .nl{border-right:1px solid rgba(255,255,255,.08)!important}
+#spDir>.wrap{padding-top:32px!important}
+.mod{max-height:calc(100dvh - 11vh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.mod .mod-f{position:sticky;bottom:0;background:inherit;z-index:2}
+/* Term sheets */
+#mtRatios .kpi small{display:block}
+.ts-tbl td,.ts-tbl th{vertical-align:middle}
+.ts-tbl td:first-child{width:30%}
+.ts-tbl td.ts-best{color:#30d158;font-weight:600}
 </style>
 </head>
 <body>
@@ -2201,8 +2220,9 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
           <div class="wrap wide">
             <div class="ph2"><div><h1 class="title">Fundraising</h1><p class="lead" id="frLead">Seed round · $4M target · closing January 2027</p><span class="stampl" id="frStamp"></span></div><div class="acts"><input type="file" id="drFile" hidden><button class="btn" id="frShare">Share data room</button><button class="btn" id="frRound"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Edit round</button><button class="btn pri" id="frAddInv"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add investor</button></div></div>
             <div class="tiles" id="frTiles"></div>
-            <div class="seg2" data-g="fr"><button data-t2="Pipeline" class="on">Investor pipeline</button><button data-t2="Cap table">Cap table</button><button data-t2="SAFEs">SAFEs</button><button data-t2="Data room">Data room</button><button data-t2="Updates">Investor updates</button></div>
+            <div class="seg2" data-g="fr"><button data-t2="Pipeline" class="on">Investor pipeline</button><button data-t2="Term sheets">Term sheets</button><button data-t2="Cap table">Cap table</button><button data-t2="SAFEs">SAFEs</button><button data-t2="Data room">Data room</button><button data-t2="Updates">Investor updates</button></div>
             <div data-p2="fr:Pipeline"><p class="hintl">Drag a card to move an investor between stages. Click a card to edit it.</p><div class="dnd-board" id="frBoard"></div></div>
+            <div data-p2="fr:Term sheets" hidden><div class="sh" style="margin-top:6px">Term sheets side by side <span class="n" id="tsN"></span><button class="r addr" id="tsAdd">+ Add term sheet</button></div><div class="tbl ts-tbl"><table><thead id="tsHead"></thead><tbody id="tsRows"></tbody></table></div><p class="hintl" style="margin-top:12px">A higher pre-money valuation means you give away less of the company for the same money. Check the option pool too: a pool counted before the money comes in is paid for by existing shareholders.</p></div>
             <div data-p2="fr:Cap table" hidden>
               <div class="seg2" data-g="cap" style="margin:0 0 4px"><button data-t2="now" class="on">Today</button><button data-t2="seed">After the seed round</button></div>
               <div class="capbar" id="capBar"></div><div class="caplg" id="capLg"></div>
@@ -2239,7 +2259,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
 
         <!-- ======== MY TASKS ======== -->
         <section class="view" id="view-mytasks" hidden>
-          <div class="wrap">
+          <div class="wrap wide">
             <div class="ph2"><div><h1 class="title">My tasks</h1><p class="lead" id="mtLead"></p></div></div>
             <div class="sh">Assigned to me <span class="n" id="mtN1"></span></div><div class="list" id="mtMine"></div>
             <div class="sh">Waiting for my sign-off <span class="n" id="mtN2"></span></div><div class="list" id="mtSign"></div>
@@ -2249,7 +2269,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
 
         <!-- ======== DECISIONS ======== -->
         <section class="view" id="view-decisions" hidden>
-          <div class="wrap">
+          <div class="wrap wide">
             <div class="ph2"><div><h1 class="title">Decisions</h1><p class="lead">What is waiting on you, and a record of everything decided, with the reason.</p></div></div>
             <div class="sh">Waiting on you <span class="n" id="dlN"></span><button class="r" data-view="home">See the briefing</button></div><div class="list" id="dlOpen"></div>
             <div class="sh">Decision log <span class="n" id="dlN2"></span></div>
@@ -2263,6 +2283,8 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
             <div class="ph2"><div><h1 class="title">Metrics</h1><p class="lead">The numbers investors ask about, each against its target. Updated weekly.</p><span class="stampl" id="mtStamp"></span></div><div class="acts"><button class="btn" id="mtTgt"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>Edit targets</button><button class="btn pri" id="mtUpd"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Update this week</button></div></div>
             <div class="tiles" id="mtTiles"></div>
             <div class="g2" id="mtCharts"></div>
+            <div class="sh ceo-only">Investor ratios <span class="n">How investors will judge the round</span></div>
+            <div class="kpis ceo-only" id="mtRatios" style="margin-top:0"></div>
             <div class="sh">All metrics <span class="n" id="mtN"></span><button class="r addr" id="mtAdd">+ Add metric</button></div>
             <div class="tbl"><table><thead><tr><th>Metric</th><th class="num">Now</th><th class="num">Target</th><th class="num">Last month</th><th>Status</th><th style="width:36px"></th></tr></thead><tbody id="mtRows"></tbody></table></div>
           </div>
@@ -2918,6 +2940,14 @@ const FR_ST=['Contacted','Meeting','Diligence','Term sheet','Committed'];
 const INV=[['Northbeam Ventures','Seed fund','$1.0M','Term sheet','AK','Sign by 24 Oct'],['Harbour Capital','Seed fund','$750k','Term sheet','AK','Follow-up call Thu 14:00'],['Field Fund','Pre-seed investor','$500k','Committed','ML','Pro rata confirmed'],['Kestrel Angels','Angel group','$250k','Diligence','ML','Data room shared'],['Oakline Partners','Series A fund','$1.5M','Meeting','AK','Partner meeting Tue'],['Lumen Capital','Seed fund','$500k','Diligence','AK','Customer reference calls'],['Arc Angels','Angels','$100k','Committed','ML','Signed'],['Northstar VC','Seed fund','$1.0M','Contacted','AK','Intro via Field Fund'],['Tidewater','Micro VC','$250k','Contacted','ML','Send deck'],['Halyard','Seed fund','$750k','Meeting','AK','First call Mon']].map(([n,type,tk,stg,o,nx],i)=>({id:'iv'+i,n,type,tk,stg,o,nx}));
 const ARROW='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const invCard=i=>`<div class="top"><span>${esc(i.type)}</span>${av(i.o,'xs')}</div><p style="font-weight:600">${esc(i.n)}</p><span class="amt">${esc(i.tk)}</span><span class="nx">${ARROW}${esc(i.nx)}</span>`;
+const TS=[{n:'Northbeam Ventures',amt:1000000,pre:16000000,lead:'Yes',board:'1 board seat',pro:'Yes',liq:'1x non-participating',pool:'10%, counted after the money',exp:'2026-10-24'},{n:'Harbour Capital',amt:750000,pre:14000000,lead:'No',board:'Board observer',pro:'Yes',liq:'1x non-participating',pool:'12%, counted before the money',exp:'2026-10-30'}];
+function renderTS(){const n=$('#tsN');if(!n)return;n.textContent=TS.length;const post=t=>t.pre+ROUND.target;
+ const best=(f,hi=true)=>{const v=TS.map(f);const m=hi?Math.max(...v):Math.min(...v);return i=>TS.length>1&&v[i]===m};
+ const R=[['Investing',t=>usd(t.amt)],['Pre-money valuation',t=>kusd(t.pre),best(t=>t.pre)],['Post-money (whole $'+(ROUND.target/1e6)+'M round)',t=>kusd(post(t))],['They would own',t=>(t.amt/post(t)*100).toFixed(1)+'%'],['Whole round sells',t=>(ROUND.target/post(t)*100).toFixed(1)+'%',best(t=>ROUND.target/post(t),false)],['Leads the round',t=>esc(t.lead)],['Board',t=>esc(t.board)],['Pro rata rights',t=>esc(t.pro)],['Liquidation preference',t=>esc(t.liq)],['Option pool',t=>esc(t.pool)],['Offer expires',t=>{const d=daysTo(t.exp);return `${dlab(t.exp)}${d<=14?` <span class="tag warn">${d} days</span>`:''}`}]];
+ $('#tsHead').innerHTML=`<tr><th></th>${TS.map((t,i)=>`<th><span style="display:flex;align-items:center;gap:8px;justify-content:space-between"><b style="color:var(--fg);font-weight:600">${esc(t.n)}</b>${edb(`data-ts="${i}"`,t.n)}</span></th>`).join('')}</tr>`;
+ $('#tsRows').innerHTML=R.map(([l,f,b])=>`<tr><td class="muted2">${l}</td>${TS.map((t,i)=>`<td${b&&b(i)?' class="ts-best"':''}>${f(t)}</td>`).join('')}</tr>`).join('')}
+function editTS(i){const t=i!=null?TS[i]:{n:'',amt:'',pre:'',lead:'No',board:'None',pro:'Yes',liq:'1x non-participating',pool:'',exp:'2026-11-01'};openForm(i!=null?'Edit term sheet':'Add term sheet',[{k:'n',label:'Investor',v:t.n},{k:'amt',label:'Amount they invest (USD)',type:'number',v:t.amt},{k:'pre',label:'Pre-money valuation (USD)',type:'number',v:t.pre},{k:'lead',label:'Leads the round',opts:['Yes','No'],v:t.lead},{k:'board',label:'Board',v:t.board,ph:'e.g. 1 board seat, observer, none'},{k:'pro',label:'Pro rata rights',opts:['Yes','No'],v:t.pro},{k:'liq',label:'Liquidation preference',v:t.liq},{k:'pool',label:'Option pool',v:t.pool,ph:'e.g. 10%, counted after the money'},{k:'exp',label:'Offer expires',type:'date',v:t.exp}],v=>{const r={...v,amt:num(v.amt),pre:num(v.pre)};if(i!=null)TS[i]=r;else TS.push(r);renderTS();saveSoon();toast(`<b>${esc(v.n)}</b> term sheet ${i!=null?'updated':'added'}`)},i!=null?'Save':'Add',i!=null?{label:'Remove',danger:1,fn:()=>{TS.splice(i,1);renderTS();saveSoon()}}:null)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ts]');if(b)editTS(+b.dataset.ts)});
 function renderFR(){dndBoard($('#frBoard'),FR_ST,INV,'stg',invCard,(it,c)=>{toast(`<b>${esc(it.n)}</b> moved to ${c}`,c==='Committed'?'Added to committed capital':'');renderFrTiles()})}
 function money2(n){return n>=1e6?'$'+(n/1e6).toFixed(n%1e6?1:0)+'M':'$'+Math.round(n/1e3)+'k'}
 const tk=s=>parseFloat(s.replace(/[$Mk]/g,''))*(s.includes('M')?1e6:1e3);
@@ -3058,7 +3088,14 @@ function renderMetrics(){$('#mtTiles').innerHTML=MET.map(m=>{const now=m.v[m.v.l
  $('#mtCharts').innerHTML=MET.map((m,i)=>`<div class="mt-card"><h4>${m.n}<span style="display:flex;align-items:center;gap:6px">12 weeks${edb(`data-met="${i}"`,m.n)}</span></h4><div class="big">${m.f(m.v[m.v.length-1])}</div>${lineChart(WK,m.v,{target:m.tgt,fmt:m.f})}</div>`).join('');
  const rows=MROWS;if(0)[['Weekly active users','1,912','2,500','1,390','risk'],['Daily active users','1,140','1,500','820','ok'],['Week-4 retention','64%','60%','60%','ok'],['Monthly recurring revenue','$3.2k','$10k','$2.4k','risk'],['Paying pilot customers','3','5','2','ok'],['Waitlist','18,420','25,000','13,700','ok'],['Waitlist growth, week on week','14%','10%','9%','ok'],['Dictation accuracy (noisy rooms)','91%','95%','89%','risk'],['Gross margin','58%','70%','55%','risk']];
  $('#mtRows').innerHTML=rows.map((r,i)=>`<tr><td style="font-weight:500">${esc(r[0])}</td><td class="num"><b style="font-weight:600">${esc(r[1])}</b></td><td class="num muted2">${esc(r[2])}</td><td class="num muted2">${esc(r[3])}</td><td>${r[4]==='ok'?'<span class="tag good">On track</span>':'<span class="tag warn">Behind</span>'}</td><td class="ed">${edb(`data-mrow="${i}"`,r[0])}</td></tr>`).join('');$('#mtN').textContent=rows.length;if(!STAMP.mtStamp)stamp('mtStamp','Priya','Monday');else stamp('mtStamp',...STAMP.mtStamp)}
-VIEWHOOK.metrics=renderMetrics;
+function renderRatios(){const el=$('#mtRatios');if(!el)return;const g=MNY.mrrPrev?(MNY.mrr-MNY.mrrPrev)/MNY.mrrPrev:0,nn=(MNY.mrr-MNY.mrrPrev)*12,bm=nn>0?MNY.burn/nn:null,cash=MNY.acc.reduce((a,x)=>a+x[2],0),run=MNY.burn?cash/MNY.burn:0;
+ const ret=MET.find(m=>/retention/i.test(m.n));const rv=ret?ret.v[ret.v.length-1]:null;
+ const T=[['MRR growth',(g>=0?'+':'')+Math.round(g*100)+'%','Month on month',g>=.15?'Strong: above 15% a month':'Investors look for 15%+ a month',g>=.15],
+  ['Burn multiple',bm==null?'—':bm.toFixed(1)+'x','Burn ÷ new annual revenue',bm==null?'No revenue growth yet':bm<=2?'Good: 2x or less':'High: under 2x is good',bm!=null&&bm<=2],
+  ['Runway',Math.floor(run)+' months','At today’s burn',run>=18?'Good: 18+ months':'Raise before it drops under 12',run>=18],
+  ['Week-4 retention',rv==null?'—':(rv<=1?Math.round(rv*100):Math.round(rv))+'%','Users still active after 4 weeks','Shows people keep using it',true]];
+ el.innerHTML=T.map(([l,v,s2,h,ok])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small><small style="margin-top:6px;color:${ok?'#30a46c':'#ff8a8e'}">${h}</small></div>`).join('')}
+VIEWHOOK.metrics=()=>{renderMetrics();renderRatios()};
 
 /* ---------- Money ---------- */
 const MNY={acc:[['Operating account','Business checking',142300],['Treasury','Savings, 4.1% yield',393000]],burn:38200,burnPrev:34100,mrr:3200,mrrPrev:2400,
@@ -3390,7 +3427,7 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
  draw();setTimeout(()=>inp.focus(),30)}
 
 /* ---------- Step 2: same page header everywhere ---------- */
-{const EB={week:'You',mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',connections:'Workspace',settings:'Account'};
+{const EB={week:'You',mytasks:'You',decisions:'You',signoff:'You',calendar:'You',notes:'You',spaces:'Messages',initiatives:'Workspace',projects:'Workspace',stages:'Workspace',people:'Workspace',fundraise:'Workspace',wages:'Workspace',money:'Workspace',metrics:'Workspace',legal:'Workspace',feedback:'Workspace',announce:'Workspace',connections:'Workspace',settings:'Account'};
  Object.entries(EB).forEach(([v,l])=>{const sec=document.getElementById('view-'+v);if(!sec)return;const h=sec.querySelector('h1.title');if(!h||h.closest('.sum'))return;
   const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
 
@@ -3539,7 +3576,7 @@ document.addEventListener('click',e=>{let b;if(b=e.target.closest('[data-met]'))
 NEWLBL.metrics='Update this week';NEWACT.metrics=updWeek;
 
 /* ---------- Fundraising: add + edit ---------- */
-function frDone(msg,sub){stamp('frStamp');renderFR();renderFrTiles();renderSafes();renderCap($('[data-g="cap"] .on')?$('[data-g="cap"] .on').dataset.t2:'now');renderDR();$('#frLead').textContent=`${ROUND.name} · ${money2(ROUND.target)} target · closing ${ROUND.close}`;if(msg)toast(msg,sub)}
+function frDone(msg,sub){stamp('frStamp');renderFR();renderTS();renderFrTiles();renderSafes();renderCap($('[data-g="cap"] .on')?$('[data-g="cap"] .on').dataset.t2:'now');renderDR();$('#frLead').textContent=`${ROUND.name} · ${money2(ROUND.target)} target · closing ${ROUND.close}`;if(msg)toast(msg,sub)}
 function editInvestor(id){const x=id?INV.find(i=>i.id===id):null;const owners=Object.keys(P);openForm(x?'Edit investor':'Add investor',[{k:'n',label:'Investor or firm',ph:'e.g. Granite Ventures',v:x?x.n:''},{k:'type',label:'Type',opts:['Seed fund','Angel','Angel group','Angels','Micro VC','Pre-seed investor','Series A fund'],v:x?x.type:'Seed fund'},{k:'tk',label:'Ticket size',ph:'e.g. $500k or $1.0M',v:x?x.tk:''},{k:'stg',label:'Stage',opts:FR_ST,v:x?x.stg:'Contacted'},{k:'o',label:'Owner',opts:owners.map(k=>P[k][0]),v:x?P[x.o][0]:'Alex Kim'},{k:'nx',label:'Next step',ph:'e.g. Send deck',v:x?x.nx:''}],v=>{const o=owners.find(k=>P[k][0]===v.o)||'AK';const tkv=/^\$?[\d.]+\s*[kKmM]$/.test(v.tk.trim())?(v.tk.trim().startsWith('$')?v.tk.trim():'$'+v.tk.trim()).replace(/m$/,'M').replace(/K$/,'k'):(v.tk?money2(num(v.tk)):'$250k');
  if(x)Object.assign(x,{n:v.n,type:v.type,tk:tkv,stg:v.stg,o,nx:v.nx||'—'});else INV.push({id:'iv'+Date.now(),n:v.n,type:v.type,tk:tkv,stg:v.stg,o,nx:v.nx||'Send deck'});const b=$('[data-g="fr"] [data-t2="Pipeline"]');if(b)b.click();frDone(`<b>${esc(v.n)}</b> ${x?'updated':'added to '+v.stg}`)},x?'Save':'Add investor',x?{label:'Remove',danger:1,fn:()=>{INV.splice(INV.indexOf(x),1);frDone(`<b>${esc(x.n)}</b> removed from the pipeline`)}}:null)}
 function editRound(){openForm('Edit round',[{k:'name',label:'Round',v:ROUND.name},{k:'t',label:'Target (USD)',type:'number',v:ROUND.target},{k:'c',label:'Target close',v:ROUND.close,ph:'e.g. January 2027'}],v=>{ROUND.name=v.name;ROUND.target=num(v.t)||ROUND.target;ROUND.close=v.c;frDone('<b>Round updated</b>',`${money2(ROUND.target)} target`)})}
@@ -3675,7 +3712,7 @@ applyRole();
 /* ---------- Saving: keeps every change on this device ---------- */
 const SAVE_KEY='helm-data-v1';
 const DEC_DONE=window.DEC_DONE||{};
-const ARR={NOTES:()=>NOTES,MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD};
+const ARR={NOTES:()=>NOTES,MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD,TS:()=>TS};
 function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:CN.map(x=>x.on===2?0:x.on),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,WG};
  for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'&&typeof v==='string'&&v.startsWith('blob:')?undefined:v)}
 let saveT=null,saveOK=true;
@@ -3695,7 +3732,7 @@ function applyData(d){
  if(d.stamps)Object.assign(STAMP,d.stamps);if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
  Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
  ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
- const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
+ const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,()=>{try{renderTS()}catch(e){}},renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
  R.forEach(fn=>{try{fn&&fn()}catch(e){}});return true}
 const hadSaved=loadSaved();
 
@@ -3794,6 +3831,7 @@ if(BK.on){document.body.classList.add('bk-loading');bkBoot()}
 
 $('#resetData').addEventListener('click',()=>{if(!confirm('Reset everything to the sample data? Your changes on this device will be removed.'))return;try{localStorage.removeItem(SAVE_KEY)}catch(e){}removeEventListener('pagehide',saveNow);['click','change','drop','keyup','submit'].forEach(ev=>document.removeEventListener(ev,saveSoon,true));location.reload()});
 
+try{renderTS()}catch(e){}$('#tsAdd').addEventListener('click',()=>editTS());
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
 </script>
 </body>
