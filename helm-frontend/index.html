@@ -1960,6 +1960,33 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 :root[data-theme=dark] .side .ni:hover{color:#fff;background:rgba(255,255,255,.05)}
 :root[data-theme=dark] .side .ni:hover .ic{color:#fff}
 :root[data-theme=dark] .side .ni.on,:root[data-theme=dark] .side .ni.on .ic{color:#fff}
+
+/* Needs you: compact like the Linear reference — 4 across (2 on phones), icon panel, title, two lines, action */
+:root[data-theme=dark] #nyCards{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:20px!important}
+:root[data-theme=dark] #nyCards>.spc.ny{aspect-ratio:4/5}
+#nyCards .ny-hero{height:auto;flex:1 1 44%;min-height:0;padding:22px 22px 0}
+#nyCards .ny-ic,#nyCards .ny.urgent .ny-ic,#nyCards .ny.decision .ny-ic,#nyCards .ny.sign .ny-ic,#nyCards .ny.reply .ny-ic,#nyCards .ny.blocked .ny-ic{width:auto;height:auto;background:none!important;color:#fff;border-radius:0}
+#nyCards .ny.urgent .ny-ic{color:#ff8a8e}
+#nyCards .ny-ic .ic{width:20px;height:20px;stroke-width:1.9}
+#nyCards .ny-due{padding-top:1px;font-size:12px}
+#nyCards .nytag,#nyCards .ny-from,#nyCards .spc.ny .spc-f>.av,#nyCards .spc.ny .spc-f>span:first-child:not(.ny-acts){display:none!important}
+#nyCards .ny-body{flex:0 0 auto;padding:18px 22px 0;gap:6px}
+#nyCards .ny-t{font-size:15.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#nyCards .spc.ny p{-webkit-line-clamp:2;font-size:13.5px;line-height:1.5}
+#nyCards .spc.ny>.spc-f{flex:0 0 auto;margin:0 22px;padding:14px 0 20px}
+#nyCards .spc.ny>.spc-f .ny-acts{margin-left:0;width:100%;justify-content:space-between;flex-direction:row-reverse}
+@media (max-width:1180px){:root[data-theme=dark] #nyCards{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (max-width:900px){:root[data-theme=dark] #nyCards{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media (max-width:640px){:root[data-theme=dark] #nyCards{gap:12px!important}:root[data-theme=dark] #nyCards>.spc.ny{aspect-ratio:auto}
+ #nyCards .ny-hero{flex:0 0 auto;height:64px;padding:16px 14px 0}#nyCards .ny-ic .ic{width:18px;height:18px}
+ #nyCards .ny-body{padding:12px 14px 0;gap:4px}#nyCards .ny-t{font-size:14px}#nyCards .spc.ny p{font-size:12.5px}
+ #nyCards .spc.ny>.spc-f{margin:auto 14px 0;padding:12px 0 14px}#nyCards .ny-done{width:26px;height:26px}#nyCards .ny-acts .btn{height:28px;padding:0 10px;font-size:12.5px}}
+
+/* Needs you: black and white; only the word "Urgent" in red */
+#nyCards .ny.urgent .ny-ic,#nyCards .ny.urgent .ny-due{color:#fff!important}
+#nyCards .ny.urgent .ny-due{color:#8e8e93!important}
+#nyCards .ny-ic{display:flex!important;align-items:center;gap:8px}
+#nyCards .ny-urg{font-style:normal;font-size:13px;font-weight:600;color:#ff6b6b}
 </style>
 </head>
 <body>
@@ -3503,7 +3530,7 @@ function newSpace(shared){closeModal();const bg=document.createElement('div');bg
   const nb=document.querySelector('.side [data-view="'+v+'"] svg.ic');const e=document.createElement('span');e.className='eyebrow';e.innerHTML=(nb?nb.outerHTML:'')+l;h.parentNode.insertBefore(e,h)})}
 
 /* ---------- Briefing: Needs you, Projects, Money (cards) ---------- */
-const NYI={urgent:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.1"/>',decision:'<path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 011.4.56l2.3 2.22a1 1 0 010 1.44l-2.3 2.22A2 2 0 0118 13H6a2 2 0 01-1.4-.56L2.3 10.22a1 1 0 010-1.44L4.6 6.56A2 2 0 016 6z"/>',sign:'<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',reply:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 016 6v5"/>',blocked:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>'};
+const NYI={urgent:'<path d="M21.73 18l-8-14a2 2 0 00-3.48 0l-8 14A2 2 0 004 21h16a2 2 0 001.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',decision:'<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 00-1.17-2.87L3 3"/><path d="M15 9l6-6"/>',sign:'<path d="M18 5l-2.41-2.41A2 2 0 0014.17 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2"/><path d="M21.38 12.63a1 1 0 00-3-3l-4.01 4.01a2 2 0 00-.51.85l-.84 2.87a.5.5 0 00.62.62l2.87-.84a2 2 0 00.85-.51z"/><path d="M8 18h1"/>',reply:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M10 7l-3 3 3 3"/><path d="M17 13v-1a2 2 0 00-2-2H7"/>',blocked:'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.17a2 2 0 00-.59-1.42L12 12l-4.41 4.41A2 2 0 007 17.83V22"/><path d="M7 2v4.17a2 2 0 00.59 1.42L12 12l4.41-4.41A2 2 0 0017 6.17V2"/>'};
 const NYL={urgent:'Urgent',decision:'Decision',sign:'Sign-off',reply:'Reply',blocked:'Blocked'};
 const NY=[
  {id:'n1',k:'urgent',t:'Pick the launch date',d:'The security review is 8 days late. 18 Nov is at risk; 2 Dec still fits the App Store review.',who:'JR',when:'Thursday',due:'Due 20 Oct',act:'Decide',dec:0,go:()=>openDecision(0)},
@@ -3518,7 +3545,7 @@ function renderNY(){const left=NY.filter(x=>!x.done);
  $('#nyFilt').innerHTML=[['all','All'],['decision','Decisions'],['sign','Sign-off & replies'],['blocked','Blocked']].map(([k,l])=>`<button class="${nyF===k?'on':''}" data-nyf="${k}"><svg class="ic pic2" viewBox="0 0 24 24">${{all:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',decision:NYI.decision,sign:NYI.sign,blocked:NYI.blocked}[k]}</svg>${l} <span style="opacity:.6;margin-left:3px">${left.filter(NYG[k]).length}</span></button>`).join('');
  const rows=left.filter(NYG[nyF]);$('#nyN').textContent=left.length;
  $('#homeLead').textContent=left.length?`${left.length} thing${left.length>1?'s':''} need${left.length>1?'':'s'} you today.${left.some(x=>x.k==='urgent')?' Murmur’s launch is at risk because the outside security review is 8 days late.':''}`:'You’re all caught up. Nothing needs you right now.';
- $('#nyCards').innerHTML=rows.map(x=>`<div class="spc ny ${x.k}" data-ny="${x.id}" role="button" tabindex="0"><div class="ny-hero"><span class="ny-ic"><svg class="ic" viewBox="0 0 24 24">${NYI[x.k]}</svg></span><span class="ny-due">${x.due}</span></div><div class="ny-body"><span class="nytag">${NYL[x.k]}</span><b class="ny-t">${esc(x.t)}</b><p>${esc(x.d)}</p></div><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.when}</span><span class="ny-acts"><button class="ny-done" data-nydone="${x.id}" aria-label="Mark done" title="Mark done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><button class="btn sm${x.k==='urgent'?' pri':''}">${x.act}</button></span></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${nyF==='all'?'You’re all caught up.':'Nothing in this group needs you.'}</div>`}
+ $('#nyCards').innerHTML=rows.map(x=>`<div class="spc ny ${x.k}" data-ny="${x.id}" role="button" tabindex="0"><div class="ny-hero"><span class="ny-ic"><svg class="ic" viewBox="0 0 24 24">${NYI[x.k]}</svg>${x.k==='urgent'?'<em class="ny-urg">Urgent</em>':''}</span><span class="ny-due">${x.due}</span></div><div class="ny-body"><span class="nytag">${NYL[x.k]}</span><b class="ny-t">${esc(x.t)}</b><p>${esc(x.d)}</p></div><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.when}</span><span class="ny-acts"><button class="ny-done" data-nydone="${x.id}" aria-label="Mark done" title="Mark done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><button class="btn sm${x.k==='urgent'?' pri':''}">${x.act}</button></span></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${nyF==='all'?'You’re all caught up.':'Nothing in this group needs you.'}</div>`}
 
 function openDecision(i){const d=document.querySelector(`.dec[data-dec="${i}"]`);if(!d)return;closeModal();const home=d.parentNode,next=d.nextSibling;
  const bg=document.createElement('div');bg.className='mod-bg';bg.innerHTML=`<div class="mod decm" role="dialog" aria-modal="true" aria-label="Decision" style="max-width:620px"><div class="mod-h" style="padding-bottom:10px"><span class="cb">Decision</span><span style="color:var(--fg-3)">Pick one. ${DECS[i].from.split(' ')[0]} is told straight away.</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="decm-b"></div></div>`;
