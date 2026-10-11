@@ -1700,6 +1700,37 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 :root[data-theme=dark] .ny-empty b{color:#fff;font-size:15px;font-weight:600;margin:0!important}
 :root[data-theme=dark] .spf-empty,:root[data-theme=dark] .cal-empty{color:#8a8a8f;text-align:center;padding:26px 12px!important}
 :root[data-theme=dark] .spf-empty::before{content:"";display:block;width:34px;height:34px;margin:0 auto 10px;border-radius:10px;background:#222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2374747c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8.5 12.2l2.4 2.3 4.6-4.8'/%3E%3C/svg%3E") center/19px no-repeat}
+
+/* ===== Charts: Framer analytics style ===== */
+.lcw{position:relative}
+.lc .ax,.chart text{font-size:11px;fill:#8a8a8f;font-family:var(--font)}
+.lc .g{stroke:rgba(255,255,255,.08)}
+.lc .ln{fill:none;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;animation:draw 1.4s var(--ease) both}
+.lc .lnp{fill:none;stroke:#8b5cf6;stroke-width:1.5;stroke-linejoin:round;opacity:.85}
+.lc .tg{stroke:rgba(255,255,255,.25);stroke-dasharray:3 4}
+.lc .gd,.chart .guide{stroke:rgba(255,255,255,.25);opacity:0}
+.lc .hit{fill:transparent;cursor:crosshair}
+.lc .hd{opacity:0;transition:opacity .1s}.lcw:hover .lc .hd{opacity:1}
+.ctip,.chart .tip{position:absolute;top:8px;transform:translateX(-50%);min-width:190px;background:#161616!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:10px;padding:0 0 4px;font-size:12.5px;color:#cfcfd4;pointer-events:none;opacity:0;transition:opacity .12s;box-shadow:0 16px 40px rgba(0,0,0,.6);z-index:3;line-height:1.4}
+.ct-h{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.08);color:#fff;font-weight:500;margin-bottom:4px}
+.ct-r{display:flex;align-items:center;gap:8px;padding:4px 12px}
+.ct-r i{width:7px;height:7px;border-radius:50%;flex:none}
+.ct-r b{margin-left:auto;font-weight:500;color:#fff;font-variant-numeric:tabular-nums}
+:root[data-theme=dark] .chart{background:linear-gradient(180deg,#1a1a1a,#141414)!important;border-color:rgba(255,255,255,.08)!important;border-radius:18px!important;padding:24px 26px 14px!important}
+:root[data-theme=dark] .chart .g{stroke:rgba(255,255,255,.06)}
+:root[data-theme=dark] .chart .a{stroke:#2d9bff;stroke-width:1.8}
+:root[data-theme=dark] .chart .f{stroke:#2d9bff}
+:root[data-theme=dark] .chart .p{stroke:#8b5cf6;stroke-dasharray:none;stroke-width:1.5}
+:root[data-theme=dark] .chart-h{padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+:root[data-theme=dark] .chart-h .stats b{font-size:24px;font-weight:600;letter-spacing:-.02em}
+:root[data-theme=dark] .chart-h .stats span{color:#9a9aa0;font-size:13px}
+:root[data-theme=dark] .chart-h .legend i{background:#2d9bff!important;height:7px!important;width:7px!important;border-radius:50%}
+:root[data-theme=dark] .chart-h .legend i.p{background:#8b5cf6!important;border:0!important}
+:root[data-theme=dark] .mt-card{background:linear-gradient(180deg,#1a1a1a,#141414)!important;border-radius:18px!important;padding:22px 24px 14px!important}
+:root[data-theme=dark] .mt-card h4{font-size:13px;font-weight:500;color:#cfcfd4}
+:root[data-theme=dark] .mt-card .big{font-size:30px;letter-spacing:-.03em;margin:6px 0 4px}
+.sl{fill:none;stroke:#2d9bff;stroke-width:1.5;stroke-linejoin:round}
+:root[data-theme=dark] .kpi svg{height:30px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2264,12 +2295,12 @@ function burnChart(el){
  M.forEach((m,i)=>g+=`<text x="${x(i)}" y="${H-5}" text-anchor="middle">${m}${i===6?' (forecast)':''}</text>`);
  const a=path(A,6),id='ag'+el.slice(1),step=(W-L-R)/6;
  $(el).innerHTML=`<div class="chart-h"><div class="stats"><div><b>$38.2k</b><span>Spent in September</span></div><div><b class="down">+$4.2k</b><span>Over plan</span></div><div><b>14 mo</b><span>Runway</span></div></div><div class="legend"><span><i></i>Actual</span><span><i class="p"></i>Plan</span></div></div>
- <svg viewBox="0 0 ${W} ${H}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e6ad2" stop-opacity=".12"/><stop offset="1" stop-color="#5e6ad2" stop-opacity="0"/></linearGradient></defs>${g}
+ <svg viewBox="0 0 ${W} ${H}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d9bff" stop-opacity=".32"/><stop offset="1" stop-color="#2d9bff" stop-opacity="0"/></linearGradient><linearGradient id="${id}p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".2"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs>${g}<path d="${path(PL,7)} L${x(6)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id}p)"/>
  <path d="${a} L${x(5)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id})"/><path class="p" d="${path(PL,7)}"/><path class="f" d="M${x(5)} ${y(A[5])} L${x(6)} ${y(A[6])}"/><path class="a" pathLength="1" d="${a}"/>
- <line class="guide" x1="0" x2="0" y1="${T}" y2="${H-B}"/><circle cx="${x(5)}" cy="${y(A[5])}" r="3.5" fill="#5e6ad2" stroke="#fff" stroke-width="2"/>
+ <line class="guide" x1="0" x2="0" y1="${T}" y2="${H-B}"/><circle cx="${x(5)}" cy="${y(A[5])}" r="4" fill="#2d9bff"/>
  ${M.map((m,i)=>`<rect class="hit" data-i="${i}" x="${x(i)-step/2}" y="${T}" width="${step}" height="${H-T-B}"/>`).join('')}</svg><div class="tip"></div>`;
  const tip=$(el+' .tip'),gd=$(el+' .guide');
- $$(el+' .hit').forEach(r=>{r.addEventListener('mouseenter',()=>{const i=+r.dataset.i,d=A[i]-PL[i];gd.setAttribute('x1',x(i));gd.setAttribute('x2',x(i));gd.style.opacity=1;tip.style.left=(x(i)/W*100)+'%';tip.innerHTML=`<b>${M[i]}${i===6?' forecast':''}</b> · $${A[i].toFixed(1)}k<br>Plan $${PL[i]}k · ${d>=0?'+':'−'}$${Math.abs(d).toFixed(1)}k`;tip.style.opacity=1});r.addEventListener('mouseleave',()=>{gd.style.opacity=0;tip.style.opacity=0})});
+ $$(el+' .hit').forEach(r=>{r.addEventListener('mouseenter',()=>{const i=+r.dataset.i,d=A[i]-PL[i];gd.setAttribute('x1',x(i));gd.setAttribute('x2',x(i));gd.style.opacity=1;tip.style.left=(x(i)/W*100)+'%';tip.innerHTML=`<div class="ct-h">${M[i]} 2026${i===6?' · forecast':''}</div><div class="ct-r"><i style="background:#2d9bff"></i>Spent<b>$${A[i].toFixed(1)}k</b></div><div class="ct-r"><i style="background:#8b5cf6"></i>Plan<b>$${PL[i]}k</b></div><div class="ct-r"><i style="background:${d>0?'#ff5a5f':'#777'}"></i>Difference<b>${d>=0?'+':'−'}$${Math.abs(d).toFixed(1)}k</b></div>`;tip.style.opacity=1});r.addEventListener('mouseleave',()=>{gd.style.opacity=0;tip.style.opacity=0})});
 }
 burnChart('#burn');
 
@@ -2439,7 +2470,7 @@ $('#mForm').addEventListener('submit',e=>{e.preventDefault();const t=mIn.value.t
 /* incoming demo message turned off */
 
 /* ---------- Project ---------- */
-const sl=v=>{const mn=Math.min(...v),mx=Math.max(...v),pts=v.map((y,i)=>`${(i/(v.length-1)*196+2).toFixed(1)},${(21-(y-mn)/(mx-mn||1)*18).toFixed(1)}`);return `<svg viewBox="0 0 200 24" preserveAspectRatio="none"><polyline class="sl" pathLength="1" points="${pts.join(' ')}" vector-effect="non-scaling-stroke"/></svg>`};
+const sl=v=>{const mn=Math.min(...v),mx=Math.max(...v),pts=v.map((y,i)=>[(i/(v.length-1)*196+2),(21-(y-mn)/(mx-mn||1)*16)]);const id='sg'+Math.random().toString(36).slice(2,7);const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');return `<svg viewBox="0 0 200 24" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d9bff" stop-opacity=".35"/><stop offset="1" stop-color="#2d9bff" stop-opacity="0"/></linearGradient></defs><path d="${d} L198 24 L2 24Z" fill="url(#${id})"/><path class="sl" pathLength="1" d="${d}" vector-effect="non-scaling-stroke"/></svg>`};
 const STG=[['Set the company up','done',1,'Mar 2'],['Product plan','done',1,'Apr 14'],['Technical foundations','done',1,'May 30'],['First usable version','done',1,'Aug 22'],['Private pilot','now',.68,'Oct 31'],['Prepare for launch','next',.12,'Nov 14'],['Launch in stages','next',0,'Nov 18'],['Retention & growth','next',0,'Q1 2027'],['Scale','next',0,'—']];
 $$('[data-r]').forEach(r=>r.addEventListener('click',()=>{const n=r.querySelector('span');const on=r.classList.toggle('on');n.textContent=+n.textContent+(on?1:-1)}));
 
@@ -2854,12 +2885,18 @@ NEWLBL.calendar='Add event';NEWLBL.spaces='New space';NEWACT.spaces=()=>newSpace
 /* ===================== STAGE 2 ===================== */
 const VIEWHOOK={};VIEWHOOK.calendar=renderCal;renderCal();
 /* simple line chart */
-function lineChart(labels,vals,{target,color='#5e6ad2',fmt=v=>v}={}){const W=520,H=150,L=36,R=8,T=10,B=22;const all=[...vals,target||0];const mx=Math.max(...all)*1.12,mn=0;
- const x=i=>L+i*(W-L-R)/(labels.length-1),y=v=>T+(1-(v-mn)/(mx-mn))*(H-T-B);const d=vals.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');const id='lc'+Math.random().toString(36).slice(2,7);
- let g='';[0,mx/2,mx].forEach(v=>g+=`<line class="g" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+3.5}" text-anchor="end">${fmt(v)}</text>`);
- labels.forEach((l,i)=>{if(i%2===0||i===labels.length-1)g+=`<text x="${x(i)}" y="${H-5}" text-anchor="middle">${l}</text>`});
- const lx=x(vals.length-1),ly=y(vals[vals.length-1]);
- return `<svg class="lc" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".14"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>${g}${target?`<line class="tg" x1="${L}" x2="${W-R}" y1="${y(target)}" y2="${y(target)}"/><text x="${W-R}" y="${y(target)-5}" text-anchor="end" style="fill:var(--fg-2)">Target ${fmt(target)}</text>`:''}<path d="${d} L${lx} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id})"/><path class="ln" pathLength="1" d="${d}" style="stroke:${color}"/><circle cx="${lx}" cy="${ly}" r="3.5" fill="${color}" stroke="#fff" stroke-width="2"/></svg>`}
+function lineChart(labels,vals,{target,color='#2d9bff',fmt=v=>v}={}){const W=520,H=160,L=4,R=4,T=22,B=22;const prev=vals.map((v,i)=>i?vals[i-1]*.92:v*.9);const all=[...vals,...prev,target||0];const mx=Math.max(...all)*1.1,mn=0;
+ const x=i=>L+i*(W-L-R)/(labels.length-1),y=v=>T+(1-(v-mn)/(mx-mn))*(H-T-B);const id='lc'+Math.random().toString(36).slice(2,7);
+ const smooth=a=>a.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');const d=smooth(vals),dp=smooth(prev);
+ let g=`<text x="${L}" y="11" class="ax">${fmt(mx)}</text><line class="g" x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}"/>`;
+ [0,labels.length-1].forEach(i=>g+=`<text x="${x(i)}" y="${H-5}" text-anchor="${i?'end':'start'}" class="ax">${labels[i]}</text>`);
+ const step=(W-L-R)/(labels.length-1);
+ return `<div class="lcw" data-l='${JSON.stringify(labels)}' data-v='${JSON.stringify(vals)}' data-p='${JSON.stringify(prev.map(v=>+v.toFixed(2)))}' data-fmt="${String(fmt).includes('%')?'%':String(fmt).includes('$')?'$':String(fmt).includes('k')?'k':''}"><svg class="lc" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".32"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient><linearGradient id="${id}p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".18"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs>${g}${target?`<line class="tg" x1="${L}" x2="${W-R}" y1="${y(target)}" y2="${y(target)}"/><text x="${W-R}" y="${y(target)-5}" text-anchor="end" class="ax">Target ${fmt(target)}</text>`:''}<path d="${dp} L${x(prev.length-1)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id}p)"/><path class="lnp" d="${dp}"/><path d="${d} L${x(vals.length-1)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id})"/><path class="ln" pathLength="1" d="${d}" style="stroke:${color}"/><line class="gd" x1="0" x2="0" y1="${T}" y2="${H-B}"/><circle class="hd" r="4" cx="-10" cy="-10" fill="${color}"/>${labels.map((l,i)=>`<rect class="hit" data-i="${i}" x="${x(i)-step/2}" y="0" width="${step}" height="${H}"/>`).join('')}</svg><div class="ctip"></div></div>`}
+function lcFmt(v,k){return k==='%'?Math.round(v)+'%':k==='$'?(v>=1000?'$'+(v/1000).toFixed(1)+'k':'$'+Math.round(v)):v>=1000?(v/1000).toFixed(1)+'k':Math.round(v).toLocaleString('en-US')}
+document.addEventListener('mouseover',e=>{const r=e.target.closest('.lcw .hit');if(!r)return;const w=r.closest('.lcw'),i=+r.dataset.i,L=JSON.parse(w.dataset.l),V=JSON.parse(w.dataset.v),Pv=JSON.parse(w.dataset.p),k=w.dataset.fmt;const sv=w.querySelector('svg'),vb=sv.viewBox.baseVal,rx=+r.getAttribute('x')+ +r.getAttribute('width')/2;
+ const gd=w.querySelector('.gd'),hd=w.querySelector('.hd');gd.setAttribute('x1',rx);gd.setAttribute('x2',rx);gd.style.opacity=1;const ln=w.querySelector('.ln');const yy=(()=>{const seg=ln.getAttribute('d').split(/[ML]/).filter(Boolean)[i].trim().split(' ');return +seg[1]})();hd.setAttribute('cx',rx);hd.setAttribute('cy',yy);
+ const t=w.querySelector('.ctip');t.innerHTML=`<div class="ct-h">${L[i]}</div><div class="ct-r"><i style="background:#2d9bff"></i>This period<b>${lcFmt(V[i],k)}</b></div><div class="ct-r"><i style="background:#8b5cf6"></i>Previous<b>${lcFmt(Pv[i],k)}</b></div>`;t.style.left=Math.min(Math.max(rx/vb.width*100,18),82)+'%';t.style.opacity=1});
+document.addEventListener('mouseout',e=>{const w=e.target.closest&&e.target.closest('.lcw');if(w&&!w.contains(e.relatedTarget)){w.querySelector('.ctip').style.opacity=0;w.querySelector('.gd').style.opacity=0;w.querySelector('.hd').setAttribute('cx',-10)}});
 const WK=['Jul 20','Jul 27','Aug 3','Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'];
 
 /* ---------- My tasks ---------- */
@@ -2882,7 +2919,7 @@ const MET=[{n:'Weekly active users',v:[620,710,790,880,940,1010,1120,1260,1390,1
  {n:'Monthly recurring revenue',v:[0,0,0,400,400,900,900,1500,1500,2400,2400,3200],tgt:10000,f:v=>v>=1000?'$'+(v/1000).toFixed(1)+'k':'$'+Math.round(v),c:'#8b8f97',last:2400},
  {n:'Waitlist',v:[4200,5100,6300,7400,8600,9800,11000,12400,13700,14900,16110,18420],tgt:25000,f:v=>v>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v)),c:'#8b8f97',last:13700}];
 function renderMetrics(){$('#mtTiles').innerHTML=MET.map(m=>{const now=m.v[m.v.length-1],pct=Math.min(1,now/m.tgt),ok=now>=m.tgt*(m.n.includes('retention')?1:.6);return `<div class="kpi"><span>${m.n}</span><b>${m.f(now)}</b><small><span class="${now>=m.last?'up':'down'}">${now>=m.last?'+':''}${m.n.includes('retention')?(now-m.last)+' pts':Math.round((now-m.last)/Math.max(1,m.last)*100)+'%'}</span> vs last month</small><div class="bar2"><i style="--w:${pct*100}%;--c:${m.c}"></i></div><div class="tgt"><span>Target ${m.f(m.tgt)}</span><span>${Math.round(pct*100)}%</span></div></div>`}).join('');
- $('#mtCharts').innerHTML=MET.map((m,i)=>`<div class="mt-card"><h4>${m.n}<span style="display:flex;align-items:center;gap:6px">12 weeks${edb(`data-met="${i}"`,m.n)}</span></h4><div class="big">${m.f(m.v[m.v.length-1])}</div>${lineChart(WK,m.v,{target:m.tgt,color:m.c,fmt:m.f})}</div>`).join('');
+ $('#mtCharts').innerHTML=MET.map((m,i)=>`<div class="mt-card"><h4>${m.n}<span style="display:flex;align-items:center;gap:6px">12 weeks${edb(`data-met="${i}"`,m.n)}</span></h4><div class="big">${m.f(m.v[m.v.length-1])}</div>${lineChart(WK,m.v,{target:m.tgt,fmt:m.f})}</div>`).join('');
  const rows=MROWS;if(0)[['Weekly active users','1,912','2,500','1,390','risk'],['Daily active users','1,140','1,500','820','ok'],['Week-4 retention','64%','60%','60%','ok'],['Monthly recurring revenue','$3.2k','$10k','$2.4k','risk'],['Paying pilot customers','3','5','2','ok'],['Waitlist','18,420','25,000','13,700','ok'],['Waitlist growth, week on week','14%','10%','9%','ok'],['Dictation accuracy (noisy rooms)','91%','95%','89%','risk'],['Gross margin','58%','70%','55%','risk']];
  $('#mtRows').innerHTML=rows.map((r,i)=>`<tr><td style="font-weight:500">${esc(r[0])}</td><td class="num"><b style="font-weight:600">${esc(r[1])}</b></td><td class="num muted2">${esc(r[2])}</td><td class="num muted2">${esc(r[3])}</td><td>${r[4]==='ok'?'<span class="tag good">On track</span>':'<span class="tag warn">Behind</span>'}</td><td class="ed">${edb(`data-mrow="${i}"`,r[0])}</td></tr>`).join('');$('#mtN').textContent=rows.length;if(!STAMP.mtStamp)stamp('mtStamp','Priya','Monday');else stamp('mtStamp',...STAMP.mtStamp)}
 VIEWHOOK.metrics=renderMetrics;
