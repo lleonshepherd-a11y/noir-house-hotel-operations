@@ -1548,6 +1548,7 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 :root[data-theme=dark] #agentTg:hover{background:#333!important}
 :root[data-theme=dark] #newBtn .ic{color:#0a0a0a}
 .ny.urgent{box-shadow:none!important}
+#nyFilt button{display:inline-flex;align-items:center;gap:7px}#nyFilt .pic2{width:15px;height:15px;stroke-width:1.6;opacity:.75}#nyFilt button.on .pic2{opacity:1}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -3082,7 +3083,7 @@ const NY=[
 let nyF='all';
 const NYG={all:()=>1,decision:x=>x.k==='decision'||x.k==='urgent',sign:x=>x.k==='sign'||x.k==='reply',blocked:x=>x.k==='blocked'};
 function renderNY(){const left=NY.filter(x=>!x.done);
- $('#nyFilt').innerHTML=[['all','All'],['decision','Decisions'],['sign','Sign-off & replies'],['blocked','Blocked']].map(([k,l])=>`<button class="${nyF===k?'on':''}" data-nyf="${k}">${l} <span style="opacity:.6;margin-left:3px">${left.filter(NYG[k]).length}</span></button>`).join('');
+ $('#nyFilt').innerHTML=[['all','All'],['decision','Decisions'],['sign','Sign-off & replies'],['blocked','Blocked']].map(([k,l])=>`<button class="${nyF===k?'on':''}" data-nyf="${k}"><svg class="ic pic2" viewBox="0 0 24 24">${{all:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',decision:NYI.decision,sign:NYI.sign,blocked:NYI.blocked}[k]}</svg>${l} <span style="opacity:.6;margin-left:3px">${left.filter(NYG[k]).length}</span></button>`).join('');
  const rows=left.filter(NYG[nyF]);$('#nyN').textContent=left.length;
  $('#homeLead').textContent=left.length?`${left.length} thing${left.length>1?'s':''} need${left.length>1?'':'s'} you today.${left.some(x=>x.k==='urgent')?' Murmur’s launch is at risk because the outside security review is 8 days late.':''}`:'You’re all caught up. Nothing needs you right now.';
  $('#nyCards').innerHTML=rows.map(x=>`<div class="spc ny ${x.k}" data-ny="${x.id}" role="button" tabindex="0"><div class="ny-top"><span class="nytag"><svg class="ic" viewBox="0 0 24 24">${NYI[x.k]}</svg>${NYL[x.k]}</span><span class="ny-due">${x.due}</span></div><b class="ny-t">${esc(x.t)}</b><p>${esc(x.d)}</p><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.when}</span><span class="ny-acts"><button class="ny-done" data-nydone="${x.id}" aria-label="Mark done" title="Mark done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><button class="btn sm${x.k==='urgent'?' pri':''}">${x.act}</button></span></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${nyF==='all'?'You’re all caught up.':'Nothing in this group needs you.'}</div>`}
