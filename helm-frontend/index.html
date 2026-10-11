@@ -1765,6 +1765,111 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 :root[data-theme=dark] .cards>*,:root[data-theme=dark] .kpis>*,:root[data-theme=dark] .tiles>*,:root[data-theme=dark] .jump>*,:root[data-theme=dark] .wk-top>*{border-right-color:rgba(255,255,255,.07)!important;border-bottom-color:rgba(255,255,255,.07)!important;transition:background .2s,box-shadow .2s}
 :root[data-theme=dark] .cards>*:hover,:root[data-theme=dark] .kpis>*:hover,:root[data-theme=dark] .tiles>*:hover,:root[data-theme=dark] .jump>*:hover,:root[data-theme=dark] .wk-top>*:hover{background:#222!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
 :root[data-theme=dark] .ib-row:hover{background:#222}
+
+/* All black: sidebar, page and tiles. Charcoal: the top bar, the pill menus and anything you type in */
+:root[data-theme=dark] .side{background:#000!important}
+:root[data-theme=dark] .msgpage,:root[data-theme=dark] .mp-left,:root[data-theme=dark] .mp-right,:root[data-theme=dark] .sproom,:root[data-theme=dark] .sp-l,:root[data-theme=dark] .sp-c,:root[data-theme=dark] .sp-r{background:#000!important}
+:root[data-theme=dark] .mp-left,:root[data-theme=dark] .sp-l{border-right:1px solid rgba(255,255,255,.08)!important}
+:root[data-theme=dark] .cards,:root[data-theme=dark] .kpis,:root[data-theme=dark] .tiles,:root[data-theme=dark] .jump,:root[data-theme=dark] .wk-top,:root[data-theme=dark] .ib-list{background:#000!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:none!important}
+:root[data-theme=dark] .cards>*,:root[data-theme=dark] .kpis>*,:root[data-theme=dark] .tiles>*,:root[data-theme=dark] .jump>*,:root[data-theme=dark] .wk-top>*{border-right-color:rgba(255,255,255,.1)!important;border-bottom-color:rgba(255,255,255,.1)!important}
+:root[data-theme=dark] .spc,:root[data-theme=dark] .kpi,:root[data-theme=dark] .card,:root[data-theme=dark] .pc,:root[data-theme=dark] .pcard,:root[data-theme=dark] .mt-card,:root[data-theme=dark] .side-card,:root[data-theme=dark] .ev,:root[data-theme=dark] .post,:root[data-theme=dark] .fb,:root[data-theme=dark] .tbl,:root[data-theme=dark] .chart,:root[data-theme=dark] .dec,:root[data-theme=dark] .sum,:root[data-theme=dark] .drg,:root[data-theme=dark] .obl{background:#000!important;border-color:rgba(255,255,255,.1)!important;box-shadow:none!important}
+:root[data-theme=dark] .cards>*,:root[data-theme=dark] .kpis>*,:root[data-theme=dark] .tiles>*,:root[data-theme=dark] .jump>*,:root[data-theme=dark] .wk-top>*{background:transparent!important}
+:root[data-theme=dark] .cards>*:hover,:root[data-theme=dark] .kpis>*:hover,:root[data-theme=dark] .tiles>*:hover,:root[data-theme=dark] .jump>*:hover,:root[data-theme=dark] .wk-top>*:hover,:root[data-theme=dark] .spc:hover,:root[data-theme=dark] .kpi:hover,:root[data-theme=dark] .card:hover,:root[data-theme=dark] .pc:hover,:root[data-theme=dark] .ev:hover,:root[data-theme=dark] .post:hover,:root[data-theme=dark] .fb:hover,:root[data-theme=dark] .ib-row:hover{background:#101010!important;box-shadow:none!important}
+:root[data-theme=dark] .bar{background:#161616!important}
+:root[data-theme=dark] .seg2{background:#161616!important;box-shadow:none!important}
+:root[data-theme=dark] .seg2 button.on,:root[data-theme=dark] #calFilt button.on{background:#2a2a2a!important}
+:root[data-theme=dark] .mcmp,:root[data-theme=dark] .sp-cmp,:root[data-theme=dark] .compose2,:root[data-theme=dark] #cIn,:root[data-theme=dark] #msgQ,:root[data-theme=dark] .mp-left input,:root[data-theme=dark] .sp-search,:root[data-theme=dark] .msearch{background:#161616!important;border-color:rgba(255,255,255,.08)!important}
+:root[data-theme=dark] .mcmp textarea,:root[data-theme=dark] .sp-cmp textarea,:root[data-theme=dark] .mcmp [contenteditable],:root[data-theme=dark] .sp-cmp [contenteditable],:root[data-theme=dark] .sp-search input{background:transparent!important}
+
+/* Calendar, Apple style */
+#view-calendar .c2-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:8px 0 18px}
+#view-calendar .c2-title{margin:0;font-size:34px;font-weight:400;letter-spacing:-.03em;color:#8e8e93}
+#view-calendar .c2-title b{font-weight:700;color:var(--fg)}
+#view-calendar .c2-nav{display:flex;align-items:center;gap:4px}
+#view-calendar .c2-today{height:30px;padding:0 14px;border-radius:8px;background:#161616;color:var(--fg);font:inherit;font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.08);cursor:pointer}
+#view-calendar .c2-today:hover{background:#1f1f1f}
+#view-calendar .c2-filt{display:flex;gap:16px;flex-wrap:wrap;margin:0 0 14px;padding:0;background:none!important;box-shadow:none!important;border-radius:0!important}
+#view-calendar .c2-filt button{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0!important;background:none!important;border:0!important;color:var(--fg-2);font-size:12.5px;font-weight:500;cursor:pointer;opacity:1!important}
+#view-calendar .c2-filt button i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+#view-calendar .c2-filt button:not(.on){color:#5a5a60}#view-calendar .c2-filt button:not(.on) i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+#view-calendar .calg{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible}
+#view-calendar .calh{border-bottom:0}
+#view-calendar .calh span{text-align:right;padding:0 10px 8px!important;font-size:12px!important;font-weight:500;text-transform:none!important;letter-spacing:0!important;color:#8e8e93!important}
+#view-calendar .cald{border-top:1px solid rgba(255,255,255,.1);border-left:1px solid rgba(255,255,255,.1)}
+#view-calendar .cd{min-height:132px;padding:6px 6px 8px;gap:2px;border-right:1px solid rgba(255,255,255,.1)!important;border-bottom:1px solid rgba(255,255,255,.1)!important;background:transparent;border-radius:0;box-shadow:none!important}
+#view-calendar .cd:hover{background:#0c0c0c}
+#view-calendar .cd.we{background:#070707}
+#view-calendar .cd.out{background:transparent}#view-calendar .cd.out .dn{color:#4a4a4f}#view-calendar .cd.out .c2-evs{opacity:.45}
+#view-calendar .cd .dn{align-self:flex-end;width:26px;height:26px;font-size:13.5px;font-weight:500;margin:0 0 4px;color:var(--fg)}
+#view-calendar .cd.today .dn{background:#2d9bff;color:#fff;font-weight:600}
+#view-calendar .cd.sel{box-shadow:none!important;background:#111}
+#view-calendar .cd.sel:not(.today) .dn{background:#fff;color:#000;font-weight:600}
+#view-calendar .c2-evs{display:flex;flex-direction:column;gap:2px;min-width:0}
+#view-calendar .c2-e{display:flex;align-items:center;gap:6px;font-size:12px;line-height:20px;padding:0 6px;border-radius:5px;color:var(--fg-2);min-width:0}
+#view-calendar .c2-e i{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+#view-calendar .c2-e span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view-calendar .c2-e time{flex:none;font-size:11px;color:#8e8e93;font-variant-numeric:tabular-nums}
+#view-calendar .c2-e.all{background:color-mix(in srgb,var(--c) 20%,transparent);color:var(--fg)}
+#view-calendar .c2-e.all i{display:none}
+#view-calendar .c2-more{font-size:11.5px;color:#8e8e93;padding:0 6px;line-height:18px}
+#view-calendar .c2-dots{display:none}
+#view-calendar .c2-e.due{color:#a1a1a6}#view-calendar .c2-e.due i{background:transparent;box-shadow:inset 0 0 0 1.5px #8e8e93}
+:root[data-theme=dark] #view-calendar #calFilt{background:none!important;padding:0!important;border-radius:0!important;box-shadow:none!important;gap:18px!important}
+:root[data-theme=dark] #view-calendar #calFilt button{background:none!important;padding:0!important;height:24px;opacity:1!important}
+#view-calendar .c2-below{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;margin-top:36px}
+#view-calendar .calside{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;position:static}
+#view-calendar .calsd-h{align-items:flex-end;margin-bottom:6px}
+#view-calendar .calsd-h span{color:#2d9bff;font-size:12px;letter-spacing:.02em;text-transform:none;font-weight:600}
+#view-calendar .calsd-h b{font-size:22px;font-weight:700;letter-spacing:-.02em}
+#view-calendar .c2-h{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:17px 0 6px;color:var(--fg)}
+#view-calendar .cev{display:grid;grid-template-columns:82px 3px minmax(0,1fr);gap:12px;align-items:center;border:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;border-radius:0;margin:0;padding:12px 2px;background:transparent!important;box-shadow:none!important;transform:none!important}
+#view-calendar .cev:hover{background:#0c0c0c!important}
+#view-calendar .cev .bar2{align-self:stretch;width:3px}
+#view-calendar .c2-t{font-size:12.5px;color:#8e8e93;font-variant-numeric:tabular-nums;line-height:1.35}
+#view-calendar .c2-t b{display:block;color:var(--fg-2);font-weight:500}
+#view-calendar .cev>span:last-child b{font-size:14px;font-weight:500}
+#view-calendar .cev small{font-size:12.5px;color:#8e8e93}
+#view-calendar .cal-empty{padding:14px 2px;color:#8e8e93}
+@media (max-width:1000px){#view-calendar .c2-below{grid-template-columns:1fr;gap:12px}}
+@media (max-width:640px){
+ #view-calendar .c2-title{font-size:28px}
+ #view-calendar .c2-filt{gap:12px;flex-wrap:nowrap;overflow-x:auto}#view-calendar .c2-filt button{flex:none}
+ #view-calendar .cald{border-left:0}
+ #view-calendar .calh span{text-align:center;padding:0 0 8px!important}
+ #view-calendar .cd{min-height:58px;padding:6px 0;align-items:center;border-right:0!important;background:transparent!important}
+ #view-calendar .cd .dn{align-self:center;margin:0 0 4px}
+ #view-calendar .c2-evs{display:none}
+ #view-calendar .c2-dots{display:flex;gap:3px;justify-content:center}#view-calendar .c2-dots i{width:5px;height:5px;border-radius:50%;background:var(--c)}
+ #view-calendar .cev{grid-template-columns:64px 3px minmax(0,1fr)}
+}
+
+/* Front page polish */
+#view-home>.wrap{padding-top:30px}
+#view-home .spgrid>.sp-sec{margin-top:40px!important;margin-bottom:12px}
+#view-home .spgrid>.sp-sec#nyHead{margin-top:26px!important}
+#view-home>.wrap>.sh{font-size:12px!important;font-weight:600!important;color:var(--fg-3)!important;letter-spacing:0!important;margin:40px 0 12px!important}
+#view-home #hmCards .kpi{padding-bottom:22px!important}
+#view-home #hmCards .kpi svg{margin-top:10px}
+
+/* Icon motion: small, quick, and off for people who turn motion off */
+@media (prefers-reduced-motion:no-preference){
+ .ic{transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+ .side .ni:hover>.ic,.side [data-view]:hover>.ic{transform:scale(1.12) translateX(1px)}
+ .btn:hover .ic:has(path[d="M12 5v14M5 12h14"]),.btn:hover .ic:has(path[d^="M12 5v14"]){transform:rotate(90deg)}
+ #bell:hover .ic{animation:ring .6s ease}
+ @keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(7deg)}80%{transform:rotate(-4deg)}}
+ .jc:hover .jc-ic .ic{transform:translateY(-3px) scale(1.08)}
+ .jc .jc-ar .ic{transition:transform .3s ease,opacity .3s}.jc:hover .jc-ar .ic{transform:translateX(4px)}
+ .spc:hover .spc-h .ic,.spc:hover .ny-k .ic,.ny:hover .ic{transform:translateY(-1px) scale(1.06)}
+ #nyFilt button:hover .ic,.seg2 button:hover .ic{transform:scale(1.15)}
+ .ib:hover .ic{transform:scale(1.1)}
+ #calPrev:hover .ic{transform:translateX(-2px)}#calNext:hover .ic{transform:translateX(2px)}
+ .btn:hover .ic:has(path[d^="M12 19l7-7"]),.btn:hover .ic:has(path[d^="M4 20h4"]){transform:rotate(-12deg)}
+ .side .ni.on>.ic{animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+ @keyframes pop{0%{transform:scale(.8)}100%{transform:scale(1)}}
+ #crumb>.ic[style*="2d9bff"]{animation:pulseic 2.4s ease-in-out infinite}
+ @keyframes pulseic{0%,100%{opacity:1}50%{opacity:.55}}
+}
 </style>
 </head>
 <body>
@@ -1851,10 +1956,10 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
             <div class="spgrid">
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
               <div class="cards" id="nyCards"></div>
-              <div class="sp-sec" style="margin-top:34px">Projects <span>3</span></div>
-              <div class="cards" id="hpCards"></div>
               <div class="sp-sec ceo-only" style="margin-top:34px">Money <span>September</span></div>
               <div class="kpis ceo-only" id="hmCards" style="margin-top:0"></div>
+              <div class="sp-sec" style="margin-top:34px">Projects <span>3</span></div>
+              <div class="cards" id="hpCards"></div>
               <div class="sp-sec ceo-only" id="ibHead" style="margin-top:34px" hidden>Inbox <span id="ibN"></span><a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener" style="margin-left:auto;color:var(--fg-3);font-weight:500;text-decoration:none">Open Gmail ↗</a></div>
               <div class="ib-list ceo-only" id="ibList" hidden></div>
               <div class="sp-sec" style="margin-top:34px">Jump to</div>
@@ -1940,12 +2045,13 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
 
         <!-- ======== CALENDAR ======== -->
         <section class="view" id="view-calendar" hidden>
-          <div class="wrap wide">
-            <div class="ph2"><div><h1 class="title">Calendar</h1><p class="lead">Meetings, investor calls, deadlines and task due dates across every project.</p></div><div class="acts"><button class="btn" id="calToday">Today</button><span class="calnav"><button class="ib" id="calPrev" aria-label="Previous month"><svg class="ic" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></svg></button><b id="calMon"></b><button class="ib" id="calNext" aria-label="Next month"><svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></button></span></div></div>
-            <div class="seg2" id="calFilt"></div>
-            <div class="calw">
-              <div class="calg"><div class="calh" id="calHead"></div><div class="cald" id="calGrid"></div></div>
-              <aside class="calside"><div class="calsd-h"><div><span id="calDow"></span><b id="calDay"></b></div><button class="btn" id="calAdd">Add event</button></div><div id="calList"></div><div class="sh" style="margin-top:22px">Coming up</div><div id="calUp"></div></aside>
+          <div class="wrap wide cal2">
+            <div class="c2-top"><h1 class="c2-title" id="calMon"></h1><div class="c2-nav"><button class="ib" id="calPrev" aria-label="Previous month"><svg class="ic" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></svg></button><button class="c2-today" id="calToday">Today</button><button class="ib" id="calNext" aria-label="Next month"><svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></button></div></div>
+            <div class="c2-filt" id="calFilt"></div>
+            <div class="calg"><div class="calh" id="calHead"></div><div class="cald" id="calGrid"></div></div>
+            <div class="c2-below">
+              <section class="calside"><div class="calsd-h"><div><span id="calDow"></span><b id="calDay"></b></div><button class="btn" id="calAdd">Add event</button></div><div id="calList"></div></section>
+              <section><div class="c2-h">Coming up</div><div id="calUp"></div></section>
             </div>
           </div>
         </section>
@@ -2875,7 +2981,7 @@ const NEWACT={projects:()=>openCreate('project',{}),initiatives:()=>openCreate('
  people:()=>openForm('Add candidate',[{k:'n',label:'Name',ph:'Full name'},{k:'r',label:'Role',opts:['Senior engineer','Product engineer','Customer success lead']},{k:'src',label:'Source',opts:['Referral','Inbound','LinkedIn','YC Work at a Startup']}],v=>{CANDS.push({id:'c'+Date.now(),n:v.n,r:v.r,s:'Applied',src:v.src,rt:3,nx:'Review CV'});renderHire();renderPPTiles();$('[data-g="pp"] [data-t2="Hiring"]').click();flash(`#hireBoard .card[data-id="${CANDS[CANDS.length-1].id}"]`);toast(`<b>${esc(v.n)}</b> added to Applied`,v.r)},'Add candidate')};
 /* =================== END STAGE 1 =================== */
 /* ---------- Calendar (Stage 4) ---------- */
-const CK={meet:['Meetings','#8b8f97'],inv:['Investors','var(--ink2)'],due:['Task due','#c4c6cc'],legal:['Deadlines','#e5484d'],launch:['Launch','#5e6ad2']};
+const CK={meet:['Meetings','#2d9bff'],inv:['Investors','#8b5cf6'],due:['Task due','#8e8e93'],legal:['Deadlines','#ff7b7b'],launch:['Launch','#30d158']};
 const CEV=[['2026-10-14','Q3 board meeting','meet','10:00 · Video call','legal'],['2026-10-14','AWS bill due · $4,700','legal','Auto-pay'],['2026-10-12','Weekly team sync','meet','09:30 · Office'],['2026-10-19','Weekly team sync','meet','09:30 · Office'],['2026-10-26','Weekly team sync','meet','09:30 · Office'],['2026-11-02','Weekly team sync','meet','09:30 · Office'],['2026-11-09','Weekly team sync','meet','09:30 · Office'],['2026-11-16','Weekly team sync','meet','09:30 · Office'],
  ['2026-10-13','Northbeam partner meeting','inv','15:00 · Their office · Alex, Maya'],['2026-10-15','Harbour Capital call','inv','11:00 · Zoom · terms follow-up'],['2026-10-22','Field Fund diligence call','inv','14:00 · Maya'],['2026-10-28','Oakline Partners first meeting','inv','10:30 · Alex'],['2026-11-04','Investor update #9 goes out','inv','Monthly update'],
  ['2026-10-20','Pen-test report deadline','legal','Decides 18 Nov or 2 Dec launch'],['2026-10-31','Delaware franchise tax','legal','Due today · $400'],['2026-11-08','83(b) election · Nadia K.','legal','30 days after grant · post to IRS'],['2026-11-01','Gusto payroll','legal','$21,400'],
@@ -2887,23 +2993,24 @@ function taskDate(d){if(d==='Today')return iso(TODAY);const wd={Mon:12,Tue:13,We
 let calM=new Date(2026,9,1),calSel=iso(TODAY);const calOff=new Set();
 function calEvents(){const ev=CEV.map(([d,t,k,sub])=>({d,t,k,sub}));TASKS.forEach(t=>{if(t.s==='done')return;const d=taskDate(t.d);if(d)ev.push({d,t:t.t,k:'due',sub:`${t.id} · ${P[t.o]?P[t.o][0]:'Unassigned'}`,task:t.id})});return ev.filter(e=>!calOff.has(e.k))}
 function renderCal(){const ev=calEvents(),by={};ev.forEach(e=>(by[e.d]=by[e.d]||[]).push(e));
- $('#calMon').textContent=`${MONL[calM.getMonth()]} ${calM.getFullYear()}`;
+ $('#calMon').innerHTML=`<b>${MONL[calM.getMonth()]}</b> ${calM.getFullYear()}`;
  $('#calFilt').innerHTML=Object.entries(CK).map(([k,[n,c]])=>`<button class="${calOff.has(k)?'':'on'}" data-ck="${k}" style="--c:${c}"><i></i>${n}</button>`).join('');
  $('#calHead').innerHTML=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<span>${d}</span>`).join('');
  const first=new Date(calM),start=new Date(first);start.setDate(1-((first.getDay()+6)%7));let h='';
  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);if(i===35&&d.getMonth()!==calM.getMonth())break;const k=iso(d),es=by[k]||[];
-  h+=`<button class="cd${d.getMonth()!==calM.getMonth()?' out':''}${k===iso(TODAY)?' today':''}${k===calSel?' sel':''}" data-cd="${k}" aria-label="${d.getDate()} ${MONL[d.getMonth()]}, ${es.length} events"><span class="dn">${d.getDate()}</span><span class="evs">${es.length?`<span class="ce1">${esc(es[0].t)}</span><span class="cdots">${es.slice(0,4).map(e=>`<i style="--c:${CK[e.k][1]}"></i>`).join('')}${es.length>1?`<em>${es.length}</em>`:''}</span>`:''}</span></button>`}
+  const tm=e=>{const m=/^(\d\d:\d\d)/.exec(e.sub||'');return m?m[1]:''};const srt=es.slice().sort((a,b)=>(tm(a)||'00')<(tm(b)||'00')?-1:1);
+  h+=`<button class="cd${d.getMonth()!==calM.getMonth()?' out':''}${k===iso(TODAY)?' today':''}${k===calSel?' sel':''}${d.getDay()%6===0?' we':''}" data-cd="${k}" aria-label="${d.getDate()} ${MONL[d.getMonth()]}, ${es.length} events"><span class="dn">${d.getDate()}</span><span class="c2-evs">${srt.slice(0,es.length>3?2:3).map(e=>`<span class="c2-e${tm(e)?'':e.k==='due'?' due':' all'}" style="--c:${CK[e.k][1]}"><i></i><span>${esc(e.t)}</span>${tm(e)?`<time>${tm(e)}</time>`:''}</span>`).join('')}${es.length>3?`<span class="c2-more">${es.length-2} more</span>`:''}</span><span class="c2-dots">${es.slice(0,3).map(e=>`<i style="--c:${CK[e.k][1]}"></i>`).join('')}</span></button>`}
  $('#calGrid').innerHTML=h;
  const sd=new Date(calSel+'T00:00');$('#calDow').textContent=sd.toLocaleDateString('en-GB',{weekday:'long'});$('#calDay').textContent=`${sd.getDate()} ${MONL[sd.getMonth()]}`;
- const evRow=e=>`<button class="cev" style="--c:${CK[e.k][1]}"${e.task?` data-ctask="${e.task}"`:''}><span class="bar2"></span><span><b>${esc(e.t)}</b><small>${esc(e.sub||CK[e.k][0])}</small></span></button>`;
+ const evRow=e=>{const m=/^(\d\d:\d\d)\s*·?\s*(.*)$/.exec(e.sub||'');return `<button class="cev" style="--c:${CK[e.k][1]}"${e.task?` data-ctask="${e.task}"`:''}><span class="c2-t">${e.when?`<b>${e.when}</b>`:''}${m?m[1]:'All day'}</span><span class="bar2"></span><span><b>${esc(e.t)}</b><small>${esc((m?m[2]:e.sub)||CK[e.k][0])}</small></span></button>`};
  $('#calList').innerHTML=(by[calSel]||[]).map(evRow).join('')||'<div class="cal-empty">Nothing on this day.</div>';
  const up=ev.filter(e=>e.d>iso(TODAY)&&e.k!=='due').sort((a,b)=>a.d<b.d?-1:1).slice(0,5);
- $('#calUp').innerHTML=up.map(e=>{const d=new Date(e.d+'T00:00');return evRow({...e,sub:`${d.getDate()} ${MON[d.getMonth()]} · ${e.sub||''}`})}).join('');
+ $('#calUp').innerHTML=up.map(e=>{const d=new Date(e.d+'T00:00');return evRow({...e,when:`${d.toLocaleDateString('en-GB',{weekday:'short'})} ${d.getDate()} ${MON[d.getMonth()]}`})}).join('');
  const wk=ev.filter(e=>{const n=(new Date(e.d+'T00:00')-TODAY)/864e5;return n>=0&&n<7}).length;$('#calC').textContent=wk||''}
-$('#calGrid').addEventListener('click',e=>{const c=e.target.closest('[data-cd]');if(!c)return;calSel=c.dataset.cd;const d=new Date(calSel+'T00:00');if(d.getMonth()!==calM.getMonth())calM=new Date(d.getFullYear(),d.getMonth(),1);renderCal();if(matchMedia('(max-width:1100px)').matches)$('.calside').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})});
+$('#calGrid').addEventListener('click',e=>{const c=e.target.closest('[data-cd]');if(!c)return;calSel=c.dataset.cd;const d=new Date(calSel+'T00:00');if(d.getMonth()!==calM.getMonth())calM=new Date(d.getFullYear(),d.getMonth(),1);renderCal();if(matchMedia('(max-width:640px)').matches)$('.calside').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})});
 $('#calPrev').addEventListener('click',()=>{calM=new Date(calM.getFullYear(),calM.getMonth()-1,1);renderCal()});
 $('#calNext').addEventListener('click',()=>{calM=new Date(calM.getFullYear(),calM.getMonth()+1,1);renderCal()});
-$('#calToday').addEventListener('click',()=>{calM=new Date(2026,9,1);calSel=iso(TODAY);renderCal()});
+$('#calToday').addEventListener('click',()=>{calM=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);calSel=iso(TODAY);renderCal()});
 $('#calFilt').addEventListener('click',e=>{const b=e.target.closest('[data-ck]');if(!b)return;const k=b.dataset.ck;calOff.has(k)?calOff.delete(k):calOff.add(k);renderCal()});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ctask]');if(b){const id=b.dataset.ctask;openProject(keyOfTask(id),'Issues');flash(`#issues .lr[data-id="${id}"]`)}});
 function addEvent(){const sd=new Date(calSel+'T00:00');openForm('Add event',[{k:'t',label:'What',ph:'e.g. Call with Granite Ventures'},{k:'d',label:'Date',v:`${sd.getDate()} ${MON[sd.getMonth()]}`,ph:'e.g. 22 Oct'},{k:'tm',label:'Time',ph:'e.g. 14:00'},{k:'k',label:'Type',opts:['Meetings','Investors','Legal & filings','Launch']}],v=>{const d=taskDate(v.d.replace(/^(\d+)\s+([A-Za-z]{3}).*$/,(m,a,b)=>a+' '+b[0].toUpperCase()+b.slice(1).toLowerCase()))||calSel;const k=Object.keys(CK).find(x=>CK[x][0]===v.k)||'meet';CEV.push([d,v.t,k,v.tm||'All day']);calSel=d;const dd=new Date(d+'T00:00');calM=new Date(dd.getFullYear(),dd.getMonth(),1);if(curView!=='calendar')showView('calendar');renderCal();flash(`.cd[data-cd="${d}"]`);toast(`<b>${esc(v.t)}</b> added`,`${dd.getDate()} ${MONL[dd.getMonth()]}${v.tm?' · '+esc(v.tm):''}`)},'Add event')}
@@ -3131,7 +3238,7 @@ $('#htabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'o
 $('#mtabs').innerHTML=TABS.map((t,i)=>`<button data-ptab="${t}" class="${i?'':'on'}">${t}</button>`).join('');
 function openTab(name){$$('[data-ptab]').forEach(b=>b.classList.toggle('on',b.dataset.ptab===name));$$('.pane').forEach(p=>p.hidden=p.dataset.pane!==name);$('#content').scrollTop=0}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ptab]');if(b)openTab(b.dataset.ptab)});
-const CRUMB={settings:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"/></svg><span class="t">Settings</span>`,messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id">BRF-41</span><span class="t">Morning briefing</span>`,
+const CRUMB={settings:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"/></svg><span class="t">Settings</span>`,messages:`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><path d="M4.5 6.5a2 2 0 012-2h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5a1 1 0 01-1-1z"/></svg><span class="t">Messages</span><span class="id">All conversations</span>`,home:`<svg class="ic" viewBox="0 0 24 24" style="color:#2d9bff"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg><span class="id" style="color:#2d9bff">BRF-41</span><span class="t">Morning briefing</span>`,
  get project(){const i=PI_();return `${st(i.st[0],i.st[1])}<span class="id">${i.key}</span><span class="t">${i.name}</span>`},
  get spaces(){const c=spCur&&CONVS.find(x=>x.id===spCur);return `<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-2)"><rect x=\"3\" y=\"11\" width=\"14\" height=\"10\" rx=\"2.2\"/><path d=\"M6 8.5V8a2 2 0 012-2h10a2 2 0 012 2v7\"/><path d=\"M9.5 3.5h9.3A2.2 2.2 0 0121 5.7V12\"/></svg><span class="t"${c?' style="color:var(--fg-3);cursor:pointer" data-spback':''}>Spaces</span>${c?`<span class="sep">›</span><span class="t">${esc(c.ch)}</span>`:''}`},
  stages:`${dia('now')}<span class="id">STG</span><span class="t">Stages &amp; team</span>`,
