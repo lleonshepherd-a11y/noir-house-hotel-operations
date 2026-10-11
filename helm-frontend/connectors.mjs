@@ -333,7 +333,10 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
       const id = mm[1]; if (!CONNECTORS[id]) { send(res, 404, { error: "Unknown tool" }); return true; }
       const s = secretOf(id);
       try { // best effort: tell the provider too
-        if (s && CONNECTORS[id].app === "google") await call("https://oauth2.googleapis.com/revoke", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: form({ token: s.refresh || s.access }) });
+        // Google ends the whole grant (Gmail, Calendar and Drive together) when any one token is revoked,
+        // so only revoke when this is the last Google tool still connected.
+        const otherGoogle = Object.keys(CONNECTORS).some((k) => k !== id && CONNECTORS[k].app === "google" && row(k));
+        if (s && CONNECTORS[id].app === "google" && !otherGoogle) await call("https://oauth2.googleapis.com/revoke", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: form({ token: s.refresh || s.access }) });
         if (s && id === "xero" && s.connectionId) await call("https://api.xero.com/connections/" + s.connectionId, { method: "DELETE", headers: { authorization: "Bearer " + (await accessToken("xero")).access } });
         if (s && id === "bank") { const c = appCreds("plaid"); if (c) await call(plaidHost() + "/item/remove", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_id: c.clientId, secret: c.clientSecret, access_token: s.access }) }); }
       } catch {}

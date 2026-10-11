@@ -39,10 +39,10 @@ const audit = (uid, what) => q("INSERT INTO audit(at,user_id,what) VALUES(?,?,?)
 /* ---------------- Roles: who can read and write each part of the workspace ---------------- */
 const STAFF = ["CEO", "Manager", "Member"], CEO = ["CEO"], MGR = ["CEO", "Manager"], ALL = ["CEO", "Manager", "Member", "Guest"];
 const ACL = {
-  TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
+  TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [STAFF, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
   TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, STAFF], stamps: [ALL, STAFF], // SPX is merged per space below
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
-  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], STGS: [ALL, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
+  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], STGS: [STAFF, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
   INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO], TS: [CEO, CEO],
@@ -91,14 +91,16 @@ function cleanTask(t) {
   const o = { id: t.id, t: noTags(t.t, 300), l: noTags(t.l, 30), o: isId(t.o) ? t.o : null, p: Math.max(0, Math.min(4, t.p | 0)), d: noTags(t.d, 20), s: TASK_S.includes(t.s) ? t.s : "todo" };
   if (t.w && TASK_ID_RE.test(String(t.w))) o.w = t.w;
   if (isId(t.nx)) o.nx = t.nx;
-  for (const k of ["mv", "ho", "ch"]) if (typeof t[k] === "string" && DATE_RE.test(t[k])) o[k] = t[k];
+  for (const k of ["mv", "ho", "ch", "due"]) if (typeof t[k] === "string" && DATE_RE.test(t[k])) o[k] = t[k];
+  // A task saved with only a label ("Fri", "Today", "Apr 20") gets its full date now, so it can go late later.
+  if (!o.due) { const d = dueISO(o.d); if (d) o.due = d; }
   return o;
 }
 // Members can add tasks and change their own; only managers and the CEO can change or remove other people's.
 function mergeTasks(incoming, u) {
   const clean = (Array.isArray(incoming) ? incoming : []).map(cleanTask).filter(Boolean);
   if (u.role === "CEO" || u.role === "Manager") return clean;
-  const cur = readSec("TASKS") || [], byId = new Map(clean.map((t) => [t.id, t]));
+  const cur = (readSec("TASKS") || []).map((t) => cleanTask(t) || t), byId = new Map(clean.map((t) => [t.id, t]));
   const out = cur.map((t) => (t.o === u.pkey && byId.has(t.id) ? byId.get(t.id) : t)).filter((t) => t.o !== u.pkey || byId.has(t.id));
   const known = new Set(cur.map((t) => t.id));
   for (const t of clean) if (!known.has(t.id)) out.push(t);
@@ -286,9 +288,13 @@ function stateFor(u) {
   // Roles come from accounts, not from what a browser sent.
   if (out.MEM) out.MEM = out.MEM.map((m) => { const acc = q("SELECT role FROM users WHERE pkey=?").get(m[0]); return acc ? [m[0], acc.role] : m; });
   if (out.SPX && u.role !== "CEO") { const mine = new Set(convsFor(u).filter((c) => c.ch).map((c) => c.id)); out.SPX = Object.fromEntries(Object.entries(out.SPX).filter(([k]) => mine.has(k))); }
+  // Guests only see the tasks they own, not the whole company's work.
+  if (u.role === "Guest" && out.TASKS) out.TASKS = out.TASKS.filter((t) => t.o === u.pkey);
   if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal" && e[4] !== "google"); // the CEO's own Google Calendar stays private
   const res = swapKeys(out, "AK", u.pkey);
-  res.__v = Object.fromEntries(q("SELECT name, updated FROM sections").all().filter((r) => r.name in res).map((r) => [r.name, r.updated]));
+  const vers = q("SELECT name, updated, by FROM sections").all().filter((r) => r.name in res);
+  res.__v = Object.fromEntries(vers.map((r) => [r.name, r.updated]));
+  res.__mine = vers.filter((r) => r.by === u.id).map((r) => r.name); // parts this person saved last
   return res;
 }
 
@@ -493,16 +499,17 @@ const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oc
 function dueISO(d, now = new Date()) {
   if (!d) return null; const pad = (n) => String(n).padStart(2, "0"); const iso = (x) => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
   if (d === "Today") return iso(now);
+  if (d === "Tomorrow") { const x = new Date(now); x.setDate(x.getDate() + 1); return iso(x); }
   const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(d); if (wd >= 0) { const x = new Date(now); x.setDate(x.getDate() + ((wd - x.getDay() + 7) % 7)); return iso(x); }
   let m = /^([A-Z][a-z]{2}) (\d+)$/.exec(d) || /^(\d+) ([A-Z][a-z]{2})$/.exec(d); if (!m) return null;
   const [mon, day] = isNaN(m[1]) ? [m[1], +m[2]] : [m[2], +m[1]]; const mi = MON3.indexOf(mon); if (mi < 0) return null;
-  let y = now.getFullYear(); if (mi < now.getMonth() - 6) y++; return `${y}-${pad(mi + 1)}-${pad(day)}`;
+  let y = now.getFullYear(); if (mi < now.getMonth() - 6) y++; else if (mi > now.getMonth() + 5) y--; return `${y}-${pad(mi + 1)}-${pad(day)}`;
 }
 async function accountabilityCheck() {
   const tasks = readSec("TASKS") || [], P = readSec("P") || {}, today = new Date(); today.setHours(0, 0, 0, 0);
   const sent = JSON.parse(getSetting("acct_sent") || "{}"), day = today.toISOString().slice(0, 10), out = [];
   for (const t of tasks) {
-    if (!t || t.s === "done") continue; const due = dueISO(t.d); if (!due) continue;
+    if (!t || t.s === "done") continue; const due = t.due || dueISO(t.d); if (!due) continue;
     const late = Math.round((today - new Date(due + "T00:00")) / 864e5); if (late < 5) continue;
     const key = t.id + ":" + day; if (sent[key]) continue; sent[key] = 1;
     out.push(`*${t.id}* ${t.t} is ${late} days late with ${String((P[t.o] || [t.o])[0]).replace(/\.$/, "")}.`);
