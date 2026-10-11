@@ -1,7 +1,8 @@
 // Helm backend: accounts, roles enforced on the server, a SQLite database,
 // file storage and live updates. Zero npm dependencies (Node 22.13+).
 //   node server.mjs            → http://localhost:5173
-// Env: PORT, DATA_DIR (put this on a Railway volume), COOKIE_SECURE=1 behind HTTPS.
+// Env: PORT, DATA_DIR (put this on a Railway volume), COOKIE_SECURE=1 behind HTTPS,
+//      HELM_SECRET (encrypts connection tokens), PUBLIC_URL, and the app keys listed in connectors.mjs.
 import { createServer } from "node:http";
 import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -10,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { randomBytes, scrypt as _scrypt, timingSafeEqual, createHash } from "node:crypto";
 import { promisify } from "node:util";
 import { DatabaseSync } from "node:sqlite";
+import { makeConnections } from "./connectors.mjs";
 
 const scrypt = promisify(_scrypt);
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
@@ -44,8 +46,9 @@ const ACL = {
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
   INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO],
   ROLES: [CEO, CEO], CANDS: [CEO, CEO], OB: [CEO, CEO], CN: [CEO, CEO],
+  CX: [CEO, []], // what the connections read (Gmail, Drive, Stripe…); only the server writes it
   CONVS: [ALL, ALL], // filtered and merged per person below
-  // WG (wages) is never in this list: it is only served by /api/wages after a PIN check.
+  // WG (wages) is never in this list: it is only served by /api/wages, to the CEO and the people given access.
 };
 const canRead = (sec, role) => ACL[sec]?.[0].includes(role);
 const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
@@ -118,7 +121,7 @@ function stateFor(u) {
   out.CONVS = convsFor(u).map((c) => (c.ch ? { ...c, unread: (c.unreadBy || {})[u.pkey] || 0, unreadBy: undefined } : c));
   // Roles come from accounts, not from what a browser sent.
   if (out.MEM) out.MEM = out.MEM.map((m) => { const acc = q("SELECT role FROM users WHERE pkey=?").get(m[0]); return acc ? [m[0], acc.role] : m; });
-  if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal");
+  if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal" && e[4] !== "google"); // the CEO's own Google Calendar stays private
   return swapKeys(out, "AK", u.pkey);
 }
 
@@ -135,12 +138,15 @@ function userFrom(req) {
 const cookie = (req, t, maxAge) => `helm_s=${t}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${process.env.COOKIE_SECURE === "1" || req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}`;
 const tries = new Map(); // simple login rate limit per IP
 function tooMany(ip) { const t = tries.get(ip) || []; const now = Date.now(); const recent = t.filter((x) => now - x < 15 * 60e3); tries.set(ip, recent); return recent.length >= 10; }
+const wagesOK = (u) => u.role === "CEO" || (u.role === "Manager" && ((readSec("WG") || {}).access || []).includes(u.pkey));
 const pub = (u) => ({ id: u.id, email: u.email, name: u.name, pkey: u.pkey, role: u.role });
 
 /* ---------------- Live updates (server-sent events) ---------------- */
 const clients = new Set();
 function broadcast(evt, filter = () => true) { for (const c of clients) if (filter(c.user)) { try { c.res.write(`data: ${JSON.stringify(evt)}\n\n`); } catch {} } }
 setInterval(() => { for (const c of clients) try { c.res.write(": ping\n\n"); } catch {} }, 25e3);
+
+const cx = makeConnections({ db, q, readSec, writeSec, getSetting, setSetting, audit, broadcast, DATA });
 
 /* ---------------- HTTP helpers ---------------- */
 const send = (res, code, obj, headers = {}) => { res.writeHead(code, { "content-type": "application/json", "cache-control": "no-store", ...headers }); res.end(JSON.stringify(obj)); };
@@ -169,9 +175,8 @@ async function api(req, res, url) {
     const b = await json(req);
     if (!validEmail(b.email) || !strongPw(b.password) || !b.name) return send(res, 400, { error: "Enter your name, a valid email and a password of at least 10 characters." });
     const r = q("INSERT INTO users(email,name,pkey,role,pass,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), String(b.name).slice(0, 80), "AK", "CEO", await hashPw(b.password), Date.now());
-    if (b.seed && typeof b.seed === "object") for (const [k, v] of Object.entries(b.seed)) if (k === "WG") { if (v && v.pin) { setSetting("wg_pin", await hashPw(String(v.pin))); delete v.pin; } writeSec("WG", v, r.lastInsertRowid); } else if (ACL[k]) writeSec(k, v, r.lastInsertRowid);
+    if (b.seed && typeof b.seed === "object") for (const [k, v] of Object.entries(b.seed)) if (k === "WG") { if (v) writeSec("WG", { access: v.access, rows: v.rows }, r.lastInsertRowid); } else if (ACL[k]) writeSec(k, v, r.lastInsertRowid);
     const P = readSec("P") || {}; P.AK = [String(b.name).slice(0, 80), (P.AK || [])[1] || "#1c1d21", (P.AK || [])[2] || "#fff"]; writeSec("P", P, r.lastInsertRowid);
-    if (!getSetting("wg_pin")) setSetting("wg_pin", await hashPw("1234"));
     audit(r.lastInsertRowid, "set up the workspace");
     return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(r.lastInsertRowid), SESSION_DAYS * 86400) });
   }
@@ -197,33 +202,38 @@ async function api(req, res, url) {
   if (!u) return send(res, 401, { error: "Sign in" });
 
   if (p === "/api/logout" && m === "POST") { q("DELETE FROM sessions WHERE user_id=? AND token=?").run(u.id, createHash("sha256").update((/(?:^|;\s*)helm_s=([a-f0-9]{64})/.exec(req.headers.cookie) || [])[1] || "").digest("hex")); return send(res, 200, { ok: true }, { "set-cookie": cookie(req, "", 0) }); }
-  if (p === "/api/me" && m === "GET") return send(res, 200, { ...pub(u), seeded: !!q("SELECT 1 FROM sections WHERE name='TASKS'").get() });
+  if (p === "/api/me" && m === "GET") return send(res, 200, { ...pub(u), wages: wagesOK(u), seeded: !!q("SELECT 1 FROM sections WHERE name='TASKS'").get() });
   if (p === "/api/state" && m === "GET") return send(res, 200, stateFor(u));
 
   if (p === "/api/state" && m === "PUT") {
     const b = await json(req); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [];
     for (const [k, v] of Object.entries(secs)) {
       if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") writeSec("CONVS", v, u.id); else mergeConvs(v, u); done.push(k); continue; }
-      if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { if (v.pin) { setSetting("wg_pin", await hashPw(String(v.pin))); } writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
+      if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
       if (k === "MEM" && u.role === "CEO") { // role changes go to accounts too
         for (const [pk, role] of v || []) if (pk !== u.pkey && ["Manager", "Member", "Guest"].includes(role)) q("UPDATE users SET role=? WHERE pkey=? AND role<>'CEO'").run(role, pk);
       }
       if (!canWrite(k, u.role)) { refused.push(k); continue; }
+      if (k === "ANN") cx.onAnnouncements(readSec("ANN"), v, u.name).catch(() => {});
       writeSec(k, v, u.id); done.push(k);
     }
     if (done.length) { audit(u.id, "updated " + done.join(", ")); broadcast({ type: "changed", sections: done, by: u.pkey }, (x) => x.id !== u.id); }
     return send(res, refused.length && !done.length ? 403 : 200, { saved: done, refused });
   }
 
-  if (p === "/api/wages" && m === "POST") {
-    const b = await json(req); const wg = readSec("WG") || { access: ["AK"], rows: [] };
-    const allowed = u.role === "CEO" || (wg.access || []).includes(u.pkey);
-    if (!allowed) return send(res, 403, { error: "You don’t have access to wages." });
-    if (!(await checkPw(String(b.pin || ""), getSetting("wg_pin")))) { audit(u.id, "wrong wages PIN"); return send(res, 401, { error: "Wrong PIN." }); }
-    if (b.save && u.role === "CEO") { const v = swapKeys(b.save, "AK", u.pkey); if (v.newPin) { if (!/^\d{4}$/.test(v.newPin)) return send(res, 400, { error: "PIN must be 4 digits" }); setSetting("wg_pin", await hashPw(v.newPin)); } delete v.newPin; delete v.pin; writeSec("WG", { access: v.access, rows: v.rows }, u.id); audit(u.id, "updated wages"); }
-    else if (b.save) return send(res, 403, { error: "Only the CEO can change wages." });
+  // Wages are role-based: the CEO, plus the people the CEO gives access to. No PIN.
+  if (p === "/api/wages" && m === "GET") {
+    if (!wagesOK(u)) return send(res, 403, { error: "You don’t have access to wages." });
     audit(u.id, "opened wages");
-    return send(res, 200, swapKeys(readSec("WG") || wg, "AK", u.pkey));
+    return send(res, 200, swapKeys(readSec("WG") || { access: [u.pkey], rows: [] }, "AK", u.pkey));
+  }
+  if (p === "/api/wages" && m === "PUT") {
+    if (u.role !== "CEO") return send(res, 403, { error: "Only the CEO can change wages." });
+    const v = swapKeys(await json(req), "AK", u.pkey);
+    const access = Array.from(new Set([u.pkey, ...(Array.isArray(v.access) ? v.access.map(String) : [])]));
+    writeSec("WG", { access, rows: Array.isArray(v.rows) ? v.rows : [] }, u.id); audit(u.id, "updated wages");
+    broadcast({ type: "wages" });
+    return send(res, 200, { ok: true });
   }
 
   if (p === "/api/users" && m === "GET") { if (u.role !== "CEO") return send(res, 403, { error: "CEO only" }); return send(res, 200, q("SELECT id,email,name,pkey,role, invite IS NOT NULL AS pending FROM users").all().map((x) => swapKeys(x, "AK", u.pkey))); }
@@ -265,10 +275,7 @@ async function api(req, res, url) {
     res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" }); res.write(": hi\n\n");
     const c = { res, user: u }; clients.add(c); req.on("close", () => clients.delete(c)); return;
   }
-  if (p === "/api/connections" && m === "GET") {
-    if (u.role !== "CEO") return send(res, 403, { error: "CEO only" });
-    return send(res, 200, { stripe: !!process.env.STRIPE_SECRET_KEY, plaid: !!process.env.PLAID_CLIENT_ID, gusto: !!process.env.GUSTO_TOKEN, google: !!process.env.GOOGLE_CLIENT_ID, slack: !!process.env.SLACK_BOT_TOKEN });
-  }
+  if (await cx.route(req, res, url, u, json)) return;
   return send(res, 404, { error: "Not found" });
 }
 

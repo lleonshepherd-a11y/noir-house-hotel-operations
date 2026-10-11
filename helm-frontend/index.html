@@ -1320,6 +1320,28 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .cn-st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--fg-3)}
 .cn-st i{width:7px;height:7px;border-radius:50%;background:#c4c6cc}
 .cn-st.on{color:var(--fg-2)}.cn-st.on i{background:#30a46c}
+.cn-st.bad{color:#ff8a8e}.cn-st.bad i{background:#ff8a8e}
+.cx-step{display:flex;gap:10px;margin:12px 0 0;font-size:13px;color:var(--fg-2);line-height:1.5}
+.cx-step>b{flex:none;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;font-size:11px;color:var(--fg)}
+.cx-step a{color:#8cc8ff}
+.cx-in{display:flex;gap:6px;margin-top:6px}.cx-in input{flex:1;min-width:0}
+.cx-m label{display:block;font-size:12px;color:var(--fg-3);font-weight:500;margin:12px 0 6px}
+.cx-m input,.cx-m select{width:100%;height:38px;border-radius:9px;background:#232323;border:1px solid transparent;color:var(--fg);font:inherit;font-size:13.5px;padding:0 12px;outline:none}
+.cx-m input:focus{border-color:rgba(255,255,255,.3)}
+.cx-err{font-size:12.5px;color:#ff8a8e;margin-top:10px;min-height:0}
+.cx-list{margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.cx-list a,.cx-list div{display:flex;gap:10px;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--fg-2);text-decoration:none}
+.cx-list>*:first-child{border-top:0}.cx-list a:hover{background:rgba(255,255,255,.04)}
+.cx-list span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.cx-list small{color:var(--fg-3);flex:none}
+.ib-list{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.ib-row{display:grid;grid-template-columns:180px minmax(0,1fr) auto;gap:16px;align-items:center;padding:12px 16px;border-top:1px solid var(--line-2);color:var(--fg-2);text-decoration:none;font-size:13.5px;transition:background .15s}
+.ib-row:first-child{border-top:0}.ib-row:hover{background:rgba(255,255,255,.045)}
+.ib-from{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg);display:flex;align-items:center;gap:8px}
+.ib-from i{flex:none;width:6px;height:6px;border-radius:50%;background:transparent}
+.ib-row.un .ib-from i{background:#2d9bff}.ib-row.un .ib-from,.ib-row.un .ib-sub b{font-weight:600}
+.ib-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ib-sub b{font-weight:500;color:var(--fg)}.ib-sub span{color:var(--fg-3)}
+.ib-d{font-size:12px;color:var(--fg-3);white-space:nowrap}
+@media(max-width:640px){.ib-row{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}.ib-sub{grid-column:1/-1;grid-row:2}}
 .cn-st.busy i{background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
 .cn-feeds{display:flex;gap:6px;flex-wrap:wrap}
 .cn-feeds span{font-size:11.5px;font-weight:500;color:var(--fg-2);border:1px solid var(--line);border-radius:6px;padding:0 7px;line-height:20px}
@@ -1827,6 +1849,8 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
               <div class="cards" id="hpCards"></div>
               <div class="sp-sec ceo-only" style="margin-top:34px">Money <span>September</span></div>
               <div class="kpis ceo-only" id="hmCards" style="margin-top:0"></div>
+              <div class="sp-sec ceo-only" id="ibHead" style="margin-top:34px" hidden>Inbox <span id="ibN"></span><a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener" style="margin-left:auto;color:var(--fg-3);font-weight:500;text-decoration:none">Open Gmail ↗</a></div>
+              <div class="ib-list ceo-only" id="ibList" hidden></div>
               <div class="sp-sec" style="margin-top:34px">Jump to</div>
               <div class="jump" id="jump"></div>
             </div>
@@ -1987,18 +2011,10 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
         <!-- ======== WAGES (private) ======== -->
         <section class="view" id="view-wages" hidden>
           <div class="wrap wide">
-            <div id="wgLock" class="wg-lock">
-              <div class="wg-lk-ic"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg></div>
-              <h1 class="title" style="font-size:26px">Wages are private</h1>
-              <p class="lead" style="text-align:center;margin:8px auto 0">Only managers with access can see salaries. Enter your 4-digit PIN to open this page.</p>
-              <div class="pin" id="pinBoxes"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 1"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 2"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 3"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 4"></div>
-              <p class="pin-msg" id="pinMsg">Sample PIN for this mockup: 1234</p>
-              <p class="pin-who" id="pinWho"></p>
-            </div>
-            <div id="wgOpen" hidden>
-              <div class="ph2"><div><h1 class="title">Wages</h1><p class="lead">Salaries, contractor rates and pay reviews. Only the people listed under Access can open this page.</p><span class="stampl" id="wgStamp"></span></div><div class="acts"><button class="btn" id="wgAccess"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/></svg>Access</button><button class="btn" id="wgPin"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg>Change PIN</button><button class="btn" id="wgLockBtn"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg>Lock now</button><button class="btn pri" id="wgAdd"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add pay</button></div></div>
+            <div id="wgOpen">
+              <div class="ph2"><div><h1 class="title">Wages</h1><p class="lead">Salaries, contractor rates and pay reviews. Only the CEO and the managers given access can see this page.</p><span class="stampl" id="wgStamp"></span></div><div class="acts"><button class="btn" id="wgAccess"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/></svg>Access</button><button class="btn pri" id="wgAdd"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add pay</button></div></div>
               <div class="kpis" id="wgTiles"></div>
-              <div class="sh">Pay by person <span class="n" id="wgN"></span><span class="r" style="cursor:default">Locks again when you leave this page</span></div>
+              <div class="sh">Pay by person <span class="n" id="wgN"></span><span class="r" style="cursor:default" id="wgWho"></span></div>
               <div class="tbl"><table><thead><tr><th>Person</th><th>Role</th><th>Type</th><th class="num">Pay</th><th class="num">Per year</th><th>Last change</th><th>Next review</th><th style="width:36px"></th></tr></thead><tbody id="wgRows"></tbody></table></div>
             </div>
           </div>
@@ -3052,10 +3068,10 @@ $('#sSave').addEventListener('click',()=>toast('<b>Settings saved</b>',$('#sName
 const MEM=[['AK','CEO'],['JR','Manager'],['ML','Manager'],['SP','Member'],['PS','Member'],['DW','Member'],['TN','Guest'],['TO','Guest'],['Sam Ortiz','Guest']];
 /* ---------- Roles: who sees what ---------- */
 const ROLE_LIST=['CEO','Manager','Member','Guest'];
-const AREAS=[['Briefing, my tasks, this week, calendar',['home','mytasks','week','calendar'],[1,1,1,0]],['Messages and spaces',['messages','spaces'],[1,1,1,'Spaces they’re in']],['Notes',['notes'],[1,1,1,0]],['Projects, initiatives, stages',['projects','project','initiatives','stages'],[1,1,1,'Shared projects']],['Team directory and announcements',['people','announce','feedback'],[1,1,1,0]],['Metrics',['metrics'],[1,1,0,0]],['Decisions and sign-offs',['decisions','signoff'],[1,0,0,0]],['Money, bank and budgets',['money'],[1,0,0,0]],['Wages',['wages'],[1,'If given access + PIN',0,0]],['Fundraising and cap table',['fundraise'],[1,0,0,0]],['Board & legal',['legal'],[1,0,0,0]],['Connections (bank, Stripe, Slack…)',['connections'],[1,0,0,0]],['Settings and permissions',['settings'],[1,0,0,0]]];
+const AREAS=[['Briefing, my tasks, this week, calendar',['home','mytasks','week','calendar'],[1,1,1,0]],['Messages and spaces',['messages','spaces'],[1,1,1,'Spaces they’re in']],['Notes',['notes'],[1,1,1,0]],['Projects, initiatives, stages',['projects','project','initiatives','stages'],[1,1,1,'Shared projects']],['Team directory and announcements',['people','announce','feedback'],[1,1,1,0]],['Metrics',['metrics'],[1,1,0,0]],['Decisions and sign-offs',['decisions','signoff'],[1,0,0,0]],['Money, bank and budgets',['money'],[1,0,0,0]],['Wages',['wages'],[1,'If the CEO gives access',0,0]],['Fundraising and cap table',['fundraise'],[1,0,0,0]],['Board & legal',['legal'],[1,0,0,0]],['Connections (bank, Stripe, Slack…)',['connections'],[1,0,0,0]],['Settings and permissions',['settings'],[1,0,0,0]]];
 const roleOf=k=>{const m=MEM.find(x=>x[0]===k);return m?m[1]:'Member'};
 let VIEWER='AK';
-function can(v,who=VIEWER){const r=roleOf(who),ri=ROLE_LIST.indexOf(r);const a=AREAS.find(x=>x[1].includes(v));if(!a)return r==='CEO';const c=a[2][ri];if(v==='wages')return r==='CEO'||(c&&typeof WG!=='undefined'&&WG.access.includes(who));if(r==='Guest')return v==='messages'||v==='spaces'||v==='project';return !!c}
+function can(v,who=VIEWER){const r=roleOf(who),ri=ROLE_LIST.indexOf(r);const a=AREAS.find(x=>x[1].includes(v));if(!a)return r==='CEO';const c=a[2][ri];if(v==='wages')return r==='CEO'||(!!c&&(typeof BK!=='undefined'&&BK.on&&who==='AK'?!!(BK.me&&BK.me.wages):typeof WG!=='undefined'&&WG.access.includes(who)));if(r==='Guest')return v==='messages'||v==='spaces'||v==='project';return !!c}
 function seeText(k){const r=roleOf(k);return r==='CEO'?'Everything, including money, wages and connections':r==='Manager'?'Normal work plus metrics':r==='Member'?'Normal work: tasks, projects, messages':'Only spaces and projects shared with them'}
 function renderMem(){$('#memCount').textContent=`${MEM.length} people · 1 CEO · ${MEM.filter(m=>m[1]==='Guest').length} guests`;
  $('#memRows').innerHTML=MEM.map(([k,r],i)=>`<tr><td><span style="display:flex;align-items:center;gap:10px">${P[k]?av(k):gav(k)}<span><b style="font-weight:500">${P[k]?esc(P[k][0]):esc(k)}</b><small>${P[k]?(k==='TN'||k==='TO'?'Contractor':'Team'):k.includes('@')?'Invite sent':'Investor · Field Fund'}</small></span></span></td><td><span class="tag ${r==='CEO'?'good':'n'}">${r}</span></td><td class="muted2">${seeText(k)}</td><td>${r==='CEO'?'<span class="muted2">Owner</span>':`<select class="rsel" data-mem="${i}" aria-label="Role">${ROLE_LIST.slice(1).map(o=>`<option${o===r?' selected':''}>${o}</option>`).join('')}</select>`}</td><td>${P[k]&&k!=='AK'?`<button class="btn sm" data-preview="${k}">Preview</button>`:''}</td></tr>`).join('');
@@ -3070,7 +3086,7 @@ function applyRole(){const ceo=roleOf(VIEWER)==='CEO';document.body.classList.to
  const bar=$('#pvBar');bar.hidden=VIEWER==='AK';if(VIEWER!=='AK')bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Previewing as <b>${esc(P[VIEWER][0])}</b> · ${roleOf(VIEWER)}. This is exactly what they see.</span><button class="btn sm" id="pvExit">Exit preview</button>`;
  const foot=$('.side-foot');if(foot){const b=foot.querySelector('b');if(b)b.textContent=P[VIEWER][0]}
  renderNY();renderJump&&renderJump()}
-function previewAs(k){VIEWER=k;wgUnlocked=false;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${roleOf(k)} · ${seeText(k)}`)}
+function previewAs(k){VIEWER=k;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${roleOf(k)} · ${seeText(k)}`)}
 document.addEventListener('click',e=>{const p=e.target.closest('[data-preview]');if(p){previewAs(p.dataset.preview);return}if(e.target.closest('#pvExit')){VIEWER='AK';applyRole();showView('settings');$('[data-g="st"] [data-t2="Members"]').click()}});
 $('#nPrefs').innerHTML=[['Someone mentions me','In Messages, notes and tasks',1],['A task is assigned to me','Or its due date changes',1],['A decision is waiting on me','Reminder after 24 hours',1],['Filing and contract deadlines','30, 7 and 1 day before',1],['Daily briefing email','Every weekday at 8:00',1],['Every message in spaces I’m in','Can get noisy',0]].map(([t,s2,on],i)=>`<div class="tglr" data-tg="${i}"><span class="t">${t}<small>${s2}</small></span><span class="tgl${on?' on':''}"></span></div>`).join('');
 $('#nPrefs').addEventListener('click',e=>{const r=e.target.closest('[data-tg]');if(r){const t=r.querySelector('.tgl');t.classList.toggle('on');toast(t.classList.contains('on')?'Notifications on':'Notifications off',r.querySelector('.t').firstChild.textContent)}});
@@ -3360,7 +3376,7 @@ function renderJump(){const sideIc=v=>{const n=document.querySelector('.side [da
 renderJump();
 
 /* ---------- Connections (step 9) ---------- */
-const CNI={bank:'<path d="M3 21h18M5 18v-7M9.5 18v-7M14.5 18v-7M19 18v-7"/><path d="M12 3l9 5H3z"/>',card:'<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/>',book:'<path d="M5 4.5h11a2 2 0 012 2v13H7a2 2 0 01-2-2z"/><path d="M5 17.5a2 2 0 012-2h11"/>',pay:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/><path d="M17 7v7M14.5 9.5h5"/>',cal:'<path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/>',chat:'<path d="M7.9 20A9 9 0 104 16.1L2.5 21.5z"/>',code:'<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',pen:'<path d="M12 19l7-7 3 3-7 7z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><circle cx="11" cy="11" r="2"/>',pie:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',drive:'<path d="M8 3h8l6 10.5-4 7H6l-4-7z"/><path d="M8 3l6 10.5H2M16 3l-6 10.5 4 7"/>'};
+const CNI={mail:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>',bank:'<path d="M3 21h18M5 18v-7M9.5 18v-7M14.5 18v-7M19 18v-7"/><path d="M12 3l9 5H3z"/>',card:'<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/>',book:'<path d="M5 4.5h11a2 2 0 012 2v13H7a2 2 0 01-2-2z"/><path d="M5 17.5a2 2 0 012-2h11"/>',pay:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/><path d="M17 7v7M14.5 9.5h5"/>',cal:'<path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/>',chat:'<path d="M7.9 20A9 9 0 104 16.1L2.5 21.5z"/>',code:'<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',pen:'<path d="M12 19l7-7 3 3-7 7z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><circle cx="11" cy="11" r="2"/>',pie:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',drive:'<path d="M8 3h8l6 10.5-4 7H6l-4-7z"/><path d="M8 3l6 10.5H2M16 3l-6 10.5 4 7"/>'};
 const CN=[
  {id:'bank',g:'Money',n:'Business bank account',ic:'bank',on:1,sync:'5 min ago',d:'Cash balance and every transaction, so runway and burn stay current.',feeds:['Money','Briefing']},
  {id:'stripe',g:'Money',n:'Stripe',ic:'card',on:1,sync:'12 min ago',d:'Subscriptions and revenue, so MRR and growth update on their own.',feeds:['Metrics','Money']},
@@ -3371,20 +3387,27 @@ const CN=[
  {id:'slack',g:'Work',n:'Slack',ic:'chat',on:1,sync:'Live',d:'Get Helm notifications in Slack and share updates to channels.',feeds:['Messages','Notifications']},
  {id:'github',g:'Work',n:'GitHub',ic:'code',on:0,d:'Pull requests and releases linked to tasks on the board.',feeds:['Projects','This week']},
  {id:'figma',g:'Work',n:'Figma',ic:'pen',on:0,d:'Design files show as previews in project Files and sign-offs.',feeds:['Files','Sign-offs']},
- {id:'carta',g:'Investors',n:'Carta',ic:'pie',on:0,d:'Cap table, SAFEs and option grants, kept in sync for diligence.',feeds:['Fundraising']}];
+ {id:'carta',g:'Investors',n:'Carta',ic:'pie',on:0,d:'Cap table, SAFEs and option grants, kept in sync for diligence.',feeds:['Fundraising']},
+ {id:'gmail',g:'Team',n:'Gmail',ic:'mail',on:1,sync:'3 min ago',d:'Your unread count and latest emails on the Briefing, so you see what needs a reply.',feeds:['Briefing']},
+ {id:'xero',g:'Money',n:'Xero',ic:'book',on:0,d:'Bank account balances from your Xero books, so cash and runway stay current.',feeds:['Money']}];
+const GMAIL_DEMO={unread:12,recent:[{id:'d1',from:'Priya Shah',subject:'Re: Seed round, next steps',snippet:'Thanks Alex. Partners loved the pilot numbers. Can we do Thursday?',date:'2026-10-10T08:42:00Z',unread:true},{id:'d2',from:'AWS Billing',subject:'Your invoice for September is ready',snippet:'Total due $4,700.12. Auto-pay is on for this account.',date:'2026-10-10T07:15:00Z',unread:true},{id:'d3',from:'Jordan Reyes',subject:'Pen-test fixes landed',snippet:'All high-severity items closed. Two mediums left, both scheduled.',date:'2026-10-09T17:03:00Z',unread:false},{id:'d4',from:'Stripe',subject:'Payout of $2,940.00 is on its way',snippet:'Expected to arrive on 13 October.',date:'2026-10-09T09:30:00Z',unread:false},{id:'d5',from:'Maya Lin',subject:'Payroll approved for October',snippet:'Everything matches the plan. Contractors go out Friday.',date:'2026-10-08T15:20:00Z',unread:false}]};
+function ibWhen(d){const t=new Date(d);if(isNaN(t))return'';const now=BK.on?new Date():new Date('2026-10-10T12:00:00Z');return t.toDateString()===now.toDateString()?t.toTimeString().slice(0,5):t.getDate()+' '+t.toLocaleString('en',{month:'short'})}
+function renderInbox(){const g=BK.on?(BK.cx&&BK.cx.gmail):((CN.find(c=>c.id==='gmail')||{}).on===1?GMAIL_DEMO:null);const show=!!g&&roleOf(VIEWER)==='CEO';$('#ibHead').hidden=$('#ibList').hidden=!show;if(!show)return;
+ $('#ibN').textContent=g.unread+' unread';$('#ibList').innerHTML=(g.recent||[]).slice(0,5).map(m=>`<a class="ib-row${m.unread?' un':''}" href="https://mail.google.com/mail/u/0/#inbox/${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><span class="ib-from"><i></i>${esc(m.from)}</span><span class="ib-sub"><b>${esc(m.subject)}</b> <span>· ${esc(m.snippet)}</span></span><span class="ib-d">${ibWhen(m.date)}</span></a>`).join('')||'<div class="cal-empty" style="padding:18px">Nothing in your inbox.</div>'}
+VIEWHOOK.home=renderInbox;
 let cnF='all';
 function renderCN(){const q=($('#cnQ').value||'').toLowerCase();const on=CN.filter(c=>c.on===1).length;$('#cnC').textContent=on+'/'+CN.length;
  $('#cnFilt').innerHTML=[['all','All',CN.length],['on','Connected',on],['off','Not connected',CN.length-on]].map(([k,l,n])=>`<button class="${cnF===k?'on':''}" data-cnf="${k}">${l} <span style="opacity:.6;margin-left:3px">${n}</span></button>`).join('');
  const rows=CN.filter(c=>(cnF==='all'||(cnF==='on'?c.on===1:c.on!==1))&&(c.n+' '+c.d).toLowerCase().includes(q));
  const groups=[...new Set(rows.map(c=>c.g))];
- $('#cnGrid').innerHTML=groups.map((g,gi)=>`<div class="sp-sec"${gi?' style="margin-top:34px"':''}>${g} <span>${rows.filter(c=>c.g===g).length}</span></div><div class="cards">${rows.filter(c=>c.g===g).map(c=>`<div class="spc cn"><div class="spc-h"><span class="cn-ic"><svg class="ic" viewBox="0 0 24 24">${CNI[c.ic]}</svg></span><span style="min-width:0"><b>${esc(c.n)}</b><small><span class="cn-st ${c.on===1?'on':c.on===2?'busy':''}"><i></i>${c.on===1?`Connected · synced ${c.sync}`:c.on===2?'Connecting…':'Not connected'}</span></small></span></div><p>${esc(c.d)}</p><div class="cn-feeds">${c.feeds.map(f=>`<span>${f}</span>`).join('')}</div><div class="cn-f"><span class="muted" style="font-size:12px">${c.on===1?'Read-only':'Takes about a minute'}</span><button class="btn sm${c.on?'':' pri'}" data-cn="${c.id}"${c.on===2?' disabled':''}>${c.on===1?'Manage':c.on===2?'Connecting':'Connect'}</button></div></div>`).join('')}</div>`).join('')||'<div class="cal-empty">No tools match.</div>'}
-function openCN(id){const c=CN.find(x=>x.id===id);closeModal();const bg=document.createElement('div');bg.className='mod-bg';
+ $('#cnGrid').innerHTML=groups.map((g,gi)=>`<div class="sp-sec"${gi?' style="margin-top:34px"':''}>${g} <span>${rows.filter(c=>c.g===g).length}</span></div><div class="cards">${rows.filter(c=>c.g===g).map(c=>`<div class="spc cn"><div class="spc-h"><span class="cn-ic"><svg class="ic" viewBox="0 0 24 24">${CNI[c.ic]}</svg></span><span style="min-width:0"><b>${esc(c.n)}</b><small><span class="cn-st ${c.st&&c.on===1&&c.st.status!=='on'?'bad':c.on===1?'on':c.on===2?'busy':''}"><i></i>${c.soon?'Coming soon':c.st&&c.on===1&&c.st.status==='expired'?'Sign-in ran out · reconnect':c.st&&c.on===1&&c.st.status==='error'?'Last sync failed':c.on===1?`Connected · synced ${c.sync}`:c.on===2?'Connecting…':c.st&&!c.st.ready&&c.st.kind!=='key'?'Needs setting up':'Not connected'}</span></small></span></div><p>${esc(c.d)}</p><div class="cn-feeds">${c.feeds.map(f=>`<span>${f}</span>`).join('')}</div><div class="cn-f"><span class="muted" style="font-size:12px">${c.soon?'Not available yet':c.on===1?(c.st&&c.st.account?esc(c.st.account):c.id==='slack'?'Posts announcements':'Read-only'):'Takes about a minute'}</span><button class="btn sm${c.on||c.soon?'':' pri'}" data-cn="${c.id}"${c.on===2||c.soon?' disabled':''}>${c.soon?'Soon':c.on===1?'Manage':c.on===2?'Connecting':c.st&&!c.st.ready&&c.st.kind!=='key'?'Set up':'Connect'}</button></div></div>`).join('')}</div>`).join('')||'<div class="cal-empty">No tools match.</div>'}
+function openCN(id){if(BK.on){bkOpenCN(id);return}const c=CN.find(x=>x.id===id);closeModal();const bg=document.createElement('div');bg.className='mod-bg';
  bg.innerHTML=`<div class="mod cn-m" role="dialog" aria-modal="true" aria-label="${esc(c.n)}" style="max-width:480px"><div class="mod-h" style="padding-bottom:12px"><span class="cn-ic" style="width:30px;height:30px;border-radius:8px"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px">${CNI[c.ic]}</svg></span><span style="font-weight:600;color:var(--fg);font-size:14px">${c.on?esc(c.n):'Connect '+esc(c.n)}</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
  <div style="padding:4px 16px 14px"><p style="margin:0 0 10px;font-size:13.5px;color:var(--fg-2)">${esc(c.d)}</p><b style="font-size:12.5px;color:var(--fg-3);font-weight:600">Helm will</b><ul><li>Read data only. It never moves money or changes anything.</li><li>Update ${c.feeds.join(' and ')}.</li><li>Show it to admins and the people you choose in Settings.</li></ul>${c.on?`<div class="note">Connected · last synced ${c.sync}.</div>`:''}</div>
  <div class="mod-f"><span style="margin-right:auto"></span>${c.on?`<button class="btn" id="cnOff">Disconnect</button><button class="btn pri" data-close>Done</button>`:`<button class="btn" data-close>Cancel</button><button class="btn pri" id="cnGo">Connect</button>`}</div></div>`;
  document.body.appendChild(bg);modal=bg;bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
- const go=bg.querySelector('#cnGo');if(go)go.addEventListener('click',()=>{c.on=2;closeModal();renderCN();setTimeout(()=>{c.on=1;c.sync='just now';renderCN();toast(`<b>${esc(c.n)}</b> connected`,`${c.feeds.join(' and ')} will now update on their own`)},1600)});
- const off=bg.querySelector('#cnOff');if(off)off.addEventListener('click',()=>{c.on=0;closeModal();renderCN();toast(`<b>${esc(c.n)}</b> disconnected`,'Helm has stopped reading from it')})}
+ const go=bg.querySelector('#cnGo');if(go)go.addEventListener('click',()=>{c.on=2;closeModal();renderCN();setTimeout(()=>{c.on=1;c.sync='just now';renderCN();renderInbox();toast(`<b>${esc(c.n)}</b> connected`,`${c.feeds.join(' and ')} will now update on their own`)},1600)});
+ const off=bg.querySelector('#cnOff');if(off)off.addEventListener('click',()=>{c.on=0;closeModal();renderCN();renderInbox();toast(`<b>${esc(c.n)}</b> disconnected`,'Helm has stopped reading from it')})}
 document.addEventListener('click',e=>{const f=e.target.closest('[data-cnf]');if(f){cnF=f.dataset.cnf;renderCN();return}const b=e.target.closest('[data-cn]');if(b)openCN(b.dataset.cn)});
 $('#cnQ').addEventListener('input',renderCN);VIEWHOOK.connections=renderCN;renderCN();
 
@@ -3457,34 +3480,27 @@ renderConvList();openConv('launch',false);
 if(matchMedia('(max-width:1100px)').matches){$('#agent').hidden=true;$('#agentTg').classList.remove('on')}
 
 
-/* ---------- Wages: private, PIN-locked ---------- */
-const WG={pin:'1234',access:['AK','ML'],rows:[['AK','Founder & CEO','Salary',120000,'year','2026-02-01','2027-02-01'],['JR','CTO','Salary',165000,'year','2026-02-01','2027-02-01'],['DW','Product engineer','Salary',140000,'year','2026-10-05','2027-04-05'],['SP','Growth lead','Salary',115000,'year','2026-04-01','2027-04-01'],['ML','Finance & operations','Salary',110000,'year','2026-05-01','2027-05-01'],['PS','Sales lead','Salary',95000,'year','2026-06-01','2027-06-01'],['TN','Product designer','Contractor',85,'hour','2026-03-01','2026-12-01'],['TO','Support & operations','Contractor',45,'hour','2026-07-01','2026-12-01']]};
-let wgUnlocked=false,wgTimer=null;
+/* ---------- Wages: private, role-based (CEO + managers given access) ---------- */
+const WG={access:['AK','ML'],rows:[['AK','Founder & CEO','Salary',120000,'year','2026-02-01','2027-02-01'],['JR','CTO','Salary',165000,'year','2026-02-01','2027-02-01'],['DW','Product engineer','Salary',140000,'year','2026-10-05','2027-04-05'],['SP','Growth lead','Salary',115000,'year','2026-04-01','2027-04-01'],['ML','Finance & operations','Salary',110000,'year','2026-05-01','2027-05-01'],['PS','Sales lead','Salary',95000,'year','2026-06-01','2027-06-01'],['TN','Product designer','Contractor',85,'hour','2026-03-01','2026-12-01'],['TO','Support & operations','Contractor',45,'hour','2026-07-01','2026-12-01']]};
 const ME='AK';
 const perYear=r=>r[4]==='hour'?r[3]*1600:r[4]==='month'?r[3]*12:r[3];
-function renderWages(){$('#wgLock').hidden=wgUnlocked;$('#wgOpen').hidden=!wgUnlocked;
- if(!wgUnlocked){$('#pinWho').textContent=`Access: ${WG.access.map(k=>P[k]?P[k][0]:k).join(', ')}`;$('#pinBoxes').classList.remove('bad');$$('#pinBoxes input').forEach(i=>i.value='');setTimeout(()=>{const i=$('#pinBoxes input');if(i&&curView==='wages'&&!matchMedia('(max-width:860px)').matches)i.focus({preventScroll:true})},60);return}
+function renderWages(){const mine=can('wages',VIEWER);$('#wgOpen').hidden=!mine;if(!mine)return;
+ if(BK.on&&!BK.wgLoaded){bkWagesLoad();$('#wgRows').innerHTML='<tr><td colspan="8" class="muted2">Loading…</td></tr>';return}
+ const ceo=roleOf(VIEWER)==='CEO';['#wgAdd','#wgAccess'].forEach(x=>{const e=$(x);if(e)e.hidden=!ceo});
+ $('#wgWho').textContent='Can see this: '+WG.access.map(k=>P[k]?P[k][0]:k).join(', ');
  const sal=WG.rows.filter(r=>r[2]!=='Contractor'),con=WG.rows.filter(r=>r[2]==='Contractor');const tot=WG.rows.reduce((a,r)=>a+perYear(r),0);const soon=WG.rows.filter(r=>daysTo(r[6])<=90).length;
  $('#wgTiles').innerHTML=[['Total pay per year',kusd(tot),`${kusd(tot/12)} a month`],['Salaried',String(sal.length),`${kusd(sal.reduce((a,r)=>a+r[3],0))} a year`],['Contractors',String(con.length),`About ${kusd(con.reduce((a,r)=>a+perYear(r),0))} a year`],['Reviews due',String(soon),'In the next 90 days']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('');
  $('#wgN').textContent=WG.rows.length;
- $('#wgRows').innerHTML=WG.rows.map((r,i)=>`<tr><td><span style="display:flex;align-items:center;gap:9px">${P[r[0]]?av(r[0],'xs'):''}<b style="font-weight:500">${esc(P[r[0]]?P[r[0]][0]:r[0])}</b></span></td><td class="muted2">${esc(r[1])}</td><td><span class="tag n">${esc(r[2])}</span></td><td class="num">${usd(r[3])} <span class="muted2">/ ${r[4]}</span></td><td class="num"><b style="font-weight:600">${usd(perYear(r))}</b></td><td class="muted2">${dlab(r[5])}</td><td>${daysTo(r[6])<=90?`<span class="tag warn">${dlab(r[6])}</span>`:`<span class="muted2">${dlab(r[6])}</span>`}</td><td class="ed">${edb(`data-wg="${i}"`,P[r[0]]?P[r[0]][0]:r[0])}</td></tr>`).join('');
+ $('#wgRows').innerHTML=WG.rows.map((r,i)=>`<tr><td><span style="display:flex;align-items:center;gap:9px">${P[r[0]]?av(r[0],'xs'):''}<b style="font-weight:500">${esc(P[r[0]]?P[r[0]][0]:r[0])}</b></span></td><td class="muted2">${esc(r[1])}</td><td><span class="tag n">${esc(r[2])}</span></td><td class="num">${usd(r[3])} <span class="muted2">/ ${r[4]}</span></td><td class="num"><b style="font-weight:600">${usd(perYear(r))}</b></td><td class="muted2">${dlab(r[5])}</td><td>${daysTo(r[6])<=90?`<span class="tag warn">${dlab(r[6])}</span>`:`<span class="muted2">${dlab(r[6])}</span>`}</td><td class="ed">${ceo?edb(`data-wg="${i}"`,P[r[0]]?P[r[0]][0]:r[0]):''}</td></tr>`).join('');
  if(!STAMP.wgStamp)stamp('wgStamp','Maya','Oct 1');else stamp('wgStamp',...STAMP.wgStamp);
- clearTimeout(wgTimer);wgTimer=setTimeout(()=>{wgUnlocked=false;if(curView==='wages')renderWages()},5*60*1000)}
-function tryPin(){const v=$$('#pinBoxes input').map(i=>i.value).join('');if(v.length<4)return;
- if(window.HELM_BACKEND){bkWagesOpen(v);return}
- if(!WG.access.includes(ME)){$('#pinMsg').textContent='You don’t have access to wages. Ask an admin.';$('#pinMsg').classList.add('err');return}
- if(v===WG.pin){wgUnlocked=true;$('#pinMsg').classList.remove('err');$('#pinMsg').textContent='Sample PIN for this mockup: 1234';renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent='Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus({preventScroll:true})},350)}}
-$('#pinBoxes').addEventListener('input',e=>{const i=e.target;i.value=i.value.replace(/\D/g,'').slice(-1);if(i.value&&i.nextElementSibling)i.nextElementSibling.focus({preventScroll:true});tryPin()});
-$('#pinBoxes').addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&e.target.previousElementSibling)e.target.previousElementSibling.focus()});
-function wgDone(msg,sub){stamp('wgStamp');if(window.HELM_BACKEND&&BK.wgPin)bkWagesSave();renderWages();toast(msg,sub)}
+}
+function wgDone(msg,sub){stamp('wgStamp');if(BK.on)bkWagesSave();else saveSoon();renderWages();toast(msg,sub)}
 function editPay(i){const r=i!=null?WG.rows[i]:null;const keys=Object.keys(P);openForm(r?'Edit pay':'Add pay',[{k:'who',label:'Person',opts:keys.map(k=>P[k][0]),v:r?P[r[0]][0]:keys.map(k=>P[k][0]).find(n=>!WG.rows.some(x=>P[x[0]]&&P[x[0]][0]===n))},{k:'role',label:'Role',v:r?r[1]:'',ph:'e.g. Senior engineer'},{k:'type',label:'Type',opts:['Salary','Contractor','Part-time'],v:r?r[2]:'Salary'},{k:'amt',label:'Pay (USD)',type:'number',v:r?r[3]:''},{k:'per',label:'Per',opts:['year','month','hour'],v:r?r[4]:'year'},{k:'last',label:'Last change',type:'date',v:r?r[5]:'2026-10-11'},{k:'next',label:'Next review',type:'date',v:r?r[6]:'2027-04-01'}],v=>{const k=keys.find(x=>P[x][0]===v.who)||'AK';const row=[k,v.role||'',v.type,num(v.amt),v.per,v.last,v.next];if(r)WG.rows[i]=row;else WG.rows.push(row);wgDone(`<b>${esc(v.who)}</b> pay ${r?'updated':'added'}`,'Only people with wages access can see this')},r?'Save':'Add pay',r?{label:'Remove',danger:1,fn:()=>{WG.rows.splice(i,1);wgDone('Pay record removed')}}:null)}
-function changePin(){openForm('Change wages PIN',[{k:'old',label:'Current PIN',type:'password'},{k:'n1',label:'New 4-digit PIN',type:'password'},{k:'n2',label:'New PIN again',type:'password'}],v=>{if(window.HELM_BACKEND){if(!/^\d{4}$/.test(v.n1)||v.n1!==v.n2){toast('<b>PIN not changed</b>','Use 4 digits, the same both times');return}bkWagesSave(v.old,v.n1);return}if(v.old!==WG.pin){toast('<b>PIN not changed</b>','The current PIN was wrong');return}if(!/^\d{4}$/.test(v.n1)||v.n1!==v.n2){toast('<b>PIN not changed</b>','Use 4 digits, the same both times');return}WG.pin=v.n1;wgDone('<b>Wages PIN changed</b>','Use the new PIN next time')},'Change PIN')}
-function editAccess(){const keys=Object.keys(P);openForm('Who can see wages',keys.map(k=>({k:'a_'+k,label:P[k][0],opts:['No access','Can see wages'],v:WG.access.includes(k)?'Can see wages':'No access'})),v=>{const a=keys.filter(k=>v['a_'+k]==='Can see wages');if(!a.includes(ME))a.unshift(ME);WG.access=a;wgDone('<b>Wages access updated</b>',a.map(k=>P[k][0]).join(', '))},'Save access')}
-$('#wgAdd').addEventListener('click',()=>editPay());$('#wgPin').addEventListener('click',changePin);$('#wgAccess').addEventListener('click',editAccess);$('#wgLockBtn').addEventListener('click',()=>{wgUnlocked=false;if(window.HELM_BACKEND){BK.wgPin=null;WG.rows=[]}renderWages();toast('<b>Wages locked</b>')});
+function editAccess(){const keys=Object.keys(P).filter(k=>k!==ME&&roleOf(k)==='Manager');openForm('Who can see wages',keys.map(k=>({k:'a_'+k,label:P[k][0],opts:['No access','Can see wages'],v:WG.access.includes(k)?'Can see wages':'No access'})),v=>{const a=[ME,...keys.filter(k=>v['a_'+k]==='Can see wages')];WG.access=a;wgDone('<b>Wages access updated</b>',a.map(k=>P[k][0]).join(', '))},'Save access')}
+$('#wgAdd').addEventListener('click',()=>editPay());$('#wgAccess').addEventListener('click',editAccess);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-wg]');if(b)editPay(+b.dataset.wg)});
 VIEWHOOK.wages=renderWages;
-{const sv=showView;showView=function(v,o){if(curView==='wages'&&v!=='wages'){wgUnlocked=false}return sv(v,o)}}
-NEWLBL.wages='Add pay';NEWACT.wages=()=>{if(wgUnlocked)editPay();else{const i=$('#pinBoxes input');if(i)i.focus()}};
+NEWLBL.wages='Add pay';NEWACT.wages=()=>{if(roleOf(VIEWER)==='CEO')editPay()};
 
 /* ---------- Role guard ---------- */
 {const sv=showView;showView=function(v,o){if(!can(v)){toast('<b>You don’t have access to that</b>',roleOf(VIEWER)==='CEO'?'':'Ask the CEO if you need it');return}return sv(v,o)}}
@@ -3563,7 +3579,7 @@ function applyData(d){
  (d.NY||[]).forEach((x,i)=>{if(NY[i])NY[i].done=x});(d.SO||[]).forEach((x,i)=>{if(SO[i]){SO[i].st=x[0];SO[i].note=x[1]}});(d.CN||[]).forEach((x,i)=>{if(CN[i])CN[i].on=x});
  for(const k in d.SPX||{}){sx({id:k,desc:''});SPX[k].files=d.SPX[k]}
  if(d.cnt){nextId=d.cnt.nextId||nextId;gN=d.cnt.gN||gN;Object.assign(NEXT,d.cnt.NEXT||{})}
- if(d.stamps)Object.assign(STAMP,d.stamps);if(d.WG)Object.assign(WG,d.WG);
+ if(d.stamps)Object.assign(STAMP,d.stamps);if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
  Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
  ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
  const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
@@ -3571,11 +3587,11 @@ function applyData(d){
 const hadSaved=loadSaved();
 
 /* ================= Backend connection (only when served by server.mjs) ================= */
-const BK={on:!!window.HELM_BACKEND,me:null,sent:{},es:null,wgPin:null,users:[]};
+const BK={on:!!window.HELM_BACKEND,me:null,sent:{},es:null,wgLoaded:false,users:[],cx:{},cn:null};
 const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps'];
 function secsFromSnap(){const d=JSON.parse(snapshot());const o={...d.arr};SEC_EXTRA.forEach(k=>o[k]=d[k]);return o}
 function dataFromSecs(S){const d={arr:{}};for(const k in ARR)if(S[k])d.arr[k]=S[k];SEC_EXTRA.forEach(k=>{if(S[k]!==undefined)d[k]=S[k]});return d}
-async function bkApi(path,opt={}){const r=await fetch(path,{credentials:'same-origin',...opt,headers:{'x-helm':'1','content-type':'application/json',...(opt.headers||{})}});if(r.status===401&&!path.startsWith('/api/wages')){location.href='/login';throw new Error('signin')}return r}
+async function bkApi(path,opt={}){const r=await fetch(path,{credentials:'same-origin',...opt,headers:{'x-helm':'1','content-type':'application/json',...(opt.headers||{})}});if(r.status===401){location.href='/login';throw new Error('signin')}return r}
 let bkSaving=null;
 async function bkSave(keepalive){if(!BK.me)return;const S=secsFromSnap(),ch={};for(const k in S){const j=JSON.stringify(S[k]);if(BK.sent[k]!==j)ch[k]=S[k]}if(!Object.keys(ch).length)return;
  const run=async()=>{try{const r=await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:ch}),keepalive:!!keepalive});const j=await r.json();[...(j.saved||[]),...(j.refused||[])].forEach(k=>BK.sent[k]=JSON.stringify(S[k]));bkStatus(true)}catch(e){bkStatus(false)}};
@@ -3586,18 +3602,66 @@ async function bkPull(first){const S=await (await bkApi('/api/state')).json();
  if(first){const put=(a,b)=>{if(Array.isArray(a))a.splice(0,a.length,...b)};for(const k in ARR)if(!(k in S))put(ARR[k](),[]);
   if(BK.me.role!=='CEO'){WG.rows=[];PINFO.murmur.kpis=[['Pilot testers','2,140','Private pilot',[400,800,1200,1500,1800,2140]],['Waitlist','18,420','+2,310 this week',[4,5,7,9,11,13,16,18.4]],['Open tasks',String(TASKS.filter(t=>t.id.startsWith('MUR')&&t.s!=='done').length),'Across the team',[14,13,12,13,12,11]],['Stage','5 of 9','Private pilot',[1,2,3,4,5,5]]];PINFO.murmur.tabs=['Overview','Issues','Board','Files']}}
  if(S.CONVS){CONVS.forEach(c=>c.unread=0)}
+ BK.cx=S.CX||{};
  applyData(dataFromSecs(S));if(S.MEM){MEM.splice(0,MEM.length,...S.MEM)}
  VIEWER='AK';applyRole();bkMarkSent();
  if(typeof cur!=='undefined'&&cur&&!$('#view-messages').hidden&&CONVS.find(c=>c.id===cur))renderThread(false);
  if(typeof spCur!=='undefined'&&spCur&&curView==='spaces'&&CONVS.find(c=>c.id===spCur))renderSpace(false);
- if(curView&&VIEWHOOK[curView]&&!modal)try{VIEWHOOK[curView]()}catch(e){}}
+ if(curView&&VIEWHOOK[curView]&&!modal)try{VIEWHOOK[curView]()}catch(e){}
+ if(BK.me.role==='CEO')bkConn()}
 let bkPullT=null;function bkPullSoon(){clearTimeout(bkPullT);bkPullT=setTimeout(async()=>{if(modal||document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!document.activeElement.closest('#mForm,#spForm')){bkPullSoon();return}await bkSave();bkPull(false).catch(()=>{})},500)}
-function bkLive(){try{BK.es=new EventSource('/api/events');BK.es.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}if(m.type==='changed'){bkPullSoon();if((m.sections||[]).includes('CONVS')){const who=P[m.by]?P[m.by][0]:'Someone';/* quiet: no pop-ups, counts update */}}};BK.es.onerror=()=>bkStatus(false);BK.es.onopen=()=>bkStatus(true)}catch(e){}}
+function bkLive(){try{BK.es=new EventSource('/api/events');BK.es.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}if(m.type==='wages'){bkApi('/api/me').then(r=>r.json()).then(me=>{BK.me={...BK.me,...me};BK.wgLoaded=false;applyRole();if(curView==='wages')renderWages()}).catch(()=>{});return}if(m.type==='connections'){bkConn();return}if(m.type==='changed'){bkPullSoon();if((m.sections||[]).includes('CONVS')){const who=P[m.by]?P[m.by][0]:'Someone';/* quiet: no pop-ups, counts update */}}};BK.es.onerror=()=>bkStatus(false);BK.es.onopen=()=>bkStatus(true)}catch(e){}}
 function bkBlob(fl,area){const u=URL.createObjectURL(fl);if(BK.on){fetch('/api/files?area='+area,{method:'POST',credentials:'same-origin',headers:{'x-helm':'1','x-file-name':encodeURIComponent(fl.name),'content-type':fl.type||'application/octet-stream'},body:fl}).then(r=>r.ok?r.json():null).then(j=>{if(!j)return toast(`<b>${esc(fl.name)}</b> didn’t upload`,'Check the file is under 25 MB and try again');bkSwapUrl(u,j.url);saveSoon()}).catch(()=>toast(`<b>${esc(fl.name)}</b> didn’t upload`,'Can’t reach the server'))}return u}
 function bkSwapUrl(a,b){const walk=o=>{if(!o||typeof o!=='object')return;if(Array.isArray(o)){o.forEach(walk);return}for(const k in o){if(k==='url'&&o[k]===a)o[k]=b;else if(o[k]&&typeof o[k]==='object')walk(o[k])}};walk(SPX);walk(LG);walk(DR)}
-async function bkWagesOpen(pin){const r=await bkApi('/api/wages',{method:'POST',body:JSON.stringify({pin})});const j=await r.json().catch(()=>({}));
- if(r.ok){Object.assign(WG,j);BK.wgPin=pin;wgUnlocked=true;$('#pinMsg').classList.remove('err');renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent=j.error||'Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus({preventScroll:true})},350)}}
-async function bkWagesSave(oldPin,newPin){const r=await bkApi('/api/wages',{method:'POST',body:JSON.stringify({pin:oldPin||BK.wgPin,save:{access:WG.access,rows:WG.rows,newPin}})});if(!r.ok){const j=await r.json().catch(()=>({}));toast('<b>Not saved</b>',j.error||'Try again');return}if(newPin){BK.wgPin=newPin;stamp('wgStamp');toast('<b>Wages PIN changed</b>','Use the new PIN next time')}}
+async function bkWagesLoad(){const r=await bkApi('/api/wages');if(!r.ok){WG.rows=[];BK.wgLoaded=true;if(curView==='wages')renderWages();return}const j=await r.json();WG.access=j.access||[];WG.rows=j.rows||[];BK.wgLoaded=true;if(curView==='wages')renderWages()}
+async function bkWagesSave(){const r=await bkApi('/api/wages',{method:'PUT',body:JSON.stringify({access:WG.access,rows:WG.rows})});if(!r.ok){const j=await r.json().catch(()=>({}));toast('<b>Not saved</b>',j.error||'Try again')}}
+/* ---- Connections (real, via the server) ---- */
+function cxAgo(t){if(!t)return'not yet';const s=(Date.now()-t)/1000;return s<60?'just now':s<3600?Math.round(s/60)+' min ago':s<86400?Math.round(s/3600)+' h ago':Math.round(s/86400)+' days ago'}
+async function bkConn(){if(!BK.me||BK.me.role!=='CEO')return;try{const r=await bkApi('/api/connect');if(r.ok)bkConnApply(await r.json())}catch(e){}}
+function bkConnApply(j){BK.cn=j;CN.forEach(c=>{const s=j.conns[c.id];if(!s){c.soon=1;c.on=0;c.st=null;return}c.soon=0;c.st=s;c.on=s.status==='off'?0:1;c.sync=cxAgo(s.lastSync)});if(curView==='connections')renderCN();renderInbox()}
+async function cxPost(path,body,method='POST'){const r=await bkApi(path,{method,body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(j.conns)bkConnApply(j);return{ok:r.ok,j}}
+function cxPlaid(){return new Promise((ok,bad)=>{if(window.Plaid)return ok(window.Plaid);const sc=document.createElement('script');sc.src='https://cdn.plaid.com/link/v2/stable/link-initialize.js';sc.onload=()=>ok(window.Plaid);sc.onerror=()=>bad(new Error('Couldn’t load the bank sign-in'));document.head.appendChild(sc)})}
+function bkOpenCN(id){const c=CN.find(x=>x.id===id);if(!c||!BK.cn)return;const s=BK.cn.conns[id];if(!s)return;const A=s.app?BK.cn.apps[s.app]:null;closeModal();
+ const bg=document.createElement('div');bg.className='mod-bg';const conn=s.status!=='off',needApp=A&&!A.ready&&!conn;let body='',foot='';
+ const cx=BK.cx[id]||{};
+ if(needApp){body=`<p style="margin:0 0 4px;font-size:13.5px;color:var(--fg-2)">To connect ${esc(c.n)}, Helm needs its own ${esc(A.name)} app. You do this once${s.app==='google'?' and it works for Gmail, Calendar and Drive':''}.</p>
+  <div class="cx-step"><b>1</b><span>${esc(A.help)} <a href="${A.console}" target="_blank" rel="noopener">Open ${esc(A.name)} ↗</a></span></div>
+  ${A.redirect?`<div class="cx-step"><b>2</b><span style="flex:1;min-width:0">Add this as the redirect URL:<span class="cx-in"><input readonly value="${esc(A.redirect)}" id="cxRedir"><button class="btn sm" id="cxCopy">Copy</button></span></span></div>`:''}
+  <div class="cx-step"><b>${A.redirect?3:2}</b><span style="flex:1;min-width:0">Paste the keys here:
+  <label for="cxId">Client ID</label><input id="cxId" autocomplete="off"><label for="cxSec">${s.app==='plaid'?'Secret':'Client Secret'}</label><input id="cxSec" type="password" autocomplete="off">
+  ${s.app==='plaid'||s.app==='intuit'?`<label for="cxEnv">Environment</label><select id="cxEnv"><option value="production">Production (real accounts)</option><option value="sandbox">Sandbox (test data)</option></select>`:''}</span></div>
+  <p style="font-size:12px;color:var(--fg-3);margin:14px 0 0">The keys are stored encrypted on your server. You can set ${A.env.map(e=>`<code>${e}</code>`).join(' and ')} in Railway instead.</p><div class="cx-err" id="cxErr"></div>`;
+  foot=`<button class="btn" data-close>Cancel</button><button class="btn pri" id="cxSave">Save keys</button>`}
+ else if(!conn){body=`<p style="margin:0 0 10px;font-size:13.5px;color:var(--fg-2)">${esc(c.d)}</p><b style="font-size:12.5px;color:var(--fg-3);font-weight:600">Helm will</b><ul><li>${id==='slack'?'Post new announcements to the channel you pick. Nothing else.':'Read data only. It never moves money or changes anything.'}</li><li>Update ${c.feeds.join(' and ')}${s.kind==='key'||id==='slack'?'':', every 30 minutes'}.</li><li>Show it only to you${id==='gcal'?'. Your calendar stays private from the team':''}.</li></ul>
+  ${s.kind==='key'?`<label for="cxKey">${esc(s.label)}</label><input id="cxKey" type="password" autocomplete="off" placeholder="${id==='stripe'?'rk_live_…':'https://hooks.slack.com/services/…'}"><p style="font-size:12px;color:var(--fg-3);margin:8px 0 0;line-height:1.5">${esc(s.hint)}</p>`:''}
+  ${s.error?`<div class="note" style="color:#ff8a8e">${esc(s.error)}</div>`:''}<div class="cx-err" id="cxErr"></div>`;
+  foot=`${A&&A.from==='settings'?`<button class="btn" id="cxKeys" style="margin-right:auto">Change app keys</button>`:''}<button class="btn" data-close>Cancel</button><button class="btn pri" id="cxGo">Connect</button>`}
+ else{const bad=s.status!=='on';body=`<p style="margin:0 0 10px;font-size:13.5px;color:var(--fg-2)">${esc(c.d)}</p>
+  <div class="kv" style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line-2)"><span class="muted">Account</span><b style="font-weight:500">${esc(s.account||c.n)}</b></div>
+  <div class="kv" style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line-2)"><span class="muted">${id==='slack'?'Last post':'Last synced'}</span><b style="font-weight:500">${cxAgo(s.lastSync)}</b></div>
+  ${id==='stripe'&&cx.mrr!=null?`<div class="kv" style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line-2)"><span class="muted">MRR</span><b style="font-weight:500">${usd(cx.mrr)} · ${cx.subs} subscriptions</b></div>`:''}
+  ${['qb','xero','bank'].includes(id)?`<div class="cx-list">${MNY.acc.filter(a=>a[3]===id).map(a=>`<div><span>${esc(a[0])}</span><small>${usd(a[2])}</small></div>`).join('')||'<div><span>No bank accounts found</span></div>'}</div>`:''}
+  ${id==='gmail'&&cx.recent?`<div class="cx-list">${cx.recent.slice(0,5).map(m=>`<a href="https://mail.google.com/mail/u/0/#inbox/${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><span><b style="font-weight:${m.unread?600:500};color:var(--fg)">${esc(m.from)}</b> · ${esc(m.subject)}</span><small>${ibWhen(m.date)}</small></a>`).join('')}</div>`:''}
+  ${id==='drive'&&cx.files?`<div class="cx-list">${cx.files.slice(0,6).map(f=>`<a href="${esc(f.link||'#')}" target="_blank" rel="noopener"><span>${esc(f.name)}</span><small>${ibWhen(f.modified)}</small></a>`).join('')}</div>`:''}
+  ${id==='gcal'&&cx.events!=null?`<div class="note">${cx.events} events from the last week and the next 60 days are on your Helm calendar.</div>`:''}
+  ${bad?`<div class="note" style="color:#ff8a8e">${esc(s.error||'Something went wrong.')}</div>`:''}<div class="cx-err" id="cxErr"></div>`;
+  foot=`<button class="btn" id="cnOff" style="margin-right:auto">Disconnect</button>${s.status==='expired'&&s.kind!=='key'?`<button class="btn pri" id="cxGo">Reconnect</button>`:id==='slack'?`<button class="btn pri" data-close>Done</button>`:`<button class="btn" id="cxSync">Sync now</button><button class="btn pri" data-close>Done</button>`}`}
+ bg.innerHTML=`<div class="mod cn-m cx-m" role="dialog" aria-modal="true" aria-label="${esc(c.n)}" style="max-width:500px"><div class="mod-h" style="padding-bottom:12px"><span class="cn-ic" style="width:30px;height:30px;border-radius:8px"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px">${CNI[c.ic]}</svg></span><span style="font-weight:600;color:var(--fg);font-size:14px">${needApp?'Set up '+esc(A.name):conn?esc(c.n):'Connect '+esc(c.n)}</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div style="padding:4px 16px 14px">${body}</div><div class="mod-f">${/margin-right:auto/.test(foot)?'':'<span style="margin-right:auto"></span>'}${foot}</div></div>`;
+ document.body.appendChild(bg);modal=bg;bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+ const err=t=>{const e=bg.querySelector('#cxErr');if(e)e.textContent=t||''};const busy=(b,t)=>{if(b){b.disabled=true;b.textContent=t}};
+ const on=(sel,fn)=>{const b=bg.querySelector(sel);if(b)b.addEventListener('click',()=>fn(b))};
+ on('#cxCopy',()=>{navigator.clipboard&&navigator.clipboard.writeText($('#cxRedir').value).then(()=>toast('<b>Redirect URL copied</b>'),()=>{})});
+ on('#cxSave',async b=>{busy(b,'Saving…');const r=await cxPost('/api/connect/app/'+s.app,{clientId:$('#cxId').value,clientSecret:$('#cxSec').value,env:$('#cxEnv')?$('#cxEnv').value:undefined});if(!r.ok){err(r.j.error||'Not saved');b.disabled=false;b.textContent='Save keys';return}toast(`<b>${esc(A.name)} app saved</b>`,'Now press Connect');bkOpenCN(id)});
+ on('#cxKeys',()=>{BK.cn.apps[s.app].ready=false;bkOpenCN(id);BK.cn.apps[s.app].ready=true});
+ on('#cxGo',async b=>{err('');
+  if(s.kind==='oauth'){busy(b,'Opening…');location.href='/api/connect/'+id+'/start';return}
+  if(s.kind==='key'){busy(b,'Checking…');const r=await cxPost('/api/connect/'+id+'/key',{key:$('#cxKey').value});if(!r.ok){err(r.j.error||'Not connected');b.disabled=false;b.textContent='Connect';return}closeModal();toast(`<b>${esc(c.n)}</b> connected`,id==='slack'?'A test message was posted to the channel':`${c.feeds.join(' and ')} now update on their own`);return}
+  if(s.kind==='plaid'){busy(b,'Opening…');try{const r=await cxPost('/api/connect/bank/link');if(!r.ok)throw new Error(r.j.error||'Couldn’t start');const Plaid=await cxPlaid();closeModal();
+   Plaid.create({token:r.j.link_token,onSuccess:async(pt,meta)=>{const x=await cxPost('/api/connect/bank/exchange',{public_token:pt,institution:meta&&meta.institution&&meta.institution.name});x.ok?toast('<b>Bank connected</b>',x.j.ok===false?x.j.error:'Balances now update on their own'):toast('<b>Bank not connected</b>',x.j.error||'Try again')}}).open()}catch(e){err(e.message);b.disabled=false;b.textContent='Connect'}}});
+ on('#cxSync',async b=>{busy(b,'Syncing…');const r=await cxPost('/api/connect/'+id+'/sync');if(!r.ok){err(r.j.error||'Sync failed');b.disabled=false;b.textContent='Sync now';return}await bkPull(false);closeModal();toast(`<b>${esc(c.n)}</b> synced`)});
+ on('#cnOff',async b=>{if(!confirm(`Disconnect ${c.n}? Helm stops reading from it${['qb','xero','bank'].includes(id)?' and removes its bank balances':id==='gcal'?' and removes its events from the calendar':''}.`))return;busy(b,'Disconnecting…');await cxPost('/api/connect/'+id,null,'DELETE');await bkPull(false);closeModal();toast(`<b>${esc(c.n)}</b> disconnected`)})}
+function bkCxReturn(){const u=new URLSearchParams(location.search),id=u.get('cx'),r=u.get('cxr');if(r==null)return;history.replaceState(null,'','/#connections');const c=CN.find(x=>x.id===id);
+ if(r==='ok')toast(`<b>${esc(c?c.n:'Tool')}</b> connected`,c?`${c.feeds.join(' and ')} now update on their own`:'');else toast(`<b>${esc(c?c.n:'Tool')} not connected</b>`,esc(r));showView('connections')}
 async function bkUsers(){if(!BK.me||BK.me.role!=='CEO')return;try{BK.users=await (await bkApi('/api/users')).json()}catch(e){BK.users=[]}renderMem()}
 function bkInvite(pkey,name){openForm(pkey?`Invite ${name}`:'Invite people',[{k:'e',label:'Their email address',ph:'name@company.com'},...(pkey?[]:[{k:'n',label:'Name',ph:'Full name'}]),{k:'r',label:'Role',opts:['Member','Manager','Guest'],v:pkey?(MEM.find(m=>m[0]===pkey)||[])[1]||'Member':'Member'}],async v=>{const r=await bkApi('/api/invite',{method:'POST',body:JSON.stringify({email:v.e,name:v.n||name,role:v.r,pkey})});const j=await r.json().catch(()=>({}));if(!r.ok){toast('<b>Invite not sent</b>',j.error||'Try again');return}
   await bkPull(false);await bkUsers();openForm('Invite link ready',[{k:'l',label:'Send this link to them. It works once.',v:j.link}],()=>{},'Done',{label:'Copy link',fn:()=>{navigator.clipboard&&navigator.clipboard.writeText(j.link).then(()=>toast('<b>Link copied</b>'),()=>{})}})},'Create invite')}
@@ -3611,8 +3675,8 @@ if(BK.on){const rm=renderMem;renderMem=function(){rm();if(!BK.me||BK.me.role!=='
  document.addEventListener('click',e=>{const b=e.target.closest('[data-binv]');if(b){const k=b.dataset.binv;bkInvite(k,P[k][0])}})}
 async function bkBoot(){let me;try{const r=await fetch('/api/me',{credentials:'same-origin'});if(r.status===401){location.href='/login';return}me=await r.json()}catch(e){bkStatus(false);return}
  BK.me=me;try{localStorage.setItem('helm-setup-done','1')}catch(e){}
- if(!me.seeded&&me.role==='CEO'){P.AK[0]=me.name;const S=secsFromSnap();S.WG={access:WG.access,rows:WG.rows,pin:WG.pin};S.CONVS=CONVS.map(c=>c.dm?{...c,parts:['AK',c.dm]}:c);await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:S})})}
- await bkPull(true);bkLive();bkUI();document.body.classList.add('bk-ready')}
+ if(!me.seeded&&me.role==='CEO'){P.AK[0]=me.name;const S=secsFromSnap();S.WG={access:WG.access,rows:WG.rows};S.CONVS=CONVS.map(c=>c.dm?{...c,parts:['AK',c.dm]}:c);await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:S})})}
+ await bkPull(true);bkLive();bkUI();bkCxReturn();document.body.classList.add('bk-ready')}
 if(BK.on){document.body.classList.add('bk-loading');bkBoot()}
 
 $('#resetData').addEventListener('click',()=>{if(!confirm('Reset everything to the sample data? Your changes on this device will be removed.'))return;try{localStorage.removeItem(SAVE_KEY)}catch(e){}removeEventListener('pagehide',saveNow);['click','change','drop','keyup','submit'].forEach(ev=>document.removeEventListener(ev,saveSoon,true));location.reload()});

@@ -25,7 +25,7 @@ To look at the app on its own, without accounts or saving to a server, open `ind
    - **Source → Branch:** `claude/nice-euler-o5jz2b`
    - **Source → Root Directory:** `/helm-frontend`
 3. Add a **Volume** to the service and mount it at `/data`. This is where the database and uploaded files live. Without a volume, everything is wiped on each deploy.
-4. In **Variables**, add `DATA_DIR=/data`.
+4. In **Variables**, add `DATA_DIR=/data` and `HELM_SECRET` set to a long random string. Helm uses `HELM_SECRET` to encrypt connection tokens. If you change it later, you'll need to connect each tool again.
 5. Under **Networking**, click **Generate Domain**, then open that address and set up your account.
 
 Railway runs `npm start`. The health check is `/health`.
@@ -38,7 +38,7 @@ Railway runs `npm start`. The health check is `/health`.
 | First run | The first person creates the workspace and becomes the CEO. |
 | Inviting people | Settings → Members & permissions → **Invite** (for someone already on the team list) or **Invite people** (for someone new). Helm makes a one-time link to send them. They choose a password and they're in. |
 | Roles | CEO, Manager, Member and Guest. Roles are checked on the server: a Member's browser is never sent money, wages, fundraising, board and legal, connections or decisions data, and the server refuses any change to those areas. Changing someone's role in Settings updates their account. |
-| Wages | Never sent with the rest of the data. Wages open only after the server checks the 4-digit PIN, and only for the CEO and the people given access. The PIN is stored hashed. The first PIN is 1234; change it from the Wages page. |
+| Wages | Based on role, with no PIN. The CEO always sees wages. The CEO can give access to Managers from Wages → **Access**, and those Managers can view wages but not change them. Members and Guests never can. Wages are never sent with the rest of the data, and the server checks access on every request. |
 | Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. |
 | Messages | Spaces and direct messages are stored on the server. People only receive the spaces they're in and their own direct messages, and can only post as themselves. New messages reach everyone straight away. |
 | Live updates | When someone changes something, everyone else's screen updates within a second. |
@@ -46,9 +46,35 @@ Railway runs `npm start`. The health check is `/health`.
 | Audit log | Every change, upload, invite and wages access is recorded with who did it and when. |
 | Security | Changes need a custom request header, which blocks cross-site form posts. Uploaded files are served with a sandbox policy, and only safe file types open in the browser. |
 
+## Connections
+
+The CEO connects tools on the **Connections** page. Helm only reads from them. The one exception is Slack: Helm posts new announcements to the channel you choose. Helm checks each tool again every 30 minutes, and you can press **Sync now** at any time. Tokens are stored encrypted, and only the CEO's browser receives what Helm reads.
+
+| Tool | What it fills in | What you need |
+| --- | --- | --- |
+| Gmail | Your unread count and latest emails, shown under Inbox on the Briefing | A Google app (see below) |
+| Google Calendar | Your meetings on the Helm calendar, from last week to 60 days ahead. The team doesn't see them. | The same Google app |
+| Google Drive | Your recently changed files | The same Google app |
+| QuickBooks | Bank account balances in Money | An Intuit app |
+| Xero | Bank account balances in Money, from the Bank Summary report | A Xero app |
+| Business bank account | Balances, through Plaid | Plaid keys |
+| Stripe | MRR (monthly recurring revenue) in Money and Metrics | A restricted key with Read access to Subscriptions and Prices. Paste it on the page. |
+| Slack | Posts new announcements to a channel | An incoming webhook URL. Paste it on the page. |
+
+**Setting up an app (Google, QuickBooks, Xero, Plaid).** Each service needs its own app for your Helm, which you set up once:
+
+1. Open the tool on the Connections page and press **Set up**. The window links to the right developer console and shows the redirect URL to copy, for example `https://your-app.up.railway.app/api/connect/callback/google`.
+2. In that console, create the app (for Google, an OAuth client of type *Web application*; also turn on the Gmail, Calendar and Drive APIs) and add the redirect URL.
+3. Paste the Client ID and Secret into Helm. Or set them as Railway variables instead: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `QUICKBOOKS_CLIENT_ID` and `QUICKBOOKS_CLIENT_SECRET`, `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET`, or `PLAID_CLIENT_ID`, `PLAID_SECRET` and `PLAID_ENV` (`sandbox` or `production`).
+4. Press **Connect** and sign in.
+
+A Google app starts in *Testing* mode: add your own email as a test user in Google Cloud. Gmail is a restricted scope, so letting people outside your company use it needs Google's verification. For your own inbox, testing mode is enough. If Railway sits behind a custom domain, set `PUBLIC_URL` to that address so the redirect URL matches.
+
+Gusto, GitHub, Figma and Carta show as *Coming soon*.
+
 ## Not built yet
 
-- **Real connections.** The bank, Stripe, payroll, Google Calendar and Slack each need an account and API keys from that company. The server already reports which keys are set (for example `STRIPE_SECRET_KEY`); pulling their data in is the next step.
+- **More connections.** Gusto payroll, GitHub, Figma and Carta.
 - **Email.** Invite links are shown to the CEO to send themselves, and notifications appear in the app. Sending emails needs an email service such as Resend or Postmark.
 - **Password reset by email.** For now the CEO can send a new invite.
 - **Editing at the same moment.** If two people edit the same area at once, the last save wins. Messages are merged safely.
@@ -59,6 +85,7 @@ Railway runs `npm start`. The health check is `/health`.
 | --- | --- |
 | `index.html` | The app |
 | `server.mjs` | The backend |
+| `connectors.mjs` | Connections: Google, QuickBooks, Xero, Plaid, Stripe and Slack |
 | `login.html` | The sign-in, first-run setup and join-from-invite page |
 | `serve.mjs` | A simple server for the demo only (no accounts) |
 | `SEED_FOUNDER_NEEDS.md` | What a seed-stage company needs from Helm |
