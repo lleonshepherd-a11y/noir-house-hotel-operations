@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, mime TEXT, size
 CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, at INTEGER, user_id INTEGER, what TEXT);`);
 const q = (sql) => db.prepare(sql);
+try { db.exec("ALTER TABLE files ADD COLUMN space TEXT"); } catch {} // which space a file was shared in
 const getSetting = (k) => q("SELECT v FROM settings WHERE k=?").get(k)?.v;
 const setSetting = (k, v) => q("INSERT INTO settings(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v").run(k, v);
 const audit = (uid, what) => q("INSERT INTO audit(at,user_id,what) VALUES(?,?,?)").run(Date.now(), uid, what);
@@ -39,7 +40,7 @@ const audit = (uid, what) => q("INSERT INTO audit(at,user_id,what) VALUES(?,?,?)
 const STAFF = ["CEO", "Manager", "Member"], CEO = ["CEO"], MGR = ["CEO", "Manager"], ALL = ["CEO", "Manager", "Member", "Guest"];
 const ACL = {
   TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
-  TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, ALL], stamps: [ALL, ALL],
+  TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, STAFF], stamps: [ALL, STAFF], // SPX is merged per space below
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
   NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], STGS: [ALL, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
@@ -53,6 +54,103 @@ const ACL = {
 const canRead = (sec, role) => ACL[sec]?.[0].includes(role);
 const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
 const FILE_AREA = { space: ALL, legal: CEO, dataroom: CEO, wages: CEO, project: STAFF };
+
+/* ---------------- Checking what people send before it is saved ----------------
+   Nothing that looks like HTML is stored in names, titles, ids or labels, and each
+   field is held to the shape and length the app uses. The app also escapes on display. */
+const noTags = (v, max = 200) => String(v ?? "").replace(/[<>]/g, "").slice(0, max);
+const ID_RE = /^[A-Za-z0-9_-]{1,40}$/, TASK_ID_RE = /^[A-Z]{2,6}-\d{1,6}$/, DATE_RE = /^\d{4}-\d\d-\d\d$/, TIME_RE = /^[A-Za-z0-9 :.,'·-]{0,24}$/;
+const isId = (v) => typeof v === "string" && ID_RE.test(v);
+const colorTok = (v) => (typeof v === "string" && /^(#[0-9a-fA-F]{3,8}|var\(--[a-z0-9-]+\)|[a-z]+)$/.test(v) ? v : "var(--soft)");
+const nowHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+function cleanRx(rx) {
+  const out = {}; if (!rx || typeof rx !== "object") return out;
+  for (const [k, n] of Object.entries(rx).slice(0, 12)) { const e = String(k).replace(/[<>"'&`\s]/g, "").slice(0, 8); if (e) out[e] = Math.max(0, Math.min(9999, n | 0)); }
+  return out;
+}
+function cleanMsgExtra(x) {
+  const o = {}; if (!x || typeof x !== "object") return o;
+  if (x.rx) o.rx = cleanRx(x.rx);
+  if (x.file) o.file = noTags(x.file, 200);
+  if (isId(x.fid)) o.fid = x.fid;
+  if (x.g) o.g = noTags(x.g, 60);
+  if (x.reply && typeof x.reply === "string") o.reply = noTags(x.reply, 40);
+  return o;
+}
+// Caps sizes everywhere so one request can't store unbounded data.
+function clamp(v, depth = 0) {
+  if (depth > 10) return null;
+  if (typeof v === "string") return v.slice(0, 20000);
+  if (Array.isArray(v)) return v.slice(0, 5000).map((x) => clamp(x, depth + 1));
+  if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v).slice(0, 2000)) o[String(k).slice(0, 80)] = clamp(x, depth + 1); return o; }
+  return typeof v === "number" || typeof v === "boolean" || v === null ? v : null;
+}
+const TASK_S = ["todo", "prog", "review", "sign", "done"];
+function cleanTask(t) {
+  if (!t || typeof t !== "object" || !TASK_ID_RE.test(String(t.id))) return null;
+  const o = { id: t.id, t: noTags(t.t, 300), l: noTags(t.l, 30), o: isId(t.o) ? t.o : null, p: Math.max(0, Math.min(4, t.p | 0)), d: noTags(t.d, 20), s: TASK_S.includes(t.s) ? t.s : "todo" };
+  if (t.w && TASK_ID_RE.test(String(t.w))) o.w = t.w;
+  if (isId(t.nx)) o.nx = t.nx;
+  for (const k of ["mv", "ho", "ch"]) if (typeof t[k] === "string" && DATE_RE.test(t[k])) o[k] = t[k];
+  return o;
+}
+// Members can add tasks and change their own; only managers and the CEO can change or remove other people's.
+function mergeTasks(incoming, u) {
+  const clean = (Array.isArray(incoming) ? incoming : []).map(cleanTask).filter(Boolean);
+  if (u.role === "CEO" || u.role === "Manager") return clean;
+  const cur = readSec("TASKS") || [], byId = new Map(clean.map((t) => [t.id, t]));
+  const out = cur.map((t) => (t.o === u.pkey && byId.has(t.id) ? byId.get(t.id) : t)).filter((t) => t.o !== u.pkey || byId.has(t.id));
+  const known = new Set(cur.map((t) => t.id));
+  for (const t of clean) if (!known.has(t.id)) out.push(t);
+  return out;
+}
+// Calendar: private rows (investor, legal, the CEO's Google Calendar) are only touched by the CEO.
+// Everyone else can add events and change or remove only the events they added.
+const CEV_K = ["meet", "inv", "legal", "launch", "due"];
+const isPrivateEv = (e) => e[2] === "inv" || e[2] === "legal" || e[4] === "google";
+function cleanEv(e) {
+  if (!Array.isArray(e) || !DATE_RE.test(String(e[0]))) return null;
+  const r = [e[0], noTags(e[1], 120), CEV_K.includes(e[2]) ? e[2] : "meet", noTags(e[3], 80)];
+  if (e[4] !== undefined || e[5] !== undefined) r.push(e[4] === undefined || e[4] === null ? "" : noTags(e[4], 20));
+  if (isId(e[5])) r.push(e[5]);
+  return r;
+}
+function mergeCev(incoming, u) {
+  const clean = (Array.isArray(incoming) ? incoming : []).map(cleanEv).filter(Boolean);
+  if (u.role === "CEO") return clean;
+  const cur = readSec("CEV") || [], keyOf = (e) => JSON.stringify(e.slice(0, 4));
+  const curKeys = new Set(cur.map(keyOf));
+  const keep = cur.filter((e) => isPrivateEv(e) || (u.role !== "Manager" && e[5] !== u.pkey));
+  const mine = clean.filter((e) => !isPrivateEv(e) && (u.role === "Manager" || e[5] === u.pkey || !curKeys.has(keyOf(e))))
+    .map((e) => { const r = e.slice(0, 4); r[2] = r[2] === "inv" || r[2] === "legal" ? "meet" : r[2]; r[4] = e[4] === "google" ? "" : (e[4] || ""); r[5] = e[5] && curKeys.has(keyOf(e)) ? e[5] : u.pkey; return r; });
+  return [...keep, ...mine];
+}
+// Space files: people only change the file lists of spaces they are in, and members only add or remove their own files.
+function cleanFile(f) {
+  if (!f || typeof f !== "object") return null;
+  const url = typeof f.url === "string" && /^\/api\/files\/[a-f0-9]{32}$/.test(f.url) ? f.url : "";
+  return { id: isId(f.id) ? f.id : "f" + randomBytes(6).toString("hex"), n: noTags(f.n, 200), kind: ["video", "image", "pdf", "sheet", "doc", "text", "other"].includes(f.kind) ? f.kind : "other", by: isId(f.by) ? f.by : "", when: noTags(f.when, 24), size: noTags(f.size, 24), url, ext: noTags(f.ext, 5), mime: noTags(f.mime, 80) };
+}
+function mergeSpx(incoming, u) {
+  const cur = readSec("SPX") || {}, convs = readSec("CONVS") || [];
+  if (!incoming || typeof incoming !== "object") return cur;
+  for (const [k, list] of Object.entries(incoming)) {
+    const conv = convs.find((c) => c.ch && c.id === k);
+    if (!conv || !canSeeConv(conv, u) || !Array.isArray(list)) continue;
+    const clean = list.slice(0, 500).map(cleanFile).filter(Boolean);
+    if (u.role === "CEO" || u.role === "Manager") { cur[k] = clean; continue; }
+    const old = Array.isArray(cur[k]) ? cur[k] : [];
+    cur[k] = [...old.filter((f) => f.by !== u.pkey), ...clean.filter((f) => f.by === u.pkey)];
+  }
+  return cur;
+}
+function cleanSection(k, v) {
+  v = clamp(v);
+  if (k === "P" && v && typeof v === "object") { const o = {}; for (const [pk, x] of Object.entries(v)) if (isId(pk) && Array.isArray(x)) o[pk] = [noTags(x[0], 80), colorTok(x[1]), colorTok(x[2])]; return o; }
+  if (k === "stamps" && v && typeof v === "object") { const o = {}; for (const [id, x] of Object.entries(v)) if (isId(id) && Array.isArray(x)) o[id] = [noTags(x[0], 40), noTags(x[1], 40)]; return o; }
+  if (k === "cnt" && v && typeof v === "object") { const o = {}; for (const [id, x] of Object.entries(v)) o[noTags(id, 40)] = typeof x === "number" ? x : clamp(x); return o; }
+  return v;
+}
 
 /* ---------------- Section storage ---------------- */
 const readSec = (name) => { const r = q("SELECT json FROM sections WHERE name=?").get(name); return r ? JSON.parse(r.json) : undefined; };
@@ -86,6 +184,17 @@ function canCreateSpace(u) {
   const rule = (readSec("SPSET") || {}).create || "Managers and CEO";
   return rule === "Everyone" || (rule === "Managers and CEO" && u.role === "Manager");
 }
+// The CEO's first save seeds the sample spaces and messages; it goes through the same checks.
+function cleanSeedConvs(v) {
+  return (Array.isArray(v) ? v : []).slice(0, 500).filter((c) => c && (c.ch ? isId(c.id) && !String(c.id).startsWith("dm_") : isId(c.dm))).map((c) => {
+    const ic = Array.isArray(c.ic) ? c.ic : [];
+    const base = c.ch ? { id: c.id, ch: noTags(c.ch, 80), ic: [noTags(ic[0], 2), colorTok(ic[1]), colorTok(ic[2])], desc: noTags(c.desc, 300), shared: c.shared ? noTags(c.shared, 80) : undefined, guests: Array.isArray(c.guests) ? c.guests.slice(0, 50).map((g) => noTags(g, 60)) : undefined, by: isId(c.by) ? c.by : undefined, mem: Array.isArray(c.mem) ? c.mem.filter(isId) : undefined, last: DATE_RE.test(String(c.last)) ? c.last : undefined }
+      : { id: c.dm, dm: c.dm, parts: Array.isArray(c.parts) ? c.parts.filter(isId) : undefined };
+    base.unread = c.unread | 0;
+    base.msgs = (Array.isArray(c.msgs) ? c.msgs : []).slice(0, 2000).filter(Array.isArray).map((m) => [isId(m[0]) || m[0] === "sys" || m[0] === "guest" ? m[0] : "sys", TIME_RE.test(String(m[1])) ? String(m[1]) : "", String(m[2] ?? "").slice(0, 8000), cleanMsgExtra(m[3])]);
+    return base;
+  });
+}
 function mergeConvs(incoming, u) {
   const all = readSec("CONVS") || [];
   const byId = new Map(all.map((c) => [c.ch ? c.id : "dm_" + convMembers(c).slice().sort().join("_"), c]));
@@ -97,11 +206,14 @@ function mergeConvs(incoming, u) {
     let cur = byId.get(id);
     if (!cur) {
       if (c.ch && !canCreateSpace(u)) continue; // the CEO decides who can create spaces
-      if (c.ch) cur = { id: c.id, ch: String(c.ch).slice(0, 80), ic: c.ic, desc: c.desc, shared: c.shared, guests: c.guests, mem: Array.from(new Set([...(c.mem || []), u.pkey])), unread: 0, msgs: [] };
+      if (c.ch && (!isId(c.id) || c.id.startsWith("dm_"))) continue; // space ids are plain, and never look like a direct message
+      if (!c.ch && !isId(c.dm)) continue;
+      const ic = Array.isArray(c.ic) ? c.ic : [];
+      if (c.ch) cur = { id: c.id, ch: noTags(c.ch, 80), ic: [noTags(ic[0], 2), colorTok(ic[1]), colorTok(ic[2])], desc: noTags(c.desc, 300), shared: c.shared ? noTags(c.shared === true ? "Shared" : c.shared, 80) : undefined, guests: Array.isArray(c.guests) ? c.guests.slice(0, 50).map((g) => noTags(g, 60)) : undefined, by: u.pkey, mem: Array.from(new Set([...(Array.isArray(c.mem) ? c.mem.filter(isId) : []), u.pkey])), unread: 0, msgs: [] };
       else cur = { id, dm: c.dm, parts: [u.pkey, c.dm], unread: 0, unreadBy: {}, msgs: [] };
       all.push(cur); byId.set(id, cur);
     } else if (!canSeeConv(cur, u)) continue;
-    if (c.ch && Array.isArray(c.mem) && (cur.mem || []).includes(u.pkey)) cur.mem = Array.from(new Set(c.mem));
+    if (c.ch && Array.isArray(c.mem) && (cur.mem || []).includes(u.pkey)) cur.mem = Array.from(new Set(c.mem.filter(isId)));
     // archive state and last activity (archiving needs the same rights as creating, or being the creator)
     if (c.ch && (canCreateSpace(u) || cur.by === u.pkey)) { for (const k of ["arch", "archAuto", "flag"]) { if (c[k] === undefined || c[k] === null) delete cur[k]; else cur[k] = c[k]; } }
     if (c.ch && typeof c.last === "string" && /^\d{4}-\d\d-\d\d$/.test(c.last) && (!cur.last || c.last > cur.last)) cur.last = c.last;
@@ -109,9 +221,9 @@ function mergeConvs(incoming, u) {
     for (const m of c.msgs || []) {
       if (!Array.isArray(m)) continue;
       const k = key(m);
-      if (have.has(k)) { const ex = cur.msgs.find((x) => key(x) === k); if (m[3] && m[3].rx) { ex[3] = ex[3] || {}; ex[3].rx = m[3].rx; } continue; }
+      if (have.has(k)) { const ex = cur.msgs.find((x) => key(x) === k); if (m[3] && m[3].rx) { ex[3] = ex[3] || {}; ex[3].rx = cleanRx(m[3].rx); } continue; }
       if (m[0] !== u.pkey && m[0] !== "sys") continue; // can't post as someone else
-      cur.msgs.push([m[0], String(m[1]).slice(0, 40), String(m[2]).slice(0, 8000), m[3] || {}]);
+      cur.msgs.push([m[0], TIME_RE.test(String(m[1])) ? String(m[1]) : nowHM(), String(m[2]).slice(0, 8000), cleanMsgExtra(m[3])]);
       if (cur.ch && cur.arch && m[0] !== "sys") { delete cur.arch; delete cur.archAuto; delete cur.flag; } // posting reopens an archived space
       have.add(k);
       if (!cur.ch) { cur.unreadBy = cur.unreadBy || {}; for (const p of convMembers(cur)) if (p !== u.pkey) cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
@@ -131,6 +243,7 @@ function stateFor(u) {
   out.CONVS = convsFor(u).map((c) => (c.ch ? { ...c, unread: (c.unreadBy || {})[u.pkey] || 0, unreadBy: undefined } : c));
   // Roles come from accounts, not from what a browser sent.
   if (out.MEM) out.MEM = out.MEM.map((m) => { const acc = q("SELECT role FROM users WHERE pkey=?").get(m[0]); return acc ? [m[0], acc.role] : m; });
+  if (out.SPX && u.role !== "CEO") { const mine = new Set(convsFor(u).filter((c) => c.ch).map((c) => c.id)); out.SPX = Object.fromEntries(Object.entries(out.SPX).filter(([k]) => mine.has(k))); }
   if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal" && e[4] !== "google"); // the CEO's own Google Calendar stays private
   return swapKeys(out, "AK", u.pkey);
 }
@@ -217,13 +330,17 @@ async function api(req, res, url) {
 
   if (p === "/api/state" && m === "PUT") {
     const b = await json(req); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [];
-    for (const [k, v] of Object.entries(secs)) {
-      if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") writeSec("CONVS", v, u.id); else mergeConvs(v, u); done.push(k); continue; }
+    for (let [k, v] of Object.entries(secs)) {
+      if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") writeSec("CONVS", cleanSeedConvs(v), u.id); else mergeConvs(v, u); done.push(k); continue; }
+      if (k === "TASKS") { if (!canWrite(k, u.role)) { refused.push(k); continue; } writeSec(k, mergeTasks(v, u), u.id); done.push(k); continue; }
+      if (k === "CEV") { if (!canWrite(k, u.role)) { refused.push(k); continue; } writeSec(k, mergeCev(v, u), u.id); done.push(k); continue; }
+      if (k === "SPX") { writeSec(k, mergeSpx(v, u), u.id); done.push(k); continue; }
       if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
       if (k === "MEM" && u.role === "CEO") { // role changes go to accounts too
         for (const [pk, role] of v || []) if (pk !== u.pkey && ["Manager", "Member", "Guest"].includes(role)) q("UPDATE users SET role=? WHERE pkey=? AND role<>'CEO'").run(role, pk);
       }
       if (!canWrite(k, u.role)) { refused.push(k); continue; }
+      v = cleanSection(k, v);
       if (k === "ANN") cx.onAnnouncements(readSec("ANN"), v, u.name).catch(() => {});
       writeSec(k, v, u.id); done.push(k);
     }
@@ -264,16 +381,23 @@ async function api(req, res, url) {
 
   if (p === "/api/files" && m === "POST") {
     const area = url.searchParams.get("area") || "space"; if (!FILE_AREA[area]?.includes(u.role)) return send(res, 403, { error: "Not allowed" });
-    const name = decodeURIComponent(req.headers["x-file-name"] || "file").replace(/[\\/\0]/g, "_").slice(0, 200);
+    let space = null;
+    if (area === "space") { space = url.searchParams.get("space"); const conv = (readSec("CONVS") || []).find((c) => c.ch && c.id === space); if (!conv || !canSeeConv(conv, u)) return send(res, 403, { error: "You’re not in that space." }); }
+    let name = "file"; try { name = decodeURIComponent(req.headers["x-file-name"] || "file"); } catch {}
+    name = name.replace(/[\\/\0<>]/g, "_").slice(0, 200);
     const buf = await body(req, MAX_FILE); const id = randomBytes(16).toString("hex");
     await writeFile(join(FILES, id), buf);
-    q("INSERT INTO files(id,name,mime,size,owner,area,created) VALUES(?,?,?,?,?,?,?)").run(id, name, String(req.headers["content-type"] || "application/octet-stream").slice(0, 100), buf.length, u.id, area, Date.now());
+    q("INSERT INTO files(id,name,mime,size,owner,area,created,space) VALUES(?,?,?,?,?,?,?,?)").run(id, name, String(req.headers["content-type"] || "application/octet-stream").slice(0, 100), buf.length, u.id, area, Date.now(), space);
     audit(u.id, "uploaded " + name);
     return send(res, 200, { id, url: "/api/files/" + id, size: buf.length });
   }
   const fm = /^\/api\/files\/([a-f0-9]{32})$/.exec(p);
   if (fm && m === "GET") {
     const f = q("SELECT * FROM files WHERE id=?").get(fm[1]); if (!f || !FILE_AREA[f.area]?.includes(u.role)) return send(res, 404, { error: "Not found" });
+    if (f.area === "space" && u.role !== "CEO") { // only members of the space (or whoever uploaded it) can open a space file
+      const conv = f.space && (readSec("CONVS") || []).find((c) => c.ch && c.id === f.space);
+      if (!(conv ? canSeeConv(conv, u) : f.owner === u.id || u.role === "Manager")) return send(res, 404, { error: "Not found" });
+    }
     const buf = await readFile(join(FILES, f.id)).catch(() => null); if (!buf) return send(res, 404, { error: "Missing" });
     const safe = /^(image\/(png|jpeg|gif|webp)|video\/(mp4|webm)|application\/pdf|text\/plain)$/.test(f.mime);
     res.writeHead(200, { "content-type": safe ? f.mime : "application/octet-stream", "content-length": buf.length, "content-disposition": `${safe ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(f.name)}`, "cache-control": "private, max-age=3600", "content-security-policy": "sandbox", ...SEC_HEADERS });
@@ -316,7 +440,8 @@ async function accountabilityCheck() {
 setInterval(() => accountabilityCheck().catch(() => {}), 60 * 60e3).unref();
 setTimeout(() => accountabilityCheck().catch(() => {}), 15e3).unref();
 
-const page = async (res, f) => { let html = await readFile(join(ROOT, f), "utf8"); if (f === "index.html") html = html.replace("<head>", "<head>\n<script>window.HELM_BACKEND=1</script>"); res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SEC_HEADERS }); res.end(html); };
+const csp = (n) => `default-src 'self'; script-src 'nonce-${n}' https://cdn.plaid.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'self' blob:; frame-src https://cdn.plaid.com; connect-src 'self' https://*.plaid.com; base-uri 'none'; form-action 'self'; frame-ancestors 'self'`;
+const page = async (res, f) => { let html = await readFile(join(ROOT, f), "utf8"); const nonce = randomBytes(16).toString("base64"); if (f === "index.html") html = html.replace("<head>", "<head>\n<script>window.HELM_BACKEND=1</script>"); html = html.replace(/<script>/g, `<script nonce="${nonce}">`); res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SEC_HEADERS, "content-security-policy": csp(nonce) }); res.end(html); };
 createServer(async (req, res) => {
   const url = new URL(req.url, `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host || "localhost"}`);
   try {
