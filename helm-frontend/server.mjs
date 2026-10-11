@@ -1,0 +1,290 @@
+// Helm backend: accounts, roles enforced on the server, a SQLite database,
+// file storage and live updates. Zero npm dependencies (Node 22.13+).
+//   node server.mjs            → http://localhost:5173
+// Env: PORT, DATA_DIR (put this on a Railway volume), COOKIE_SECURE=1 behind HTTPS.
+import { createServer } from "node:http";
+import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { join, extname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomBytes, scrypt as _scrypt, timingSafeEqual, createHash } from "node:crypto";
+import { promisify } from "node:util";
+import { DatabaseSync } from "node:sqlite";
+
+const scrypt = promisify(_scrypt);
+const ROOT = fileURLToPath(new URL(".", import.meta.url));
+const DATA = process.env.DATA_DIR || join(ROOT, "data");
+const FILES = join(DATA, "files");
+const PORT = Number(process.env.PORT) || 5173;
+const MAX_JSON = 5 * 1024 * 1024, MAX_FILE = 25 * 1024 * 1024;
+await mkdir(FILES, { recursive: true });
+
+/* ---------------- Database ---------------- */
+const db = new DatabaseSync(join(DATA, "helm.db"));
+db.exec(`PRAGMA journal_mode=WAL;
+CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, email TEXT UNIQUE, name TEXT, pkey TEXT UNIQUE, role TEXT, pass TEXT, invite TEXT, created INTEGER);
+CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id INTEGER, expires INTEGER);
+CREATE TABLE IF NOT EXISTS sections(name TEXT PRIMARY KEY, json TEXT, updated INTEGER, by INTEGER);
+CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, mime TEXT, size INTEGER, owner INTEGER, area TEXT, created INTEGER);
+CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, at INTEGER, user_id INTEGER, what TEXT);`);
+const q = (sql) => db.prepare(sql);
+const getSetting = (k) => q("SELECT v FROM settings WHERE k=?").get(k)?.v;
+const setSetting = (k, v) => q("INSERT INTO settings(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v").run(k, v);
+const audit = (uid, what) => q("INSERT INTO audit(at,user_id,what) VALUES(?,?,?)").run(Date.now(), uid, what);
+
+/* ---------------- Roles: who can read and write each part of the workspace ---------------- */
+const STAFF = ["CEO", "Manager", "Member"], CEO = ["CEO"], MGR = ["CEO", "Manager"], ALL = ["CEO", "Manager", "Member", "Guest"];
+const ACL = {
+  TASKS: [ALL, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
+  TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, ALL], stamps: [ALL, ALL],
+  MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
+  NY: [CEO, CEO], SO: [CEO, CEO], dec: [CEO, CEO], DECLOG: [CEO, CEO],
+  MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
+  LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
+  INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO],
+  ROLES: [CEO, CEO], CANDS: [CEO, CEO], OB: [CEO, CEO], CN: [CEO, CEO],
+  CONVS: [ALL, ALL], // filtered and merged per person below
+  // WG (wages) is never in this list: it is only served by /api/wages after a PIN check.
+};
+const canRead = (sec, role) => ACL[sec]?.[0].includes(role);
+const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
+const FILE_AREA = { space: ALL, legal: CEO, dataroom: CEO, wages: CEO, project: STAFF };
+
+/* ---------------- Section storage ---------------- */
+const readSec = (name) => { const r = q("SELECT json FROM sections WHERE name=?").get(name); return r ? JSON.parse(r.json) : undefined; };
+const writeSec = (name, val, uid) => q("INSERT INTO sections(name,json,updated,by) VALUES(?,?,?,?) ON CONFLICT(name) DO UPDATE SET json=excluded.json,updated=excluded.updated,by=excluded.by").run(name, JSON.stringify(val), Date.now(), uid);
+
+// Each person's own key is shown to their browser as "AK" (the front end's "me"),
+// and the real "AK" gets their key. Applied on the way out and undone on the way in.
+function swapKeys(v, a, b) {
+  if (a === b) return v;
+  if (typeof v === "string") return v === a ? b : v === b ? a : v;
+  if (Array.isArray(v)) return v.map((x) => swapKeys(x, a, b));
+  if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v)) o[k === a ? b : k === b ? a : k] = swapKeys(x, a, b); return o; }
+  return v;
+}
+const convMembers = (c) => (c.ch ? c.mem || [] : c.parts || ["AK", c.dm]);
+const canSeeConv = (c, u) => (c.ch ? !c.mem || c.mem.includes(u.pkey) || u.role === "CEO" && !c.parts : convMembers(c).includes(u.pkey));
+
+function convsFor(u) {
+  const all = readSec("CONVS") || [];
+  return all.filter((c) => canSeeConv(c, u)).map((c) => {
+    if (c.ch) return c;
+    const other = convMembers(c).find((k) => k !== u.pkey) || c.dm;
+    const unread = (c.unreadBy || {})[u.pkey] || 0;
+    return { ...c, dm: other, id: other, parts: undefined, unreadBy: undefined, unread };
+  });
+}
+// Merge one person's copy of the conversations into the shared copy without
+// losing anyone else's messages. People can only add their own messages.
+function mergeConvs(incoming, u) {
+  const all = readSec("CONVS") || [];
+  const byId = new Map(all.map((c) => [c.ch ? c.id : "dm_" + convMembers(c).slice().sort().join("_"), c]));
+  const key = (m) => JSON.stringify([m[0], m[1], m[2]]);
+  for (const c of incoming || []) {
+    if (!c || typeof c !== "object") continue;
+    let id = c.id;
+    if (!c.ch) { const parts = [u.pkey, c.dm].sort(); id = "dm_" + parts.join("_"); }
+    let cur = byId.get(id);
+    if (!cur) {
+      if (c.ch) cur = { id: c.id, ch: String(c.ch).slice(0, 80), ic: c.ic, desc: c.desc, shared: c.shared, guests: c.guests, mem: Array.from(new Set([...(c.mem || []), u.pkey])), unread: 0, msgs: [] };
+      else cur = { id, dm: c.dm, parts: [u.pkey, c.dm], unread: 0, unreadBy: {}, msgs: [] };
+      all.push(cur); byId.set(id, cur);
+    } else if (!canSeeConv(cur, u)) continue;
+    if (c.ch && Array.isArray(c.mem) && (cur.mem || []).includes(u.pkey)) cur.mem = Array.from(new Set(c.mem));
+    const have = new Set(cur.msgs.map(key));
+    for (const m of c.msgs || []) {
+      if (!Array.isArray(m)) continue;
+      const k = key(m);
+      if (have.has(k)) { const ex = cur.msgs.find((x) => key(x) === k); if (m[3] && m[3].rx) { ex[3] = ex[3] || {}; ex[3].rx = m[3].rx; } continue; }
+      if (m[0] !== u.pkey && m[0] !== "sys") continue; // can't post as someone else
+      cur.msgs.push([m[0], String(m[1]).slice(0, 40), String(m[2]).slice(0, 8000), m[3] || {}]);
+      have.add(k);
+      if (!cur.ch) { cur.unreadBy = cur.unreadBy || {}; for (const p of convMembers(cur)) if (p !== u.pkey) cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
+      else for (const p of cur.mem || []) if (p !== u.pkey) { cur.unreadBy = cur.unreadBy || {}; cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
+    }
+    if ((c.unread | 0) === 0 && cur.unreadBy) cur.unreadBy[u.pkey] = 0;
+  }
+  writeSec("CONVS", all, u.id);
+}
+
+function stateFor(u) {
+  const out = {};
+  for (const r of q("SELECT name,json FROM sections").all()) {
+    if (r.name === "CONVS" || !canRead(r.name, u.role)) continue;
+    out[r.name] = JSON.parse(r.json);
+  }
+  out.CONVS = convsFor(u).map((c) => (c.ch ? { ...c, unread: (c.unreadBy || {})[u.pkey] || 0, unreadBy: undefined } : c));
+  // Roles come from accounts, not from what a browser sent.
+  if (out.MEM) out.MEM = out.MEM.map((m) => { const acc = q("SELECT role FROM users WHERE pkey=?").get(m[0]); return acc ? [m[0], acc.role] : m; });
+  if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal");
+  return swapKeys(out, "AK", u.pkey);
+}
+
+/* ---------------- Accounts and sessions ---------------- */
+async function hashPw(pw) { const salt = randomBytes(16); const h = await scrypt(pw, salt, 64); return salt.toString("hex") + ":" + h.toString("hex"); }
+async function checkPw(pw, stored) { if (!stored) return false; const [s, h] = stored.split(":"); const got = await scrypt(pw, Buffer.from(s, "hex"), 64); return timingSafeEqual(got, Buffer.from(h, "hex")); }
+const SESSION_DAYS = 30;
+function newSession(uid) { const t = randomBytes(32).toString("hex"); q("INSERT INTO sessions(token,user_id,expires) VALUES(?,?,?)").run(createHash("sha256").update(t).digest("hex"), uid, Date.now() + SESSION_DAYS * 864e5); return t; }
+function userFrom(req) {
+  const m = /(?:^|;\s*)helm_s=([a-f0-9]{64})/.exec(req.headers.cookie || ""); if (!m) return null;
+  const r = q("SELECT u.* , s.expires FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?").get(createHash("sha256").update(m[1]).digest("hex"));
+  if (!r || r.expires < Date.now()) return null; return r;
+}
+const cookie = (req, t, maxAge) => `helm_s=${t}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${process.env.COOKIE_SECURE === "1" || req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}`;
+const tries = new Map(); // simple login rate limit per IP
+function tooMany(ip) { const t = tries.get(ip) || []; const now = Date.now(); const recent = t.filter((x) => now - x < 15 * 60e3); tries.set(ip, recent); return recent.length >= 10; }
+const pub = (u) => ({ id: u.id, email: u.email, name: u.name, pkey: u.pkey, role: u.role });
+
+/* ---------------- Live updates (server-sent events) ---------------- */
+const clients = new Set();
+function broadcast(evt, filter = () => true) { for (const c of clients) if (filter(c.user)) { try { c.res.write(`data: ${JSON.stringify(evt)}\n\n`); } catch {} } }
+setInterval(() => { for (const c of clients) try { c.res.write(": ping\n\n"); } catch {} }, 25e3);
+
+/* ---------------- HTTP helpers ---------------- */
+const send = (res, code, obj, headers = {}) => { res.writeHead(code, { "content-type": "application/json", "cache-control": "no-store", ...headers }); res.end(JSON.stringify(obj)); };
+function body(req, limit = MAX_JSON) {
+  return new Promise((ok, bad) => { const chunks = []; let n = 0;
+    req.on("data", (c) => { n += c.length; if (n > limit) { bad(Object.assign(new Error("too large"), { code: 413 })); req.destroy(); } else chunks.push(c); });
+    req.on("end", () => ok(Buffer.concat(chunks))); req.on("error", bad); });
+}
+const json = async (req) => { const b = await body(req); try { return JSON.parse(b.toString() || "{}"); } catch { throw Object.assign(new Error("bad json"), { code: 400 }); } };
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
+const SEC_HEADERS = { "x-content-type-options": "nosniff", "referrer-policy": "same-origin", "x-frame-options": "SAMEORIGIN" };
+const validEmail = (e) => typeof e === "string" && /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(e);
+const strongPw = (p) => typeof p === "string" && p.length >= 10 && p.length <= 200;
+function nextKey(name) { const base = (String(name).match(/\b\w/g) || ["N", "N"]).join("").toUpperCase().slice(0, 2).padEnd(2, "X"); let k = base, i = 2; while (q("SELECT 1 FROM users WHERE pkey=?").get(k)) k = base[0] + i++; return k; }
+
+/* ---------------- Routes ---------------- */
+async function api(req, res, url) {
+  const p = url.pathname, m = req.method, ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+  // Every change must come from our own page (blocks cross-site form posts).
+  if (m !== "GET" && req.headers["x-helm"] !== "1") return send(res, 403, { error: "Missing request header" });
+
+  if (p === "/api/status" && m === "GET") return send(res, 200, { setup: !q("SELECT 1 FROM users LIMIT 1").get() });
+
+  if (p === "/api/setup" && m === "POST") {
+    if (q("SELECT 1 FROM users LIMIT 1").get()) return send(res, 409, { error: "Already set up" });
+    const b = await json(req);
+    if (!validEmail(b.email) || !strongPw(b.password) || !b.name) return send(res, 400, { error: "Enter your name, a valid email and a password of at least 10 characters." });
+    const r = q("INSERT INTO users(email,name,pkey,role,pass,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), String(b.name).slice(0, 80), "AK", "CEO", await hashPw(b.password), Date.now());
+    if (b.seed && typeof b.seed === "object") for (const [k, v] of Object.entries(b.seed)) if (k === "WG") { if (v && v.pin) { setSetting("wg_pin", await hashPw(String(v.pin))); delete v.pin; } writeSec("WG", v, r.lastInsertRowid); } else if (ACL[k]) writeSec(k, v, r.lastInsertRowid);
+    const P = readSec("P") || {}; P.AK = [String(b.name).slice(0, 80), (P.AK || [])[1] || "#1c1d21", (P.AK || [])[2] || "#fff"]; writeSec("P", P, r.lastInsertRowid);
+    if (!getSetting("wg_pin")) setSetting("wg_pin", await hashPw("1234"));
+    audit(r.lastInsertRowid, "set up the workspace");
+    return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(r.lastInsertRowid), SESSION_DAYS * 86400) });
+  }
+
+  if (p === "/api/login" && m === "POST") {
+    if (tooMany(ip)) return send(res, 429, { error: "Too many attempts. Try again in 15 minutes." });
+    const b = await json(req); const u = q("SELECT * FROM users WHERE email=?").get(String(b.email || "").toLowerCase());
+    if (!u || !(await checkPw(String(b.password || ""), u.pass))) { tries.get(ip)?.push(Date.now()) ?? tries.set(ip, [Date.now()]); return send(res, 401, { error: "Email or password is wrong." }); }
+    return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(u.id), SESSION_DAYS * 86400) });
+  }
+
+  if (p === "/api/invite/accept" && m === "POST") {
+    const b = await json(req); const u = b.token && q("SELECT * FROM users WHERE invite=?").get(String(b.token));
+    if (!u) return send(res, 404, { error: "This invite link has expired or was already used." });
+    if (!strongPw(b.password)) return send(res, 400, { error: "Use a password of at least 10 characters." });
+    q("UPDATE users SET pass=?, invite=NULL, name=COALESCE(?,name) WHERE id=?").run(await hashPw(b.password), b.name ? String(b.name).slice(0, 80) : null, u.id);
+    audit(u.id, "accepted invite");
+    return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(u.id), SESSION_DAYS * 86400) });
+  }
+  if (p === "/api/invite/info" && m === "GET") { const u = q("SELECT name,email FROM users WHERE invite=?").get(url.searchParams.get("t") || ""); return u ? send(res, 200, u) : send(res, 404, { error: "Invite not found" }); }
+
+  const u = userFrom(req);
+  if (!u) return send(res, 401, { error: "Sign in" });
+
+  if (p === "/api/logout" && m === "POST") { q("DELETE FROM sessions WHERE user_id=? AND token=?").run(u.id, createHash("sha256").update((/(?:^|;\s*)helm_s=([a-f0-9]{64})/.exec(req.headers.cookie) || [])[1] || "").digest("hex")); return send(res, 200, { ok: true }, { "set-cookie": cookie(req, "", 0) }); }
+  if (p === "/api/me" && m === "GET") return send(res, 200, { ...pub(u), seeded: !!q("SELECT 1 FROM sections WHERE name='TASKS'").get() });
+  if (p === "/api/state" && m === "GET") return send(res, 200, stateFor(u));
+
+  if (p === "/api/state" && m === "PUT") {
+    const b = await json(req); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [];
+    for (const [k, v] of Object.entries(secs)) {
+      if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") writeSec("CONVS", v, u.id); else mergeConvs(v, u); done.push(k); continue; }
+      if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { if (v.pin) { setSetting("wg_pin", await hashPw(String(v.pin))); } writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
+      if (k === "MEM" && u.role === "CEO") { // role changes go to accounts too
+        for (const [pk, role] of v || []) if (pk !== u.pkey && ["Manager", "Member", "Guest"].includes(role)) q("UPDATE users SET role=? WHERE pkey=? AND role<>'CEO'").run(role, pk);
+      }
+      if (!canWrite(k, u.role)) { refused.push(k); continue; }
+      writeSec(k, v, u.id); done.push(k);
+    }
+    if (done.length) { audit(u.id, "updated " + done.join(", ")); broadcast({ type: "changed", sections: done, by: u.pkey }, (x) => x.id !== u.id); }
+    return send(res, refused.length && !done.length ? 403 : 200, { saved: done, refused });
+  }
+
+  if (p === "/api/wages" && m === "POST") {
+    const b = await json(req); const wg = readSec("WG") || { access: ["AK"], rows: [] };
+    const allowed = u.role === "CEO" || (wg.access || []).includes(u.pkey);
+    if (!allowed) return send(res, 403, { error: "You don’t have access to wages." });
+    if (!(await checkPw(String(b.pin || ""), getSetting("wg_pin")))) { audit(u.id, "wrong wages PIN"); return send(res, 401, { error: "Wrong PIN." }); }
+    if (b.save && u.role === "CEO") { const v = swapKeys(b.save, "AK", u.pkey); if (v.newPin) { if (!/^\d{4}$/.test(v.newPin)) return send(res, 400, { error: "PIN must be 4 digits" }); setSetting("wg_pin", await hashPw(v.newPin)); } delete v.newPin; delete v.pin; writeSec("WG", { access: v.access, rows: v.rows }, u.id); audit(u.id, "updated wages"); }
+    else if (b.save) return send(res, 403, { error: "Only the CEO can change wages." });
+    audit(u.id, "opened wages");
+    return send(res, 200, swapKeys(readSec("WG") || wg, "AK", u.pkey));
+  }
+
+  if (p === "/api/users" && m === "GET") { if (u.role !== "CEO") return send(res, 403, { error: "CEO only" }); return send(res, 200, q("SELECT id,email,name,pkey,role, invite IS NOT NULL AS pending FROM users").all().map((x) => swapKeys(x, "AK", u.pkey))); }
+  if (p === "/api/invite" && m === "POST") {
+    if (u.role !== "CEO") return send(res, 403, { error: "Only the CEO can invite people." });
+    const b = await json(req); if (!validEmail(b.email)) return send(res, 400, { error: "Enter a valid email." });
+    const role = ["Manager", "Member", "Guest"].includes(b.role) ? b.role : "Member";
+    if (q("SELECT 1 FROM users WHERE email=?").get(b.email.toLowerCase())) return send(res, 409, { error: "That person already has an account." });
+    let pkey = b.pkey ? swapKeys(String(b.pkey), "AK", u.pkey) : null;
+    if (pkey && q("SELECT 1 FROM users WHERE pkey=?").get(pkey)) return send(res, 409, { error: "That team member already has an account." });
+    const P = readSec("P") || {};
+    if (!pkey) { pkey = nextKey(b.name || b.email); P[pkey] = [String(b.name || b.email.split("@")[0]).slice(0, 80), "#efeff1", "#3f4148"]; writeSec("P", P, u.id); const mem = readSec("MEM") || []; mem.push([pkey, role]); writeSec("MEM", mem, u.id); }
+    const token = randomBytes(24).toString("hex");
+    q("INSERT INTO users(email,name,pkey,role,invite,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), (P[pkey] || [b.name])[0], pkey, role, token, Date.now());
+    audit(u.id, "invited " + b.email + " as " + role);
+    return send(res, 200, { link: `${url.origin}/join?t=${token}`, pkey: swapKeys(pkey, "AK", u.pkey) });
+  }
+
+  if (p === "/api/files" && m === "POST") {
+    const area = url.searchParams.get("area") || "space"; if (!FILE_AREA[area]?.includes(u.role)) return send(res, 403, { error: "Not allowed" });
+    const name = decodeURIComponent(req.headers["x-file-name"] || "file").replace(/[\\/\0]/g, "_").slice(0, 200);
+    const buf = await body(req, MAX_FILE); const id = randomBytes(16).toString("hex");
+    await writeFile(join(FILES, id), buf);
+    q("INSERT INTO files(id,name,mime,size,owner,area,created) VALUES(?,?,?,?,?,?,?)").run(id, name, String(req.headers["content-type"] || "application/octet-stream").slice(0, 100), buf.length, u.id, area, Date.now());
+    audit(u.id, "uploaded " + name);
+    return send(res, 200, { id, url: "/api/files/" + id, size: buf.length });
+  }
+  const fm = /^\/api\/files\/([a-f0-9]{32})$/.exec(p);
+  if (fm && m === "GET") {
+    const f = q("SELECT * FROM files WHERE id=?").get(fm[1]); if (!f || !FILE_AREA[f.area]?.includes(u.role)) return send(res, 404, { error: "Not found" });
+    const buf = await readFile(join(FILES, f.id)).catch(() => null); if (!buf) return send(res, 404, { error: "Missing" });
+    const safe = /^(image\/(png|jpeg|gif|webp)|video\/(mp4|webm)|application\/pdf|text\/plain)$/.test(f.mime);
+    res.writeHead(200, { "content-type": safe ? f.mime : "application/octet-stream", "content-length": buf.length, "content-disposition": `${safe ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(f.name)}`, "cache-control": "private, max-age=3600", "content-security-policy": "sandbox", ...SEC_HEADERS });
+    return res.end(buf);
+  }
+  if (fm && m === "DELETE") { const f = q("SELECT * FROM files WHERE id=?").get(fm[1]); if (!f || (f.owner !== u.id && u.role !== "CEO")) return send(res, 404, { error: "Not found" }); q("DELETE FROM files WHERE id=?").run(f.id); await unlink(join(FILES, f.id)).catch(() => {}); return send(res, 200, { ok: true }); }
+
+  if (p === "/api/events" && m === "GET") {
+    res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" }); res.write(": hi\n\n");
+    const c = { res, user: u }; clients.add(c); req.on("close", () => clients.delete(c)); return;
+  }
+  if (p === "/api/connections" && m === "GET") {
+    if (u.role !== "CEO") return send(res, 403, { error: "CEO only" });
+    return send(res, 200, { stripe: !!process.env.STRIPE_SECRET_KEY, plaid: !!process.env.PLAID_CLIENT_ID, gusto: !!process.env.GUSTO_TOKEN, google: !!process.env.GOOGLE_CLIENT_ID, slack: !!process.env.SLACK_BOT_TOKEN });
+  }
+  return send(res, 404, { error: "Not found" });
+}
+
+const page = async (res, f) => { let html = await readFile(join(ROOT, f), "utf8"); if (f === "index.html") html = html.replace("<head>", "<head>\n<script>window.HELM_BACKEND=1</script>"); res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SEC_HEADERS }); res.end(html); };
+createServer(async (req, res) => {
+  const url = new URL(req.url, `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host || "localhost"}`);
+  try {
+    if (url.pathname.startsWith("/api/")) return await api(req, res, url);
+    if (url.pathname === "/login" || url.pathname === "/join" || url.pathname === "/setup") return await page(res, "login.html");
+    if (url.pathname === "/" || url.pathname === "/index.html") return await page(res, "index.html");
+    if (url.pathname === "/health") return send(res, 200, { ok: true });
+    const f = join(ROOT, "public", url.pathname.replace(/\.\.+/g, ""));
+    if (f.startsWith(join(ROOT, "public")) && existsSync(f)) { res.writeHead(200, { "content-type": TYPES[extname(f)] || "application/octet-stream", ...SEC_HEADERS }); return res.end(await readFile(f)); }
+    res.writeHead(404, SEC_HEADERS).end("Not found");
+  } catch (e) {
+    if (!res.headersSent) send(res, e.code === 413 ? 413 : e.code === 400 ? 400 : 500, { error: e.code === 413 ? "Too large" : e.code === 400 ? "Bad request" : "Server error" });
+    if (!e.code) console.error(e);
+  }
+}).listen(PORT, () => console.log(`Helm running at http://localhost:${PORT} (data in ${DATA})`));

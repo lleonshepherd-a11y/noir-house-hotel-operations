@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · Helm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:#000;color:#f5f5f7;font-family:"Inter",ui-sans-serif,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;display:grid;place-items:center;padding:16px}
+.card{width:100%;max-width:400px;background:#161616;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:32px 28px 28px;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#fff,#a9d8ff);display:grid;place-items:center;margin-bottom:22px}
+.logo i{width:11px;height:11px;border-radius:50%;border:2px solid #0a0a0a}
+h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.03em}
+p.lead{margin:0 0 22px;color:#8a8a8f;font-size:14px;line-height:1.55}
+label{display:block;font-size:12.5px;color:#9a9aa0;font-weight:500;margin:14px 0 7px}
+input{width:100%;height:44px;border-radius:11px;background:#232323;border:1px solid transparent;color:#fff;font:inherit;font-size:14.5px;padding:0 14px;outline:none;transition:border-color .15s}
+input:focus{border-color:rgba(255,255,255,.3)}
+button{width:100%;height:44px;margin-top:22px;border:0;border-radius:11px;background:#fff;color:#0a0a0a;font:inherit;font-weight:600;font-size:14.5px;cursor:pointer;transition:background .15s}
+button:hover{background:#e6e6e6}
+button:disabled{opacity:.5;cursor:default}
+.err{color:#ff8a8e;font-size:13px;margin-top:14px;min-height:18px}
+.foot{margin-top:18px;font-size:12.5px;color:#6e6e74;text-align:center}
+</style>
+</head>
+<body>
+<form class="card" id="f" autocomplete="on">
+  <div class="logo"><i></i></div>
+  <h1 id="h">Sign in to Helm</h1>
+  <p class="lead" id="lead">Use the email and password for your workspace.</p>
+  <div id="nameRow" hidden><label for="name">Your name</label><input id="name" autocomplete="name"></div>
+  <div id="emailRow"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
+  <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required minlength="10">
+  <button id="go" type="submit">Sign in</button>
+  <div class="err" id="err" role="alert"></div>
+  <div class="foot" id="foot">Forgot your password? Ask your workspace owner to send a new invite.</div>
+</form>
+<script>
+const $=s=>document.querySelector(s);const path=location.pathname,token=new URLSearchParams(location.search).get('t');
+let mode='login';
+async function init(){
+  const st=await fetch('/api/status').then(r=>r.json()).catch(()=>({}));
+  if(st.setup){mode='setup';$('#h').textContent='Set up your workspace';$('#lead').textContent='You’re the first person here, so you’ll be the CEO. You can invite your team once you’re in.';$('#nameRow').hidden=false;$('#go').textContent='Create workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters.'}
+  else if(path==='/join'&&token){mode='join';const i=await fetch('/api/invite/info?t='+encodeURIComponent(token)).then(r=>r.ok?r.json():null).catch(()=>null);
+    if(!i){$('#h').textContent='Invite not found';$('#lead').textContent='This invite link has expired or was already used. Ask for a new one.';$('#go').hidden=true;$('#emailRow').hidden=true;$('#pw').parentNode.querySelectorAll('label[for=pw],#pw').forEach(x=>x.hidden=true);return}
+    $('#h').textContent='Join your team on Helm';$('#lead').textContent='Choose a password to finish setting up your account.';$('#nameRow').hidden=false;$('#name').value=i.name||'';$('#email').value=i.email;$('#email').readOnly=true;$('#go').textContent='Join workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters.'}
+}
+$('#f').addEventListener('submit',async e=>{e.preventDefault();$('#err').textContent='';$('#go').disabled=true;
+  const url=mode==='setup'?'/api/setup':mode==='join'?'/api/invite/accept':'/api/login';
+  const body=mode==='join'?{token,password:$('#pw').value,name:$('#name').value}:{email:$('#email').value,password:$('#pw').value,name:$('#name').value};
+  try{const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','x-helm':'1'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));
+    if(r.ok){location.href='/';return}$('#err').textContent=j.error||'Something went wrong. Try again.'}catch(x){$('#err').textContent='Can’t reach the server. Check your connection.'}
+  $('#go').disabled=false});
+init();
+</script>
+</body>
+</html>

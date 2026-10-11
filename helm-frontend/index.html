@@ -1731,11 +1731,18 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 :root[data-theme=dark] .mt-card .big{font-size:30px;letter-spacing:-.03em;margin:6px 0 4px}
 .sl{fill:none;stroke:#2d9bff;stroke-width:1.5;stroke-linejoin:round}
 :root[data-theme=dark] .kpi svg{height:30px}
+
+/* backend */
+.bkdot{width:7px;height:7px;border-radius:50%;background:#30a46c;margin-left:6px;flex:none}
+.bkdot.off{background:var(--red)}
+body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transition:opacity .2s}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<script>document.documentElement.dataset.theme="dark"</script>
+<script>
+function isOwnCEO(){try{return VIEWER==='AK'&&roleOf('AK')==='CEO'}catch(e){return true}}
+function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'AK'}catch(e){return 'AK'}}document.documentElement.dataset.theme="dark"</script>
 
 <div class="app" id="app">
   <!-- ======== SIDEBAR ======== -->
@@ -2353,7 +2360,7 @@ function createSpaceForm(shared,pre=''){openForm(shared?'New shared space':'New 
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':l[0]==='guest'?esc(l[3].g.split(' ')[0])+': ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}${typeof cur!=='undefined'&&c.id===cur?' on':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
-function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(typeof VIEWER!=='undefined'&&VIEWER!=='AK'?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
+function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(!isOwnCEO()?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
 const gIni=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
 function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div class="sysm">${esc(txt)}</div>`;
  if(k==='guest'){const f2=!prev||prev[0]!=='guest'||(prev[3]||{}).g!==x.g;return `<div class="m${f2?' first':''}" data-i="${i}">${f2?`<span class="av md guest" title="${esc(x.g)}">${gIni(x.g)}</span>`:'<span></span>'}<div>${f2?`<div class="mh"><b>${esc(x.g)}</b><span class="gtag">${esc(c.shared||'Guest')}</span><time>${t}</time></div>`:''}<p>${fmt(txt)}</p></div></div>`}const first=!prev||prev[0]!==k||prev[1]!==t;
@@ -2901,7 +2908,7 @@ const WK=['Jul 20','Jul 27','Aug 3','Aug 10','Aug 17','Aug 24','Aug 31','Sep 7',
 
 /* ---------- My tasks ---------- */
 function mtRow(t){return `<div class="lr" data-mytask="${t.id}">${pr(t.p)}<span class="id">${t.id}</span>${st(t.s,.5)}<div class="ttl"><b>${esc(t.t)}</b><small>${STAT[t.s]}</small></div><div class="meta">${lbl(t.l)}${t.o?av(t.o):''}<span class="dt">${t.d}</span></div></div>`}
-VIEWHOOK.mytasks=()=>{const W=typeof VIEWER==='undefined'?'AK':VIEWER,ceo=W==='AK';const mine=TASKS.filter(t=>t.o===W&&t.s!=='done'),sign=ceo?TASKS.filter(t=>t.s==='sign'):[],oth=ceo?TASKS.filter(t=>t.o&&t.o!=='AK'&&t.s!=='done'&&t.s!=='sign').slice(0,6):[];
+VIEWHOOK.mytasks=()=>{const W=typeof VIEWER==='undefined'?'AK':VIEWER,ceo=isOwnCEO();const mine=TASKS.filter(t=>t.o===W&&t.s!=='done'),sign=ceo?TASKS.filter(t=>t.s==='sign'):[],oth=ceo?TASKS.filter(t=>t.o&&t.o!=='AK'&&t.s!=='done'&&t.s!=='sign').slice(0,6):[];
  $('#mtLead').textContent=ceo?`${mine.length} assigned to you · ${sign.length} waiting for your sign-off`:`${mine.length} assigned to you`;$$('#view-mytasks .sh').forEach((h,i)=>{if(i>0)h.style.display=ceo?'':'none'});$('#mtSign').style.display=$('#mtOthers').style.display=ceo?'':'none';[['#mtMine','#mtN1',mine],['#mtSign','#mtN2',sign],['#mtOthers','#mtN3',oth]].forEach(([a,b,l])=>{$(b).textContent=l.length;$(a).innerHTML=l.map(mtRow).join('')||`<div class="pal-empty" style="padding:14px 10px">Nothing here. <button class="link" data-new-status="todo" style="color:var(--accent)">Create a task</button></div>`})};
 $('#view-mytasks').addEventListener('click',e=>{const r=e.target.closest('[data-mytask]');if(r){const id=r.dataset.mytask;showView('project',{tab:'Issues'});flash(`#issues .lr[data-id="${id}"]`)}});
 
@@ -2975,7 +2982,7 @@ function editFiling(i){const f=i!=null?LG.fil[i]:null;openForm(f?'Edit filing':'
 function editContract(i){const c=i!=null?LG.ct[i]:null;const owners=Object.keys(P);openForm(c?'Edit contract':'Add contract',[{k:'n',label:'Contract',ph:'e.g. Acme pilot agreement',v:c?c.n:''},{k:'ty',label:'Type',opts:['Customer','Vendor','Property','Employment','Investor','Other'],v:c?c.ty:'Customer'},{k:'v',label:'Value',ph:'e.g. $24,000 / year',v:c?c.v:''},{k:'r',label:'Renews or ends',type:'date',v:c?c.r:'',hint:'Leave empty if it is not signed yet.'},{k:'o',label:'Owner',opts:owners.map(k=>P[k][0]),v:c?P[c.o][0]:'Alex Kim'}],v=>{const o=owners.find(k=>P[k][0]===v.o)||'AK';const row={...(c||{}),n:v.n,ty:v.ty,v:v.v||'—',r:v.r,o};if(c)LG.ct[i]=row;else LG.ct.push(row);lgTab('Contracts');lgDone(`<b>${esc(v.n)}</b> ${c?'updated':'added'}`,row.file?'':'Use “Attach” to add the signed PDF')},c?'Save':'Add contract',c?{label:'Delete',danger:1,fn:()=>{LG.ct.splice(i,1);lgDone(`<b>${esc(c.n)}</b> deleted`)}}:null)}
 function editMember(i){const m=i!=null?LG.mem[i]:null;openForm(m?'Edit board member':'Add board member',[{k:'n',label:'Name',v:m?m[1]:'',ph:'Full name'},{k:'r',label:'Role',v:m?m[2]:'',ph:'e.g. Independent director'}],v=>{const k=Object.keys(P).find(x=>P[x][0]===v.n)||null;const row=[k,v.n,v.r];if(m)LG.mem[i]=row;else LG.mem.push(row);lgDone(`<b>${esc(v.n)}</b> ${m?'updated':'added to the board'}`)},m?'Save':'Add member',m?{label:'Remove',danger:1,fn:()=>{LG.mem.splice(i,1);lgDone(`<b>${esc(m[1])}</b> removed from the board`)}}:null)}
 const lgTarget=a=>a[0]==='m'?LG.meet[+a.slice(1)]:LG.ct[+a.slice(1)];
-$('#lgFile').addEventListener('change',()=>{const fl=$('#lgFile').files[0];const a=$('#lgFile').dataset.t;$('#lgFile').value='';if(!fl)return;const kind=kindOf(fl);const o=F(fl.name,kind,'AK',now(),fsz(fl.size),{url:URL.createObjectURL(fl),ext:(fl.name.split('.').pop()||'').slice(0,4).toUpperCase()});if(kind==='text')fl.text().then(t=>o.text=t);const x=lgTarget(a);if(a[0]==='m')x.min=o;else x.file=o;lgDone(`<b>${esc(fl.name)}</b> attached`,`To ${esc(x.t||x.n)}`)});
+$('#lgFile').addEventListener('change',()=>{const fl=$('#lgFile').files[0];const a=$('#lgFile').dataset.t;$('#lgFile').value='';if(!fl)return;const kind=kindOf(fl);const o=F(fl.name,kind,'AK',now(),fsz(fl.size),{url:bkBlob(fl,'legal'),ext:(fl.name.split('.').pop()||'').slice(0,4).toUpperCase()});if(kind==='text')fl.text().then(t=>o.text=t);const x=lgTarget(a);if(a[0]==='m')x.min=o;else x.file=o;lgDone(`<b>${esc(fl.name)}</b> attached`,`To ${esc(x.t||x.n)}`)});
 document.addEventListener('click',e=>{let b;
  if(b=e.target.closest('[data-lgatt]')){$('#lgFile').dataset.t=b.dataset.lgatt;$('#lgFile').click()}
  else if(b=e.target.closest('[data-lgopen]')){const x=lgTarget(b.dataset.lgopen);openPreview(b.dataset.lgopen[0]==='m'?x.min:x.file)}
@@ -3199,7 +3206,7 @@ function renderSpFiles(){const c=CONVS.find(x=>x.id===spCur);if(!c)return;const 
 const fsz=n=>n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixed(1)+' MB';
 function kindOf(fl){const t=fl.type||'',e=(fl.name.split('.').pop()||'').toLowerCase();if(t.startsWith('image/'))return 'image';if(t.startsWith('video/'))return 'video';if(t==='application/pdf'||e==='pdf')return 'pdf';if(['xls','xlsx','numbers'].includes(e))return 'sheet';if(['doc','docx','pages','rtf'].includes(e))return 'doc';if(t.startsWith('text/')||['txt','md','csv','json'].includes(e))return 'text';return 'other'}
 function addSpFiles(list,fromChat){const c=CONVS.find(x=>x.id===spCur);if(!c||!list.length)return;const x=sx(c);const added=[];
- [...list].forEach(fl=>{const kind=kindOf(fl);const ext=(fl.name.split('.').pop()||'').slice(0,4).toUpperCase();const o=F(fl.name,kind,'AK',now(),fsz(fl.size),{url:URL.createObjectURL(fl),ext:['image','video'].includes(kind)?'':ext,fresh:1,mime:fl.type});
+ [...list].forEach(fl=>{const kind=kindOf(fl);const ext=(fl.name.split('.').pop()||'').slice(0,4).toUpperCase();const o=F(fl.name,kind,'AK',now(),fsz(fl.size),{url:bkBlob(fl,'space'),ext:['image','video'].includes(kind)?'':ext,fresh:1,mime:fl.type});
   if(kind==='text'&&fl.size<500000)fl.text().then(t=>o.text=t);x.files.unshift(o);added.push(o)});
  added.forEach(o=>c.msgs.push(['AK',now(),fromChat?'':'Added to Files',{file:o.n,fid:o.id}]));
  renderSpace(spTab==='chat');if(spTab==='files')renderSpFiles();renderConvList();
@@ -3405,7 +3412,7 @@ function editSafe(i){const r=i!=null?SAFES[i]:null;openForm(r?`Edit ${r[0]} SAFE
 function addDoc(){openForm('Add data room document',[{k:'n',label:'Document',ph:'e.g. Board minutes 2026'},{k:'g',label:'Folder',opts:DR.map(g=>g[0]),v:'Company'},{k:'st',label:'Status',opts:['Missing','Needs update','Ready'],v:'Missing'},{k:'note',label:'Note',ph:'e.g. Ask the accountant'}],v=>{const g=DR.find(x=>x[0]===v.g);g[1].push([v.n,{Missing:'missing','Needs update':'update',Ready:'ready'}[v.st],v.note]);frDone(`<b>${esc(v.n)}</b> added to ${v.g}`,'Attach the file when it’s ready')},'Add document')}
 $('#frAddInv').addEventListener('click',()=>editInvestor());$('#frRound').addEventListener('click',editRound);$('#capAdd').addEventListener('click',()=>editCap());$('#safeAdd').addEventListener('click',()=>editSafe());$('#drAdd').addEventListener('click',addDoc);
 $('#frBoard').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)editInvestor(c.dataset.id)});
-$('#drFile').addEventListener('change',()=>{const fl=$('#drFile').files[0];const [g,i]=($('#drFile').dataset.t||'0:0').split(':').map(Number);$('#drFile').value='';if(!fl)return;const it=DR[g][1][i];const kind=kindOf(fl);const o=F(fl.name,kind,'AK',now(),fsz(fl.size),{url:URL.createObjectURL(fl),ext:(fl.name.split('.').pop()||'').slice(0,4).toUpperCase()});if(kind==='text')fl.text().then(t=>o.text=t);it[3]=o;it[1]='ready';frDone(`<b>${esc(fl.name)}</b> added to the data room`,`${esc(it[0])} is now marked ready`)});
+$('#drFile').addEventListener('change',()=>{const fl=$('#drFile').files[0];const [g,i]=($('#drFile').dataset.t||'0:0').split(':').map(Number);$('#drFile').value='';if(!fl)return;const it=DR[g][1][i];const kind=kindOf(fl);const o=F(fl.name,kind,'AK',now(),fsz(fl.size),{url:bkBlob(fl,'dataroom'),ext:(fl.name.split('.').pop()||'').slice(0,4).toUpperCase()});if(kind==='text')fl.text().then(t=>o.text=t);it[3]=o;it[1]='ready';frDone(`<b>${esc(fl.name)}</b> added to the data room`,`${esc(it[0])} is now marked ready`)});
 document.addEventListener('click',e=>{let b;if(b=e.target.closest('[data-dratt]')){$('#drFile').dataset.t=b.dataset.dratt;$('#drFile').click()}else if(b=e.target.closest('[data-dropen]')){const [g,i]=b.dataset.dropen.split(':').map(Number);openPreview(DR[g][1][i][3])}else if(b=e.target.closest('[data-cap]'))editCap(+b.dataset.cap);else if(b=e.target.closest('[data-safe]'))editSafe(+b.dataset.safe)});
 NEWACT.fundraise=()=>editInvestor();stamp('frStamp','Maya','yesterday');
 $('#thmTg').addEventListener('click',()=>{const d=document.documentElement;const t=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=t;try{localStorage.setItem('helm-theme',t)}catch(e){}});
@@ -3437,7 +3444,7 @@ function openPal(){if($('.pal-bg'))return;closeSide();document.body.insertAdjace
  const bg=$('.pal-bg'),inp=$('#palIn');bg.addEventListener('click',e=>{if(e.target===bg)closePal()});inp.addEventListener('input',()=>{sel=0;renderPal(inp.value)});
  inp.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){sel=Math.min(sel+1,shown.length-1);renderPal(inp.value);e.preventDefault()}else if(e.key==='ArrowUp'){sel=Math.max(sel-1,0);renderPal(inp.value);e.preventDefault()}else if(e.key==='Enter'&&shown[sel]){const f=shown[sel][3];closePal();f()}});
  renderPal('');inp.focus()}
-function itemOK(i){if(typeof VIEWER==='undefined'||VIEWER==='AK')return true;const r=roleOf(VIEWER);if(i[4])return can(i[4]);if(r==='Guest')return i[0]==='Projects'&&i[1]==='Murmur';if(i[0]==='Tasks'){const t=TASKS.find(x=>x.id===i[2]);return !(t&&t.l==='Finance')}return true}
+function itemOK(i){if(isOwnCEO())return true;const r=roleOf(VIEWER);if(i[4])return can(i[4]);if(r==='Guest')return i[0]==='Projects'&&i[1]==='Murmur';if(i[0]==='Tasks'){const t=TASKS.find(x=>x.id===i[2]);return !(t&&t.l==='Finance')}return true}
 function renderPal(v){const s=v.toLowerCase();shown=ITEMS.filter(i=>itemOK(i)&&(i[1]+' '+i[2]).toLowerCase().includes(s));let h='',g='';
  shown.forEach((it,idx)=>{if(it[0]!==g){g=it[0];h+=`<h6>${g}</h6>`}const ic=it[0]==='People'?av(Object.keys(P).find(k=>P[k][0]===it[1]),'xs'):it[0]==='Tasks'?st('prog',.5):it[0]==='Files'?ICON.doc:it[0]==='Pages'?dia('now'):st('prog',.68);h+=`<button class="pal-it${idx===sel?' sel':''}" data-i="${idx}">${ic}<span>${it[1]}</span><small>${it[2]}</small></button>`});
  $('#palList').innerHTML=h||'<div class="pal-empty">No matches. Try a task, project, person or file.</div>';
@@ -3464,15 +3471,16 @@ function renderWages(){$('#wgLock').hidden=wgUnlocked;$('#wgOpen').hidden=!wgUnl
  if(!STAMP.wgStamp)stamp('wgStamp','Maya','Oct 1');else stamp('wgStamp',...STAMP.wgStamp);
  clearTimeout(wgTimer);wgTimer=setTimeout(()=>{wgUnlocked=false;if(curView==='wages')renderWages()},5*60*1000)}
 function tryPin(){const v=$$('#pinBoxes input').map(i=>i.value).join('');if(v.length<4)return;
+ if(window.HELM_BACKEND){bkWagesOpen(v);return}
  if(!WG.access.includes(ME)){$('#pinMsg').textContent='You don’t have access to wages. Ask an admin.';$('#pinMsg').classList.add('err');return}
  if(v===WG.pin){wgUnlocked=true;$('#pinMsg').classList.remove('err');$('#pinMsg').textContent='Sample PIN for this mockup: 1234';renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent='Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus({preventScroll:true})},350)}}
 $('#pinBoxes').addEventListener('input',e=>{const i=e.target;i.value=i.value.replace(/\D/g,'').slice(-1);if(i.value&&i.nextElementSibling)i.nextElementSibling.focus({preventScroll:true});tryPin()});
 $('#pinBoxes').addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&e.target.previousElementSibling)e.target.previousElementSibling.focus()});
-function wgDone(msg,sub){stamp('wgStamp');renderWages();toast(msg,sub)}
+function wgDone(msg,sub){stamp('wgStamp');if(window.HELM_BACKEND&&BK.wgPin)bkWagesSave();renderWages();toast(msg,sub)}
 function editPay(i){const r=i!=null?WG.rows[i]:null;const keys=Object.keys(P);openForm(r?'Edit pay':'Add pay',[{k:'who',label:'Person',opts:keys.map(k=>P[k][0]),v:r?P[r[0]][0]:keys.map(k=>P[k][0]).find(n=>!WG.rows.some(x=>P[x[0]]&&P[x[0]][0]===n))},{k:'role',label:'Role',v:r?r[1]:'',ph:'e.g. Senior engineer'},{k:'type',label:'Type',opts:['Salary','Contractor','Part-time'],v:r?r[2]:'Salary'},{k:'amt',label:'Pay (USD)',type:'number',v:r?r[3]:''},{k:'per',label:'Per',opts:['year','month','hour'],v:r?r[4]:'year'},{k:'last',label:'Last change',type:'date',v:r?r[5]:'2026-10-11'},{k:'next',label:'Next review',type:'date',v:r?r[6]:'2027-04-01'}],v=>{const k=keys.find(x=>P[x][0]===v.who)||'AK';const row=[k,v.role||'',v.type,num(v.amt),v.per,v.last,v.next];if(r)WG.rows[i]=row;else WG.rows.push(row);wgDone(`<b>${esc(v.who)}</b> pay ${r?'updated':'added'}`,'Only people with wages access can see this')},r?'Save':'Add pay',r?{label:'Remove',danger:1,fn:()=>{WG.rows.splice(i,1);wgDone('Pay record removed')}}:null)}
-function changePin(){openForm('Change wages PIN',[{k:'old',label:'Current PIN',type:'password'},{k:'n1',label:'New 4-digit PIN',type:'password'},{k:'n2',label:'New PIN again',type:'password'}],v=>{if(v.old!==WG.pin){toast('<b>PIN not changed</b>','The current PIN was wrong');return}if(!/^\d{4}$/.test(v.n1)||v.n1!==v.n2){toast('<b>PIN not changed</b>','Use 4 digits, the same both times');return}WG.pin=v.n1;wgDone('<b>Wages PIN changed</b>','Use the new PIN next time')},'Change PIN')}
+function changePin(){openForm('Change wages PIN',[{k:'old',label:'Current PIN',type:'password'},{k:'n1',label:'New 4-digit PIN',type:'password'},{k:'n2',label:'New PIN again',type:'password'}],v=>{if(window.HELM_BACKEND){if(!/^\d{4}$/.test(v.n1)||v.n1!==v.n2){toast('<b>PIN not changed</b>','Use 4 digits, the same both times');return}bkWagesSave(v.old,v.n1);return}if(v.old!==WG.pin){toast('<b>PIN not changed</b>','The current PIN was wrong');return}if(!/^\d{4}$/.test(v.n1)||v.n1!==v.n2){toast('<b>PIN not changed</b>','Use 4 digits, the same both times');return}WG.pin=v.n1;wgDone('<b>Wages PIN changed</b>','Use the new PIN next time')},'Change PIN')}
 function editAccess(){const keys=Object.keys(P);openForm('Who can see wages',keys.map(k=>({k:'a_'+k,label:P[k][0],opts:['No access','Can see wages'],v:WG.access.includes(k)?'Can see wages':'No access'})),v=>{const a=keys.filter(k=>v['a_'+k]==='Can see wages');if(!a.includes(ME))a.unshift(ME);WG.access=a;wgDone('<b>Wages access updated</b>',a.map(k=>P[k][0]).join(', '))},'Save access')}
-$('#wgAdd').addEventListener('click',()=>editPay());$('#wgPin').addEventListener('click',changePin);$('#wgAccess').addEventListener('click',editAccess);$('#wgLockBtn').addEventListener('click',()=>{wgUnlocked=false;renderWages();toast('<b>Wages locked</b>')});
+$('#wgAdd').addEventListener('click',()=>editPay());$('#wgPin').addEventListener('click',changePin);$('#wgAccess').addEventListener('click',editAccess);$('#wgLockBtn').addEventListener('click',()=>{wgUnlocked=false;if(window.HELM_BACKEND){BK.wgPin=null;WG.rows=[]}renderWages();toast('<b>Wages locked</b>')});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-wg]');if(b)editPay(+b.dataset.wg)});
 VIEWHOOK.wages=renderWages;
 {const sv=showView;showView=function(v,o){if(curView==='wages'&&v!=='wages'){wgUnlocked=false}return sv(v,o)}}
@@ -3489,12 +3497,12 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-mytask]');
 applyRole();
 
 /* ---------- Spaces by membership, member view tidy, Workspace 'more' ---------- */
-function inSpace(c){return typeof VIEWER==='undefined'||VIEWER==='AK'||!c.mem||c.mem.includes(VIEWER)}
+function inSpace(c){return isOwnCEO()||!c.mem||c.mem.includes(VIEWER)}
 let wsOpen=false;
 function layoutWorkspace(){const g=$('#wsHead').closest('.grp');g.classList.toggle('closed',!wsOpen);$('#wsHead').classList.toggle('open',wsOpen);const m=$('#wsMore');if(m)m.remove();g.querySelectorAll('.wsx').forEach(b=>b.classList.remove('wsx'))}
 $('#wsHead').addEventListener('click',e=>{e.stopImmediatePropagation();const g=$('#wsHead').closest('.grp');g.classList.remove('closed');wsOpen=!wsOpen;layoutWorkspace()},true);
 document.addEventListener('click',e=>{if(e.target.closest('#wsMore')){wsOpen=!wsOpen;layoutWorkspace()}});
-{const ar=applyRole;applyRole=function(){ar();const _c=VIEWER==='AK';NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=P[VIEWER][0].split(' ')[0];$('#hello').textContent=`Good morning, ${nm}`;const ceo=VIEWER==='AK';
+{const ar=applyRole;applyRole=function(){ar();const _c=isOwnCEO();NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=P[VIEWER][0].split(' ')[0];$('#hello').textContent=`Good morning, ${nm}`;const ceo=isOwnCEO();
  ['#navDec'].forEach(x=>{const e=$(x);if(e&&!ceo)e.hidden=true});
  renderSideSpaces();renderConvList();if(curView==='spaces'&&typeof spShow==='function'){spCur=null;spShow()}
  layoutWorkspace()}}
@@ -3517,22 +3525,22 @@ function tickClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),sec=d.ge
 tickClock();setInterval(tickClock,1000);
 
 /* ---------- Per-viewer counts, DMs and notifications ---------- */
-function viewerCounts(){const W=VIEWER,ceo=W==='AK';const mt=document.querySelector('.side [data-view="mytasks"] .c');if(mt)mt.textContent=TASKS.filter(t=>t.o===W&&t.s!=='done').length||'';
+function viewerCounts(){const W=VIEWER,ceo=isOwnCEO();const mt=document.querySelector('.side [data-view="mytasks"] .c');if(mt)mt.textContent=TASKS.filter(t=>t.o===W&&t.s!=='done').length||'';
  if(!ceo){const mine=TASKS.filter(t=>t.o===W);const pct=mine.length?Math.round(mine.filter(t=>t.s==='done').length/mine.length*100):0;$('#wkC').textContent=mine.length?pct+'%':'';
   const wk=calEvents().filter(e=>{const n=(new Date(e.d+'T00:00')-TODAY)/864e5;return n>=0&&n<7&&(!e.task||(TASKS.find(t=>t.id===e.task)||{}).o===W)&&e.k!=='inv'&&e.k!=='legal'}).length;$('#calC').textContent=wk||''}
  else{renderWK();renderCal()}
  const n=CONVS.filter(c=>c.ch?inSpace(c):ceo).reduce((a,c)=>a+c.unread,0);const nm=$('#navMsg');if(nm){nm.textContent=n;nm.hidden=!n}}
-{const ut=unreadTotal;unreadTotal=function(){return typeof VIEWER==='undefined'||VIEWER==='AK'?ut():CONVS.filter(c=>c.ch&&inSpace(c)).reduce((a,c)=>a+c.unread,0)}}
+{const ut=unreadTotal;unreadTotal=function(){return isOwnCEO()?ut():CONVS.filter(c=>c.ch&&inSpace(c)).reduce((a,c)=>a+c.unread,0)}}
 const NREAD=new Set();
-function notifList(){if(VIEWER==='AK')return NOTIF;const W=VIEWER;const out=[];
- TASKS.filter(t=>t.o===W&&t.s!=='done').slice(0,4).forEach(t=>out.push([ 'AK',`<b>Alex</b> assigned you <b>${t.id}</b> ${esc(t.t)}`,t.d==='Today'?'Today':'This week',!NREAD.has(t.id),()=>{openProject(keyOfTask(t.id),'Issues');flash(`#issues .lr[data-id="${t.id}"]`)},null,t.id]));
+function notifList(){if(isOwnCEO())return NOTIF;const W=VIEWER;const out=[];
+ TASKS.filter(t=>t.o===W&&t.s!=='done').slice(0,4).forEach(t=>out.push([ceoKey(),`<b>${esc(P[ceoKey()][0].split(' ')[0])}</b> assigned you <b>${t.id}</b> ${esc(t.t)}`,t.d==='Today'?'Today':'This week',!NREAD.has(t.id),()=>{openProject(keyOfTask(t.id),'Issues');flash(`#issues .lr[data-id="${t.id}"]`)},null,t.id]));
  (typeof ANN!=='undefined'?ANN:[]).slice(0,2).forEach((a,i)=>out.push([a.who,`<b>${esc(P[a.who][0].split(' ')[0])}</b> posted <b>${esc(a.t)}</b>`,i?'Earlier':'Today',!NREAD.has('ann'+i),()=>showView('announce'),null,'ann'+i]));
  CONVS.filter(c=>c.ch&&inSpace(c)&&c.unread).forEach(c=>out.push([null,`New messages in <b>${esc(c.ch)}</b>`,'Today',!NREAD.has('sp'+c.id),()=>openSpace(c.id),'chat','sp'+c.id]));return out}
-{const bc=bellCount;bellCount=function(){if(VIEWER==='AK')return bc();const n=notifList().filter(x=>x[3]).length;$('#bellN').textContent=n;$('#bellN').hidden=!n}}
-{const rn=renderNotif;renderNotif=function(){if(VIEWER==='AK')return rn();const list=notifList().filter(x=>nTab==='all'||x[3]);$('.nlst').innerHTML=list.map((x,i)=>`<button class="nit${x[3]?' unread':''}" data-vn="${i}">${x[0]?av(x[0],'md'):`<span class="nic">${st('prog',.5)}</span>`}<span class="t">${x[1]}<small>${x[2]}</small></span></button>`).join('')||'<div class="pal-empty" style="padding:24px;text-align:center">You’re all caught up.</div>'}}
+{const bc=bellCount;bellCount=function(){if(isOwnCEO())return bc();const n=notifList().filter(x=>x[3]).length;$('#bellN').textContent=n;$('#bellN').hidden=!n}}
+{const rn=renderNotif;renderNotif=function(){if(isOwnCEO())return rn();const list=notifList().filter(x=>nTab==='all'||x[3]);$('.nlst').innerHTML=list.map((x,i)=>`<button class="nit${x[3]?' unread':''}" data-vn="${i}">${x[0]?av(x[0],'md'):`<span class="nic">${st('prog',.5)}</span>`}<span class="t">${x[1]}<small>${x[2]}</small></span></button>`).join('')||'<div class="pal-empty" style="padding:24px;text-align:center">You’re all caught up.</div>'}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-vn]');if(b){const list=notifList().filter(x=>nTab==='all'||x[3]);const x=list[+b.dataset.vn];if(x){NREAD.add(x[6]);bellCount();closeNotif();x[4]()}}
- if(e.target.closest('#nAll')&&VIEWER!=='AK'){notifList().forEach(x=>NREAD.add(x[6]));bellCount();renderNotif()}},true);
-{const ar=applyRole;applyRole=function(){ar();viewerCounts();bellCount();document.body.classList.toggle('pv-dm',VIEWER!=='AK');if(curView==='mytasks')VIEWHOOK.mytasks()}}
+ if(e.target.closest('#nAll')&&!isOwnCEO()){notifList().forEach(x=>NREAD.add(x[6]));bellCount();renderNotif()}},true);
+{const ar=applyRole;applyRole=function(){ar();viewerCounts();bellCount();document.body.classList.toggle('pv-dm',!isOwnCEO());if(curView==='mytasks')VIEWHOOK.mytasks()}}
 applyRole();
 
 /* ---------- Saving: keeps every change on this device ---------- */
@@ -3540,13 +3548,14 @@ const SAVE_KEY='helm-data-v1';
 const DEC_DONE=window.DEC_DONE||{};
 const ARR={MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD};
 function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:CN.map(x=>x.on===2?0:x.on),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,WG};
- for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'?undefined:v)}
+ for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'&&typeof v==='string'&&v.startsWith('blob:')?undefined:v)}
 let saveT=null,saveOK=true;
-function saveNow(){try{localStorage.setItem(SAVE_KEY,snapshot());saveOK=true}catch(e){if(saveOK)toast('<b>Couldn’t save</b>','This browser is blocking storage, so changes last until you close the page');saveOK=false}}
+function saveNow(){if(window.HELM_BACKEND){bkSave();return}try{localStorage.setItem(SAVE_KEY,snapshot());saveOK=true}catch(e){if(saveOK)toast('<b>Couldn’t save</b>','This browser is blocking storage, so changes last until you close the page');saveOK=false}}
 function saveSoon(){clearTimeout(saveT);saveT=setTimeout(saveNow,500)}
 ['click','change','drop','keyup','submit'].forEach(ev=>document.addEventListener(ev,saveSoon,true));
-document.addEventListener('dragend',saveSoon,true);addEventListener('pagehide',saveNow);
-function loadSaved(){let raw=null;try{raw=localStorage.getItem(SAVE_KEY)}catch(e){}if(!raw)return false;let d;try{d=JSON.parse(raw)}catch(e){return false}
+document.addEventListener('dragend',saveSoon,true);addEventListener('pagehide',()=>window.HELM_BACKEND?bkSave(true):saveNow());
+function loadSaved(){if(window.HELM_BACKEND)return false;let raw=null;try{raw=localStorage.getItem(SAVE_KEY)}catch(e){}if(!raw)return false;let d;try{d=JSON.parse(raw)}catch(e){return false}return applyData(d)}
+function applyData(d){
  const put=(a,b)=>{if(Array.isArray(a)&&Array.isArray(b))a.splice(0,a.length,...b)};
  for(const k in ARR)if(d.arr&&d.arr[k])put(ARR[k](),d.arr[k]);
  if(d.P)Object.assign(P,d.P);if(d.ROUND)Object.assign(ROUND,d.ROUND);if(d.MNYn)Object.assign(MNY,d.MNYn);
@@ -3560,6 +3569,52 @@ function loadSaved(){let raw=null;try{raw=localStorage.getItem(SAVE_KEY)}catch(e
  const R=[renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
  R.forEach(fn=>{try{fn&&fn()}catch(e){}});return true}
 const hadSaved=loadSaved();
+
+/* ================= Backend connection (only when served by server.mjs) ================= */
+const BK={on:!!window.HELM_BACKEND,me:null,sent:{},es:null,wgPin:null,users:[]};
+const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps'];
+function secsFromSnap(){const d=JSON.parse(snapshot());const o={...d.arr};SEC_EXTRA.forEach(k=>o[k]=d[k]);return o}
+function dataFromSecs(S){const d={arr:{}};for(const k in ARR)if(S[k])d.arr[k]=S[k];SEC_EXTRA.forEach(k=>{if(S[k]!==undefined)d[k]=S[k]});return d}
+async function bkApi(path,opt={}){const r=await fetch(path,{credentials:'same-origin',...opt,headers:{'x-helm':'1','content-type':'application/json',...(opt.headers||{})}});if(r.status===401&&!path.startsWith('/api/wages')){location.href='/login';throw new Error('signin')}return r}
+let bkSaving=null;
+async function bkSave(keepalive){if(!BK.me)return;const S=secsFromSnap(),ch={};for(const k in S){const j=JSON.stringify(S[k]);if(BK.sent[k]!==j)ch[k]=S[k]}if(!Object.keys(ch).length)return;
+ const run=async()=>{try{const r=await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:ch}),keepalive:!!keepalive});const j=await r.json();[...(j.saved||[]),...(j.refused||[])].forEach(k=>BK.sent[k]=JSON.stringify(S[k]));bkStatus(true)}catch(e){bkStatus(false)}};
+ bkSaving=(bkSaving||Promise.resolve()).then(run);return bkSaving}
+function bkStatus(ok){const el=$('#bkDot');if(el){el.classList.toggle('off',!ok);el.title=ok?'All changes saved':'Can’t reach the server. Changes will retry.'}}
+function bkMarkSent(){const S=secsFromSnap();BK.sent={};for(const k in S)BK.sent[k]=JSON.stringify(S[k])}
+async function bkPull(first){const S=await (await bkApi('/api/state')).json();
+ if(first){const put=(a,b)=>{if(Array.isArray(a))a.splice(0,a.length,...b)};for(const k in ARR)if(!(k in S))put(ARR[k](),[]);
+  if(BK.me.role!=='CEO'){WG.rows=[];PINFO.murmur.kpis=[['Pilot testers','2,140','Private pilot',[400,800,1200,1500,1800,2140]],['Waitlist','18,420','+2,310 this week',[4,5,7,9,11,13,16,18.4]],['Open tasks',String(TASKS.filter(t=>t.id.startsWith('MUR')&&t.s!=='done').length),'Across the team',[14,13,12,13,12,11]],['Stage','5 of 9','Private pilot',[1,2,3,4,5,5]]];PINFO.murmur.tabs=['Overview','Issues','Board','Files']}}
+ if(S.CONVS){CONVS.forEach(c=>c.unread=0)}
+ applyData(dataFromSecs(S));if(S.MEM){MEM.splice(0,MEM.length,...S.MEM)}
+ VIEWER='AK';applyRole();bkMarkSent();
+ if(typeof cur!=='undefined'&&cur&&!$('#view-messages').hidden&&CONVS.find(c=>c.id===cur))renderThread(false);
+ if(typeof spCur!=='undefined'&&spCur&&curView==='spaces'&&CONVS.find(c=>c.id===spCur))renderSpace(false);
+ if(curView&&VIEWHOOK[curView]&&!modal)try{VIEWHOOK[curView]()}catch(e){}}
+let bkPullT=null;function bkPullSoon(){clearTimeout(bkPullT);bkPullT=setTimeout(async()=>{if(modal||document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!document.activeElement.closest('#mForm,#spForm')){bkPullSoon();return}await bkSave();bkPull(false).catch(()=>{})},500)}
+function bkLive(){try{BK.es=new EventSource('/api/events');BK.es.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}if(m.type==='changed'){bkPullSoon();if((m.sections||[]).includes('CONVS')){const who=P[m.by]?P[m.by][0]:'Someone';/* quiet: no pop-ups, counts update */}}};BK.es.onerror=()=>bkStatus(false);BK.es.onopen=()=>bkStatus(true)}catch(e){}}
+function bkBlob(fl,area){const u=URL.createObjectURL(fl);if(BK.on){fetch('/api/files?area='+area,{method:'POST',credentials:'same-origin',headers:{'x-helm':'1','x-file-name':encodeURIComponent(fl.name),'content-type':fl.type||'application/octet-stream'},body:fl}).then(r=>r.ok?r.json():null).then(j=>{if(!j)return toast(`<b>${esc(fl.name)}</b> didn’t upload`,'Check the file is under 25 MB and try again');bkSwapUrl(u,j.url);saveSoon()}).catch(()=>toast(`<b>${esc(fl.name)}</b> didn’t upload`,'Can’t reach the server'))}return u}
+function bkSwapUrl(a,b){const walk=o=>{if(!o||typeof o!=='object')return;if(Array.isArray(o)){o.forEach(walk);return}for(const k in o){if(k==='url'&&o[k]===a)o[k]=b;else if(o[k]&&typeof o[k]==='object')walk(o[k])}};walk(SPX);walk(LG);walk(DR)}
+async function bkWagesOpen(pin){const r=await bkApi('/api/wages',{method:'POST',body:JSON.stringify({pin})});const j=await r.json().catch(()=>({}));
+ if(r.ok){Object.assign(WG,j);BK.wgPin=pin;wgUnlocked=true;$('#pinMsg').classList.remove('err');renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent=j.error||'Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus({preventScroll:true})},350)}}
+async function bkWagesSave(oldPin,newPin){const r=await bkApi('/api/wages',{method:'POST',body:JSON.stringify({pin:oldPin||BK.wgPin,save:{access:WG.access,rows:WG.rows,newPin}})});if(!r.ok){const j=await r.json().catch(()=>({}));toast('<b>Not saved</b>',j.error||'Try again');return}if(newPin){BK.wgPin=newPin;stamp('wgStamp');toast('<b>Wages PIN changed</b>','Use the new PIN next time')}}
+async function bkUsers(){if(!BK.me||BK.me.role!=='CEO')return;try{BK.users=await (await bkApi('/api/users')).json()}catch(e){BK.users=[]}renderMem()}
+function bkInvite(pkey,name){openForm(pkey?`Invite ${name}`:'Invite people',[{k:'e',label:'Their email address',ph:'name@company.com'},...(pkey?[]:[{k:'n',label:'Name',ph:'Full name'}]),{k:'r',label:'Role',opts:['Member','Manager','Guest'],v:pkey?(MEM.find(m=>m[0]===pkey)||[])[1]||'Member':'Member'}],async v=>{const r=await bkApi('/api/invite',{method:'POST',body:JSON.stringify({email:v.e,name:v.n||name,role:v.r,pkey})});const j=await r.json().catch(()=>({}));if(!r.ok){toast('<b>Invite not sent</b>',j.error||'Try again');return}
+  await bkPull(false);await bkUsers();openForm('Invite link ready',[{k:'l',label:'Send this link to them. It works once.',v:j.link}],()=>{},'Done',{label:'Copy link',fn:()=>{navigator.clipboard&&navigator.clipboard.writeText(j.link).then(()=>toast('<b>Link copied</b>'),()=>{})}})},'Create invite')}
+function bkUI(){
+ const st=$('#view-settings .ph2 .acts');if(st){$('#resetData').hidden=true;if(!$('#signOut')){const b=document.createElement('button');b.className='btn';b.id='signOut';b.textContent='Sign out';st.prepend(b);b.addEventListener('click',async()=>{await bkSave();await bkApi('/api/logout',{method:'POST'});location.href='/login'})}}
+ const foot=$('.side-foot');if(foot&&!$('#bkDot')){const d=document.createElement('span');d.id='bkDot';d.className='bkdot';foot.appendChild(d)}
+ const sm=$('.side-foot small');if(sm)sm.textContent=`${BK.me.role} · Settings`;
+ if(BK.me.role==='CEO'){const mi=$('#memInvite');if(mi){const n=mi.cloneNode(true);mi.replaceWith(n);n.addEventListener('click',()=>bkInvite())}bkUsers()}
+ const pb=$$('[data-preview]');pb.forEach(b=>{if(BK.me.role!=='CEO')b.remove()})}
+if(BK.on){const rm=renderMem;renderMem=function(){rm();if(!BK.me||BK.me.role!=='CEO')return;$$('#memRows tr').forEach((tr,i)=>{const k=MEM[i]&&MEM[i][0];const acc=BK.users.find(u=>u.pkey===k);const cell=tr.lastElementChild;if(!cell||!P[k])return;if(acc)cell.insertAdjacentHTML('afterbegin',`<span class="tag n" style="margin-right:6px">${acc.pending?'Invite sent':'Has account'}</span>`);else if(k!=='AK')cell.insertAdjacentHTML('afterbegin',`<button class="btn sm" data-binv="${k}" style="margin-right:6px">Invite</button>`)})}
+ document.addEventListener('click',e=>{const b=e.target.closest('[data-binv]');if(b){const k=b.dataset.binv;bkInvite(k,P[k][0])}})}
+async function bkBoot(){let me;try{const r=await fetch('/api/me',{credentials:'same-origin'});if(r.status===401){location.href='/login';return}me=await r.json()}catch(e){bkStatus(false);return}
+ BK.me=me;try{localStorage.setItem('helm-setup-done','1')}catch(e){}
+ if(!me.seeded&&me.role==='CEO'){P.AK[0]=me.name;const S=secsFromSnap();S.WG={access:WG.access,rows:WG.rows,pin:WG.pin};S.CONVS=CONVS.map(c=>c.dm?{...c,parts:['AK',c.dm]}:c);await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:S})})}
+ await bkPull(true);bkLive();bkUI();document.body.classList.add('bk-ready')}
+if(BK.on){document.body.classList.add('bk-loading');bkBoot()}
+
 $('#resetData').addEventListener('click',()=>{if(!confirm('Reset everything to the sample data? Your changes on this device will be removed.'))return;try{localStorage.removeItem(SAVE_KEY)}catch(e){}removeEventListener('pagehide',saveNow);['click','change','drop','keyup','submit'].forEach(ev=>document.removeEventListener(ev,saveSoon,true));location.reload()});
 
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
