@@ -1987,6 +1987,14 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 #nyCards .ny.urgent .ny-due{color:#8e8e93!important}
 #nyCards .ny-ic{display:flex!important;align-items:center;gap:8px}
 #nyCards .ny-urg{font-style:normal;font-size:13px;font-weight:600;color:#ff6b6b}
+
+/* Needs you: slim header, no empty gap */
+:root[data-theme=dark] #nyCards>.spc.ny{aspect-ratio:auto!important}
+#nyCards .ny-hero{flex:0 0 auto!important;height:auto!important;padding:16px 22px 14px!important;align-items:center!important}
+#nyCards .ny-due{padding-top:0!important}
+#nyCards .ny-body{padding:16px 22px 0!important}
+#nyCards .spc.ny>.spc-f{margin:auto 22px 0!important;padding:16px 0 18px!important}
+@media (max-width:640px){#nyCards .ny-hero{padding:12px 14px 10px!important}#nyCards .ny-body{padding:12px 14px 0!important}#nyCards .spc.ny>.spc-f{margin:auto 14px 0!important;padding:12px 0 14px!important}}
 </style>
 </head>
 <body>
