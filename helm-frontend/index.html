@@ -2070,6 +2070,44 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 .held-ok{padding:16px;color:#8e8e93;font-size:13.5px;border:1px dashed rgba(255,255,255,.1);border-radius:12px}
 .lr[data-id],#board .card{cursor:pointer}
 .lr .late-b{margin-left:8px;font-size:11.5px;font-weight:600;color:#ff8a8e}
+
+/* Clock: 24-hour local time, ticking colon; smaller greeting */
+#view-home #hello{font-size:21px!important;letter-spacing:-.02em!important}
+.hc-col{display:inline-block;margin:0 1px;animation:hcblink 1s steps(1) infinite}
+@keyframes hcblink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.hc-col{animation:none}}
+@media (max-width:640px){#view-home #hello{font-size:19px!important}}
+
+/* Briefing pulse line: a wave runs along it like a heart monitor */
+@media (prefers-reduced-motion:no-preference){
+ #crumb>.ic[style*="2d9bff"]{animation:none!important;transform:none!important;filter:drop-shadow(0 0 4px rgba(45,155,255,.55))}
+ #crumb>.ic[style*="2d9bff"] path{stroke-dasharray:30 14;stroke-dashoffset:44;animation:ecg 1.6s linear infinite}
+}
+@keyframes ecg{to{stroke-dashoffset:0}}
+.bar #crumb>.ic[style*="2d9bff"]{color:#2d9bff!important}
+
+/* Phone tidy */
+@media (max-width:640px){
+ #view-home .ph2{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:4px 12px;margin-bottom:18px!important}
+ #view-home .ph2>div:first-child{min-width:0}
+ #view-home .hclock{margin:0!important;text-align:right;align-self:end}
+ #view-home #hcTime{font-size:20px!important;line-height:1.1}
+ #view-home #hcZone{font-size:11px!important}
+ #view-home .ny-hint{display:none!important}
+ #view-home #nyTools{margin-bottom:6px!important}
+ #view-home .spgrid>.sp-sec#nyHead{margin-top:14px!important}
+ :root[data-theme=dark] .view .kpis>*,:root[data-theme=dark] .view .tiles>*{min-height:0!important;padding:16px!important}
+ :root[data-theme=dark] .view .kpis>* svg,:root[data-theme=dark] .view .tiles>* svg{margin-top:8px}
+ .view .sh .r:not(.addr):not(button){display:none}
+ .view>.wrap{padding-top:20px!important}
+ .gtabs{margin-bottom:16px}
+}
+
+@media (max-width:640px){
+ .bar #newBtn #newLbl{display:none}.bar #newBtn{width:36px;padding:0!important;justify-content:center}
+ .bar #crumb{flex:1;min-width:0;overflow:hidden}.bar #crumb .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .banner{flex-wrap:wrap;gap:10px 12px!important;padding:14px 16px!important}.banner>span{flex:1 1 calc(100% - 40px);min-width:0}.banner>.btn,.banner>button{margin-left:30px!important}
+}
 </style>
 </head>
 <body>
@@ -3861,7 +3899,7 @@ let wsOpen=false;
 function layoutWorkspace(){const g=$('#wsHead').closest('.grp');g.classList.toggle('closed',!wsOpen);$('#wsHead').classList.toggle('open',wsOpen);const m=$('#wsMore');if(m)m.remove();g.querySelectorAll('.wsx').forEach(b=>b.classList.remove('wsx'))}
 $('#wsHead').addEventListener('click',e=>{e.stopImmediatePropagation();const g=$('#wsHead').closest('.grp');g.classList.remove('closed');wsOpen=!wsOpen;layoutWorkspace()},true);
 document.addEventListener('click',e=>{if(e.target.closest('#wsMore')){wsOpen=!wsOpen;layoutWorkspace()}});
-{const ar=applyRole;applyRole=function(){ar();const _c=isOwnCEO();NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=P[VIEWER][0].split(' ')[0];$('#hello').textContent=`Good morning, ${nm}`;const ceo=isOwnCEO();
+{const ar=applyRole;applyRole=function(){ar();const _c=isOwnCEO();NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=P[VIEWER][0].split(' ')[0];$('#hello').textContent=`${greetWord()}, ${nm}`;const ceo=isOwnCEO();
  ['#navDec'].forEach(x=>{const e=$(x);if(e&&!ceo)e.hidden=true});
  renderSideSpaces();renderConvList();if(curView==='spaces'&&typeof spShow==='function'){spCur=null;spShow()}
  layoutWorkspace()}}
@@ -3876,10 +3914,12 @@ $('#sideSp').addEventListener('click',e=>{if(spSideOpen){spSideOpen=false;layout
 layoutSpacesMenu();
 
 /* ---------- Briefing clock ---------- */
+function greetWord(){const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
 function tickClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),sec=d.getSeconds();
  const set=(id,deg)=>{const e=document.getElementById(id);if(e)e.setAttribute('transform',`rotate(${deg} 20 20)`)};
  set('hcH',(h%12)*30+m*.5);set('hcM',m*6+sec*.1);set('hcS',sec*6);
- const t=$('#hcTime');if(t)t.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+ const t=$('#hcTime');if(t)t.innerHTML=`${String(h).padStart(2,'0')}<span class="hc-col">:</span>${String(m).padStart(2,'0')}`;
+ if(sec===0||!tickClock.g){tickClock.g=1;const hl=$('#hello');if(hl)hl.textContent=hl.textContent.replace(/^Good (morning|afternoon|evening)/,greetWord())}
  const z=$('#hcZone');if(z&&!z.textContent){let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ')}catch(e){}z.textContent=tz||'Local time'}}
 tickClock();setInterval(tickClock,1000);
 
