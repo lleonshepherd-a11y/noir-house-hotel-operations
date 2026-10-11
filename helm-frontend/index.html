@@ -1624,6 +1624,82 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:640px){.seg2{flex-wrap:nowrap!important;overflow-x:auto;max-width:100%;scrollbar-width:none}.seg2::-webkit-scrollbar{display:none}.seg2 button{flex:none;white-space:nowrap}#calFilt{flex-wrap:nowrap!important}}
 @media (min-width:861px){:root[data-theme=dark] .side{position:relative}}
 .sp-search input,.sp-search input:focus{background:transparent!important;border:0!important;box-shadow:none!important}
+
+/* ===== 1. Pop-up forms ===== */
+:root[data-theme=dark] .mod-bg{background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+:root[data-theme=dark] .mod{background:#1a1a1a!important;border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.08)!important}
+:root[data-theme=dark] .mod-h{padding:18px 18px 4px 22px!important;font-size:13px}
+:root[data-theme=dark] .mod-h>span:first-child[style]{font-size:16px!important;letter-spacing:-.01em}
+:root[data-theme=dark] .mod-h .cb{background:#242424;border:0;border-radius:999px;padding:0 10px;line-height:24px}
+:root[data-theme=dark] .mod .ff{padding:0 22px;margin-top:14px;gap:7px}
+:root[data-theme=dark] .ff label{font-size:12.5px;color:#9a9aa0;font-weight:500}
+:root[data-theme=dark] .ff input,:root[data-theme=dark] .ff select,:root[data-theme=dark] .ff-area{height:42px;border-radius:11px!important;background:#232323!important;border:1px solid transparent!important;padding:0 14px;font-size:14px;color:#fff;transition:border-color .15s,background .15s}
+:root[data-theme=dark] .ff-area{height:auto;padding:11px 14px}
+:root[data-theme=dark] .ff input:hover,:root[data-theme=dark] .ff select:hover{background:#282828!important}
+:root[data-theme=dark] .ff input:focus,:root[data-theme=dark] .ff select:focus,:root[data-theme=dark] .ff-area:focus{border-color:rgba(255,255,255,.28)!important;box-shadow:none!important;background:#262626!important}
+:root[data-theme=dark] .ff select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6ad' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 13px center!important;background-size:15px!important;padding-right:38px}
+:root[data-theme=dark] .ff select option{background:#1f1f1f;color:#fff}
+:root[data-theme=dark] .ff input[type=date]{color-scheme:dark}
+:root[data-theme=dark] .ff-hint{color:#6e6e74}
+:root[data-theme=dark] .mod-f{padding:16px 18px 18px 22px!important;margin-top:18px;border-top:1px solid rgba(255,255,255,.06)!important}
+:root[data-theme=dark] .mod-f .btn{height:36px;padding:0 16px}
+:root[data-theme=dark] .mod .mt{padding:14px 22px 4px;font-size:22px}
+:root[data-theme=dark] .mod .mdsc{padding:4px 22px 14px}
+:root[data-theme=dark] .mod-props{padding:0 22px 16px}
+:root[data-theme=dark] .pp{background:#242424!important;border:0!important;border-radius:999px;height:30px;padding:0 12px}
+:root[data-theme=dark] .pp:hover{background:#2c2c2c!important;transform:none}
+:root[data-theme=dark] .pp.hl{box-shadow:0 0 0 1px rgba(255,255,255,.35)!important}
+:root[data-theme=dark] .menu{border-radius:12px!important;padding:6px!important}
+/* ===== 2. Messages ===== */
+:root[data-theme=dark] .msgpage{background:#161616}
+:root[data-theme=dark] .mp-left{background:#131313;border-right-color:rgba(255,255,255,.06)!important}
+:root[data-theme=dark] .ci{border-radius:10px;padding:9px 10px}
+:root[data-theme=dark] .ci:hover{background:rgba(255,255,255,.04);transform:none}
+:root[data-theme=dark] .ci.on{background:#222}
+:root[data-theme=dark] .ci .ub2{background:#fff!important;color:#0a0a0a!important}
+:root[data-theme=dark] .cl h6,:root[data-theme=dark] #convList h6{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:#6e6e74}
+:root[data-theme=dark] .mp-right .msg-h{border-bottom-color:rgba(255,255,255,.06)!important}
+:root[data-theme=dark] .mcmp{background:#1f1f1f;border:1px solid rgba(255,255,255,.06)!important;border-radius:16px!important;box-shadow:none!important}
+:root[data-theme=dark] .mcmp:focus-within{border-color:rgba(255,255,255,.2)!important;box-shadow:none!important}
+:root[data-theme=dark] .m:hover{background:rgba(255,255,255,.03)}
+:root[data-theme=dark] .rxb{background:#222!important;border-color:transparent!important;color:#cfcfd4}
+:root[data-theme=dark] .rxb.on{background:#2e2e2e!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+:root[data-theme=dark] .fileatt{background:#1f1f1f;border-color:rgba(255,255,255,.06)!important;box-shadow:none}
+:root[data-theme=dark] .fileatt i{background:#2a2a2a}
+:root[data-theme=dark] .mn{color:#fff!important;background:rgba(255,255,255,.08);border-radius:5px;padding:0 4px}
+:root[data-theme=dark] .tk{background:#242424!important;color:#cfcfd4!important}
+:root[data-theme=dark] #msgQ,:root[data-theme=dark] .mp-left input{background:#1f1f1f!important;border-color:transparent!important;border-radius:10px!important}
+:root[data-theme=dark] .mact{background:#222!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px}
+/* ===== 3. Notes ===== */
+:root[data-theme=dark] .notes{background:#161616}
+:root[data-theme=dark] .nl{background:#131313;border-right-color:rgba(255,255,255,.06)!important}
+:root[data-theme=dark] .ni2{border-radius:10px!important;padding:10px 12px!important}
+:root[data-theme=dark] .ni2:hover{background:rgba(255,255,255,.04)!important}
+:root[data-theme=dark] .ni2.on{background:#222!important}
+:root[data-theme=dark] .nlist h6{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:#6e6e74}
+:root[data-theme=dark] .nl input{background:#1f1f1f!important;border-color:transparent!important;border-radius:10px!important}
+:root[data-theme=dark] .ntool{background:#1f1f1f!important;border:0!important;border-radius:999px!important;padding:4px!important;box-shadow:none!important}
+:root[data-theme=dark] .ntool button{border-radius:999px!important}
+:root[data-theme=dark] .ntool button:hover{background:#2c2c2c}
+:root[data-theme=dark] .nmeta .ib.on{color:#0a0a0a!important;background:#fff!important}
+:root[data-theme=dark] .nmeta .prop,:root[data-theme=dark] .nmeta .pp{background:#242424!important;border:0!important;border-radius:999px}
+:root[data-theme=dark] .ntitle{font-size:34px;letter-spacing:-.03em}
+:root[data-theme=dark] .nbody{font-size:15px;line-height:1.7;color:#d9d9de}
+:root[data-theme=dark] .chk li::before,:root[data-theme=dark] ul.chk li::before{border-radius:6px}
+:root[data-theme=dark] .chk li.done::before{background:#fff!important;border-color:#fff!important}
+/* ===== 4. Chips and tags ===== */
+:root[data-theme=dark] .tag,:root[data-theme=dark] .lbl,:root[data-theme=dark] .chip,:root[data-theme=dark] .cn-feeds span,:root[data-theme=dark] .shtag,:root[data-theme=dark] .gtag,:root[data-theme=dark] .so-st,:root[data-theme=dark] .hpt{background:rgba(255,255,255,.07)!important;border:0!important;border-radius:999px!important;color:#c9c9ce!important;font-weight:500;padding:0 9px;line-height:22px;height:22px;display:inline-flex;align-items:center}
+:root[data-theme=dark] .tag.bad,:root[data-theme=dark] .so-st.late,:root[data-theme=dark] .hpt.risk{background:rgba(255,90,95,.13)!important;color:#ff8a8e!important}
+:root[data-theme=dark] .tag.warn{background:rgba(255,90,95,.1)!important;color:#ff8a8e!important}
+:root[data-theme=dark] .lbl i{width:6px;height:6px}
+:root[data-theme=dark] .thumb .ty{background:rgba(0,0,0,.55)!important;border:0!important;border-radius:999px;color:#ddd;padding:0 8px;backdrop-filter:blur(4px)}
+/* ===== 5. Empty states ===== */
+.ny-empty,.spf-empty,.cal-empty,.pal-empty{position:relative}
+:root[data-theme=dark] .ny-empty{border:1px dashed rgba(255,255,255,.12)!important;border-radius:16px!important;padding:46px 20px 40px!important;display:flex;flex-direction:column;align-items:center;gap:4px;color:#8a8a8f;background:transparent}
+:root[data-theme=dark] .ny-empty::before{content:"";width:40px;height:40px;margin-bottom:10px;border-radius:12px;background:#222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2374747c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8.5 12.2l2.4 2.3 4.6-4.8'/%3E%3C/svg%3E") center/22px no-repeat}
+:root[data-theme=dark] .ny-empty b{color:#fff;font-size:15px;font-weight:600;margin:0!important}
+:root[data-theme=dark] .spf-empty,:root[data-theme=dark] .cal-empty{color:#8a8a8f;text-align:center;padding:26px 12px!important}
+:root[data-theme=dark] .spf-empty::before{content:"";display:block;width:34px;height:34px;margin:0 auto 10px;border-radius:10px;background:#222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2374747c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8.5 12.2l2.4 2.3 4.6-4.8'/%3E%3C/svg%3E") center/19px no-repeat}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2245,7 +2321,7 @@ function createSpaceForm(shared,pre=''){openForm(shared?'New shared space':'New 
  if(sh){c.shared=v.n;c.guests=guests}CONVS.push(c);openSpace(c.id);toast(`<b>${esc(v.n)}</b> created`,sh?(guests.length?`${guests.length} guest${guests.length>1?'s':''} invited by email`:'Add guests by email any time'):'Add people with the + button')},shared?'Create shared space':'Create space')}
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':l[0]==='guest'?esc(l[3].g.split(' ')[0])+': ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
- return `<button class="ci${c.unread?' unread':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
+ return `<button class="ci${c.unread?' unread':''}${typeof cur!=='undefined'&&c.id===cur?' on':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
 function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(typeof VIEWER!=='undefined'&&VIEWER!=='AK'?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
 const gIni=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
 function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div class="sysm">${esc(txt)}</div>`;
@@ -3193,7 +3269,7 @@ let soF='wait';
 const SOL={wait:'Waiting',approved:'Approved',changes:'Changes asked'};
 function renderSO(){const n=k=>SO.filter(x=>x.st===k).length;$('#soC').textContent=n('wait')||'';
  $('#soFilt').innerHTML=[['wait','Waiting on you'],['approved','Approved'],['changes','Changes asked']].map(([k,l])=>`<button class="${soF===k?'on':''}" data-sof="${k}">${l} <span style="opacity:.6;margin-left:3px">${n(k)}</span></button>`).join('');
- $('#soCards').innerHTML=SO.filter(x=>x.st===soF).map(x=>`<div class="spc so" data-so="${x.id}" role="button" tabindex="0"><div class="thumb"><div class="in">${x.art}</div><span class="ty">${x.k}</span>${x.dur?`<span class="du">${x.dur}</span><span class="playc">${ICON.play}</span>`:''}</div><div class="so-b"><div class="ny-top"><span class="so-st ${x.st==='wait'&&x.late?'late':x.st}">${x.st==='wait'?(x.late?'Overdue':'Waiting'):SOL[x.st]}</span><span class="ny-due" style="${x.late?'color:var(--red)':''}">${x.due}</span></div><b class="ny-t">${esc(x.t)}</b><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.proj}</span>${x.st==='wait'?'<span class="ny-acts"><span class="btn sm">Review</span></span>':''}</div></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${soF==='wait'?'You’re all caught up on sign-offs.':'Nothing yet.'}</div>`}
+ $('#soCards').innerHTML=SO.filter(x=>x.st===soF).map(x=>`<div class="spc so" data-so="${x.id}" role="button" tabindex="0"><div class="thumb"><div class="in">${x.art}</div><span class="ty">${x.k}</span>${x.dur?`<span class="du">${x.dur}</span><span class="playc">${ICON.play}</span>`:''}</div><div class="so-b"><div class="ny-top"><span class="so-st ${x.st==='wait'&&x.late?'late':x.st}">${x.st==='wait'?(x.late?'Overdue':'Waiting'):SOL[x.st]}</span><span class="ny-due" style="${x.late?'color:var(--red)':''}">${x.due}</span></div><b class="ny-t">${esc(x.t)}</b><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.proj}</span>${x.st==='wait'?'<span class="ny-acts"><span class="btn sm">Review</span></span>':''}</div></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${soF==='wait'?'You’re all caught up on sign-offs.':soF==='approved'?'Nothing approved yet. Approved work shows here.':'No changes asked for yet.'}</div>`}
 function openSO(id){const x=SO.find(y=>y.id===id);if(!x)return;closeModal();const bg=document.createElement('div');bg.className='mod-bg';
  bg.innerHTML=`<div class="mod rv" role="dialog" aria-modal="true" aria-label="Review ${esc(x.t)}"><div class="mod-h" style="padding-bottom:12px"><span class="cb">${x.k}</span><span style="font-weight:600;color:var(--fg);font-size:14px">${esc(x.t)}</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
  <div class="rv-g"><div class="rv-stage"><div class="frame"><div class="in${x.dur?' vid':''}">${x.art}</div>${x.dur?`<div class="rv-play" id="rvPlay"><button aria-label="Play">${ICON.play.replace('var(--ink)','#fff')}</button><span class="trk"><i></i></span><time>${x.dur}</time></div>`:''}</div></div>
