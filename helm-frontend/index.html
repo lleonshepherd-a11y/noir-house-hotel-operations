@@ -1469,6 +1469,24 @@ td.ed{text-align:right;padding-right:6px!important}
 :root[data-theme=dark] .sp-sec{font-size:13px;color:#8a8a8f;margin-bottom:14px}
 :root[data-theme=dark] .btn.pri,:root[data-theme=dark] .msg-btn{background:#0099ff!important;border-color:#0099ff!important;color:#fff!important}
 :root[data-theme=dark] .btn.pri:hover,:root[data-theme=dark] .msg-btn:hover{background:#1aa3ff!important;border-color:#1aa3ff!important}
+.obrow{display:flex;align-items:center;gap:4px}.obrow .obi{flex:1;min-width:0}
+.pc .tp .edb{align-self:flex-start}
+#hireBoard .card{cursor:pointer}
+button.prop{cursor:pointer}
+
+/* ===== Wages (private) ===== */
+.wg-lock{display:flex;flex-direction:column;align-items:center;text-align:center;padding:70px 0 40px}
+.wg-lk-ic{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;margin-bottom:18px}
+.wg-lk-ic .ic{width:24px;height:24px;stroke-width:1.5}
+.pin{display:flex;gap:10px;margin-top:26px}
+.pin input{width:52px;height:60px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);font:inherit;font-size:24px;font-weight:600;text-align:center;outline:none;-webkit-text-security:disc;transition:border-color .15s,box-shadow .15s}
+.pin input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.pin.bad input{border-color:var(--red);animation:shake .35s}
+.pin-msg{margin:16px 0 0;font-size:12.5px;color:var(--fg-3)}
+.pin-msg.err{color:var(--red)}
+.pin-who{margin:6px 0 0;font-size:12.5px;color:var(--fg-3)}
+#wgC .ic{opacity:.7}
+@media (max-width:640px){.pin input{width:46px;height:54px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1505,6 +1523,7 @@ td.ed{text-align:right;padding-right:6px!important}
           <button class="ni" data-view="projects"><svg class="ic" viewBox="0 0 24 24"><path d="M20.5 19a2 2 0 01-2 2h-13a2 2 0 01-2-2V5a2 2 0 012-2h3.9a2 2 0 011.7.9l.8 1.2a2 2 0 001.7.9h4.9a2 2 0 012 2z"/></svg>Projects<span class="c" id="projCount"></span></button>
           <button class="ni" data-view="stages"><svg class="ic" viewBox="0 0 24 24"><path d="M12.8 2.7a2 2 0 00-1.6 0L3 6.4a.9.9 0 000 1.7l8.2 3.7a2 2 0 001.6 0L21 8.1a.9.9 0 000-1.7z"/><path d="M3 12.3l8.2 3.7a2 2 0 001.6 0l8.2-3.7M3 16.8l8.2 3.7a2 2 0 001.6 0l8.2-3.7"/></svg>Stages &amp; team</button>
           <button class="ni" data-view="people"><svg class="ic" viewBox="0 0 24 24"><path d="M16 21v-1.5a4 4 0 00-4-4H6a4 4 0 00-4 4V21"/><circle cx="9" cy="7.5" r="3.8"/><path d="M22 21v-1.5a4 4 0 00-3-3.9M16 3.6a3.9 3.9 0 010 7.7"/></svg>People &amp; hiring</button>
+          <button class="ni" data-view="wages"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg>Wages<span class="c" id="wgC" title="Private"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg></span></button>
           <button class="ni" data-view="fundraise"><svg class="ic" viewBox="0 0 24 24"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>Fundraising</button>
           <button class="ni" data-view="money"><svg class="ic" viewBox="0 0 24 24"><path d="M19 7V4.5a1 1 0 00-1-1H5a2 2 0 000 4h15a1 1 0 011 1v3.5h-3a2 2 0 000 4h3a1 1 0 001-1v-2"/><path d="M3 5.5v13a2 2 0 002 2h15a1 1 0 001-1V16"/></svg>Money</button>
           <button class="ni" data-view="metrics"><svg class="ic" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>Metrics</button>
@@ -1713,6 +1732,26 @@ td.ed{text-align:right;padding-right:6px!important}
           </div>
         </section>
 
+        <!-- ======== WAGES (private) ======== -->
+        <section class="view" id="view-wages" hidden>
+          <div class="wrap wide">
+            <div id="wgLock" class="wg-lock">
+              <div class="wg-lk-ic"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg></div>
+              <h1 class="title" style="font-size:26px">Wages are private</h1>
+              <p class="lead" style="text-align:center;margin:8px auto 0">Only managers with access can see salaries. Enter your 4-digit PIN to open this page.</p>
+              <div class="pin" id="pinBoxes"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 1"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 2"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 3"><input inputmode="numeric" maxlength="1" aria-label="PIN digit 4"></div>
+              <p class="pin-msg" id="pinMsg">Sample PIN for this mockup: 1234</p>
+              <p class="pin-who" id="pinWho"></p>
+            </div>
+            <div id="wgOpen" hidden>
+              <div class="ph2"><div><h1 class="title">Wages</h1><p class="lead">Salaries, contractor rates and pay reviews. Only the people listed under Access can open this page.</p><span class="stampl" id="wgStamp"></span></div><div class="acts"><button class="btn" id="wgAccess"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5"/></svg>Access</button><button class="btn" id="wgPin"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg>Change PIN</button><button class="btn" id="wgLockBtn"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3"/></svg>Lock now</button><button class="btn pri" id="wgAdd"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add pay</button></div></div>
+              <div class="kpis" id="wgTiles"></div>
+              <div class="sh">Pay by person <span class="n" id="wgN"></span><span class="r" style="cursor:default">Locks again when you leave this page</span></div>
+              <div class="tbl"><table><thead><tr><th>Person</th><th>Role</th><th>Type</th><th class="num">Pay</th><th class="num">Per year</th><th>Last change</th><th>Next review</th><th style="width:36px"></th></tr></thead><tbody id="wgRows"></tbody></table></div>
+            </div>
+          </div>
+        </section>
+
         <!-- ======== PROJECTS ROADMAP ======== -->
         <section class="view" id="view-projects" hidden>
           <div class="rm-top"><h1>Projects</h1><button class="prop">All initiatives<svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;color:var(--fg-3)"><path d="M7 10l5 5 5-5"/></svg></button><button class="prop">Quarter <span>2026–27</span></button><span class="muted" style="margin-left:auto;font-size:12.5px" id="rmCount"></span></div>
@@ -1809,12 +1848,12 @@ td.ed{text-align:right;padding-right:6px!important}
         <!-- ======== PEOPLE ======== -->
         <section class="view" id="view-people" hidden>
           <div class="wrap wide">
-            <div class="ph2"><div><h1 class="title">People &amp; hiring</h1><p class="lead">Who is on the team, who you are hiring, and how new people get set up.</p></div></div>
+            <div class="ph2"><div><h1 class="title">People &amp; hiring</h1><p class="lead">Who is on the team, who you are hiring, and how new people get set up.</p><span class="stampl" id="ppStamp"></span></div><div class="acts"><button class="btn" id="ppAddRole"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add role</button><button class="btn" id="ppAddCand"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add candidate</button><button class="btn pri" id="ppAddMem"><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>Add team member</button></div></div>
             <div class="tiles" id="ppTiles"></div>
             <div class="seg2" data-g="pp"><button data-t2="Team" class="on">Team</button><button data-t2="Hiring">Hiring</button><button data-t2="Onboarding">Onboarding</button></div>
-            <div data-p2="pp:Team"><div id="ipBanner"></div><div class="pgrid" id="teamGrid"></div></div>
-            <div data-p2="pp:Hiring" hidden><div class="roles" id="roles"></div><div class="dnd-board" id="hireBoard"></div></div>
-            <div data-p2="pp:Onboarding" hidden><div class="two2"><div><div class="sh" style="margin-top:0">Dan W. · Product engineer <span class="n" id="obN"></span></div><div class="obl" id="obList"></div></div><div class="side-card"><h4>Starting soon</h4><div class="r1"><span class="av" style="--av:var(--soft);--avc:#5f636b">NK</span><div class="t"><b>Nadia K.</b><small>Senior engineer · offer accepted · starts 9 Nov</small></div></div><button class="btn" id="obPrep">Prepare her checklist</button></div></div></div>
+            <div data-p2="pp:Team"><div id="ipBanner"></div><div class="sh" style="margin-top:4px">Team <span class="n" id="teamN"></span><button class="r addr" id="ppAddMem2">+ Add team member</button></div><div class="pgrid" id="teamGrid"></div></div>
+            <div data-p2="pp:Hiring" hidden><div class="sh" style="margin-top:4px">Open roles <span class="n" id="rolesN"></span><button class="r addr" id="ppAddRole2">+ Add role</button></div><div class="roles" id="roles"></div><div class="sh">Candidates <span class="n" id="candN"></span><button class="r addr" id="ppAddCand2">+ Add candidate</button></div><p class="hintl">Drag a card to move a candidate between stages. Click a card to edit it.</p><div class="dnd-board" id="hireBoard"></div></div>
+            <div data-p2="pp:Onboarding" hidden><div class="two2"><div><div class="sh" style="margin-top:0">Dan W. · Product engineer <span class="n" id="obN"></span><button class="r addr" id="obAdd">+ Add step</button></div><div class="obl" id="obList"></div></div><div class="side-card"><h4>Starting soon</h4><div class="r1"><span class="av" style="--av:var(--soft);--avc:#5f636b">NK</span><div class="t"><b>Nadia K.</b><small>Senior engineer · offer accepted · starts 9 Nov</small></div></div><button class="btn" id="obPrep">Prepare her checklist</button></div></div></div>
           </div>
         </section>
 
@@ -1896,7 +1935,7 @@ td.ed{text-align:right;padding-right:6px!important}
         <!-- ======== SETTINGS ======== -->
         <section class="view" id="view-settings" hidden>
           <div class="wrap wide">
-            <div class="ph2"><div><h1 class="title">Settings</h1><p class="lead">Your company, who can see what, and how Helm notifies you.</p></div><div class="acts"><button class="btn" id="rerunSetup">Run first-time setup again</button></div></div>
+            <div class="ph2"><div><h1 class="title">Settings</h1><p class="lead">Your company, who can see what, and how Helm notifies you.</p></div><div class="acts"><button class="btn" id="resetData">Reset to sample data</button><button class="btn" id="rerunSetup">Run first-time setup again</button></div></div>
             <div class="seg2" data-g="st"><button data-t2="General" class="on">Company</button><button data-t2="Members">Members &amp; permissions</button><button data-t2="Notif">Notifications</button></div>
             <div data-p2="st:General">
               <div class="set-row"><label for="sName">Company name<small>Shown to your team and investors</small></label><input id="sName" value="Murmur Inc."></div>
@@ -2537,20 +2576,20 @@ $('#updDraft').addEventListener('click',()=>toast('Draft saved'));
 const TEAMP=[['AK','Founder & CEO','Leadership','Full-time','Feb 2026',1],['JR','CTO','Development','Full-time','Feb 2026',1],['DW','Product engineer','Development','Full-time','Oct 2026',1],['SP','Growth lead','Marketing','Full-time','Apr 2026',1],['ML','Finance & operations','Finance','Full-time','May 2026',1],['PS','Sales lead','Sales','Full-time','Jun 2026',1],['TN','Product designer','Design','Contractor','Mar 2026',0],['TO','Support & operations','Operations','Contractor','Jul 2026',0]];
 function renderTeam(){const miss=TEAMP.filter(t=>!t[5]);
  $('#ipBanner').innerHTML=miss.length?`<div class="banner"><svg class="ic" viewBox="0 0 24 24" style="color:#e5484d"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h0"/></svg><span><b>${miss.length} contractor${miss.length>1?'s have':' has'} not signed an IP assignment.</b> Investors check this in diligence.</span><button class="btn" id="ipReq">Request signatures</button></div>`:'';
- $('#teamGrid').innerHTML=TEAMP.map(([k,r,tm,ty,st2,ip])=>`<div class="pc"><div class="tp">${av(k,'lg')}<div><b>${P[k][0]}</b><small>${r}</small></div></div><div class="rw"><span class="tag n">${tm}</span><span class="tag n">${ty}</span>${ip?'':'<span class="tag bad">No IP assignment</span>'}</div><div class="ft2"><span>Started ${st2}</span><button class="link" data-dm="${k}" style="color:var(--accent);font-weight:500">Message</button></div></div>`).join('');
+ $('#teamN').textContent=TEAMP.length;$('#teamGrid').innerHTML=TEAMP.map(([k,r,tm,ty,st2,ip])=>`<div class="pc"><div class="tp">${av(k,'lg')}<div style="flex:1;min-width:0"><b>${esc(P[k][0])}</b><small>${esc(r)}</small></div>${edb(`data-tm="${k}"`,P[k][0])}</div><div class="rw"><span class="tag n">${esc(tm)}</span><span class="tag n">${esc(ty)}</span>${ip?'':'<span class="tag bad">No IP assignment</span>'}</div><div class="ft2"><span>Started ${esc(st2)}</span><button class="link" data-dm="${k}" style="color:var(--accent);font-weight:500">Message</button></div></div>`).join('');
  const b=$('#ipReq');if(b)b.addEventListener('click',()=>{TEAMP.forEach(t=>t[5]=1);DR[1][1][1][1]='ready';renderDR();renderTeam();toast('<b>Signature requests sent</b>','Tara N. and Tom O. will get the IP assignment to sign')})}
 $('#teamGrid').addEventListener('click',e=>{const b=e.target.closest('[data-dm]');if(b){const k=b.dataset.dm;openCompose(k==='AK'?null:{t:'p',v:k,label:P[k][0]})}});
 renderTeam();
 const ROLES=[['Senior engineer (speech)','4 candidates','risk'],['Product engineer','2 candidates','ok'],['Customer success lead','Opens after launch','none']];
-$('#roles').innerHTML=ROLES.map(([n,c,h])=>`<span class="prop">${hicon(h)}${n} <span>${c}</span></span>`).join('');
+function renderRoles(){$('#rolesN').textContent=ROLES.length;$('#roles').innerHTML=ROLES.map(([n,c,h],i)=>{const cnt=CANDS.filter(x=>x.r&&n.toLowerCase().startsWith(x.r.toLowerCase())&&x.s!=='Hired').length;return `<button class="prop" data-role="${i}" title="Edit role">${hicon(h)}${esc(n)} <span>${cnt?cnt+' candidate'+(cnt>1?'s':''):esc(c)}</span></button>`}).join('')}
 const HR_ST=['Applied','Screen','Interview','Offer','Hired'];
 const CANDS=[['Nadia K.','Senior engineer','Hired','Referral',5,'Starts 9 Nov'],['Omar B.','Senior engineer','Offer','LinkedIn',4,'Offer expires Fri'],['Lena V.','Senior engineer','Interview','Referral',4,'Tech interview Wed'],['Chris P.','Senior engineer','Screen','Inbound',3,'Call Thu'],['Mia R.','Product engineer','Interview','YC Work at a Startup',4,'Pairing session Mon'],['Tom H.','Product engineer','Applied','Inbound',3,'Review CV'],['Aisha N.','Product engineer','Applied','Referral',4,'Review CV']].map(([n,r,s2,src,rt,nx],i)=>({id:'c'+i,n,r,s:s2,src,rt,nx}));
 const candCard=c=>`<div class="top"><span>${esc(c.r)}</span>${gav(c.n,'xs')}</div><p style="font-weight:600">${esc(c.n)}</p><span class="rating">${[1,2,3,4,5].map(i=>`<i class="${i<=c.rt?'on':''}"></i>`).join('')}</span><span class="nx">${ARROW}${esc(c.nx)}</span><span class="muted2" style="font-size:12px">via ${esc(c.src)}</span>`;
 function renderHire(){dndBoard($('#hireBoard'),HR_ST,CANDS,'s',candCard,(c,s2)=>{toast(`<b>${esc(c.n)}</b> moved to ${s2}`,s2==='Offer'?'Draft the offer letter next':s2==='Hired'?'Onboarding checklist created':'');renderPPTiles()})}
-function renderPPTiles(){$('#ppTiles').innerHTML=[['Team',String(TEAMP.length),'6 full-time · 2 contractors'],['Open roles','3','Senior engineer is urgent'],['Candidates',String(CANDS.filter(c=>c.s!=='Hired').length),`${CANDS.filter(c=>c.s==='Interview').length} interviewing`],['Offers out',String(CANDS.filter(c=>c.s==='Offer').length),'Omar B. · expires Friday']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('')}
-renderHire();renderPPTiles();
+function renderPPTiles(){const ft=TEAMP.filter(t=>t[3]==='Full-time').length,urg=ROLES.find(r=>r[2]==='risk');$('#candN')&&($('#candN').textContent=CANDS.filter(c=>c.s!=='Hired').length);$('#ppTiles').innerHTML=[['Team',String(TEAMP.length),`${ft} full-time · ${TEAMP.length-ft} other`],['Open roles',String(ROLES.length),urg?`${urg[0].split(' (')[0]} is urgent`:'None urgent'],['Candidates',String(CANDS.filter(c=>c.s!=='Hired').length),`${CANDS.filter(c=>c.s==='Interview').length} interviewing`],['Offers out',String(CANDS.filter(c=>c.s==='Offer').length),CANDS.filter(c=>c.s==='Offer').map(c=>`${c.n} · ${c.nx}`)[0]||'None out']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('')}
+renderHire();renderPPTiles();renderRoles();
 const OB=[['Laptop and accounts set up','Done 6 Oct',1],['Sign employment contract and IP assignment','Done 6 Oct',1],['Payroll and benefits','Done 7 Oct',1],['Meet each team (15 minutes each)','3 of 6 done',0],['First task: MUR-148 Team admin controls','Due 1 Nov',0],['30-day goals agreed with Jordan','Due 31 Oct',0]];
-function renderOB(){$('#obN').textContent=`${OB.filter(x=>x[2]).length} of ${OB.length} done`;$('#obList').innerHTML=OB.map((x,i)=>`<button class="obi${x[2]?' done':''}" data-ob="${i}"><span class="cb">${x[2]?ICON.check:''}</span><span class="tx">${x[0]}</span><small>${x[1]}</small></button>`).join('')}
+function renderOB(){$('#obN').textContent=`${OB.filter(x=>x[2]).length} of ${OB.length} done`;$('#obList').innerHTML=OB.map((x,i)=>`<div class="obrow"><button class="obi${x[2]?' done':''}" data-ob="${i}"><span class="cb">${x[2]?ICON.check:''}</span><span class="tx">${esc(x[0])}</span><small>${esc(x[1])}</small></button>${edb(`data-obe="${i}"`,x[0])}</div>`).join('')}
 $('#obList').addEventListener('click',e=>{const b=e.target.closest('[data-ob]');if(b){const x=OB[+b.dataset.ob];x[2]=!x[2];renderOB()}});
 renderOB();
 $('#obPrep').addEventListener('click',()=>toast('<b>Checklist ready for Nadia K.</b>','Based on the Product engineer template'));
@@ -2617,7 +2656,7 @@ $('#view-mytasks').addEventListener('click',e=>{const r=e.target.closest('[data-
 
 /* ---------- Decisions ---------- */
 const DECLOG=[['8 Oct','Ship offline mode to the pilot first','Approved','JR','Pilot users asked for it most'],['2 Oct','Raise a priced seed instead of more SAFEs','$4M priced seed','AK','Cleaner cap table for Series A'],['26 Sep','Hire a product designer as a contractor','Contractor for 6 months','AK','Keeps burn down until launch'],['19 Sep','Move launch prep into stage 6 early','Started early','AK','Press needs 6 weeks of notice'],['12 Sep','Use one speech model provider for the pilot','One provider','JR','Simpler to measure accuracy']];
-function logDecision(dec,ch){DECLOG.unshift(['Today',dec.t,ch,'AK','Decided from the briefing']);VIEWHOOK.decisions()}
+function logDecision(dec,ch){try{DEC_DONE[DECS.indexOf(dec)]=ch}catch(e){}DECLOG.unshift(['Today',dec.t,ch,'AK','Decided from the briefing']);VIEWHOOK.decisions()}
 VIEWHOOK.decisions=()=>{const open=DECS.filter((d,i)=>{const el=document.querySelector(`.dec[data-dec="${i}"]`);return el&&!el.dataset.done});
  $('#dlN').textContent=open.length;$('#dlN2').textContent=DECLOG.length;
  $('#dlOpen').innerHTML=open.map(d=>`<div class="lr" data-decopen="${DECS.indexOf(d)}" style="cursor:pointer">${st('sign',.5)}<div class="ttl"><b>${d.t}</b><small>Asked ${d.when} · from ${P[d.who][0]}</small></div><div class="meta">${av(d.who)}<span class="link" style="color:var(--accent);font-size:12.5px">Decide</span></div></div>`).join('')||'<div class="pal-empty" style="padding:14px 10px">Nothing is waiting on you.</div>';
@@ -3103,6 +3142,22 @@ $('#drFile').addEventListener('change',()=>{const fl=$('#drFile').files[0];const
 document.addEventListener('click',e=>{let b;if(b=e.target.closest('[data-dratt]')){$('#drFile').dataset.t=b.dataset.dratt;$('#drFile').click()}else if(b=e.target.closest('[data-dropen]')){const [g,i]=b.dataset.dropen.split(':').map(Number);openPreview(DR[g][1][i][3])}else if(b=e.target.closest('[data-cap]'))editCap(+b.dataset.cap);else if(b=e.target.closest('[data-safe]'))editSafe(+b.dataset.safe)});
 NEWACT.fundraise=()=>editInvestor();stamp('frStamp','Maya','yesterday');
 $('#thmTg').addEventListener('click',()=>{const d=document.documentElement;const t=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=t;try{localStorage.setItem('helm-theme',t)}catch(e){}});
+
+/* ---------- People & hiring: add + edit ---------- */
+function ppDone(msg,sub){stamp('ppStamp');renderTeam();renderHire();renderPPTiles();renderRoles();renderOB();if(msg)toast(msg,sub)}
+const ppTab=t=>{const b=$(`[data-g="pp"] [data-t2="${t}"]`);if(b)b.click()};
+const PP_TEAMS=['Leadership','Development','Marketing','Finance','Sales','Design','Operations','Product','Customer success'];
+function newKey(name){const ini=name.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'NN';let k=ini,i=2;while(P[k])k=ini.slice(0,1)+i++;return k}
+function editTeamMember(k){const t=k?TEAMP.find(x=>x[0]===k):null;openForm(t?`Edit ${P[k][0]}`:'Add team member',[{k:'n',label:'Name',ph:'Full name',v:t?P[k][0]:''},{k:'r',label:'Role',ph:'e.g. Senior engineer',v:t?t[1]:''},{k:'tm',label:'Team',opts:PP_TEAMS,v:t?t[2]:'Development'},{k:'ty',label:'Type',opts:['Full-time','Part-time','Contractor','Advisor'],v:t?t[3]:'Full-time'},{k:'st',label:'Start date',ph:'e.g. Nov 2026',v:t?t[4]:'Nov 2026'},{k:'ip',label:'IP assignment signed?',opts:['Yes','No'],v:t?(t[5]?'Yes':'No'):'No',hint:'Investors check this in diligence.'}],v=>{
+  if(t){P[k][0]=v.n;t[1]=v.r;t[2]=v.tm;t[3]=v.ty;t[4]=v.st;t[5]=v.ip==='Yes'?1:0}else{const nk=newKey(v.n);P[nk]=[v.n,'#efeff1','#3f4148'];TEAMP.push([nk,v.r||'Team member',v.tm,v.ty,v.st||'Nov 2026',v.ip==='Yes'?1:0]);CONVS.push({id:nk,dm:nk,on:false,unread:0,msgs:[]});renderConvList()}
+  ppTab('Team');ppDone(`<b>${esc(v.n)}</b> ${t?'updated':'added to the team'}`,t?'':'They can now be assigned tasks and messaged')},t?'Save':'Add member',t&&k!=='AK'?{label:'Remove from team',danger:1,fn:()=>{TEAMP.splice(TEAMP.indexOf(t),1);ppDone(`<b>${esc(P[k][0])}</b> removed from the team`)}}:null)}
+function editRole(i){const r=i!=null?ROLES[i]:null;openForm(r?'Edit role':'Add open role',[{k:'n',label:'Role',ph:'e.g. Senior engineer (speech)',v:r?r[0]:''},{k:'h',label:'Priority',opts:['Urgent','Normal','Later'],v:r?{risk:'Urgent',ok:'Normal',none:'Later'}[r[2]]:'Normal'},{k:'c',label:'Note',ph:'e.g. Opens after launch',v:r?r[1]:''}],v=>{const row=[v.n,v.c||'No candidates yet',{Urgent:'risk',Normal:'ok',Later:'none'}[v.h]];if(r)ROLES[i]=row;else ROLES.push(row);ppTab('Hiring');ppDone(`<b>${esc(v.n)}</b> ${r?'updated':'added to open roles'}`)},r?'Save':'Add role',r?{label:'Close role',danger:1,fn:()=>{ROLES.splice(i,1);ppDone(`<b>${esc(r[0])}</b> closed`)}}:null)}
+function editCand(id){const c=id?CANDS.find(x=>x.id===id):null;const roleNames=[...new Set([...ROLES.map(r=>r[0].split(' (')[0]),...CANDS.map(x=>x.r)])];openForm(c?`Edit ${c.n}`:'Add candidate',[{k:'n',label:'Name',ph:'Full name',v:c?c.n:''},{k:'r',label:'Role',opts:roleNames,v:c?c.r:roleNames[0]},{k:'s',label:'Stage',opts:HR_ST,v:c?c.s:'Applied'},{k:'src',label:'Source',opts:['Referral','Inbound','LinkedIn','YC Work at a Startup','Agency'],v:c?c.src:'Referral'},{k:'rt',label:'Rating',opts:['1','2','3','4','5'],v:c?String(c.rt):'3'},{k:'nx',label:'Next step',ph:'e.g. Tech interview Wed',v:c?c.nx:'Review CV'}],v=>{const o={n:v.n,r:v.r,s:v.s,src:v.src,rt:+v.rt,nx:v.nx||'—'};if(c)Object.assign(c,o);else CANDS.push({id:'c'+Date.now(),...o});ppTab('Hiring');ppDone(`<b>${esc(v.n)}</b> ${c?'updated':'added to '+v.s}`)},c?'Save':'Add candidate',c?{label:'Remove',danger:1,fn:()=>{CANDS.splice(CANDS.indexOf(c),1);ppDone(`<b>${esc(c.n)}</b> removed`)}}:null)}
+function editStep(i){const x=i!=null?OB[i]:null;openForm(x?'Edit onboarding step':'Add onboarding step',[{k:'t',label:'Step',ph:'e.g. Security training',v:x?x[0]:''},{k:'d',label:'When',ph:'e.g. Due 5 Nov',v:x?x[1]:''}],v=>{if(x){x[0]=v.t;x[1]=v.d}else OB.push([v.t,v.d||'',0]);ppTab('Onboarding');ppDone(`<b>${esc(v.t)}</b> ${x?'updated':'added'}`)},x?'Save':'Add step',x?{label:'Remove',danger:1,fn:()=>{OB.splice(i,1);ppDone('Step removed')}}:null)}
+['#ppAddMem','#ppAddMem2'].forEach(id=>$(id).addEventListener('click',()=>editTeamMember()));['#ppAddRole','#ppAddRole2'].forEach(id=>$(id).addEventListener('click',()=>editRole()));['#ppAddCand','#ppAddCand2'].forEach(id=>$(id).addEventListener('click',()=>editCand()));$('#obAdd').addEventListener('click',()=>editStep());
+$('#hireBoard').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)editCand(c.dataset.id)});
+document.addEventListener('click',e=>{let b;if(b=e.target.closest('[data-tm]'))editTeamMember(b.dataset.tm);else if(b=e.target.closest('[data-role]'))editRole(+b.dataset.role);else if(b=e.target.closest('[data-obe]'))editStep(+b.dataset.obe)});
+NEWLBL.people='Add team member';NEWACT.people=()=>editTeamMember();stamp('ppStamp','Maya','Oct 7');renderPPTiles();renderRoles();
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
@@ -3123,6 +3178,63 @@ document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLower
 
 renderConvList();openConv('launch',false);
 if(matchMedia('(max-width:1100px)').matches){$('#agent').hidden=true;$('#agentTg').classList.remove('on')}
+
+
+/* ---------- Wages: private, PIN-locked ---------- */
+const WG={pin:'1234',access:['AK','ML'],rows:[['AK','Founder & CEO','Salary',120000,'year','2026-02-01','2027-02-01'],['JR','CTO','Salary',165000,'year','2026-02-01','2027-02-01'],['DW','Product engineer','Salary',140000,'year','2026-10-05','2027-04-05'],['SP','Growth lead','Salary',115000,'year','2026-04-01','2027-04-01'],['ML','Finance & operations','Salary',110000,'year','2026-05-01','2027-05-01'],['PS','Sales lead','Salary',95000,'year','2026-06-01','2027-06-01'],['TN','Product designer','Contractor',85,'hour','2026-03-01','2026-12-01'],['TO','Support & operations','Contractor',45,'hour','2026-07-01','2026-12-01']]};
+let wgUnlocked=false,wgTimer=null;
+const ME='AK';
+const perYear=r=>r[4]==='hour'?r[3]*1600:r[4]==='month'?r[3]*12:r[3];
+function renderWages(){$('#wgLock').hidden=wgUnlocked;$('#wgOpen').hidden=!wgUnlocked;
+ if(!wgUnlocked){$('#pinWho').textContent=`Access: ${WG.access.map(k=>P[k]?P[k][0]:k).join(', ')}`;$('#pinBoxes').classList.remove('bad');$$('#pinBoxes input').forEach(i=>i.value='');setTimeout(()=>{const i=$('#pinBoxes input');if(i&&curView==='wages')i.focus()},60);return}
+ const sal=WG.rows.filter(r=>r[2]!=='Contractor'),con=WG.rows.filter(r=>r[2]==='Contractor');const tot=WG.rows.reduce((a,r)=>a+perYear(r),0);const soon=WG.rows.filter(r=>daysTo(r[6])<=90).length;
+ $('#wgTiles').innerHTML=[['Total pay per year',kusd(tot),`${kusd(tot/12)} a month`],['Salaried',String(sal.length),`${kusd(sal.reduce((a,r)=>a+r[3],0))} a year`],['Contractors',String(con.length),`About ${kusd(con.reduce((a,r)=>a+perYear(r),0))} a year`],['Reviews due',String(soon),'In the next 90 days']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('');
+ $('#wgN').textContent=WG.rows.length;
+ $('#wgRows').innerHTML=WG.rows.map((r,i)=>`<tr><td><span style="display:flex;align-items:center;gap:9px">${P[r[0]]?av(r[0],'xs'):''}<b style="font-weight:500">${esc(P[r[0]]?P[r[0]][0]:r[0])}</b></span></td><td class="muted2">${esc(r[1])}</td><td><span class="tag n">${esc(r[2])}</span></td><td class="num">${usd(r[3])} <span class="muted2">/ ${r[4]}</span></td><td class="num"><b style="font-weight:600">${usd(perYear(r))}</b></td><td class="muted2">${dlab(r[5])}</td><td>${daysTo(r[6])<=90?`<span class="tag warn">${dlab(r[6])}</span>`:`<span class="muted2">${dlab(r[6])}</span>`}</td><td class="ed">${edb(`data-wg="${i}"`,P[r[0]]?P[r[0]][0]:r[0])}</td></tr>`).join('');
+ if(!STAMP.wgStamp)stamp('wgStamp','Maya','Oct 1');else stamp('wgStamp',...STAMP.wgStamp);
+ clearTimeout(wgTimer);wgTimer=setTimeout(()=>{wgUnlocked=false;if(curView==='wages')renderWages()},5*60*1000)}
+function tryPin(){const v=$$('#pinBoxes input').map(i=>i.value).join('');if(v.length<4)return;
+ if(!WG.access.includes(ME)){$('#pinMsg').textContent='You don’t have access to wages. Ask an admin.';$('#pinMsg').classList.add('err');return}
+ if(v===WG.pin){wgUnlocked=true;$('#pinMsg').classList.remove('err');$('#pinMsg').textContent='Sample PIN for this mockup: 1234';renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent='Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus()},350)}}
+$('#pinBoxes').addEventListener('input',e=>{const i=e.target;i.value=i.value.replace(/\D/g,'').slice(-1);if(i.value&&i.nextElementSibling)i.nextElementSibling.focus();tryPin()});
+$('#pinBoxes').addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&e.target.previousElementSibling)e.target.previousElementSibling.focus()});
+function wgDone(msg,sub){stamp('wgStamp');renderWages();toast(msg,sub)}
+function editPay(i){const r=i!=null?WG.rows[i]:null;const keys=Object.keys(P);openForm(r?'Edit pay':'Add pay',[{k:'who',label:'Person',opts:keys.map(k=>P[k][0]),v:r?P[r[0]][0]:keys.map(k=>P[k][0]).find(n=>!WG.rows.some(x=>P[x[0]]&&P[x[0]][0]===n))},{k:'role',label:'Role',v:r?r[1]:'',ph:'e.g. Senior engineer'},{k:'type',label:'Type',opts:['Salary','Contractor','Part-time'],v:r?r[2]:'Salary'},{k:'amt',label:'Pay (USD)',type:'number',v:r?r[3]:''},{k:'per',label:'Per',opts:['year','month','hour'],v:r?r[4]:'year'},{k:'last',label:'Last change',type:'date',v:r?r[5]:'2026-10-11'},{k:'next',label:'Next review',type:'date',v:r?r[6]:'2027-04-01'}],v=>{const k=keys.find(x=>P[x][0]===v.who)||'AK';const row=[k,v.role||'',v.type,num(v.amt),v.per,v.last,v.next];if(r)WG.rows[i]=row;else WG.rows.push(row);wgDone(`<b>${esc(v.who)}</b> pay ${r?'updated':'added'}`,'Only people with wages access can see this')},r?'Save':'Add pay',r?{label:'Remove',danger:1,fn:()=>{WG.rows.splice(i,1);wgDone('Pay record removed')}}:null)}
+function changePin(){openForm('Change wages PIN',[{k:'old',label:'Current PIN',type:'password'},{k:'n1',label:'New 4-digit PIN',type:'password'},{k:'n2',label:'New PIN again',type:'password'}],v=>{if(v.old!==WG.pin){toast('<b>PIN not changed</b>','The current PIN was wrong');return}if(!/^\d{4}$/.test(v.n1)||v.n1!==v.n2){toast('<b>PIN not changed</b>','Use 4 digits, the same both times');return}WG.pin=v.n1;wgDone('<b>Wages PIN changed</b>','Use the new PIN next time')},'Change PIN')}
+function editAccess(){const keys=Object.keys(P);openForm('Who can see wages',keys.map(k=>({k:'a_'+k,label:P[k][0],opts:['No access','Can see wages'],v:WG.access.includes(k)?'Can see wages':'No access'})),v=>{const a=keys.filter(k=>v['a_'+k]==='Can see wages');if(!a.includes(ME))a.unshift(ME);WG.access=a;wgDone('<b>Wages access updated</b>',a.map(k=>P[k][0]).join(', '))},'Save access')}
+$('#wgAdd').addEventListener('click',()=>editPay());$('#wgPin').addEventListener('click',changePin);$('#wgAccess').addEventListener('click',editAccess);$('#wgLockBtn').addEventListener('click',()=>{wgUnlocked=false;renderWages();toast('<b>Wages locked</b>')});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-wg]');if(b)editPay(+b.dataset.wg)});
+VIEWHOOK.wages=renderWages;
+{const sv=showView;showView=function(v,o){if(curView==='wages'&&v!=='wages'){wgUnlocked=false}return sv(v,o)}}
+NEWLBL.wages='Add pay';NEWACT.wages=()=>{if(wgUnlocked)editPay();else{const i=$('#pinBoxes input');if(i)i.focus()}};
+
+/* ---------- Saving: keeps every change on this device ---------- */
+const SAVE_KEY='helm-data-v1';
+const DEC_DONE=window.DEC_DONE||{};
+const ARR={MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD};
+function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:CN.map(x=>x.on===2?0:x.on),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,WG};
+ for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'?undefined:v)}
+let saveT=null,saveOK=true;
+function saveNow(){try{localStorage.setItem(SAVE_KEY,snapshot());saveOK=true}catch(e){if(saveOK)toast('<b>Couldn’t save</b>','This browser is blocking storage, so changes last until you close the page');saveOK=false}}
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(saveNow,500)}
+['click','change','drop','keyup','submit'].forEach(ev=>document.addEventListener(ev,saveSoon,true));
+document.addEventListener('dragend',saveSoon,true);addEventListener('pagehide',saveNow);
+function loadSaved(){let raw=null;try{raw=localStorage.getItem(SAVE_KEY)}catch(e){}if(!raw)return false;let d;try{d=JSON.parse(raw)}catch(e){return false}
+ const put=(a,b)=>{if(Array.isArray(a)&&Array.isArray(b))a.splice(0,a.length,...b)};
+ for(const k in ARR)if(d.arr&&d.arr[k])put(ARR[k](),d.arr[k]);
+ if(d.P)Object.assign(P,d.P);if(d.ROUND)Object.assign(ROUND,d.ROUND);if(d.MNYn)Object.assign(MNY,d.MNYn);
+ (d.MET||[]).forEach((m,i)=>{if(MET[i])Object.assign(MET[i],m)});
+ (d.NY||[]).forEach((x,i)=>{if(NY[i])NY[i].done=x});(d.SO||[]).forEach((x,i)=>{if(SO[i]){SO[i].st=x[0];SO[i].note=x[1]}});(d.CN||[]).forEach((x,i)=>{if(CN[i])CN[i].on=x});
+ for(const k in d.SPX||{}){sx({id:k,desc:''});SPX[k].files=d.SPX[k]}
+ if(d.cnt){nextId=d.cnt.nextId||nextId;gN=d.cnt.gN||gN;Object.assign(NEXT,d.cnt.NEXT||{})}
+ if(d.stamps)Object.assign(STAMP,d.stamps);if(d.WG)Object.assign(WG,d.WG);
+ Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
+ ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
+ const R=[renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
+ R.forEach(fn=>{try{fn&&fn()}catch(e){}});return true}
+const hadSaved=loadSaved();
+$('#resetData').addEventListener('click',()=>{if(!confirm('Reset everything to the sample data? Your changes on this device will be removed.'))return;try{localStorage.removeItem(SAVE_KEY)}catch(e){}removeEventListener('pagehide',saveNow);['click','change','drop','keyup','submit'].forEach(ev=>document.removeEventListener(ev,saveSoon,true));location.reload()});
+
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
 </script>
 </body>
