@@ -112,6 +112,7 @@ function mergeConvs(incoming, u) {
       if (have.has(k)) { const ex = cur.msgs.find((x) => key(x) === k); if (m[3] && m[3].rx) { ex[3] = ex[3] || {}; ex[3].rx = m[3].rx; } continue; }
       if (m[0] !== u.pkey && m[0] !== "sys") continue; // can't post as someone else
       cur.msgs.push([m[0], String(m[1]).slice(0, 40), String(m[2]).slice(0, 8000), m[3] || {}]);
+      if (cur.ch && cur.arch && m[0] !== "sys") { delete cur.arch; delete cur.archAuto; delete cur.flag; } // posting reopens an archived space
       have.add(k);
       if (!cur.ch) { cur.unreadBy = cur.unreadBy || {}; for (const p of convMembers(cur)) if (p !== u.pkey) cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
       else for (const p of cur.mem || []) if (p !== u.pkey) { cur.unreadBy = cur.unreadBy || {}; cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }

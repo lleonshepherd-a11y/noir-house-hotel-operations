@@ -2183,6 +2183,9 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 .stg-ck input{width:16px;height:16px;accent-color:#2d9bff;flex:none}
 .stg-next{margin:14px 0 4px;font-size:13px;color:#8e8e93}.stg-next b{color:#fff;font-weight:500}
 @media (max-width:640px){.stg-body{padding-left:16px}.stg-body ul{grid-template-columns:1fr}.stg-row .stg-chip{display:none}}
+
+#spArchBar{display:flex;align-items:center;gap:10px;margin:10px 16px 0;padding:10px 12px 10px 14px;border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:13px;color:#c9c9ce;background:#0b0b0b}
+#spArchBar .ic{width:16px;height:16px;color:#8a8a8f;flex:none}#spArchBar span{flex:1;min-width:0}
 </style>
 </head>
 <body>
@@ -4253,7 +4256,7 @@ function canCreateSpace(who){who=who||VIEWER;const r=roleOf(who);if(r==='CEO')re
 const SP_IDLE=30,SP_GRACE=7;
 // last activity per space (sample data has a date; new posts update it)
 {const L={launch:0,fundraise:1,general:2,northbeam:3,brightpath:34};CONVS.forEach(c=>{if(c.ch&&!c.last){const d=new Date(TODAY);d.setDate(d.getDate()-(L[c.id]!=null?L[c.id]:Math.min(25,c.msgs.length)));c.last=iso(d)}c._n=c.msgs?c.msgs.length:0})}
-function spTouch(){CONVS.forEach(c=>{if(!c.ch)return;const n=c.msgs?c.msgs.length:0;if(c._n!=null&&n>c._n){c.last=iso(TODAY);if(c.flag){c.flag=null}}c._n=n})}
+function spTouch(){CONVS.forEach(c=>{if(!c.ch)return;const n=c.msgs?c.msgs.length:0;if(c._n!=null&&n>c._n){c.last=iso(TODAY);if(c.flag){c.flag=null}if(c.arch&&c.msgs.slice(c._n).some(m=>m[0]!=='sys')){delete c.arch;delete c.archAuto;c.msgs.push(['sys',now(),'Space reopened because someone posted']);saveSoon();try{renderSideSpaces();renderConvList()}catch(e){}}}c._n=c.msgs?c.msgs.length:0})}
 const spIdle=c=>c.last?Math.round((TODAY-new Date(c.last+'T00:00'))/864e5):0;
 const spAutoDate=c=>{const d=new Date((c.flag||iso(TODAY))+'T00:00');d.setDate(d.getDate()+SP_GRACE);return iso(d)};
 function spSetArch(c,on,auto){if(on){c.arch=iso(TODAY);c.archAuto=!!auto;c.flag=null;c.msgs.push(['sys',now(),auto?`Archived automatically after ${spIdle(c)} days without posts`:`${P[VIEWER]?P[VIEWER][0].split(' ')[0]:'Someone'} archived this space`]);c._n=c.msgs.length}else{delete c.arch;delete c.archAuto;c.flag=null;c.last=iso(TODAY);c.msgs.push(['sys',now(),'Space reopened']);c._n=c.msgs.length}}
@@ -4265,7 +4268,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-sparch]');
  const k=e.target.closest('[data-spkeep]');if(k){e.stopPropagation();const c=CONVS.find(x=>x.id===k.dataset.spkeep);if(c){c.flag=null;c.last=iso(TODAY);saveSoon();renderSpDir();toast(`<b>${esc(c.ch)}</b> kept`,'We’ll check again in 30 days')}return}
  const p=e.target.closest('[data-nypin]');if(p){e.stopPropagation();const id=p.dataset.nypin;const was=NYPIN.has(id);was?NYPIN.delete(id):NYPIN.add(id);saveSoon();renderNY();return}},true);
 // archive button in the space's About panel
-{const rs=renderSpace;renderSpace=function(){const r=rs.apply(this,arguments);try{const c=CONVS.find(x=>x.id===spCur);const ab=$('#spAbout');if(c&&ab&&!ab.querySelector('.sp-archbtn')&&(canCreateSpace()||sx(c).by===VIEWER))ab.insertAdjacentHTML('beforeend',`<section class="sp-archbtn"><button class="btn sm" data-sparch="${c.id}" data-v="${c.arch?0:1}">${c.arch?'Reopen space':'Archive space'}</button><p style="font-size:12px;color:#7d7d84;margin:8px 0 0">${c.arch?'This space is archived.':'Archive when the work is finished. Messages and files are kept.'}</p></section>`)}catch(e){}return r}}
+{const rs=renderSpace;renderSpace=function(){try{spTouch()}catch(e){}const r=rs.apply(this,arguments);try{const c0=CONVS.find(x=>x.id===spCur);let bar=$('#spArchBar');if(c0&&c0.arch){if(!bar){bar=document.createElement('div');bar.id='spArchBar';const t=$('#spTabs');if(t)t.after(bar)}bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4"/></svg><span>This space is archived ${dlab(c0.arch)}. Everything is kept. Posting here reopens it.</span><button class="btn sm pri" data-sparch="${c0.id}" data-v="0">Reopen</button>`;bar.hidden=false}else if(bar)bar.hidden=true}catch(e){}try{const c=CONVS.find(x=>x.id===spCur);const ab=$('#spAbout');if(c&&ab&&!ab.querySelector('.sp-archbtn')&&(canCreateSpace()||sx(c).by===VIEWER))ab.insertAdjacentHTML('beforeend',`<section class="sp-archbtn"><button class="btn sm" data-sparch="${c.id}" data-v="${c.arch?0:1}">${c.arch?'Reopen space':'Archive space'}</button><p style="font-size:12px;color:#7d7d84;margin:8px 0 0">${c.arch?'This space is archived.':'Archive when the work is finished. Messages and files are kept.'}</p></section>`)}catch(e){}return r}}
 // notifications: idle spaces to the people who can tidy them
 {const nl=notifList;notifList=function(){const b=nl();if(isOwnCEO())return b;return [...spTidyList().map(c=>[null,`<b>${esc(c.ch)}</b> has had no posts for ${spIdle(c)} days. Archive it?`,'Today',NREAD.has('spt'+c.id)?0:1,()=>{showView('spaces')},'chat','spt'+c.id]),...b]}}
 function spTidyBell(){if(!isOwnCEO())return;for(let i=NOTIF.length-1;i>=0;i--)if(String(NOTIF[i][6]||'').startsWith('spt'))NOTIF.splice(i,1);spTidyList().forEach(c=>{const id='spt'+c.id;NOTIF.unshift([null,`<b>${esc(c.ch)}</b> has had no posts for ${spIdle(c)} days. Archive it?`,'Today',NREAD.has(id)?0:1,()=>{NREAD.add(id);showView('spaces')},null,id])});bellCount()}
