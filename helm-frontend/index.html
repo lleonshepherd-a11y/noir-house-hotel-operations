@@ -2164,6 +2164,25 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 /* Buttons: content always centred, even rounding */
 .btn{display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1;gap:6px}
 .btn .ic{flex:none;display:block}
+
+#nyFilt [data-nyf="urgent"] .ic,#nyFilt [data-nyf="blocked"] .ic{color:#ff6b6b}
+
+/* Stages */
+.stg-row{cursor:pointer}.stg-row .meta{display:flex;align-items:center;gap:8px}
+.stg-chip{font-size:12px;font-weight:500;color:#fff;background:rgba(255,255,255,.08);border-radius:999px;padding:0 10px;line-height:22px;cursor:pointer}
+.stg-chip:hover{background:rgba(255,255,255,.14)}
+.stg-chev{width:14px;height:14px;color:#6e6e74;transition:transform .2s}.stg-row.open .stg-chev{transform:rotate(90deg)}
+.stg-body{padding:4px 16px 16px 66px;font-size:13px;color:#9a9aa0}.stg-body b{color:#fff;font-weight:600;font-size:12.5px}
+.stg-body ul{margin:8px 0 0;padding-left:18px;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px}
+[data-stg-open]{cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,255,255,.25);text-underline-offset:3px}
+.stg-t{margin:6px 0 4px;font-size:18px;font-weight:600;letter-spacing:-.015em}
+.stg-w{margin:0 0 14px;font-size:13px;color:#8e8e93}
+.stg-bar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:16px}.stg-bar i{display:block;height:100%;background:#2d9bff;border-radius:4px}
+.stg-h{display:block;font-size:12px;color:#8a8a8f;font-weight:600;margin-bottom:6px}
+.stg-ck{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.06);font-size:14px;color:#e5e5e7;cursor:pointer}
+.stg-ck input{width:16px;height:16px;accent-color:#2d9bff;flex:none}
+.stg-next{margin:14px 0 4px;font-size:13px;color:#8e8e93}.stg-next b{color:#fff;font-weight:500}
+@media (max-width:640px){.stg-body{padding-left:16px}.stg-body ul{grid-template-columns:1fr}.stg-row .stg-chip{display:none}}
 </style>
 </head>
 <body>
@@ -2245,7 +2264,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
         <!-- ======== BRIEFING ======== -->
         <section class="view" id="view-home">
           <div class="wrap wide">
-            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Saturday 10 October · Week 41</span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
+            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg><span id="hDate">Saturday 10 October · Week 41</span></span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
             <div class="sp-tools" id="nyTools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
             <div class="spgrid">
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
@@ -2636,7 +2655,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
         <section class="view" id="view-stages" hidden>
           <div class="wrap wide">
             <h1 class="title">Stages &amp; team</h1>
-            <p class="lead">The nine stages from set-up to scale, and who is involved in each. Murmur is on stage 5.</p>
+            <p class="lead" id="stgLead">The nine stages from set-up to scale: who is involved, and what has to be true before you move on.</p>
             <div class="sh">Stages <span class="n">9</span></div>
             <div class="list" id="stages"></div>
             <div class="sh">Lean starting team</div>
@@ -2788,7 +2807,7 @@ function createSpaceForm(shared,pre=''){openForm(shared?'New shared space':'New 
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':l[0]==='guest'?esc(l[3].g.split(' ')[0])+': ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}${typeof cur!=='undefined'&&c.id===cur?' on':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
-function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(!isOwnCEO()?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
+function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.arch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&!c.arch&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(!isOwnCEO()?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
 const gIni=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
 function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div class="sysm">${esc(txt)}</div>`;
  if(k==='guest'){const f2=!prev||prev[0]!=='guest'||(prev[3]||{}).g!==x.g;return `<div class="m${f2?' first':''}" data-i="${i}">${f2?`<span class="av md guest" title="${esc(x.g)}">${gIni(x.g)}</span>`:'<span></span>'}<div>${f2?`<div class="mh"><b>${esc(x.g)}</b><span class="gtag">${esc(c.shared||'Guest')}</span><time>${t}</time></div>`:''}<p>${fmt(txt)}</p></div></div>`}const first=!prev||prev[0]!==k||prev[1]!==t;
@@ -2824,7 +2843,7 @@ function pickDM(anchor){openMenu(anchor,PEOPLE.filter(p=>p.v!=='AK'),null,v=>ope
 let toSel=[],toOpts=[],toI=0;const toIn=$('#toIn'),cIn=$('#cIn');
 function toOptions(q){const ql=(q||'').toLowerCase();
  const people=Object.keys(P).filter(k=>k!=='AK').map(k=>{const dm=CONVS.find(c=>c.dm===k)||{};return {t:'p',v:k,label:P[k][0],html:`<span class="pres">${av(k)}<i class="${dm.on?'on':''}"></i></span><span>${P[k][0]}</span><small>${dm.on?'Online':''}</small>`}});
- const spaces=CONVS.filter(c=>c.ch&&c.desc!=='Group conversation').map(c=>({t:'s',v:c.id,label:c.ch,html:`${spIc(c)}<span>${c.ch}</span><small>Space · ${c.mem.length} people</small>`}));
+ const spaces=CONVS.filter(c=>c.ch&&!c.arch&&c.desc!=='Group conversation').map(c=>({t:'s',v:c.id,label:c.ch,html:`${spIc(c)}<span>${c.ch}</span><small>Space · ${c.mem.length} people</small>`}));
  return [...people,...spaces].filter(o=>!toSel.some(x=>x.t===o.t&&x.v===o.v)&&o.label.toLowerCase().includes(ql))}
 function drawTo(){$('#toChips').innerHTML=toSel.map((x,i)=>`<span class="tochip">${x.t==='p'?av(x.v,'xs'):spIc(CONVS.find(c=>c.id===x.v)).replace('class="sp-ic"','class="sp-ic" style="width:18px;height:18px;font-size:10px;border-radius:5px"')}${esc(x.label)}<button type="button" data-rm="${i}" aria-label="Remove ${esc(x.label)}">×</button></span>`).join('');
  const q=toIn.value.trim();toOpts=toOptions(q);if(toI>=toOpts.length)toI=0;
@@ -2990,7 +3009,7 @@ function renderFiles(){$('#files').innerHTML=PI_().files.map(([n,s,t,art,d,pl])=
 function renderProject(){const i=PI_();
  $('#pIcon').innerHTML=curProj==='murmur'?`<span class="wv">${[7,13,18,10,15,8].map((h,j)=>`<u style="--h:${h}px;--i:${j}"></u>`).join('')}</span>`:pic(i.icon);
  $('#pTitle').textContent=i.name;$('#pLead').innerHTML=i.lead_;
- $('#pprops').innerHTML=[`${st(i.st[0],i.st[1])}${i.st[2]}`,`${pri(i.p)}${PRI_N[i.p]}`,`${av(i.lead,'xs')}${P[i.lead][0]}`,`<span class="avs">${i.mem.map(k=>av(k,'xs')).join('')}</span>${i.more?'+'+i.more:''}`,`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-3)"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>${i.dates} <span>→</span> ${i.end}`,`${dia('now')}Stage ${i.stage} of 9`].map(h=>`<button class="prop">${h}</button>`).join('');
+ $('#pprops').innerHTML=[`${st(i.st[0],i.st[1])}${i.st[2]}`,`${pri(i.p)}${PRI_N[i.p]}`,`${av(i.lead,'xs')}${P[i.lead][0]}`,`<span class="avs">${i.mem.map(k=>av(k,'xs')).join('')}</span>${i.more?'+'+i.more:''}`,`<svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-3)"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>${i.dates} <span>→</span> ${i.end}`,`${dia('now')}<span data-stg-open>Stage ${i.stage} of 9 · ${stgDone(curProj)}/${STG_CHECK[i.stage-1].length}</span>`].map(h=>`<button class="prop">${h}</button>`).join('');
  $('#pRes').innerHTML=i.res.map(([n,ic,tab])=>`<button data-rtab="${tab}">${ic}${n}</button>`).join('')+`<button class="add" data-rtab="Files">${ICB('<path d="M12 5v14M5 12h14"/>')}Add resource</button>`;
  $('#kpis').innerHTML=i.kpis.map(([l,v,s2,d])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small>${sl(d)}</div>`).join('');
  const u=i.upd;$('#uhealth').className='health '+u[0];$('#uhealth').innerHTML=health(u[0]);$('#uWho').innerHTML=`${av(u[1])}<b style="font-weight:500">${P[u[1]][0]}</b><span class="muted">${u[2]}</span>`;$('#uWho').style.cssText='display:contents';$('#uText').textContent=u[3];
@@ -3229,7 +3248,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ts]');if(b
 function renderFR(){dndBoard($('#frBoard'),FR_ST,INV,'stg',invCard,(it,c)=>{toast(`<b>${esc(it.n)}</b> moved to ${c}`,c==='Committed'?'Added to committed capital':'');renderFrTiles()})}
 function money2(n){return n>=1e6?'$'+(n/1e6).toFixed(n%1e6?1:0)+'M':'$'+Math.round(n/1e3)+'k'}
 const tk=s=>parseFloat(s.replace(/[$Mk]/g,''))*(s.includes('M')?1e6:1e3);
-function renderFrTiles(){const com=INV.filter(i=>i.stg==='Committed').reduce((a,i)=>a+tk(i.tk),0)+1e6,ts=INV.filter(i=>i.stg==='Term sheet').length;
+function seedCommitted(){return INV.filter(i=>i.stg==='Committed').reduce((a,i)=>a+tk(i.tk),0)+1e6}
+function planBurn(){return (MNY.B||[]).reduce((a,b)=>a+(+b[2]||0),0)||34000}
+function renderFrTiles(){const com=seedCommitted(),ts=INV.filter(i=>i.stg==='Term sheet').length;
  const T0=ROUND.target;$('#frTiles').innerHTML=[['Target',money2(T0),ROUND.name],['Committed',money2(com),`${Math.round(com/T0*100)}% of target`,com/T0],['Term sheets',String(ts),INV.filter(i=>i.stg==='Term sheet').map(i=>i.n.split(' ')[0]).join(', ')||'None yet'],['In the pipeline',String(INV.length),`${INV.filter(i=>i.stg==='Diligence').length} in diligence`]].map(([l,v,s2,p])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small>${p!=null?`<div class="bar2"><i style="--w:${Math.min(100,p*100)}%;--c:var(--green)"></i></div>`:''}</div>`).join('')}
 renderFR();renderFrTiles();
 const CAP=[['Alex Kim','Founder · common',4500000,'var(--ink)'],['Marcus R.','Co-founder · common',2500000,'#5e6ad2'],['Option pool · granted','Options',320000,'#8b8f97'],['Option pool · available','Options',680000,'#9fd8d0'],['Pre-seed SAFEs','SAFE · converts at seed',1180000,'#8b8f97']];
@@ -3295,9 +3316,9 @@ const CEV=[['2026-10-14','Q3 board meeting','meet','10:00 · Video call','legal'
  ['2026-10-20','Pen-test report deadline','legal','Decides 18 Nov or 2 Dec launch'],['2026-10-31','Delaware franchise tax','legal','Due today · $400'],['2026-11-08','83(b) election · Nadia K.','legal','30 days after grant · post to IRS'],['2026-11-01','Gusto payroll','legal','$21,400'],
  ['2026-10-21','Ledgerly prototype sessions','meet','3 design partners · Priya'],['2026-11-18','Murmur public launch','launch','Staged release · Product Hunt day'],['2026-11-17','Launch rehearsal','launch','All hands · 16:00'],['2026-10-16','Pilot review: Brightpath','meet','13:00 · Priya, Marcus'],['2026-10-27','1:1 with Marcus','meet','17:00'],['2026-10-30','Nadia K. starts','meet','Onboarding day 1']];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const TODAY=new Date(2026,9,10);
+const TODAY=window.HELM_BACKEND?(d=>{d.setHours(0,0,0,0);return d})(new Date()):new Date(2026,9,10);
 const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-function taskDate(d){if(d==='Today')return iso(TODAY);const wd={Mon:12,Tue:13,Wed:14,Thu:15,Fri:16};if(wd[d])return `2026-10-${wd[d]}`;let m=d.match(/^([A-Z][a-z]{2}) (\d+)$/)||null,day,mon;if(m){mon=m[1];day=+m[2]}else{m=d.match(/^(\d+) ([A-Z][a-z]{2})$/);if(!m)return null;day=+m[1];mon=m[2]}const mi=MON.indexOf(mon);if(mi<0)return null;return `${mi<6?2027:2026}-${String(mi+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
+function taskDate(d){if(!d)return null;if(d==='Today')return iso(TODAY);if(d==='Tomorrow'){const t=new Date(TODAY);t.setDate(t.getDate()+1);return iso(t)}const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(d);if(wd>=0){const t=new Date(TODAY);t.setDate(t.getDate()+((wd-t.getDay()+7)%7));return iso(t)}let m=d.match(/^([A-Z][a-z]{2}) (\d+)$/)||null,day,mon;if(m){mon=m[1];day=+m[2]}else{m=d.match(/^(\d+) ([A-Z][a-z]{2})$/);if(!m)return null;day=+m[1];mon=m[2]}const mi=MON.indexOf(mon);if(mi<0)return null;let y=TODAY.getFullYear();if(mi<TODAY.getMonth()-6)y++;else if(mi>TODAY.getMonth()+5)y--;return `${y}-${String(mi+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
 let calM=new Date(2026,9,1),calSel=iso(TODAY);const calOff=new Set();
 function calEvents(){const ev=CEV.map(([d,t,k,sub])=>({d,t,k,sub}));TASKS.forEach(t=>{if(t.s==='done')return;const d=taskDate(t.d);if(d)ev.push({d,t:t.t,k:'due',sub:`${t.id} · ${P[t.o]?P[t.o][0]:'Unassigned'}`,task:t.id})});return ev.filter(e=>!calOff.has(e.k))}
 function renderCal(){const ev=calEvents(),by={};ev.forEach(e=>(by[e.d]=by[e.d]||[]).push(e));
@@ -3491,7 +3512,7 @@ $('#fbList').addEventListener('click',e=>{const v=e.target.closest('[data-vote]'
 renderFB();
 
 /* ---------- Settings ---------- */
-VIEWHOOK.settings=()=>{if(!$('#sStage').options.length)$('#sStage').innerHTML=STAGES.map((x,i)=>`<option${i===4?' selected':''}>${i+1}. ${x[0]}</option>`).join('')};
+VIEWHOOK.settings=()=>{if(!$('#sStage').options.length)$('#sStage').innerHTML=STAGES.map((x,i)=>`<option value="${i+1}">${i+1}. ${x[0]}</option>`).join('');$('#sStage').value=String(STGS.company)};
 $('#sSave').addEventListener('click',()=>toast('<b>Settings saved</b>',$('#sName').value));
 const MEM=[['AK','CEO'],['JR','Manager'],['ML','Manager'],['SP','Member'],['PS','Member'],['DW','Member'],['TN','Guest'],['TO','Guest'],['Sam Ortiz','Guest']];
 /* ---------- Roles: who sees what ---------- */
@@ -3536,7 +3557,7 @@ function drawWiz(){const w=$('.wiz');if(!w)return;const s2=wz.step;const steps=`
  w.querySelectorAll('[data-wst]').forEach(b=>b.addEventListener('click',()=>{wz.stage=+b.dataset.wst;drawWiz()}));
  const em=$('#wzIn');if(em){em.focus();em.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===',')&&em.value.trim()){e.preventDefault();wz.emails.push(em.value.trim().replace(/,$/,''));drawWiz()}});w.querySelectorAll('[data-wrm]').forEach(b=>b.addEventListener('click',()=>{wz.emails.splice(+b.dataset.wrm,1);drawWiz()}))}
  const f=w.querySelector('input');if(f&&s2!==3)f.focus()}
-function finishWiz(){try{localStorage.setItem('helm-setup-done','1')}catch(e){}closeWizard();VIEWHOOK.settings();$('#sName').value=wz.name;$('#sWhat').value=wz.what;$('#sStage').selectedIndex=wz.stage;wz.step=0;showView('home');toast(`<b>${esc(wz.name)}</b> is set up`,`Stage ${wz.stage+1} · ${wz.emails.length} invite${wz.emails.length===1?'':'s'} sent`)}
+function finishWiz(){try{localStorage.setItem('helm-setup-done','1')}catch(e){}closeWizard();VIEWHOOK.settings();$('#sName').value=wz.name;$('#sWhat').value=wz.what;$('#sStage').value=String(wz.stage+1);STGS.company=wz.stage+1;saveSoon();try{renderStages()}catch(e){}wz.step=0;showView('home');toast(`<b>${esc(wz.name)}</b> is set up`,`Stage ${wz.stage+1} · ${wz.emails.length} invite${wz.emails.length===1?'':'s'} sent`)}
 $('#rerunSetup').addEventListener('click',()=>{wz.step=0;openWizard()});
 let setupDone=false;try{setupDone=!!window.HELM_BACKEND||!!localStorage.getItem('helm-setup-done')}catch(e){setupDone=true}
 if(!setupDone)setTimeout(openWizard,300);
@@ -3544,7 +3565,7 @@ if(!setupDone)setTimeout(openWizard,300);
 
 /* ---------- Stages ---------- */
 const STAGES=[["Set the company up to operate","CEO, startup lawyer, accountant","done","Mar"],["Turn the UI into a product plan","Founder, product designer, tech lead, prospective customers","done","Apr"],["Design the technical foundations","CTO, product designer, security adviser","done","May"],["Build the first usable version","Tech lead, engineers, designer, founder, AI specialist","done","Aug"],["Run a private pilot","Founder, product, engineers, pilot users, customer success","now","68%"],["Prepare for a public launch","Product, engineering, support, product marketer, lawyer","next","12%"],["Launch in stages","Founder, growth lead, customer success, engineering","next","18 Nov"],["Improve retention, find repeatable growth","Founder, product, engineering, customer success, sales","next","Q1 2027"],["Scale the company","Product and engineering, sales, success, operations, finance","next","Later"]];
-$('#stages').innerHTML=STAGES.map(([t,w,k,m],i)=>`<div class="lr">${dia(k)}<span class="id" style="width:22px">${i+1}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${k==='now'?'<span class="lbl" style="--c:#8b8f97"><i></i>You are here</span>':''}<span class="dt" style="width:60px">${m}</span></div></div>`).join('');
+function renderStagesOld(){$('#stages').innerHTML=STAGES.map(([t,w,k,m],i)=>`<div class="lr">${dia(k)}<span class="id" style="width:22px">${i+1}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${k==='now'?'<span class="lbl" style="--c:#8b8f97"><i></i>You are here</span>':''}<span class="dt" style="width:60px">${m}</span></div></div>`).join('')}
 $('#team').innerHTML=[['Founder / CEO','Vision, customers, hiring, fundraising','AK','Alex Kim'],['CTO','Technical direction, building the product','JR','Marcus R.'],['Product engineers ×2','Core app and reliability','DW','1 hired · 1 open'],['Product designer','UI into a usable product','TN','Contractor'],['Customer success','Onboards pilot teams','AK','Founder covers it'],['Specialists','Lawyer, accountant, security, AI/ML','TO','4 on contract']].map(([r,c,a,w])=>`<div class="lr">${av(a)}<div class="ttl"><b>${r}</b><small>${c}</small></div><div class="meta"><span class="muted" style="font-size:12.5px">${w}</span></div></div>`).join('');
 
 /* ---------- Views, header, tabs ---------- */
@@ -3726,13 +3747,14 @@ const NY=[
  {id:'n6',k:'sign',t:'Approve the Q3 board pack',d:'Board meeting Tuesday 14 Oct. Two of three sections are ready for your sign-off.',who:'ML',when:'Today',due:'Due Fri',act:'Review',go:()=>openSO('board')}];
 let nyF='all';
 const PIN_IC='<path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V16a1 1 0 001 1h12a1 1 0 001-1v-.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V7a1 1 0 011-1 2 2 0 000-4H8a2 2 0 000 4 1 1 0 011 1z"/>';
-function nyUrgent(x){if(x.k==='urgent'||x.k==='blocked')return true;const d=String(x.due||'');if(/late|overdue/i.test(d))return true;const m=d.replace(/^Due\s+/i,'');if(/^(Today|Tomorrow)$/i.test(m))return true;try{const iso2=taskDate(m);if(iso2){const n=Math.round((new Date(iso2+'T00:00')-TODAY)/864e5);return n<=2}}catch(e){}return false}
-const NYG={all:()=>1,pinned:x=>(window.NYPIN||new Set()).has(x.id),urgent:x=>x.k==='urgent',decision:x=>x.k==='decision',sign:x=>x.k==='sign'||x.k==='reply',blocked:x=>x.k==='blocked'};
+function nyBlocked(x){return x.k==='blocked'}
+function nyUrgent(x){if(nyBlocked(x))return false;if(x.k==='urgent')return true;const d=String(x.due||'');if(/late|overdue/i.test(d))return true;const m=d.replace(/^Due\s+/i,'');if(/^(Today|Tomorrow)$/i.test(m))return true;try{const iso2=taskDate(m);if(iso2){const n=Math.round((new Date(iso2+'T00:00')-TODAY)/864e5);return n<=2}}catch(e){}return false}
+const NYG={all:()=>1,pinned:x=>(window.NYPIN||new Set()).has(x.id),urgent:x=>nyUrgent(x),decision:x=>x.k==='decision',sign:x=>x.k==='sign'||x.k==='reply',blocked:x=>x.k==='blocked'};
 function renderNY(){const left=NY.filter(x=>!x.done);
- $('#nyFilt').innerHTML=[['all','All'],...((window.NYPIN&&NY.some(x=>!x.done&&NYPIN.has(x.id)))?[['pinned','Pinned']]:[]),['decision','Decisions'],['sign','Sign-off & replies'],['blocked','Blocked']].map(([k,l])=>`<button class="${nyF===k?'on':''}" data-nyf="${k}"><svg class="ic pic2" viewBox="0 0 24 24">${{all:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',decision:NYI.decision,sign:NYI.sign,blocked:NYI.blocked,urgent:NYI.urgent,pinned:PIN_IC}[k]}</svg>${l} <span style="opacity:.6;margin-left:3px">${left.filter(NYG[k]).length}</span></button>`).join('');
- if(!NYG[nyF])nyF='all';const PS=window.NYPIN||new Set();const rows=left.filter(NYG[nyF]).sort((a,b)=>((PS.has(b.id)?2:0)+(nyUrgent(b)?1:0))-((PS.has(a.id)?2:0)+(nyUrgent(a)?1:0)));$('#nyN').textContent=left.length;
+ $('#nyFilt').innerHTML=[['all','All'],['urgent','Urgent'],['blocked','Blocked'],...((window.NYPIN&&NY.some(x=>!x.done&&NYPIN.has(x.id)))?[['pinned','Pinned']]:[]),['decision','Decisions'],['sign','Sign-off & replies']].map(([k,l])=>`<button class="${nyF===k?'on':''}" data-nyf="${k}"><svg class="ic pic2" viewBox="0 0 24 24">${{all:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',decision:NYI.decision,sign:NYI.sign,blocked:NYI.blocked,urgent:NYI.urgent,pinned:PIN_IC}[k]}</svg>${l} <span style="opacity:.6;margin-left:3px">${left.filter(NYG[k]).length}</span></button>`).join('');
+ if(!NYG[nyF])nyF='all';const PS=window.NYPIN||new Set();const rows=left.filter(NYG[nyF]).sort((a,b)=>((PS.has(b.id)?4:0)+(nyUrgent(b)?2:0)+(nyBlocked(b)?1:0))-((PS.has(a.id)?4:0)+(nyUrgent(a)?2:0)+(nyBlocked(a)?1:0)));$('#nyN').textContent=left.length;
  $('#homeLead').textContent=left.length?`${left.length} thing${left.length>1?'s':''} need${left.length>1?'':'s'} you today.${left.some(x=>x.k==='urgent')?' Murmur’s launch is at risk because the outside security review is 8 days late.':''}`:'You’re all caught up. Nothing needs you right now.';
- $('#nyCards').innerHTML=rows.map(x=>`<div class="spc ny ${x.k}" data-ny="${x.id}" role="button" tabindex="0"><div class="ny-hero"><span class="ny-ic"><svg class="ic" viewBox="0 0 24 24">${NYI[x.k]}</svg>${nyUrgent(x)?'<em class="ny-urg">Urgent</em>':''}</span><span class="ny-due">${x.due}</span></div><div class="ny-body"><span class="nytag">${NYL[x.k]}</span><b class="ny-t">${esc(x.t)}</b><p>${esc(x.d)}</p></div><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.when}</span><span class="ny-acts"><button class="ny-pin${PS.has(x.id)?' on':''}" data-nypin="${x.id}" aria-label="${PS.has(x.id)?'Unpin':'Pin for later'}" title="${PS.has(x.id)?'Unpin':'Pin for later'}"><svg class="ic" viewBox="0 0 24 24">${PIN_IC}</svg></button><button class="ny-done" data-nydone="${x.id}" aria-label="Mark done" title="Mark done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><button class="btn sm${x.k==='urgent'?' pri':''}">${x.act}</button></span></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${nyF==='all'?'You’re all caught up.':'Nothing in this group needs you.'}</div>`;nyFill()}
+ $('#nyCards').innerHTML=rows.map(x=>`<div class="spc ny ${x.k}" data-ny="${x.id}" role="button" tabindex="0"><div class="ny-hero"><span class="ny-ic"><svg class="ic" viewBox="0 0 24 24">${NYI[x.k]}</svg>${nyBlocked(x)?'<em class="ny-urg">Blocked</em>':nyUrgent(x)?'<em class="ny-urg">Urgent</em>':''}</span><span class="ny-due">${x.due}</span></div><div class="ny-body"><span class="nytag">${NYL[x.k]}</span><b class="ny-t">${esc(x.t)}</b><p>${esc(x.d)}</p></div><div class="spc-f">${av(x.who,'xs')}<span class="ny-from">${P[x.who][0]} · ${x.when}</span><span class="ny-acts"><button class="ny-pin${PS.has(x.id)?' on':''}" data-nypin="${x.id}" aria-label="${PS.has(x.id)?'Unpin':'Pin for later'}" title="${PS.has(x.id)?'Unpin':'Pin for later'}"><svg class="ic" viewBox="0 0 24 24">${PIN_IC}</svg></button><button class="ny-done" data-nydone="${x.id}" aria-label="Mark done" title="Mark done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><button class="btn sm${x.k==='urgent'?' pri':''}">${x.act}</button></span></div></div>`).join('')||`<div class="ny-empty"><b>Nothing here</b>${nyF==='all'?'You’re all caught up.':'Nothing in this group needs you.'}</div>`;nyFill()}
 
 /* Fill empty spots in the last row of "Needs you" with quick-view cards */
 function nyFill(){const g=$('#nyCards');if(!g||nyF!=='all')return;const n=g.querySelectorAll('.spc.ny').length;if(!n)return;
@@ -3755,7 +3777,7 @@ function openDecision(i){const d=document.querySelector(`.dec[data-dec="${i}"]`)
  d.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{const ch=o.dataset.choice;setTimeout(()=>{if(modal===bg)closeModal();const x=NY.find(y=>y.dec===i);if(x){x.done=true;renderNY()}toast(`Decided: <b>${esc(ch)}</b>`,`${DECS[i].from} has been told and the plan is updated`)},1100)},{once:true}))}
 document.addEventListener('click',e=>{const r=e.target.closest('[data-decopen]');if(r)openDecision(+r.dataset.decopen)});
 function renderHP(){$('#hpCards').innerHTML=Object.entries(PINFO).map(([k,i])=>{const u=i.upd;const plain=i.lead_.replace(/<[^>]+>/g,'');return `<button class="spc" data-hp="${k}"><div class="spc-h"><span class="spt">${k==='murmur'?`<span class="wv" style="height:14px">${[5,9,13,7,11].map((h,j)=>`<u style="--h:${h}px;--i:${j}"></u>`).join('')}</span>`:pic(i.icon)}</span><span style="min-width:0"><b>${i.name}</b><small>Stage ${i.stage} of 9 · ${P[i.lead][0]}</small></span></div><p>${esc(plain)}</p><div class="spc-last"><b>${P[u[1]][0].split(' ')[0]}</b> ${esc(u[3])}</div><div class="hp-foot"><span class="hpt ${u[0]==='ok'?'':'risk'}">${HL[u[0]][0]}</span><span class="mbar"><i style="--w:${i.st[1]*100}%;--c:${u[0]==='ok'?'#5f636b':'#e5484d'}"></i></span><span class="pct">${Math.round(i.st[1]*100)}%</span><time>${i.end}</time></div></button>`}).join('')}
-function renderHM(){const cash=MNY.acc.reduce((x,y)=>x+y[2],0),run=Math.floor(cash/MNY.burn),u=new Date(TODAY);u.setMonth(u.getMonth()+run);const over=MNY.burn-34000;$('#hmCards').innerHTML=[['money','Runway',run+' mo',`Until ${MONL[u.getMonth()]} ${u.getFullYear()}`,[19,18,17,16,15,run]],['money','Cash in the bank',kusd(cash),`Across ${MNY.acc.length} accounts`,[.72,.69,.65,.61,.57,cash/1e6]],['money','Monthly burn',kusd(MNY.burn),over>0?`<span class="down">${kusd(over)} over plan</span>`:'Within plan',[22,25,27,30,34,MNY.burn/1000]],['fundraise','Seed raised','$1.6M','40% of the $4M target',[0,0,1.2,1.2,1.4,1.6]]].map(([v,l,n,sub,d])=>`<button class="kpi" data-view="${v}"><span>${l}</span><b>${n}</b><small>${sub}</small>${sl(d)}</button>`).join('')}
+function renderHM(){const cash=MNY.acc.reduce((x,y)=>x+y[2],0),run=Math.floor(cash/MNY.burn),u=new Date(TODAY);u.setMonth(u.getMonth()+run);const over=MNY.burn-planBurn();$('#hmCards').innerHTML=[['money','Runway',run+' mo',`Until ${MONL[u.getMonth()]} ${u.getFullYear()}`,[19,18,17,16,15,run]],['money','Cash in the bank',kusd(cash),`Across ${MNY.acc.length} accounts`,[.72,.69,.65,.61,.57,cash/1e6]],['money','Monthly burn',kusd(MNY.burn),over>0?`<span class="down">${kusd(over)} over plan</span>`:'Within plan',[22,25,27,30,34,MNY.burn/1000]],['fundraise','Seed raised',money2(seedCommitted()),`${Math.round(seedCommitted()/ROUND.target*100)}% of the ${money2(ROUND.target)} target`,[0,0,1.2,1.2,1.4,1.6]]].map(([v,l,n,sub,d])=>`<button class="kpi" data-view="${v}"><span>${l}</span><b>${n}</b><small>${sub}</small>${sl(d)}</button>`).join('')}
 document.addEventListener('click',e=>{const f=e.target.closest('[data-nyf]');if(f){nyF=f.dataset.nyf;renderNY();return}
  const d=e.target.closest('[data-nydone]');if(d){const x=NY.find(y=>y.id===d.dataset.nydone);const card=d.closest('.spc');card.classList.add('gone');setTimeout(()=>{x.done=true;renderNY()},300);toast(`<b>${esc(x.t)}</b> marked done`,'Undo',()=>{x.done=false;renderNY()});return}
  const c=e.target.closest('[data-ny]');if(c){NY.find(y=>y.id===c.dataset.ny).go();return}
@@ -4012,7 +4034,7 @@ applyRole();
 const SAVE_KEY='helm-data-v1';
 const DEC_DONE=window.DEC_DONE||{};
 const ARR={NOTES:()=>NOTES,MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD,TS:()=>TS};
-function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:CN.map(x=>x.on===2?0:x.on),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,NYP:[...(window.NYPIN||[])],SPSET:window.SPSET||{create:'Managers and CEO'},WG};
+function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:CN.map(x=>x.on===2?0:x.on),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,STGS:window.STGS,NYP:[...(window.NYPIN||[])],SPSET:window.SPSET||{create:'Managers and CEO'},WG};
  for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'&&typeof v==='string'&&v.startsWith('blob:')?undefined:v)}
 let saveT=null,saveOK=true;
 function saveNow(){if(window.HELM_BACKEND){bkSave();return}try{localStorage.setItem(SAVE_KEY,snapshot());saveOK=true}catch(e){if(saveOK)toast('<b>Couldn’t save</b>','This browser is blocking storage, so changes last until you close the page');saveOK=false}}
@@ -4028,7 +4050,7 @@ function applyData(d){
  (d.NY||[]).forEach((x,i)=>{if(NY[i])NY[i].done=x});(d.SO||[]).forEach((x,i)=>{if(SO[i]){SO[i].st=x[0];SO[i].note=x[1]}});(d.CN||[]).forEach((x,i)=>{if(CN[i])CN[i].on=x});
  for(const k in d.SPX||{}){sx({id:k,desc:''});SPX[k].files=d.SPX[k]}
  if(d.cnt){nextId=d.cnt.nextId||nextId;gN=d.cnt.gN||gN;Object.assign(NEXT,d.cnt.NEXT||{})}
- if(d.stamps)Object.assign(STAMP,d.stamps);if(d.NYP)window.NYPIN=new Set(d.NYP);if(d.SPSET)window.SPSET=d.SPSET;if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
+ if(d.stamps)Object.assign(STAMP,d.stamps);if(d.STGS)window.STGS=d.STGS;if(d.NYP)window.NYPIN=new Set(d.NYP);if(d.SPSET)window.SPSET=d.SPSET;if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
  Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
  ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
  const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,()=>{try{renderTS()}catch(e){}},renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
@@ -4037,7 +4059,7 @@ const hadSaved=loadSaved();
 
 /* ================= Backend connection (only when served by server.mjs) ================= */
 const BK={on:!!window.HELM_BACKEND,me:null,sent:{},es:null,wgLoaded:false,users:[],cx:{},cn:null};
-const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps','NYP','SPSET'];
+const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps','NYP','SPSET','STGS'];
 function secsFromSnap(){const d=JSON.parse(snapshot());const o={...d.arr};SEC_EXTRA.forEach(k=>o[k]=d[k]);return o}
 function dataFromSecs(S){const d={arr:{}};for(const k in ARR)if(S[k])d.arr[k]=S[k];SEC_EXTRA.forEach(k=>{if(S[k]!==undefined)d[k]=S[k]});return d}
 async function bkApi(path,opt={}){const r=await fetch(path,{credentials:'same-origin',...opt,headers:{'x-helm':'1','content-type':'application/json',...(opt.headers||{})}});if(r.status===401){location.href='/login';throw new Error('signin')}return r}
@@ -4172,8 +4194,10 @@ function whyText(a){return a.late?`${a.late} day${a.late>1?'s':''} late`:a.idle>
 function acctNotifs(W){const out=[],ceo=roleOf(W)==='CEO';const A=acct();
  A.forEach(a=>{const t=a.t,go=()=>{openProject(a.k,'Overview');setTimeout(()=>{const h=$('#pHeld');if(h)h.scrollIntoView({block:'center'})},120)};
   if(t.o===W&&a.lvl==='soon')out.push([ceoKey(),`Reminder: <b>${t.id}</b> ${esc(t.t)} is ${whyText(a)}`,'Today',1,go,null,'acct:soon:'+t.id]);
+  if(t.o===W&&!a.late&&a.idle>=5)out.push([ceoKey(),`<b>${t.id}</b> ${esc(t.t)} hasn't moved for ${a.idle} days. Update it or say what's in the way.`,'Today',1,go,null,'acct:idle:'+t.id]);
   if(t.o===W&&a.late)out.push([ceoKey(),`<b>${t.id}</b> ${esc(t.t)} is <b>${whyText(a)}</b>. Update it or say what's in the way.`,'Today',1,go,null,'acct:late:'+t.id+':'+a.late]);
   if(a.lead===W&&t.o!==W&&(a.lvl==='lead'||a.lvl==='ceo'))out.push([t.o,`<b>${t.id}</b> with <b>${fn1(t.o)}</b> is ${whyText(a)}${a.ms?` · holds up ${esc(a.ms)}`:''}`,'Today',1,go,null,'acct:lead:'+t.id]);
+  if(ceo&&t.o!==W&&a.lvl==='lead'&&a.lead===t.o)out.push([t.o,`<b>${t.id}</b> with <b>${fn1(t.o)}</b>, who leads the project, is ${whyText(a)}${a.ms?` · holds up ${esc(a.ms)}`:''}`,'Today',1,go,null,'acct:leadceo:'+t.id]);
   if(ceo&&t.o!==W&&a.lvl==='ceo')out.push([t.o,`<b>Blocked:</b> ${t.id} ${esc(t.t)} is stuck with <b>${fn1(t.o)}</b>, ${whyText(a)}${a.ms?` · holds up ${esc(a.ms)}`:''}`,'Today',1,go,null,'acct:ceo:'+t.id]);
   if(a.dep&&t.o===W){const da=A.find(x=>x.t===a.dep);if(da&&da.late)out.push([a.dep.o,`<b>${t.id}</b> is waiting on <b>${a.dep.id}</b> with ${fn1(a.dep.o)} (${whyText(da)})`,'Today',1,go,null,'acct:wait:'+t.id])}});
  TASKS.filter(t=>t.s==='done'&&t.ho&&dayDiff(ISO(TODAY),t.ho)<=7).forEach(t=>{const go=()=>openProject(keyOfTask(t.id),'Issues');
@@ -4235,7 +4259,7 @@ const spAutoDate=c=>{const d=new Date((c.flag||iso(TODAY))+'T00:00');d.setDate(d
 function spSetArch(c,on,auto){if(on){c.arch=iso(TODAY);c.archAuto=!!auto;c.flag=null;c.msgs.push(['sys',now(),auto?`Archived automatically after ${spIdle(c)} days without posts`:`${P[VIEWER]?P[VIEWER][0].split(' ')[0]:'Someone'} archived this space`]);c._n=c.msgs.length}else{delete c.arch;delete c.archAuto;c.flag=null;c.last=iso(TODAY);c.msgs.push(['sys',now(),'Space reopened']);c._n=c.msgs.length}}
 function spTidy(){spTouch();CONVS.forEach(c=>{if(!c.ch||c.arch||/^g\d+$/.test(c.id))return;if(spIdle(c)>=SP_IDLE){if(!c.flag)c.flag=iso(TODAY);else if(iso(TODAY)>=spAutoDate(c))spSetArch(c,true,true)}else c.flag=null})}
 const spTidyList=()=>SPACES().filter(c=>c.flag&&(isOwnCEO()||roleOf(VIEWER)==='Manager'||(sx(c).by===VIEWER)));
-function spArchUI(id,on){const c=CONVS.find(x=>x.id===id);if(!c)return;if(on&&!(canCreateSpace()||sx(c).by===VIEWER)){toast('<b>Ask a manager to archive it</b>');return}spSetArch(c,on);if(on&&spCur===id){spCur=null}saveSoon();try{renderSideSpaces();renderSpDir();if(spCur)renderSpace(false)}catch(e){}if(curView==='spaces'&&!spCur)try{spShow()}catch(e){}
+function spArchUI(id,on){const c=CONVS.find(x=>x.id===id);if(!c)return;if(on&&!(canCreateSpace()||sx(c).by===VIEWER)){toast('<b>Ask a manager to archive it</b>');return}spSetArch(c,on);if(on&&spCur===id){spCur=null}saveSoon();try{renderSideSpaces();renderConvList();renderSpDir();if(spCur)renderSpace(false)}catch(e){}if(curView==='spaces'&&!spCur)try{spShow()}catch(e){}
  toast(on?`<b>${esc(c.ch)}</b> archived`:`<b>${esc(c.ch)}</b> reopened`,on?'Messages and files are kept':'It’s back in your spaces',on?()=>{spSetArch(c,false);saveSoon();renderSideSpaces();renderSpDir()}:null)}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-sparch]');if(a){e.stopPropagation();spArchUI(a.dataset.sparch,a.dataset.v==='1');return}
  const k=e.target.closest('[data-spkeep]');if(k){e.stopPropagation();const c=CONVS.find(x=>x.id===k.dataset.spkeep);if(c){c.flag=null;c.last=iso(TODAY);saveSoon();renderSpDir();toast(`<b>${esc(c.ch)}</b> kept`,'We’ll check again in 30 days')}return}
@@ -4249,8 +4273,49 @@ function spTidyBell(){if(!isOwnCEO())return;for(let i=NOTIF.length-1;i>=0;i--)if
 {const mp=document.querySelector('[data-p2="st:Members"]');if(mp){mp.insertAdjacentHTML('beforeend',`<div class="set-row sp-perm" style="margin-top:24px"><div><b>Who can create spaces</b><small>Others can still join and post in spaces they’re added to.</small></div><select id="spPerm"><option>Managers and CEO</option><option>CEO only</option><option>Everyone</option></select></div>`);
  const sel=$('#spPerm');sel.value=SPSET.create;sel.addEventListener('change',()=>{SPSET.create=sel.value;saveSoon();toast('<b>Saved</b>',`${sel.value} can create spaces`);try{renderSpDir()}catch(e){}});
  const ar=applyRole;applyRole=function(){ar();try{sel.disabled=!isOwnCEO();$$('#spNew,#spNew2').forEach(b=>b.hidden=!canCreateSpace())}catch(e){}}}}
-{const sv=showView;showView=function(v,o){if(v==='spaces')try{spTidy();spTidyBell()}catch(e){}return sv(v,o)}}
+{const sv=showView;showView=function(v,o){if(v==='spaces'||v==='messages')try{spTidy();spTidyBell()}catch(e){}const r=sv(v,o);if(v==='messages')try{renderConvList()}catch(e){}return r}}
 spTidy();spTidyBell();try{renderSideSpaces();renderNY()}catch(e){}
+{const hd=$('#hDate');if(hd){const d=TODAY,j=new Date(d.getFullYear(),0,1),wk=Math.ceil(((d-j)/864e5+((j.getDay()+6)%7)+1)/7);hd.textContent=`${d.toLocaleDateString('en-GB',{weekday:'long'})} ${d.getDate()} ${d.toLocaleDateString('en-GB',{month:'long'})} · Week ${wk}`}}
+{const rp=renderProject;renderProject=function(){try{if(curProj==='murmur'){const K=PINFO.murmur.kpis;const pm=new Date(TODAY);pm.setMonth(pm.getMonth()-1);const sp=K.find(k=>/^Spent in/.test(k[0]));if(sp){const ch=MNY.burnPrev?Math.round((MNY.burn-MNY.burnPrev)/MNY.burnPrev*100):0;sp[0]='Spent in '+MON[pm.getMonth()];sp[1]=kusd(MNY.burn);sp[2]=`<span class="${ch>0?'down':'up'}">${ch>0?'+':''}${ch}%</span> vs ${MON[(pm.getMonth()+11)%12]}`}const rs=K.find(k=>k[0]==='Raised');if(rs){rs[1]=money2(seedCommitted());rs[2]=`Seed, of ${money2(ROUND.target)}`}}}catch(e){}return rp.apply(this,arguments)}}
+/* ================= The 9 stages: what has to be true before you move on ================= */
+const STG_CHECK=[
+ ['Company incorporated','Business bank account open','Founder shares and IP assigned','Lawyer and accountant in place'],
+ ['20+ customer interviews done','Problem and target user written down','First version scope signed off','One success measure agreed'],
+ ['Architecture plan reviewed','Security basics in place','Hosting and running costs estimated','Core team hired or contracted'],
+ ['Main flow works end to end','Team uses it every day','Error and crash tracking on','Pilot users lined up'],
+ ['Pilot users active every week','Top pilot issues fixed','Retention measured','Outside security review passed'],
+ ['Launch plan and date set','Support and help centre ready','Pricing decided','Terms and privacy policy live'],
+ ['First wave launched','Monitoring and on-call set up','Feedback loop running','Launch goals measured'],
+ ['Week-4 retention target met','One growth channel that repeats','Unit economics understood','Paying customers growing monthly'],
+ ['Team leads in place','Hiring plan funded','Key processes written down','Board and reporting rhythm set']];
+var STGS=window.STGS||{company:5,proj:{murmur:{stage:5,done:[1,1,0,0]},ledgerly:{stage:2,done:[1,0,0,1]},atlas:{stage:4,done:[1,1,1,0]}}};window.STGS=STGS;
+Object.keys(PINFO).forEach(k=>{if(!STGS.proj[k])STGS.proj[k]={stage:PINFO[k].stage||1,done:[0,0,0,0]};PINFO[k].stage=STGS.proj[k].stage});
+const stgDone=k=>(STGS.proj[k]||{done:[]}).done.filter(Boolean).length;
+const canMoveStage=k=>isOwnCEO()||roleOf(VIEWER)==='CEO'||(PINFO[k]&&PINFO[k].lead===VIEWER)||roleOf(VIEWER)==='Manager';
+function renderStages(){const el=$('#stages');if(!el)return;const cs=STGS.company;
+ el.innerHTML=STAGES.map(([t,w],i)=>{const n=i+1,k=n<cs?'done':n===cs?'now':'next';const here=Object.keys(PINFO).filter(p=>STGS.proj[p].stage===n);
+  return `<div class="lr stg-row" data-stg="${n}">${dia(k)}<span class="id" style="width:22px">${n}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${here.map(p=>`<span class="stg-chip" data-stgp="${p}">${esc(PINFO[p].name)}</span>`).join('')}${n===cs?'<span class="lbl" style="--c:#8b8f97"><i></i>You are here</span>':''}<svg class="ic stg-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div><div class="stg-body" data-stgb="${n}" hidden><b>Done when</b><ul>${STG_CHECK[i].map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`}).join('');
+ const l=$('#stgLead');if(l)l.textContent=`The nine stages from set-up to scale. The company is on stage ${cs}: ${STAGES[cs-1][0].toLowerCase()}.`}
+function openStage(k){const pi=PINFO[k],sp=STGS.proj[k];if(!pi)return;const n=sp.stage,list=STG_CHECK[n-1],all=sp.done.filter(Boolean).length===list.length;closeModal();
+ const bg=document.createElement('div');bg.className='mod-bg';const ok=canMoveStage(k);
+ bg.innerHTML=`<div class="mod stg-m" role="dialog" aria-modal="true" aria-label="Stage" style="max-width:480px"><div class="mod-h" style="padding-bottom:6px"><span style="font-weight:600;color:var(--fg);font-size:14px">${esc(pi.name)} · Stage ${n} of 9</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+ <div style="padding:2px 18px 6px"><h3 class="stg-t">${esc(STAGES[n-1][0])}</h3><p class="stg-w">${esc(STAGES[n-1][1])}</p><div class="stg-bar"><i style="width:${sp.done.filter(Boolean).length/list.length*100}%"></i></div><b class="stg-h">Done when</b>
+ ${list.map((c,j)=>`<label class="stg-ck"><input type="checkbox" data-stgck="${j}"${sp.done[j]?' checked':''}${ok?'':' disabled'}><span>${esc(c)}</span></label>`).join('')}
+ ${n<9?`<p class="stg-next">Next: <b>${esc(STAGES[n][0])}</b></p>`:'<p class="stg-next">This is the last stage.</p>'}</div>
+ <div class="mod-f">${n>1&&isOwnCEO()?'<button class="btn" id="stgBack" style="margin-right:auto">Move back</button>':'<span style="margin-right:auto"></span>'}<button class="btn" data-close>Close</button>${n<9&&ok?`<button class="btn${all?' pri':''}" id="stgGo"${all||isOwnCEO()?'':' disabled'}>${all?`Move to stage ${n+1}`:isOwnCEO()?'Move on anyway':`Move to stage ${n+1}`}</button>`:''}</div></div>`;
+ document.body.appendChild(bg);modal=bg;bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+ bg.querySelectorAll('[data-stgck]').forEach(c=>c.addEventListener('change',()=>{sp.done[+c.dataset.stgck]=c.checked?1:0;saveSoon();stgRefresh();openStage(k)}));
+ const go=$('#stgGo');if(go)go.addEventListener('click',()=>moveStage(k,n+1,!all));const bk=$('#stgBack');if(bk)bk.addEventListener('click',()=>moveStage(k,n-1))}
+function moveStage(k,to,forced){const sp=STGS.proj[k],from=sp.stage;sp.stage=to;sp.done=[0,0,0,0];PINFO[k].stage=to;saveSoon();closeModal();
+ try{addActivity(`<b>You</b> moved <b>${esc(PINFO[k].name)}</b> to stage ${to}: ${esc(STAGES[to-1][0])}${forced?' (checklist not finished)':''}`)}catch(e){}
+ if(forced&&typeof DECLOG!=='undefined'&&Array.isArray(DECLOG))try{DECLOG.unshift([dlab(iso(TODAY)),`Move ${PINFO[k].name} to stage ${to} early`,'Checklist not finished','Moved early','AK'])}catch(e){}
+ stgRefresh();toast(`<b>${esc(PINFO[k].name)}</b> is on stage ${to}`,STAGES[to-1][0])}
+function stgRefresh(){try{renderStages()}catch(e){}try{renderHP()}catch(e){}try{if(curView==='project')renderProject()}catch(e){}}
+document.addEventListener('click',e=>{const o=e.target.closest('[data-stg-open]');if(o){e.stopPropagation();openStage(curProj);return}
+ const c=e.target.closest('[data-stgp]');if(c){e.stopPropagation();openStage(c.dataset.stgp);return}
+ const r=e.target.closest('[data-stg]');if(r){const b=document.querySelector(`[data-stgb="${r.dataset.stg}"]`);if(b){b.hidden=!b.hidden;r.classList.toggle('open',!b.hidden)}}},true);
+{const sel=$('#sStage');if(sel)sel.addEventListener('change',()=>{STGS.company=+sel.value;saveSoon();renderStages();toast('<b>Company stage saved</b>',`Stage ${sel.value}: ${STAGES[+sel.value-1][0]}`)})}
+VIEWHOOK.stages=renderStages;renderStages();
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
 </script>
 </body>

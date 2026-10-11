@@ -41,7 +41,7 @@ const ACL = {
   TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
   TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, ALL], stamps: [ALL, ALL],
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
-  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], dec: [CEO, CEO], DECLOG: [CEO, CEO],
+  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], STGS: [ALL, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
   INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO], TS: [CEO, CEO],
