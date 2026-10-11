@@ -18,7 +18,13 @@ const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const DATA = process.env.DATA_DIR || join(ROOT, "data");
 const FILES = join(DATA, "files");
 const PORT = Number(process.env.PORT) || 5173;
-const MAX_JSON = 5 * 1024 * 1024, MAX_FILE = 25 * 1024 * 1024;
+const MB = 1024 * 1024, MAX_JSON = 16 * MB, MAX_FILE = 25 * MB;
+// How big each saved part may get. Messages have the most room; everything else is a list of short records.
+const SEC_MAX = { CONVS: 12 * MB, TASKS: 3 * MB }, SEC_MAX_OTHER = 2 * MB;
+const tooBig = (k, v) => JSON.stringify(v).length > (SEC_MAX[k] || SEC_MAX_OTHER);
+const MSG_MAX = 4000, MSGS_KEPT = 2000, NEW_MSGS_MAX = 200; // per message, per conversation, per save
+// Uploads: a total for the workspace and a share for each person (in MB, can be changed with variables).
+const FILES_TOTAL = (+process.env.FILES_QUOTA_MB || 5000) * MB, FILES_EACH = (+process.env.FILES_PER_PERSON_MB || 1000) * MB;
 await mkdir(FILES, { recursive: true });
 
 /* ---------------- Database ---------------- */
@@ -248,21 +254,24 @@ function mergeConvs(incoming, u) {
       else if (!want && cur.arch && c.arch === undefined && c.reopen) { delete cur.arch; delete cur.archAuto; delete cur.flag; cur.last = today(); sysMsg(cur, `${nameOf(u.pkey)} reopened this space`); }
       if (!c.flag && cur.flag && c.keep) { delete cur.flag; cur.last = today(); }
     }
-    const have = new Set(cur.msgs.map(key));
+    const have = new Set(cur.msgs.map(key)); let added = 0;
     for (const m of c.msgs || []) {
       if (!Array.isArray(m)) continue;
       const k = key(m);
       if (have.has(k)) { const ex = cur.msgs.find((x) => key(x) === k); if (m[3] && m[3].rx) { ex[3] = ex[3] || {}; ex[3].rx = cleanRx(m[3].rx); } continue; }
       if (m[0] !== u.pkey) continue; // people only post as themselves; system notices come from the server
-      cur.msgs.push([m[0], TIME_RE.test(String(m[1])) ? String(m[1]) : nowHM(), String(m[2]).slice(0, 8000), cleanMsgExtra(m[3])]);
+      if (++added > NEW_MSGS_MAX) break;
+      cur.msgs.push([m[0], TIME_RE.test(String(m[1])) ? String(m[1]) : nowHM(), String(m[2]).slice(0, MSG_MAX), cleanMsgExtra(m[3])]);
       have.add(k);
       if (cur.ch) { cur.last = today(); delete cur.flag; if (cur.arch) { delete cur.arch; delete cur.archAuto; sysMsg(cur, "Space reopened because someone posted"); } }
       if (!cur.ch) { cur.unreadBy = cur.unreadBy || {}; for (const p of convMembers(cur)) if (p !== u.pkey) cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
       else for (const p of cur.mem || []) if (p !== u.pkey) { cur.unreadBy = cur.unreadBy || {}; cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
     }
     if ((c.unread | 0) === 0 && cur.unreadBy) cur.unreadBy[u.pkey] = 0;
+    if (cur.msgs.length > MSGS_KEPT) cur.msgs.splice(0, cur.msgs.length - MSGS_KEPT); // each conversation keeps its latest messages
   }
-  writeSec("CONVS", all, u.id);
+  if (tooBig("CONVS", all)) return false;
+  writeSec("CONVS", all, u.id); return true;
 }
 
 // Spaces with no posts for 30 days are flagged; 7 days later they archive themselves. Runs on the server only, so it happens once.
@@ -354,12 +363,12 @@ const cx = makeConnections({ db, q, readSec, writeSec, getSetting, setSetting, a
 
 /* ---------------- HTTP helpers ---------------- */
 const send = (res, code, obj, headers = {}) => { res.writeHead(code, { "content-type": "application/json", "cache-control": "no-store", ...headers }); res.end(JSON.stringify(obj)); };
-function body(req, limit = MAX_JSON) {
+function body(req, limit) {
   return new Promise((ok, bad) => { const chunks = []; let n = 0;
-    req.on("data", (c) => { n += c.length; if (n > limit) { bad(Object.assign(new Error("too large"), { code: 413 })); req.destroy(); } else chunks.push(c); });
+    req.on("data", (c) => { if (n > limit) return; n += c.length; if (n > limit) { chunks.length = 0; bad(Object.assign(new Error("too large"), { code: 413 })); } else chunks.push(c); });
     req.on("end", () => ok(Buffer.concat(chunks))); req.on("error", bad); });
 }
-const json = async (req) => { const b = await body(req); try { return JSON.parse(b.toString() || "{}"); } catch { throw Object.assign(new Error("bad json"), { code: 400 }); } };
+const json = async (req, limit = 256 * 1024) => { const b = await body(req, limit); try { return JSON.parse(b.toString() || "{}"); } catch { throw Object.assign(new Error("bad json"), { code: 400 }); } };
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
 const SEC_HEADERS = { "x-content-type-options": "nosniff", "referrer-policy": "same-origin", "x-frame-options": "SAMEORIGIN" };
 const validEmail = (e) => typeof e === "string" && /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(e);
@@ -383,7 +392,6 @@ async function api(req, res, url) {
     if (!validEmail(b.email) || !strongPw(b.password) || !b.name) return send(res, 400, { error: "Enter your name, a valid email and a password of at least 10 characters." });
     const r = q("INSERT INTO users(email,name,pkey,role,pass,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), String(b.name).slice(0, 80), "AK", "CEO", await hashPw(b.password), Date.now());
     setSetting("setup_done", "1");
-    if (b.seed && typeof b.seed === "object") for (const [k, v] of Object.entries(b.seed)) if (k === "WG") { if (v) writeSec("WG", { access: v.access, rows: v.rows }, r.lastInsertRowid); } else if (ACL[k]) writeSec(k, v, r.lastInsertRowid);
     const P = readSec("P") || {}; P.AK = [String(b.name).slice(0, 80), (P.AK || [])[1] || "#1c1d21", (P.AK || [])[2] || "#fff"]; writeSec("P", P, r.lastInsertRowid);
     audit(r.lastInsertRowid, "set up the workspace");
     return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(r.lastInsertRowid), SESSION_DAYS * 86400) });
@@ -419,7 +427,7 @@ async function api(req, res, url) {
   if (p === "/api/state" && m === "GET") return send(res, 200, stateFor(u));
 
   if (p === "/api/state" && m === "PUT") {
-    const b = await json(req); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [], conflicts = [];
+    const b = await json(req, MAX_JSON); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [], conflicts = [], big = [];
     // Each section has a version (when it was last saved). If someone else saved it after this browser loaded it,
     // the save is held back and the person is asked which version to keep, instead of silently overwriting.
     const base = b.base && typeof b.base === "object" ? b.base : {}, force = new Set(Array.isArray(b.force) ? b.force : []);
@@ -427,21 +435,21 @@ async function api(req, res, url) {
     for (let [k, v] of Object.entries(secs)) {
       const st = canWrite(k, u.role) || k === "SPX" ? stale(k) : null;
       if (st) { const w = st.by && q("SELECT name FROM users WHERE id=?").get(st.by); conflicts.push({ sec: k, by: w ? String(w.name).split(" ")[0] : "Someone", at: st.updated }); continue; }
-      if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") writeSec("CONVS", cleanSeedConvs(v), u.id); else mergeConvs(v, u); done.push(k); continue; }
-      if (k === "TASKS") { if (!canWrite(k, u.role)) { refused.push(k); continue; } writeSec(k, mergeTasks(v, u), u.id); done.push(k); continue; }
-      if (k === "CEV") { if (!canWrite(k, u.role)) { refused.push(k); continue; } writeSec(k, mergeCev(v, u), u.id); done.push(k); continue; }
-      if (k === "SPX") { writeSec(k, mergeSpx(v, u), u.id); done.push(k); continue; }
+      const put = (val) => { if (tooBig(k, val)) big.push(k); else { writeSec(k, val, u.id); done.push(k); } };
+      if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") put(cleanSeedConvs(v)); else if (mergeConvs(v, u)) done.push(k); else big.push(k); continue; }
+      if (k === "TASKS") { if (!canWrite(k, u.role)) { refused.push(k); continue; } put(mergeTasks(v, u)); continue; }
+      if (k === "CEV") { if (!canWrite(k, u.role)) { refused.push(k); continue; } put(mergeCev(v, u)); continue; }
+      if (k === "SPX") { put(mergeSpx(v, u)); continue; }
       if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
       if (k === "MEM" && u.role === "CEO") { // role changes go to accounts too
         for (const [pk, role] of v || []) if (pk !== u.pkey && ["Manager", "Member", "Guest"].includes(role)) q("UPDATE users SET role=? WHERE pkey=? AND role<>'CEO'").run(role, pk);
       }
       if (!canWrite(k, u.role)) { refused.push(k); continue; }
-      v = cleanSection(k, v);
-      writeSec(k, v, u.id); done.push(k);
+      put(cleanSection(k, v));
     }
     if (done.length) { audit(u.id, "updated " + done.join(", ")); broadcast({ type: "changed", sections: done, by: u.pkey }, (x) => x.id !== u.id); }
     const ver = {}; for (const k of done) { const r = q("SELECT updated FROM sections WHERE name=?").get(k); if (r) ver[k] = r.updated; }
-    return send(res, refused.length && !done.length && !conflicts.length ? 403 : 200, { saved: done, refused, conflicts, ver });
+    return send(res, refused.length && !done.length && !conflicts.length && !big.length ? 403 : 200, { saved: done, refused, conflicts, tooBig: big, ver });
   }
 
   // Wages are role-based: the CEO, plus the people the CEO gives access to. No PIN.
@@ -452,7 +460,7 @@ async function api(req, res, url) {
   }
   if (p === "/api/wages" && m === "PUT") {
     if (u.role !== "CEO") return send(res, 403, { error: "Only the CEO can change wages." });
-    const v = swapKeys(await json(req), "AK", u.pkey);
+    const v = swapKeys(await json(req, SEC_MAX_OTHER), "AK", u.pkey);
     const access = Array.from(new Set([u.pkey, ...(Array.isArray(v.access) ? v.access.map(String) : [])]));
     writeSec("WG", { access, rows: Array.isArray(v.rows) ? v.rows : [] }, u.id); audit(u.id, "updated wages");
     broadcast({ type: "wages" });
@@ -501,9 +509,13 @@ async function api(req, res, url) {
     const area = url.searchParams.get("area") || "space"; if (!FILE_AREA[area]?.includes(u.role)) return send(res, 403, { error: "Not allowed" });
     let space = null;
     if (area === "space") { space = url.searchParams.get("space"); const conv = (readSec("CONVS") || []).find((c) => c.ch && c.id === space); if (!conv || !canSeeConv(conv, u)) return send(res, 403, { error: "You’re not in that space." }); }
-    let name = "file"; try { name = decodeURIComponent(req.headers["x-file-name"] || "file"); } catch {}
-    name = name.replace(/[\\/\0<>]/g, "_").slice(0, 200);
-    const buf = await body(req, MAX_FILE); const id = randomBytes(16).toString("hex");
+    let name = "file"; try { name = decodeURIComponent(String(req.headers["x-file-name"] || "file")); } catch {}
+    name = name.replace(/[\\/\0<>\u0000-\u001f]/g, "_").trim().slice(0, 200) || "file";
+    const used = () => [q("SELECT COALESCE(SUM(size),0) n FROM files").get().n, q("SELECT COALESCE(SUM(size),0) n FROM files WHERE owner=?").get(u.id).n];
+    const full = (n) => { const [all, mine] = used(); return all + n > FILES_TOTAL ? "The workspace’s file storage is full." : mine + n > FILES_EACH ? "You’ve used all of your file storage." : null; };
+    const said = +req.headers["content-length"] || 0; let why = said && full(said); if (why) { req.resume(); return send(res, 413, { error: why }); }
+    const buf = await body(req, MAX_FILE); why = full(buf.length); if (why) return send(res, 413, { error: why });
+    const id = randomBytes(16).toString("hex");
     await writeFile(join(FILES, id), buf);
     q("INSERT INTO files(id,name,mime,size,owner,area,created,space) VALUES(?,?,?,?,?,?,?,?)").run(id, name, String(req.headers["content-type"] || "application/octet-stream").slice(0, 100), buf.length, u.id, area, Date.now(), space);
     audit(u.id, "uploaded " + name);
@@ -560,7 +572,8 @@ createServer(async (req, res) => {
     if (f.startsWith(join(ROOT, "public")) && existsSync(f)) { res.writeHead(200, { "content-type": TYPES[extname(f)] || "application/octet-stream", ...SEC_HEADERS }); return res.end(await readFile(f)); }
     res.writeHead(404, SEC_HEADERS).end("Not found");
   } catch (e) {
-    if (!res.headersSent) send(res, e.code === 413 ? 413 : e.code === 400 ? 400 : 500, { error: e.code === 413 ? "Too large" : e.code === 400 ? "Bad request" : "Server error" });
+    if (!res.headersSent) send(res, e.code === 413 ? 413 : e.code === 400 ? 400 : 500, { error: e.code === 413 ? "Too large" : e.code === 400 ? "Bad request" : "Server error" }, e.code === 413 ? { connection: "close" } : {});
+    if (e.code === 413) res.on("finish", () => req.destroy()); // stop reading the rest of an oversized upload
     if (!e.code) console.error(e);
   }
 }).listen(PORT, () => console.log(`Helm running at http://localhost:${PORT} (data in ${DATA})`));

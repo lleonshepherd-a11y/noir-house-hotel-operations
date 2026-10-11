@@ -40,10 +40,10 @@ Railway runs `npm start`. The health check is `/health`.
 | Removing people | Settings → Members & permissions. **Sign out** ends someone's sessions on every device. **Remove** deletes their account so they can't sign in again; their name stays on their past work and open tasks until you reassign them. Anyone can use **Sign out everywhere** for their own account. |
 | Roles | CEO, Manager, Member and Guest. Roles are checked on the server: a Member's browser is never sent money, wages, fundraising, board and legal, connections or decisions data, and the server refuses any change to those areas. Changing someone's role in Settings updates their account. |
 | Wages | Based on role, with no PIN. The CEO always sees wages. The CEO can give access to Managers from Wages → **Access**, and those Managers can view wages but not change them. Members and Guests never can. Wages are never sent with the rest of the data, and the server checks access on every request. |
-| Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. |
+| Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. If someone else changed the same thing while you were editing, Helm asks which version to keep. Each part has a size limit; messages can be up to 4,000 characters, and each space or chat keeps its latest 2,000 messages. |
 | Messages | Spaces and direct messages are stored on the server. People only receive the spaces they're in and their own direct messages, and can only post as themselves. New messages reach everyone straight away. |
 | Live updates | When someone changes something, everyone else's screen updates within a second. |
-| Files | Uploads (space files, contract and minutes PDFs, data room documents) are stored on the server, up to 25 MB each. Each file is only available to roles allowed to see that area. |
+| Files | Uploads (space files, contract and minutes PDFs, data room documents) are stored on the server, up to 25 MB each, 5 GB for the workspace and 1 GB for each person (change these with `FILES_QUOTA_MB` and `FILES_PER_PERSON_MB`). Each file is only available to roles allowed to see that area. |
 | Audit log | Every change, upload, invite and wages access is recorded with who did it and when. |
 | Security | Changes need a custom request header, which blocks cross-site form posts. Uploaded files are served with a sandbox policy, and only safe file types open in the browser. |
 
