@@ -1,6 +1,6 @@
 // Helm connections: Gmail, Google Calendar, Google Drive, QuickBooks, Xero,
-// bank accounts (Plaid), Stripe and Slack. Read-only: Helm never moves money
-// or changes anything in these tools, except posting announcements to Slack.
+// bank accounts (Plaid) and Stripe. Read-only: Helm never moves money
+// or changes anything in these tools.
 //
 // OAuth apps (client ID and secret) come from environment variables, or the CEO
 // pastes them in on the Connections page. Tokens are encrypted at rest with
@@ -44,11 +44,13 @@ export const CONNECTORS = {
   xero: { app: "xero", kind: "oauth", name: "Xero", scope: process.env.XERO_SCOPES || "offline_access accounting.reports.read accounting.settings.read" },
   bank: { app: "plaid", kind: "plaid", name: "Business bank account" },
   stripe: { kind: "key", name: "Stripe", label: "Stripe restricted key (read-only)", hint: "In Stripe, go to Developers → API keys → Create restricted key. Give it Read access to Subscriptions and Prices. It starts with rk_live_." },
-  slack: { kind: "key", name: "Slack", label: "Slack incoming webhook URL", hint: "In Slack, create an app → Incoming Webhooks → Add to a channel. Copy the webhook URL (it starts with https://hooks.slack.com/services/)." },
 };
 
 export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetting, audit, broadcast, DATA }) {
   db.exec("CREATE TABLE IF NOT EXISTS connections(id TEXT PRIMARY KEY, secret TEXT, account TEXT, status TEXT, last_sync INTEGER, error TEXT, created INTEGER)");
+  // Tools Helm no longer offers: drop their saved keys and status so nothing is left behind.
+  for (const r of q("SELECT id FROM connections").all()) if (!CONNECTORS[r.id]) q("DELETE FROM connections WHERE id=?").run(r.id);
+  { const cx = readSec("CX"); if (cx && Object.keys(cx).some((k) => !CONNECTORS[k])) writeSec("CX", Object.fromEntries(Object.entries(cx).filter(([k]) => CONNECTORS[k])), null); }
 
   /* ---------- Encryption for tokens and app secrets ---------- */
   let keySrc = process.env.HELM_SECRET;
@@ -197,17 +199,6 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
   }
   setInterval(() => { for (const r of q("SELECT id FROM connections WHERE status IN ('on','error')").all()) sync(r.id).catch(() => {}); }, 30 * 60e3).unref();
 
-  /* ---------- Slack: post new announcements ---------- */
-  async function slackPost(text) { const s = secretOf("slack"); if (!s) return; await call(s.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) }); }
-  async function onAnnouncements(before, after, name) {
-    if (row("slack")?.status !== "on") return;
-    const seen = new Set((before || []).map((a) => a.t + "|" + a.b));
-    for (const a of (after || []).filter((a) => a && !seen.has(a.t + "|" + a.b)).slice(0, 3)) {
-      try { await slackPost(`*${a.t}*\n${a.b}\n_${name} · posted in Helm_`); save("slack", { last_sync: Date.now(), error: null }); }
-      catch (e) { save("slack", { status: "error", error: e.message }); }
-    }
-  }
-
   /* ---------- What the Connections page shows ---------- */
   const origin = (url) => (process.env.PUBLIC_URL || url.origin).replace(/\/$/, "");
   const redirectFor = (app, url) => `${origin(url)}/api/connect/callback/${app}`;
@@ -311,17 +302,10 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
     if (mm && m === "POST") {
       const id = mm[1], C = CONNECTORS[id]; if (!C || C.kind !== "key") { send(res, 404, { error: "Unknown tool" }); return true; }
       const key = String((await json(req)).key || "").trim();
-      if (id === "stripe") {
-        if (!/^(rk|sk)_(live|test)_[A-Za-z0-9]{10,}$/.test(key)) { send(res, 400, { error: "That doesn’t look like a Stripe key. It starts with rk_live_ or sk_live_." }); return true; }
-        save("stripe", { secret: { key }, account: key.includes("_test_") ? "Test mode" : "Live", status: "on", error: null });
-        const r = await sync("stripe", u.id);
-        if (!r.ok) { save("stripe", { secret: null, status: "off", error: null, account: null }); send(res, 400, { error: "Stripe said: " + r.error }); return true; }
-      } else {
-        if (!(MOCK ? /^https?:\/\//.test(key) : /^https:\/\/hooks\.slack\.com\/services\/[A-Za-z0-9/_-]+$/.test(key))) { send(res, 400, { error: "Paste the full webhook URL. It starts with https://hooks.slack.com/services/" }); return true; }
-        save("slack", { secret: { url: key }, account: "Incoming webhook", status: "on", error: null });
-        try { await slackPost(`Helm is connected. New announcements from ${u.name} and the team will be posted here.`); save("slack", { last_sync: Date.now() }); }
-        catch (e) { save("slack", { secret: null, status: "off", account: null }); send(res, 400, { error: "Slack said: " + e.message }); return true; }
-      }
+      if (!/^(rk|sk)_(live|test)_[A-Za-z0-9]{10,}$/.test(key)) { send(res, 400, { error: "That doesn’t look like a Stripe key. It starts with rk_live_ or sk_live_." }); return true; }
+      save("stripe", { secret: { key }, account: key.includes("_test_") ? "Test mode" : "Live", status: "on", error: null });
+      const r = await sync("stripe", u.id);
+      if (!r.ok) { save("stripe", { secret: null, status: "off", error: null, account: null }); send(res, 400, { error: "Stripe said: " + r.error }); return true; }
       audit(u.id, "connected " + id); send(res, 200, list(url)); return true;
     }
 
@@ -350,7 +334,5 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
     send(res, 404, { error: "Not found" }); return true;
   }
 
-  // Used by the accountability check to tell Slack when a task is escalated.
-  async function notify(text) { if (row("slack")?.status !== "on") return false; try { await slackPost(text); return true; } catch { return false; } }
-  return { route, onAnnouncements, notify };
+  return { route };
 }

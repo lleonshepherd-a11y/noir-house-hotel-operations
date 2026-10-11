@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id INTEGER, exp
 CREATE TABLE IF NOT EXISTS sections(name TEXT PRIMARY KEY, json TEXT, updated INTEGER, by INTEGER);
 CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, mime TEXT, size INTEGER, owner INTEGER, area TEXT, created INTEGER);
 CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
+DELETE FROM settings WHERE k='acct_sent';
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, at INTEGER, user_id INTEGER, what TEXT);`);
 const q = (sql) => db.prepare(sql);
 try { db.exec("ALTER TABLE files ADD COLUMN space TEXT"); } catch {} // which space a file was shared in
@@ -420,7 +421,6 @@ async function api(req, res, url) {
       }
       if (!canWrite(k, u.role)) { refused.push(k); continue; }
       v = cleanSection(k, v);
-      if (k === "ANN") cx.onAnnouncements(readSec("ANN"), v, u.name).catch(() => {});
       writeSec(k, v, u.id); done.push(k);
     }
     if (done.length) { audit(u.id, "updated " + done.join(", ")); broadcast({ type: "changed", sections: done, by: u.pkey }, (x) => x.id !== u.id); }
@@ -493,8 +493,9 @@ async function api(req, res, url) {
   return send(res, 404, { error: "Not found" });
 }
 
-/* ---------------- Accountability: hourly check for stuck tasks ---------------- */
-// Tasks store due dates as short labels ("Oct 20", "Fri", "Today"). This mirrors the app's reading of them.
+/* ---------------- Due dates ---------------- */
+// Older tasks store due dates as short labels ("Oct 20", "Fri", "Today"). This mirrors the app's reading of them,
+// so cleanTask can give each one a full date.
 const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function dueISO(d, now = new Date()) {
   if (!d) return null; const pad = (n) => String(n).padStart(2, "0"); const iso = (x) => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
@@ -505,21 +506,8 @@ function dueISO(d, now = new Date()) {
   const [mon, day] = isNaN(m[1]) ? [m[1], +m[2]] : [m[2], +m[1]]; const mi = MON3.indexOf(mon); if (mi < 0) return null;
   let y = now.getFullYear(); if (mi < now.getMonth() - 6) y++; else if (mi > now.getMonth() + 5) y--; return `${y}-${pad(mi + 1)}-${pad(day)}`;
 }
-async function accountabilityCheck() {
-  const tasks = readSec("TASKS") || [], P = readSec("P") || {}, today = new Date(); today.setHours(0, 0, 0, 0);
-  const sent = JSON.parse(getSetting("acct_sent") || "{}"), day = today.toISOString().slice(0, 10), out = [];
-  for (const t of tasks) {
-    if (!t || t.s === "done") continue; const due = t.due || dueISO(t.d); if (!due) continue;
-    const late = Math.round((today - new Date(due + "T00:00")) / 864e5); if (late < 5) continue;
-    const key = t.id + ":" + day; if (sent[key]) continue; sent[key] = 1;
-    out.push(`*${t.id}* ${t.t} is ${late} days late with ${String((P[t.o] || [t.o])[0]).replace(/\.$/, "")}.`);
-  }
-  if (out.length) { const ok = await cx.notify(":rotating_light: *Stuck tasks*\n" + out.join("\n") + "\n_Open Helm to chase or reassign._"); if (ok) audit(null, "posted stuck tasks to Slack"); }
-  for (const k of Object.keys(sent)) if (!k.endsWith(day)) delete sent[k];
-  setSetting("acct_sent", JSON.stringify(sent));
-}
-setInterval(() => { accountabilityCheck().catch(() => {}); try { tidySpaces(); } catch {} }, 60 * 60e3).unref();
-setTimeout(() => { accountabilityCheck().catch(() => {}); try { tidySpaces(); } catch {} }, 15e3).unref();
+setInterval(() => { try { tidySpaces(); } catch {} }, 60 * 60e3).unref();
+setTimeout(() => { try { tidySpaces(); } catch {} }, 15e3).unref();
 
 const csp = (n) => `default-src 'self'; script-src 'nonce-${n}' https://cdn.plaid.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'self' blob:; frame-src https://cdn.plaid.com; connect-src 'self' https://*.plaid.com; base-uri 'none'; form-action 'self'; frame-ancestors 'self'`;
 const page = async (res, f) => { let html = await readFile(join(ROOT, f), "utf8"); const nonce = randomBytes(16).toString("base64"); if (f === "index.html") html = html.replace("<head>", "<head>\n<script>window.HELM_BACKEND=1</script>"); html = html.replace(/<script>/g, `<script nonce="${nonce}">`); res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SEC_HEADERS, "content-security-policy": csp(nonce) }); res.end(html); };

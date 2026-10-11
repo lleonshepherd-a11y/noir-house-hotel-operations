@@ -60,14 +60,14 @@ Helm then follows each task through:
 | Due today or tomorrow | The owner gets a reminder. |
 | 1 day late | The owner is nudged to update it or say what's in the way. |
 | 2 days late, or no movement for 5 days | The project lead is told. |
-| 5 days late | It goes to the CEO: a "Blocked" card on the Briefing, a notification, and a Slack post if Slack is connected (checked hourly on the server). |
+| 5 days late | It goes to the CEO: a "Blocked" card on the Briefing and a notification. |
 | Done | The next person, and anyone whose task was waiting on it, is told it's their turn. |
 
 Each project page has a **Held up** panel. It shows what's late, who has it, how long it's been, and which milestone it puts at risk, with **Chase** and **Reassign** buttons. Chase sends the owner a direct message. A project's health (on track, at risk or off track) is worked out from its late tasks.
 
 ## Connections
 
-The CEO connects tools on the **Connections** page. Helm only reads from them. The one exception is Slack: Helm posts new announcements to the channel you choose. Helm checks each tool again every 30 minutes, and you can press **Sync now** at any time. Tokens are stored encrypted, and only the CEO's browser receives what Helm reads.
+The CEO connects tools on the **Connections** page. Helm only reads from them. Helm checks each tool again every 30 minutes, and you can press **Sync now** at any time. Tokens are stored encrypted, and only the CEO's browser receives what Helm reads.
 
 | Tool | What it fills in | What you need |
 | --- | --- | --- |
@@ -78,7 +78,6 @@ The CEO connects tools on the **Connections** page. Helm only reads from them. T
 | Xero | Bank account balances in Money, from the Bank Summary report | A Xero app |
 | Business bank account | Balances, through Plaid | Plaid keys |
 | Stripe | MRR (monthly recurring revenue) in Money and Metrics | A restricted key with Read access to Subscriptions and Prices. Paste it on the page. |
-| Slack | Posts new announcements to a channel | An incoming webhook URL. Paste it on the page. |
 
 **Setting up an app (Google, QuickBooks, Xero, Plaid).** Each service needs its own app for your Helm, which you set up once:
 
@@ -96,7 +95,6 @@ Gusto, GitHub, Figma and Carta show as *Coming soon*.
 - **More connections.** Gusto payroll, GitHub, Figma and Carta.
 - **Email.** Invite links are shown to the CEO to send themselves, and notifications appear in the app. Sending emails needs an email service such as Resend or Postmark.
 - **Password reset by email.** For now the CEO can send a new invite.
-- **Editing at the same moment.** If two people edit the same area at once, the last save wins. Messages are merged safely.
 
 ## Files
 
@@ -104,7 +102,7 @@ Gusto, GitHub, Figma and Carta show as *Coming soon*.
 | --- | --- |
 | `index.html` | The app |
 | `server.mjs` | The backend |
-| `connectors.mjs` | Connections: Google, QuickBooks, Xero, Plaid, Stripe and Slack |
+| `connectors.mjs` | Connections: Google, QuickBooks, Xero, Plaid and Stripe |
 | `login.html` | The sign-in, first-run setup and join-from-invite page |
 | `serve.mjs` | A simple server for the demo only (no accounts) |
 | `SEED_FOUNDER_NEEDS.md` | What a seed-stage company needs from Helm |
