@@ -41,7 +41,7 @@ const ACL = {
   TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [ALL, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
   TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, ALL], stamps: [ALL, ALL],
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
-  NY: [CEO, CEO], SO: [CEO, CEO], dec: [CEO, CEO], DECLOG: [CEO, CEO],
+  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
   INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO], TS: [CEO, CEO],
@@ -81,6 +81,11 @@ function convsFor(u) {
 }
 // Merge one person's copy of the conversations into the shared copy without
 // losing anyone else's messages. People can only add their own messages.
+function canCreateSpace(u) {
+  if (u.role === "CEO") return true; if (u.role === "Guest") return false;
+  const rule = (readSec("SPSET") || {}).create || "Managers and CEO";
+  return rule === "Everyone" || (rule === "Managers and CEO" && u.role === "Manager");
+}
 function mergeConvs(incoming, u) {
   const all = readSec("CONVS") || [];
   const byId = new Map(all.map((c) => [c.ch ? c.id : "dm_" + convMembers(c).slice().sort().join("_"), c]));
@@ -91,11 +96,15 @@ function mergeConvs(incoming, u) {
     if (!c.ch) { const parts = [u.pkey, c.dm].sort(); id = "dm_" + parts.join("_"); }
     let cur = byId.get(id);
     if (!cur) {
+      if (c.ch && !canCreateSpace(u)) continue; // the CEO decides who can create spaces
       if (c.ch) cur = { id: c.id, ch: String(c.ch).slice(0, 80), ic: c.ic, desc: c.desc, shared: c.shared, guests: c.guests, mem: Array.from(new Set([...(c.mem || []), u.pkey])), unread: 0, msgs: [] };
       else cur = { id, dm: c.dm, parts: [u.pkey, c.dm], unread: 0, unreadBy: {}, msgs: [] };
       all.push(cur); byId.set(id, cur);
     } else if (!canSeeConv(cur, u)) continue;
     if (c.ch && Array.isArray(c.mem) && (cur.mem || []).includes(u.pkey)) cur.mem = Array.from(new Set(c.mem));
+    // archive state and last activity (archiving needs the same rights as creating, or being the creator)
+    if (c.ch && (canCreateSpace(u) || cur.by === u.pkey)) { for (const k of ["arch", "archAuto", "flag"]) { if (c[k] === undefined || c[k] === null) delete cur[k]; else cur[k] = c[k]; } }
+    if (c.ch && typeof c.last === "string" && /^\d{4}-\d\d-\d\d$/.test(c.last) && (!cur.last || c.last > cur.last)) cur.last = c.last;
     const have = new Set(cur.msgs.map(key));
     for (const m of c.msgs || []) {
       if (!Array.isArray(m)) continue;
