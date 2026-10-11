@@ -1549,6 +1549,22 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 :root[data-theme=dark] #newBtn .ic{color:#0a0a0a}
 .ny.urgent{box-shadow:none!important}
 #nyFilt button{display:inline-flex;align-items:center;gap:7px}#nyFilt .pic2{width:15px;height:15px;stroke-width:1.6;opacity:.75}#nyFilt button.on .pic2{opacity:1}
+
+/* Briefing: no summary line, small clock */
+#homeLead{display:none!important}
+.hacts{flex-direction:column;align-items:flex-end!important;gap:12px!important}
+.hclock{display:flex;align-items:center;gap:12px}
+.hc-face{width:40px;height:40px}
+.hc-face circle:first-child{fill:none;stroke:var(--line);stroke-width:1}
+.hc-ticks line{stroke:var(--fg-4);stroke-width:1;stroke-linecap:round}
+.hc-h,.hc-m{stroke:var(--fg);stroke-linecap:round}.hc-h{stroke-width:2}.hc-m{stroke-width:1.4}
+.hc-s{stroke:var(--red);stroke-width:.8;stroke-linecap:round}
+.hc-dot{fill:var(--fg)}
+
+.hc-t{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
+.hc-t b{font-size:22px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
+.hc-t small{font-size:12px;color:var(--fg-3)}
+@media (max-width:640px){.hacts{align-items:flex-start!important;width:100%;flex-direction:row;justify-content:space-between}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1629,7 +1645,7 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
         <!-- ======== BRIEFING ======== -->
         <section class="view" id="view-home">
           <div class="wrap wide">
-            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Saturday 10 October · Week 41</span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts"><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
+            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg>Saturday 10 October · Week 41</span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><svg viewBox="0 0 40 40" class="hc-face"><circle cx="20" cy="20" r="18.5"/><g class="hc-ticks"><line x1="20" y1="3" x2="20" y2="6" transform="rotate(0 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(30 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(60 20 20)"/><line x1="20" y1="3" x2="20" y2="6" transform="rotate(90 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(120 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(150 20 20)"/><line x1="20" y1="3" x2="20" y2="6" transform="rotate(180 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(210 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(240 20 20)"/><line x1="20" y1="3" x2="20" y2="6" transform="rotate(270 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(300 20 20)"/><line x1="20" y1="4" x2="20" y2="5.4" transform="rotate(330 20 20)"/></g><line id="hcH" class="hc-h" x1="20" y1="20" x2="20" y2="11.5"/><line id="hcM" class="hc-m" x1="20" y1="20" x2="20" y2="7"/><line id="hcS" class="hc-s" x1="20" y1="22.5" x2="20" y2="6.5"/><circle cx="20" cy="20" r="1.4" class="hc-dot"/></svg><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
             <div class="sp-tools" id="nyTools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
             <div class="spgrid">
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
@@ -3316,6 +3332,14 @@ function layoutSpacesMenu(){$('#sideSpaces').classList.toggle('closed',!spSideOp
 $('#sideSp').addEventListener('click',e=>{if(spSideOpen){spSideOpen=false;layoutSpacesMenu();e.stopImmediatePropagation()}else{spSideOpen=true;layoutSpacesMenu()}},true);
 {const sv=showView;showView=function(v,o){const r=sv(v,o);if(v==='spaces'&&!spSideOpen){spSideOpen=true;layoutSpacesMenu()}return r}}
 layoutSpacesMenu();
+
+/* ---------- Briefing clock ---------- */
+function tickClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),sec=d.getSeconds();
+ const set=(id,deg)=>{const e=document.getElementById(id);if(e)e.setAttribute('transform',`rotate(${deg} 20 20)`)};
+ set('hcH',(h%12)*30+m*.5);set('hcM',m*6+sec*.1);set('hcS',sec*6);
+ const t=$('#hcTime');if(t)t.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+ const z=$('#hcZone');if(z&&!z.textContent){let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ')}catch(e){}z.textContent=tz||'Local time'}}
+tickClock();setInterval(tickClock,1000);
 
 /* ---------- Saving: keeps every change on this device ---------- */
 const SAVE_KEY='helm-data-v1';
