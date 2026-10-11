@@ -3605,7 +3605,7 @@ const SPX={launch:{purpose:'Everything for the Murmur public launch: video, pres
  northbeam:{purpose:'Shared with Northbeam Ventures for diligence questions. Keep answers short and link to the data room.',proj:null,by:'ML',made:'Oct 5',files:[F('Data room index.pdf','pdf','ML','Oct 5','140 KB'),F('September metrics.xlsx','sheet','ML','Yesterday','88 KB'),F('Cap table.xlsx','sheet','ML','Oct 5','64 KB')],pins:[['link','Data room',()=>showView('fundraise')],['doc','Cap table',()=>showView('fundraise')]]},
  brightpath:{purpose:'Shared with Brightpath for the 40-seat pilot: rollout, feedback and support questions.',proj:'murmur',by:'PS',made:'Oct 2',files:[F('Pilot contract.pdf','pdf','PS','Oct 2','520 KB'),F('Rollout plan.docx','doc','PS','Oct 3','26 KB'),F('Feedback export.csv','text','PS','Mon','14 KB')],pins:[['doc','Pilot contract',()=>openProject('murmur','Files')],['link','Customer feedback',()=>showView('feedback')]]}};
 const PIC={doc:'<path d="M7 3.5h7l4 4V20a.5.5 0 01-.5.5h-10A.5.5 0 017 20z"/><path d="M14 3.5V8h4"/>',vid:'<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M10 9.5v5l4-2.5z"/>',task:'<circle cx="12" cy="12" r="8"/><path d="M8.8 12.2l2.2 2.1 4.2-4.4"/>',link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'};
-const sx=c=>{const x=SPX[c.id]||(SPX[c.id]={purpose:c.desc||'A new space.',proj:null,by:'AK',made:'Today',pins:[]});x.files=x.files||[];return x};
+const sx=c=>{const x=SPX[c.id]||(SPX[c.id]={purpose:c.desc||'A new space.',proj:null,by:c.by||'AK',made:'Today',pins:[]});x.files=x.files||[];if(c.desc&&(!x.purpose||x.purpose==='A new space.'))x.purpose=c.desc;if(c.by)x.by=c.by;return x};
 let spCur=null,spF='all';
 const spT=(c,cls='')=>`<span class="spt${c.shared?' shr':''} ${cls}">${esc(c.ic[0])}</span>`;
 const lastLine=c=>{const l=[...c.msgs].reverse().find(m=>m[0]!=='sys');if(!l)return '<span>No messages yet</span>';const who=l[0]==='AK'?'You':l[0]==='guest'?l[3].g.split(' ')[0]:FIRST(l[0]);return `<b>${esc(who)}</b> ${esc(l[2])}`};
@@ -4063,18 +4063,35 @@ function applyData(d){
 const hadSaved=loadSaved();
 
 /* ================= Backend connection (only when served by server.mjs) ================= */
-const BK={on:!!window.HELM_BACKEND,me:null,sent:{},es:null,wgLoaded:false,users:[],cx:{},cn:null};
+const BK={on:!!window.HELM_BACKEND,me:null,ver:{},sent:{},es:null,wgLoaded:false,users:[],cx:{},cn:null};
 const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps','NYP','SPSET','STGS'];
 function secsFromSnap(){const d=JSON.parse(snapshot());const o={...d.arr};SEC_EXTRA.forEach(k=>o[k]=d[k]);return o}
 function dataFromSecs(S){const d={arr:{}};for(const k in ARR)if(S[k])d.arr[k]=S[k];SEC_EXTRA.forEach(k=>{if(S[k]!==undefined)d[k]=S[k]});return d}
 async function bkApi(path,opt={}){const r=await fetch(path,{credentials:'same-origin',...opt,headers:{'x-helm':'1','content-type':'application/json',...(opt.headers||{})}});if(r.status===401){location.href='/login';throw new Error('signin')}return r}
 let bkSaving=null;
-async function bkSave(keepalive){if(!BK.me)return;const S=secsFromSnap(),ch={};for(const k in S){const j=JSON.stringify(S[k]);if(BK.sent[k]!==j)ch[k]=S[k]}if(!Object.keys(ch).length)return;
- const run=async()=>{try{const r=await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:ch}),keepalive:!!keepalive});const j=await r.json();[...(j.saved||[]),...(j.refused||[])].forEach(k=>BK.sent[k]=JSON.stringify(S[k]));bkStatus(true)}catch(e){bkStatus(false)}};
+const SEC_NAME={TASKS:'Tasks',CEV:'Calendar',SPX:'Space files',NOTES:'Notes',PROJ:'Projects',SIDEP:'Projects',ANN:'Announcements',TEAMP:'Team',MEM:'Members',P:'People',MROWS:'Metrics',WK:'This week',MET:'Metrics',STGS:'Stages',SPSET:'Space settings',NY:'Briefing',NYP:'Pins',MNY_B:'Budgets',MNY_BL:'Bills',MNY_acc:'Accounts',MNY_tx:'Transactions',MNYn:'Money',INV:'Investors',SAFES:'SAFEs',CAP:'Cap table',DR:'Data room',ROUND:'Round',UPD:'Investor updates',TS:'Term sheets',LG_meet:'Board meetings',LG_mem:'Board',LG_fil:'Filings',LG_ct:'Contracts',ROLES:'Roles',CANDS:'Candidates',OB:'Onboarding',CN:'Connections',DECLOG:'Decision log',stamps:'Updates',cnt:'Task numbers'};
+const secName=k=>SEC_NAME[k]||k;
+async function bkSave(keepalive,force){if(!BK.me)return;const S=secsFromSnap(),ch={};for(const k in S){const j=JSON.stringify(S[k]);if(BK.sent[k]!==j)ch[k]=S[k]}if(!Object.keys(ch).length)return true;
+ const base={};for(const k in ch)if(BK.ver[k]!=null)base[k]=BK.ver[k];
+ const run=async()=>{try{const r=await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:ch,base,force:force||[]}),keepalive:!!keepalive});const j=await r.json().catch(()=>({}));
+   (j.saved||[]).forEach(k=>{BK.sent[k]=JSON.stringify(S[k]);if(j.ver&&j.ver[k])BK.ver[k]=j.ver[k]});
+   const refused=j.refused||[],conflicts=j.conflicts||[];
+   if(refused.length){bkStatus(false,'Some changes weren’t saved');toast(`<b>Not saved: ${esc(refused.map(secName).join(', '))}</b>`,'You don’t have permission to change this. It’s been put back as it was.');refused.forEach(k=>delete BK.sent[k]);await bkPull(false).catch(()=>{})}
+   if(conflicts.length){bkStatus(false,'Waiting for you to choose a version');bkConflict(conflicts)}
+   if(!refused.length&&!conflicts.length){bkStatus(true);return true}return false}catch(e){bkStatus(false);return false}};
  bkSaving=(bkSaving||Promise.resolve()).then(run);return bkSaving}
-function bkStatus(ok){const el=$('#bkDot');if(el){el.classList.toggle('off',!ok);el.title=ok?'All changes saved':'Can’t reach the server. Changes will retry.'}}
+// Someone else saved the same part while you were editing: ask which version to keep, so nobody's work is lost silently.
+function bkConflict(list){BK.hold=BK.hold||new Set();list.forEach(c=>BK.hold.add(c.sec));if(document.querySelector('.bk-conf'))return;closeModal();const bg=document.createElement('div');bg.className='mod-bg bk-conf';
+ const what=list.map(c=>`<li><b>${esc(secName(c.sec))}</b>, changed by ${esc(c.by)} ${esc(cxAgo(c.at))}</li>`).join('');
+ bg.innerHTML=`<div class="mod" role="dialog" aria-modal="true" aria-label="Someone else changed this" style="max-width:460px"><div class="mod-h" style="padding-bottom:6px"><span style="font-weight:600;color:var(--fg);font-size:14px">Someone else changed this while you were editing</span></div><div style="padding:4px 18px 8px;font-size:13.5px;color:#c9c9ce;line-height:1.55"><ul style="margin:0 0 10px;padding-left:18px">${what}</ul>Your change hasn’t been saved yet. Keep yours to replace theirs, or load theirs and make your change again.</div><div class="mod-f"><span style="margin-right:auto"></span><button class="btn" id="bkTheirs">Load theirs</button><button class="btn pri" id="bkMine">Keep mine</button></div></div>`;
+ document.body.appendChild(bg);modal=bg;
+ $('#bkTheirs').addEventListener('click',async()=>{closeModal();list.forEach(c=>{delete BK.sent[c.sec];BK.hold.delete(c.sec)});await bkPull(false).catch(()=>{});bkStatus(true);toast('<b>Loaded the latest version</b>','Make your change again if you still need it')});
+ $('#bkMine').addEventListener('click',async()=>{closeModal();list.forEach(c=>{delete BK.sent[c.sec];BK.hold.delete(c.sec)});const ok=await bkSave(false,list.map(c=>c.sec));if(ok)toast('<b>Your version was saved</b>')})}
+function bkStatus(ok,msg){const el=$('#bkDot');if(el){el.classList.toggle('off',!ok);el.title=ok?'All changes saved':(msg||'Can’t reach the server. Changes will retry.')}}
 function bkMarkSent(){const S=secsFromSnap();BK.sent={};for(const k in S)BK.sent[k]=JSON.stringify(S[k])}
-async function bkPull(first){const S=await (await bkApi('/api/state')).json();
+async function bkPull(first){const S=await (await bkApi('/api/state')).json();if(S.__v){BK.ver=S.__v;delete S.__v}
+ // A part waiting on the "someone else changed this" choice keeps the user's own version until they choose.
+ if(BK.hold&&BK.hold.size){const L=secsFromSnap();BK.hold.forEach(k=>{if(k in L)S[k]=L[k]})}
  if(first){const put=(a,b)=>{if(Array.isArray(a))a.splice(0,a.length,...b)};for(const k in ARR)if(!(k in S))put(ARR[k](),[]);
   if(BK.me.role!=='CEO'){WG.rows=[];PINFO.murmur.kpis=[['Pilot testers','2,140','Private pilot',[400,800,1200,1500,1800,2140]],['Waitlist','18,420','+2,310 this week',[4,5,7,9,11,13,16,18.4]],['Open tasks',String(TASKS.filter(t=>t.id.startsWith('MUR')&&t.s!=='done').length),'Across the team',[14,13,12,13,12,11]],['Stage','5 of 9','Private pilot',[1,2,3,4,5,5]]];PINFO.murmur.tabs=['Overview','Issues','Board','Files']}}
  if(S.CONVS){CONVS.forEach(c=>c.unread=0)}
@@ -4151,7 +4168,7 @@ if(BK.on){const rm=renderMem;renderMem=function(){rm();if(!BK.me||BK.me.role!=='
  document.addEventListener('click',e=>{const b=e.target.closest('[data-binv]');if(b){const k=b.dataset.binv;bkInvite(k,P[k][0])}})}
 async function bkBoot(){let me;try{const r=await fetch('/api/me',{credentials:'same-origin'});if(r.status===401){location.href='/login';return}me=await r.json()}catch(e){bkStatus(false);return}
  BK.me=me;try{localStorage.setItem('helm-setup-done','1')}catch(e){}
- if(!me.seeded&&me.role==='CEO'){P.AK[0]=me.name;const S=secsFromSnap();S.WG={access:WG.access,rows:WG.rows};S.CONVS=CONVS.map(c=>c.dm?{...c,parts:['AK',c.dm]}:c);await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:S})})}
+ if(!me.seeded&&me.role==='CEO'){P.AK[0]=me.name;const S=secsFromSnap();S.WG={access:WG.access,rows:WG.rows};S.CONVS=CONVS.map(c=>c.dm?{...c,parts:['AK',c.dm]}:{...c,by:c.by||(SPX[c.id]||{}).by,desc:c.desc||(SPX[c.id]||{}).purpose});await bkApi('/api/state',{method:'PUT',body:JSON.stringify({sections:S})})}
  await bkPull(true);bkLive();bkUI();bkCxReturn();document.body.classList.add('bk-ready')}
 if(BK.on){document.body.classList.add('bk-loading');bkBoot()}
 
@@ -4254,23 +4271,24 @@ acctHealth();acctBell();try{renderNY();renderHP()}catch(e){}
 /* ================= Spaces housekeeping: archive, auto-tidy, who can create ================= */
 var SPSET=window.SPSET||{create:'Managers and CEO'};window.SPSET=SPSET;
 var NYPIN=window.NYPIN||new Set();window.NYPIN=NYPIN;
+function canManageSpace(c,who){who=who||VIEWER;const r=roleOf(who);return r==='CEO'||r==='Manager'||!!(c&&(c.by||sx(c).by)===who)}
 function canCreateSpace(who){who=who||VIEWER;const r=roleOf(who);if(r==='CEO')return true;if(r==='Guest')return false;if(SPSET.create==='Everyone')return true;return SPSET.create==='Managers and CEO'&&r==='Manager'}
 const SP_IDLE=30,SP_GRACE=7;
 // last activity per space (sample data has a date; new posts update it)
 {const L={launch:0,fundraise:1,general:2,northbeam:3,brightpath:34};CONVS.forEach(c=>{if(c.ch&&!c.last){const d=new Date(TODAY);d.setDate(d.getDate()-(L[c.id]!=null?L[c.id]:Math.min(25,c.msgs.length)));c.last=iso(d)}c._n=c.msgs?c.msgs.length:0})}
-function spTouch(){CONVS.forEach(c=>{if(!c.ch)return;const n=c.msgs?c.msgs.length:0;if(c._n!=null&&n>c._n){c.last=iso(TODAY);if(c.flag){c.flag=null}if(c.arch&&c.msgs.slice(c._n).some(m=>m[0]!=='sys')){delete c.arch;delete c.archAuto;c.msgs.push(['sys',now(),'Space reopened because someone posted']);saveSoon();try{renderSideSpaces();renderConvList()}catch(e){}}}c._n=c.msgs?c.msgs.length:0})}
+function spTouch(){if(BK.on)return;CONVS.forEach(c=>{if(!c.ch)return;const n=c.msgs?c.msgs.length:0;if(c._n!=null&&n>c._n){c.last=iso(TODAY);if(c.flag){c.flag=null}if(c.arch&&c.msgs.slice(c._n).some(m=>m[0]!=='sys')){delete c.arch;delete c.archAuto;c.msgs.push(['sys',now(),'Space reopened because someone posted']);saveSoon();try{renderSideSpaces();renderConvList()}catch(e){}}}c._n=c.msgs?c.msgs.length:0})}
 const spIdle=c=>c.last?Math.round((TODAY-new Date(c.last+'T00:00'))/864e5):0;
 const spAutoDate=c=>{const d=new Date((c.flag||iso(TODAY))+'T00:00');d.setDate(d.getDate()+SP_GRACE);return iso(d)};
-function spSetArch(c,on,auto){if(on){c.arch=iso(TODAY);c.archAuto=!!auto;c.flag=null;c.msgs.push(['sys',now(),auto?`Archived automatically after ${spIdle(c)} days without posts`:`${P[VIEWER]?P[VIEWER][0].split(' ')[0]:'Someone'} archived this space`]);c._n=c.msgs.length}else{delete c.arch;delete c.archAuto;c.flag=null;c.last=iso(TODAY);c.msgs.push(['sys',now(),'Space reopened']);c._n=c.msgs.length}}
-function spTidy(){spTouch();CONVS.forEach(c=>{if(!c.ch||c.arch||/^g\d+$/.test(c.id))return;if(spIdle(c)>=SP_IDLE){if(!c.flag)c.flag=iso(TODAY);else if(iso(TODAY)>=spAutoDate(c))spSetArch(c,true,true)}else c.flag=null})}
-const spTidyList=()=>SPACES().filter(c=>c.flag&&(isOwnCEO()||roleOf(VIEWER)==='Manager'||(sx(c).by===VIEWER)));
-function spArchUI(id,on){const c=CONVS.find(x=>x.id===id);if(!c)return;if(on&&!(canCreateSpace()||sx(c).by===VIEWER)){toast('<b>Ask a manager to archive it</b>');return}spSetArch(c,on);if(on&&spCur===id){spCur=null}saveSoon();try{renderSideSpaces();renderConvList();renderSpDir();if(spCur)renderSpace(false)}catch(e){}if(curView==='spaces'&&!spCur)try{spShow()}catch(e){}
+function spSetArch(c,on,auto){if(BK.on){if(on){c.arch=iso(new Date());delete c.reopen}else{delete c.arch;delete c.archAuto;c.flag=null;c.reopen=true}return}if(on){c.arch=iso(TODAY);c.archAuto=!!auto;c.flag=null;c.msgs.push(['sys',now(),auto?`Archived automatically after ${spIdle(c)} days without posts`:`${P[VIEWER]?P[VIEWER][0].split(' ')[0]:'Someone'} archived this space`]);c._n=c.msgs.length}else{delete c.arch;delete c.archAuto;c.flag=null;c.last=iso(TODAY);c.msgs.push(['sys',now(),'Space reopened']);c._n=c.msgs.length}}
+function spTidy(){if(BK.on)return;spTouch();CONVS.forEach(c=>{if(!c.ch||c.arch||/^g\d+$/.test(c.id))return;if(spIdle(c)>=SP_IDLE){if(!c.flag)c.flag=iso(TODAY);else if(iso(TODAY)>=spAutoDate(c))spSetArch(c,true,true)}else c.flag=null})}
+const spTidyList=()=>SPACES().filter(c=>c.flag&&canManageSpace(c));
+function spArchUI(id,on){const c=CONVS.find(x=>x.id===id);if(!c)return;if(!canManageSpace(c)){toast('<b>Ask a manager to '+(on?'archive':'reopen')+' it</b>','Only the person who made the space, managers and the CEO can.');return}spSetArch(c,on);if(on&&spCur===id){spCur=null}saveSoon();try{renderSideSpaces();renderConvList();renderSpDir();if(spCur)renderSpace(false)}catch(e){}if(curView==='spaces'&&!spCur)try{spShow()}catch(e){}
  toast(on?`<b>${esc(c.ch)}</b> archived`:`<b>${esc(c.ch)}</b> reopened`,on?'Messages and files are kept':'It’s back in your spaces',on?()=>{spSetArch(c,false);saveSoon();renderSideSpaces();renderSpDir()}:null)}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-sparch]');if(a){e.stopPropagation();spArchUI(a.dataset.sparch,a.dataset.v==='1');return}
- const k=e.target.closest('[data-spkeep]');if(k){e.stopPropagation();const c=CONVS.find(x=>x.id===k.dataset.spkeep);if(c){c.flag=null;c.last=iso(TODAY);saveSoon();renderSpDir();toast(`<b>${esc(c.ch)}</b> kept`,'We’ll check again in 30 days')}return}
+ const k=e.target.closest('[data-spkeep]');if(k){e.stopPropagation();const c=CONVS.find(x=>x.id===k.dataset.spkeep);if(c){c.flag=null;c.last=iso(TODAY);if(BK.on)c.keep=true;saveSoon();renderSpDir();toast(`<b>${esc(c.ch)}</b> kept`,'We’ll check again in 30 days')}return}
  const p=e.target.closest('[data-nypin]');if(p){e.stopPropagation();const id=p.dataset.nypin;const was=NYPIN.has(id);was?NYPIN.delete(id):NYPIN.add(id);saveSoon();renderNY();return}},true);
 // archive button in the space's About panel
-{const rs=renderSpace;renderSpace=function(){try{spTouch()}catch(e){}const r=rs.apply(this,arguments);try{const c0=CONVS.find(x=>x.id===spCur);let bar=$('#spArchBar');if(c0&&c0.arch){if(!bar){bar=document.createElement('div');bar.id='spArchBar';const t=$('#spTabs');if(t)t.after(bar)}bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4"/></svg><span>This space is archived ${dlab(c0.arch)}. Everything is kept. Posting here reopens it.</span><button class="btn sm pri" data-sparch="${c0.id}" data-v="0">Reopen</button>`;bar.hidden=false}else if(bar)bar.hidden=true}catch(e){}try{const c=CONVS.find(x=>x.id===spCur);const ab=$('#spAbout');if(c&&ab&&!ab.querySelector('.sp-archbtn')&&(canCreateSpace()||sx(c).by===VIEWER))ab.insertAdjacentHTML('beforeend',`<section class="sp-archbtn"><button class="btn sm" data-sparch="${c.id}" data-v="${c.arch?0:1}">${c.arch?'Reopen space':'Archive space'}</button><p style="font-size:12px;color:#7d7d84;margin:8px 0 0">${c.arch?'This space is archived.':'Archive when the work is finished. Messages and files are kept.'}</p></section>`)}catch(e){}return r}}
+{const rs=renderSpace;renderSpace=function(){try{spTouch()}catch(e){}const r=rs.apply(this,arguments);try{const c0=CONVS.find(x=>x.id===spCur);let bar=$('#spArchBar');if(c0&&c0.arch){if(!bar){bar=document.createElement('div');bar.id='spArchBar';const t=$('#spTabs');if(t)t.after(bar)}bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4"/></svg><span>This space is archived ${dlab(c0.arch)}. Everything is kept. Posting here reopens it.</span><button class="btn sm pri" data-sparch="${c0.id}" data-v="0">Reopen</button>`;bar.hidden=false}else if(bar)bar.hidden=true}catch(e){}try{const c=CONVS.find(x=>x.id===spCur);const ab=$('#spAbout');if(c&&ab&&!ab.querySelector('.sp-archbtn')&&canManageSpace(c))ab.insertAdjacentHTML('beforeend',`<section class="sp-archbtn"><button class="btn sm" data-sparch="${c.id}" data-v="${c.arch?0:1}">${c.arch?'Reopen space':'Archive space'}</button><p style="font-size:12px;color:#7d7d84;margin:8px 0 0">${c.arch?'This space is archived.':'Archive when the work is finished. Messages and files are kept.'}</p></section>`)}catch(e){}return r}}
 // notifications: idle spaces to the people who can tidy them
 {const nl=notifList;notifList=function(){const b=nl();if(isOwnCEO())return b;return [...spTidyList().map(c=>[null,`<b>${esc(c.ch)}</b> has had no posts for ${spIdle(c)} days. Archive it?`,'Today',NREAD.has('spt'+c.id)?0:1,()=>{showView('spaces')},'chat','spt'+c.id]),...b]}}
 function spTidyBell(){if(!isOwnCEO())return;for(let i=NOTIF.length-1;i>=0;i--)if(String(NOTIF[i][6]||'').startsWith('spt'))NOTIF.splice(i,1);spTidyList().forEach(c=>{const id='spt'+c.id;NOTIF.unshift([null,`<b>${esc(c.ch)}</b> has had no posts for ${spIdle(c)} days. Archive it?`,'Today',NREAD.has(id)?0:1,()=>{NREAD.add(id);showView('spaces')},null,id])});bellCount()}
@@ -4296,7 +4314,7 @@ const STG_CHECK=[
 var STGS=window.STGS||{company:5,proj:{murmur:{stage:5,done:[1,1,0,0]},ledgerly:{stage:2,done:[1,0,0,1]},atlas:{stage:4,done:[1,1,1,0]}}};window.STGS=STGS;
 Object.keys(PINFO).forEach(k=>{if(!STGS.proj[k])STGS.proj[k]={stage:PINFO[k].stage||1,done:[0,0,0,0]};PINFO[k].stage=STGS.proj[k].stage});
 const stgDone=k=>(STGS.proj[k]||{done:[]}).done.filter(Boolean).length;
-const canMoveStage=k=>isOwnCEO()||roleOf(VIEWER)==='CEO'||(PINFO[k]&&PINFO[k].lead===VIEWER)||roleOf(VIEWER)==='Manager';
+const canMoveStage=k=>isOwnCEO()||roleOf(VIEWER)==='CEO'||roleOf(VIEWER)==='Manager';
 function renderStages(){const el=$('#stages');if(!el)return;const cs=STGS.company;
  el.innerHTML=STAGES.map(([t,w],i)=>{const n=i+1,k=n<cs?'done':n===cs?'now':'next';const here=Object.keys(PINFO).filter(p=>STGS.proj[p].stage===n);
   return `<div class="lr stg-row" data-stg="${n}">${dia(k)}<span class="id" style="width:22px">${n}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${here.map(p=>`<span class="stg-chip" data-stgp="${p}">${esc(PINFO[p].name)}</span>`).join('')}${n===cs?'<span class="lbl" style="--c:#8b8f97"><i></i>You are here</span>':''}<svg class="ic stg-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div></div><div class="stg-body" data-stgb="${n}" hidden><b>Done when</b><ul>${STG_CHECK[i].map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`}).join('');

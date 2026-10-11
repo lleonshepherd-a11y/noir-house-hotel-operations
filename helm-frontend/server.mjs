@@ -195,43 +195,85 @@ function cleanSeedConvs(v) {
     return base;
   });
 }
+// Who can manage a space (archive it, remove other people): its creator, managers and the CEO.
+const canManageSpace = (cur, u) => u.role === "CEO" || u.role === "Manager" || (cur.by && cur.by === u.pkey);
+const nameOf = (pk) => { const r = q("SELECT name FROM users WHERE pkey=?").get(pk); if (r && r.name) return String(r.name).split(" ")[0]; const P = readSec("P") || {}; return P[pk] ? String(P[pk][0]).split(" ")[0] : "Someone"; };
+const today = () => new Date().toISOString().slice(0, 10);
+const sysMsg = (cur, text) => { cur.msgs.push(["sys", nowHM(), text, {}]); };
+
 function mergeConvs(incoming, u) {
   const all = readSec("CONVS") || [];
-  const byId = new Map(all.map((c) => [c.ch ? c.id : "dm_" + convMembers(c).slice().sort().join("_"), c]));
+  // Spaces and direct messages live in separate lookups, so a space can never be mistaken for a DM (or the other way round).
+  const chans = new Map(all.filter((c) => c.ch).map((c) => [c.id, c]));
+  const dmKey = (a, b) => [a, b].sort().join("|");
+  const dms = new Map(all.filter((c) => !c.ch).map((c) => [convMembers(c).slice().sort().join("|"), c]));
   const key = (m) => JSON.stringify([m[0], m[1], m[2]]);
   for (const c of incoming || []) {
     if (!c || typeof c !== "object") continue;
-    let id = c.id;
-    if (!c.ch) { const parts = [u.pkey, c.dm].sort(); id = "dm_" + parts.join("_"); }
-    let cur = byId.get(id);
-    if (!cur) {
-      if (c.ch && !canCreateSpace(u)) continue; // the CEO decides who can create spaces
-      if (c.ch && (!isId(c.id) || c.id.startsWith("dm_"))) continue; // space ids are plain, and never look like a direct message
-      if (!c.ch && !isId(c.dm)) continue;
-      const ic = Array.isArray(c.ic) ? c.ic : [];
-      if (c.ch) cur = { id: c.id, ch: noTags(c.ch, 80), ic: [noTags(ic[0], 2), colorTok(ic[1]), colorTok(ic[2])], desc: noTags(c.desc, 300), shared: c.shared ? noTags(c.shared === true ? "Shared" : c.shared, 80) : undefined, guests: Array.isArray(c.guests) ? c.guests.slice(0, 50).map((g) => noTags(g, 60)) : undefined, by: u.pkey, mem: Array.from(new Set([...(Array.isArray(c.mem) ? c.mem.filter(isId) : []), u.pkey])), unread: 0, msgs: [] };
-      else cur = { id, dm: c.dm, parts: [u.pkey, c.dm], unread: 0, unreadBy: {}, msgs: [] };
-      all.push(cur); byId.set(id, cur);
-    } else if (!canSeeConv(cur, u)) continue;
-    if (c.ch && Array.isArray(c.mem) && (cur.mem || []).includes(u.pkey)) cur.mem = Array.from(new Set(c.mem.filter(isId)));
-    // archive state and last activity (archiving needs the same rights as creating, or being the creator)
-    if (c.ch && (canCreateSpace(u) || cur.by === u.pkey)) { for (const k of ["arch", "archAuto", "flag"]) { if (c[k] === undefined || c[k] === null) delete cur[k]; else cur[k] = c[k]; } }
-    if (c.ch && typeof c.last === "string" && /^\d{4}-\d\d-\d\d$/.test(c.last) && (!cur.last || c.last > cur.last)) cur.last = c.last;
+    let cur;
+    if (c.ch) {
+      if (!isId(c.id) || c.id.startsWith("dm_")) continue; // never trust the id: it must be a plain space id
+      cur = chans.get(c.id);
+      if (!cur) {
+        if (!canCreateSpace(u)) continue; // the CEO decides who can create spaces
+        const ic = Array.isArray(c.ic) ? c.ic : [];
+        cur = { id: c.id, ch: noTags(c.ch, 80), ic: [noTags(ic[0], 2), colorTok(ic[1]), colorTok(ic[2])], desc: noTags(c.desc, 300), shared: c.shared ? noTags(c.shared === true ? "Shared" : c.shared, 80) : undefined, guests: Array.isArray(c.guests) ? c.guests.slice(0, 50).map((g) => noTags(g, 60)) : undefined, by: u.pkey, made: today(), last: today(), mem: Array.from(new Set([...(Array.isArray(c.mem) ? c.mem.filter(isId) : []), u.pkey])), unread: 0, msgs: [] };
+        sysMsg(cur, `${nameOf(u.pkey)} created this space`);
+        all.push(cur); chans.set(cur.id, cur);
+      } else if (!canSeeConv(cur, u)) continue; // only people in the space can change it
+    } else {
+      if (!isId(c.dm) || c.dm === u.pkey) continue;
+      cur = dms.get(dmKey(u.pkey, c.dm));
+      if (!cur) { cur = { id: "dm_" + [u.pkey, c.dm].sort().join("_"), dm: c.dm, parts: [u.pkey, c.dm], unread: 0, unreadBy: {}, msgs: [] }; all.push(cur); dms.set(dmKey(u.pkey, c.dm), cur); }
+      else if (!convMembers(cur).includes(u.pkey)) continue;
+    }
+    if (c.ch && Array.isArray(c.mem) && (cur.mem || []).includes(u.pkey) && u.role !== "Guest") {
+      // Anyone in the space can add people. Removing someone else needs the creator, a manager or the CEO; anyone can leave.
+      const next = new Set(c.mem.filter(isId)), was = new Set(cur.mem || []);
+      const added = [...next].filter((k) => !was.has(k));
+      const removed = [...was].filter((k) => !next.has(k) && (k === u.pkey || canManageSpace(cur, u)));
+      if (added.length || removed.length) {
+        cur.mem = [...[...was].filter((k) => !removed.includes(k)), ...added];
+        if (added.length) sysMsg(cur, `${nameOf(u.pkey)} added ${added.map(nameOf).join(", ")}`);
+        for (const k of removed) sysMsg(cur, k === u.pkey ? `${nameOf(k)} left` : `${nameOf(u.pkey)} removed ${nameOf(k)}`);
+      }
+    }
+    // Archive and keep: same people who can manage the space. The server writes the notice, once.
+    if (c.ch && canManageSpace(cur, u)) {
+      const want = typeof c.arch === "string" && DATE_RE.test(c.arch);
+      if (want && !cur.arch) { cur.arch = today(); delete cur.archAuto; delete cur.flag; sysMsg(cur, `${nameOf(u.pkey)} archived this space`); }
+      else if (!want && cur.arch && c.arch === undefined && c.reopen) { delete cur.arch; delete cur.archAuto; delete cur.flag; cur.last = today(); sysMsg(cur, `${nameOf(u.pkey)} reopened this space`); }
+      if (!c.flag && cur.flag && c.keep) { delete cur.flag; cur.last = today(); }
+    }
     const have = new Set(cur.msgs.map(key));
     for (const m of c.msgs || []) {
       if (!Array.isArray(m)) continue;
       const k = key(m);
       if (have.has(k)) { const ex = cur.msgs.find((x) => key(x) === k); if (m[3] && m[3].rx) { ex[3] = ex[3] || {}; ex[3].rx = cleanRx(m[3].rx); } continue; }
-      if (m[0] !== u.pkey && m[0] !== "sys") continue; // can't post as someone else
+      if (m[0] !== u.pkey) continue; // people only post as themselves; system notices come from the server
       cur.msgs.push([m[0], TIME_RE.test(String(m[1])) ? String(m[1]) : nowHM(), String(m[2]).slice(0, 8000), cleanMsgExtra(m[3])]);
-      if (cur.ch && cur.arch && m[0] !== "sys") { delete cur.arch; delete cur.archAuto; delete cur.flag; } // posting reopens an archived space
       have.add(k);
+      if (cur.ch) { cur.last = today(); delete cur.flag; if (cur.arch) { delete cur.arch; delete cur.archAuto; sysMsg(cur, "Space reopened because someone posted"); } }
       if (!cur.ch) { cur.unreadBy = cur.unreadBy || {}; for (const p of convMembers(cur)) if (p !== u.pkey) cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
       else for (const p of cur.mem || []) if (p !== u.pkey) { cur.unreadBy = cur.unreadBy || {}; cur.unreadBy[p] = (cur.unreadBy[p] || 0) + 1; }
     }
     if ((c.unread | 0) === 0 && cur.unreadBy) cur.unreadBy[u.pkey] = 0;
   }
   writeSec("CONVS", all, u.id);
+}
+
+// Spaces with no posts for 30 days are flagged; 7 days later they archive themselves. Runs on the server only, so it happens once.
+function tidySpaces() {
+  const all = readSec("CONVS"); if (!all) return; const t = today(); let changed = false;
+  const days = (a, b) => Math.round((new Date(b + "T00:00") - new Date(a + "T00:00")) / 864e5);
+  for (const c of all) {
+    if (!c.ch || c.arch || !c.last) continue;
+    const idle = days(c.last, t);
+    if (idle < 30) { if (c.flag) { delete c.flag; changed = true; } continue; }
+    if (!c.flag) { c.flag = t; changed = true; }
+    else if (days(c.flag, t) >= 7) { c.arch = t; c.archAuto = true; delete c.flag; sysMsg(c, `Archived automatically after ${idle} days without posts`); changed = true; }
+  }
+  if (changed) { writeSec("CONVS", all, null); broadcast({ type: "changed", sections: ["CONVS"], by: "sys" }); }
 }
 
 function stateFor(u) {
@@ -245,12 +287,14 @@ function stateFor(u) {
   if (out.MEM) out.MEM = out.MEM.map((m) => { const acc = q("SELECT role FROM users WHERE pkey=?").get(m[0]); return acc ? [m[0], acc.role] : m; });
   if (out.SPX && u.role !== "CEO") { const mine = new Set(convsFor(u).filter((c) => c.ch).map((c) => c.id)); out.SPX = Object.fromEntries(Object.entries(out.SPX).filter(([k]) => mine.has(k))); }
   if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal" && e[4] !== "google"); // the CEO's own Google Calendar stays private
-  return swapKeys(out, "AK", u.pkey);
+  const res = swapKeys(out, "AK", u.pkey);
+  res.__v = Object.fromEntries(q("SELECT name, updated FROM sections").all().filter((r) => r.name in res).map((r) => [r.name, r.updated]));
+  return res;
 }
 
 /* ---------------- Accounts and sessions ---------------- */
 async function hashPw(pw) { const salt = randomBytes(16); const h = await scrypt(pw, salt, 64); return salt.toString("hex") + ":" + h.toString("hex"); }
-async function checkPw(pw, stored) { if (!stored) return false; const [s, h] = stored.split(":"); const got = await scrypt(pw, Buffer.from(s, "hex"), 64); return timingSafeEqual(got, Buffer.from(h, "hex")); }
+async function checkPw(pw, stored) { if (!stored) { DUMMY_PW ??= await hashPw(randomBytes(12).toString("hex")); await checkPw(pw, DUMMY_PW); return false; } const [s, h] = stored.split(":"); const got = await scrypt(pw, Buffer.from(s, "hex"), 64); return timingSafeEqual(got, Buffer.from(h, "hex")); }
 const SESSION_DAYS = 30;
 function newSession(uid) { const t = randomBytes(32).toString("hex"); q("INSERT INTO sessions(token,user_id,expires) VALUES(?,?,?)").run(createHash("sha256").update(t).digest("hex"), uid, Date.now() + SESSION_DAYS * 864e5); return t; }
 function userFrom(req) {
@@ -259,8 +303,26 @@ function userFrom(req) {
   if (!r || r.expires < Date.now()) return null; return r;
 }
 const cookie = (req, t, maxAge) => `helm_s=${t}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${process.env.COOKIE_SECURE === "1" || req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}`;
-const tries = new Map(); // simple login rate limit per IP
-function tooMany(ip) { const t = tries.get(ip) || []; const now = Date.now(); const recent = t.filter((x) => now - x < 15 * 60e3); tries.set(ip, recent); return recent.length >= 10; }
+// Login rate limit: counted per address AND per email, before the password is checked, so neither
+// rotating a spoofed header nor firing many attempts at once gets around it.
+const tries = new Map(), TRY_WINDOW = 15 * 60e3, MAX_IP = 10, MAX_EMAIL = 10;
+function recent(key) { const now = Date.now(); const t = (tries.get(key) || []).filter((x) => now - x < TRY_WINDOW); if (t.length) tries.set(key, t); else tries.delete(key); return t; }
+function tooMany(...keys) { return keys.some((k) => recent(k).length >= (k.startsWith("e:") ? MAX_EMAIL : MAX_IP)); }
+function addTry(...keys) { for (const k of keys) { const t = recent(k); t.push(Date.now()); tries.set(k, t); } }
+setInterval(() => { for (const k of [...tries.keys()]) recent(k); }, 5 * 60e3).unref();
+// The visitor's address. X-Forwarded-For is only believed when the request itself came from a private
+// network (the hosting proxy), and then only the entry that proxy added (the last one): anything
+// earlier in the header was written by the visitor and can be faked.
+const PRIVATE_IP = /^(::1|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fc|fd|::ffff:(127|10|192\.168|172\.(1[6-9]|2\d|3[01]))\.)/i;
+function clientIp(req) {
+  const peer = req.socket.remoteAddress || "";
+  const xff = req.headers["x-forwarded-for"];
+  if (!xff || !PRIVATE_IP.test(peer)) return peer;
+  const hops = String(xff).split(",").map((x) => x.trim()).filter(Boolean);
+  return hops[hops.length - 1] || peer;
+}
+// Checked when the email has no account (or no password yet), so a wrong email takes as long as a wrong password.
+let DUMMY_PW = null;
 const wagesOK = (u) => u.role === "CEO" || (u.role === "Manager" && ((readSec("WG") || {}).access || []).includes(u.pkey));
 const pub = (u) => ({ id: u.id, email: u.email, name: u.name, pkey: u.pkey, role: u.role });
 
@@ -287,7 +349,7 @@ function nextKey(name) { const base = (String(name).match(/\b\w/g) || ["N", "N"]
 
 /* ---------------- Routes ---------------- */
 async function api(req, res, url) {
-  const p = url.pathname, m = req.method, ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+  const p = url.pathname, m = req.method, ip = clientIp(req);
   // Every change must come from our own page (blocks cross-site form posts).
   if (m !== "GET" && req.headers["x-helm"] !== "1") return send(res, 403, { error: "Missing request header" });
 
@@ -305,9 +367,14 @@ async function api(req, res, url) {
   }
 
   if (p === "/api/login" && m === "POST") {
-    if (tooMany(ip)) return send(res, 429, { error: "Too many attempts. Try again in 15 minutes." });
-    const b = await json(req); const u = q("SELECT * FROM users WHERE email=?").get(String(b.email || "").toLowerCase());
-    if (!u || !(await checkPw(String(b.password || ""), u.pass))) { tries.get(ip)?.push(Date.now()) ?? tries.set(ip, [Date.now()]); return send(res, 401, { error: "Email or password is wrong." }); }
+    const b = await json(req); const email = String(b.email || "").toLowerCase().slice(0, 200), kI = "i:" + ip, kE = "e:" + email;
+    if (tooMany(kI, kE)) return send(res, 429, { error: "Too many attempts. Try again in 15 minutes." });
+    addTry(kI, kE); // counted up front; a successful sign-in clears it
+    const u = q("SELECT * FROM users WHERE email=?").get(email);
+    // Same message, same work and same timing whether or not the email has an account.
+    const ok = await checkPw(String(b.password || ""), u && u.pass);
+    if (!u || !ok) return send(res, 401, { error: "Email or password is wrong." });
+    tries.delete(kI); tries.delete(kE);
     return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(u.id), SESSION_DAYS * 86400) });
   }
 
@@ -329,8 +396,14 @@ async function api(req, res, url) {
   if (p === "/api/state" && m === "GET") return send(res, 200, stateFor(u));
 
   if (p === "/api/state" && m === "PUT") {
-    const b = await json(req); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [];
+    const b = await json(req); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [], conflicts = [];
+    // Each section has a version (when it was last saved). If someone else saved it after this browser loaded it,
+    // the save is held back and the person is asked which version to keep, instead of silently overwriting.
+    const base = b.base && typeof b.base === "object" ? b.base : {}, force = new Set(Array.isArray(b.force) ? b.force : []);
+    const stale = (k) => { if (k === "CONVS" || force.has(k) || base[k] == null) return null; const r = q("SELECT updated, by FROM sections WHERE name=?").get(k); return r && r.updated > base[k] && r.by !== u.id ? r : null; };
     for (let [k, v] of Object.entries(secs)) {
+      const st = canWrite(k, u.role) || k === "SPX" ? stale(k) : null;
+      if (st) { const w = st.by && q("SELECT name FROM users WHERE id=?").get(st.by); conflicts.push({ sec: k, by: w ? String(w.name).split(" ")[0] : "Someone", at: st.updated }); continue; }
       if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") writeSec("CONVS", cleanSeedConvs(v), u.id); else mergeConvs(v, u); done.push(k); continue; }
       if (k === "TASKS") { if (!canWrite(k, u.role)) { refused.push(k); continue; } writeSec(k, mergeTasks(v, u), u.id); done.push(k); continue; }
       if (k === "CEV") { if (!canWrite(k, u.role)) { refused.push(k); continue; } writeSec(k, mergeCev(v, u), u.id); done.push(k); continue; }
@@ -345,7 +418,8 @@ async function api(req, res, url) {
       writeSec(k, v, u.id); done.push(k);
     }
     if (done.length) { audit(u.id, "updated " + done.join(", ")); broadcast({ type: "changed", sections: done, by: u.pkey }, (x) => x.id !== u.id); }
-    return send(res, refused.length && !done.length ? 403 : 200, { saved: done, refused });
+    const ver = {}; for (const k of done) { const r = q("SELECT updated FROM sections WHERE name=?").get(k); if (r) ver[k] = r.updated; }
+    return send(res, refused.length && !done.length && !conflicts.length ? 403 : 200, { saved: done, refused, conflicts, ver });
   }
 
   // Wages are role-based: the CEO, plus the people the CEO gives access to. No PIN.
@@ -437,8 +511,8 @@ async function accountabilityCheck() {
   for (const k of Object.keys(sent)) if (!k.endsWith(day)) delete sent[k];
   setSetting("acct_sent", JSON.stringify(sent));
 }
-setInterval(() => accountabilityCheck().catch(() => {}), 60 * 60e3).unref();
-setTimeout(() => accountabilityCheck().catch(() => {}), 15e3).unref();
+setInterval(() => { accountabilityCheck().catch(() => {}); try { tidySpaces(); } catch {} }, 60 * 60e3).unref();
+setTimeout(() => { accountabilityCheck().catch(() => {}); try { tidySpaces(); } catch {} }, 15e3).unref();
 
 const csp = (n) => `default-src 'self'; script-src 'nonce-${n}' https://cdn.plaid.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'self' blob:; frame-src https://cdn.plaid.com; connect-src 'self' https://*.plaid.com; base-uri 'none'; form-action 'self'; frame-ancestors 'self'`;
 const page = async (res, f) => { let html = await readFile(join(ROOT, f), "utf8"); const nonce = randomBytes(16).toString("base64"); if (f === "index.html") html = html.replace("<head>", "<head>\n<script>window.HELM_BACKEND=1</script>"); html = html.replace(/<script>/g, `<script nonce="${nonce}">`); res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SEC_HEADERS, "content-security-policy": csp(nonce) }); res.end(html); };
