@@ -1446,7 +1446,7 @@ td.ed{text-align:right;padding-right:6px!important}
 :root[data-theme=dark] .spc-last b{color:#d4d4d8;font-weight:500}
 :root[data-theme=dark] .spc-f{color:#6e6e74}
 /* urgent card: thin red top line, no fill */
-:root[data-theme=dark] .ny.urgent{background:transparent!important;box-shadow:inset 0 2px 0 var(--red)!important}
+:root[data-theme=dark] .ny.urgent{background:transparent!important;box-shadow:none!important;border-color:rgba(255,255,255,.1)!important}
 /* clean white line icons, no boxes */
 :root[data-theme=dark] .spt,:root[data-theme=dark] .sb-ic,:root[data-theme=dark] .cn-ic,:root[data-theme=dark] .jc-ic,:root[data-theme=dark] .sdi{background:transparent!important;border:0!important;box-shadow:none!important;color:#fff}
 :root[data-theme=dark] .spt{width:auto;height:auto;min-width:22px;justify-content:start;font-size:15px}
@@ -1517,6 +1517,37 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 #sideSp .spchev{width:10px;height:10px;margin-left:6px;color:var(--fg-3);flex:none;transform:rotate(-90deg);transition:transform .2s var(--ease)}
 #sideSp.open .spchev{transform:none}
 #sideSp .c{margin-left:auto}
+
+/* ===== Charcoal + white buttons + pill tabs ===== */
+:root[data-theme=dark] {--panel:#161616;--soft:#1f1f1f;--softer:#1a1a1a;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.06)}
+:root[data-theme=dark] body{background:#000}
+:root[data-theme=dark] .panel{background:#161616!important;border-color:rgba(255,255,255,.1)}
+:root[data-theme=dark] .bar{background:#161616!important;backdrop-filter:none}
+:root[data-theme=dark] .cards,:root[data-theme=dark] .kpis,:root[data-theme=dark] .tiles,:root[data-theme=dark] .jump,:root[data-theme=dark] .wk-top{background:#161616}
+:root[data-theme=dark] .tbl,:root[data-theme=dark] .chart,:root[data-theme=dark] .update,:root[data-theme=dark] .side-card,:root[data-theme=dark] .dec,:root[data-theme=dark] .ev,:root[data-theme=dark] .calg,:root[data-theme=dark] .calside,:root[data-theme=dark] .tl,:root[data-theme=dark] .mt-card,:root[data-theme=dark] .card,:root[data-theme=dark] .wk-ring,:root[data-theme=dark] .so,:root[data-theme=dark] .pc,:root[data-theme=dark] th,:root[data-theme=dark] .bcol,:root[data-theme=dark] .mod,:root[data-theme=dark] .pal,:root[data-theme=dark] .menu,:root[data-theme=dark] .npop,:root[data-theme=dark] .toast{background:#1a1a1a!important}
+:root[data-theme=dark] .pc:hover,:root[data-theme=dark] .card:hover,:root[data-theme=dark] .ev:hover,:root[data-theme=dark] .spc:hover,:root[data-theme=dark] .jc:hover,:root[data-theme=dark] .kpi:hover,:root[data-theme=dark] .cards>*:hover,:root[data-theme=dark] .kpis>*:hover,:root[data-theme=dark] .tiles>*:hover,:root[data-theme=dark] .jump>*:hover{background:#222!important}
+:root[data-theme=dark] .sp-search,:root[data-theme=dark] .ff input,:root[data-theme=dark] .ff select,:root[data-theme=dark] .ff-area,:root[data-theme=dark] .mcmp,:root[data-theme=dark] .set-row input,:root[data-theme=dark] .set-row select,:root[data-theme=dark] .pin input{background:#1f1f1f!important;border-color:rgba(255,255,255,.08)!important}
+/* white buttons + pills: front page and page headers only */
+:root[data-theme=dark] #nyFilt{background:#1f1f1f!important;border-radius:999px!important;padding:4px!important;box-shadow:none!important;gap:2px}
+:root[data-theme=dark] #nyFilt button{border-radius:999px!important;height:30px;padding:0 15px;color:#9a9aa0}
+:root[data-theme=dark] #nyFilt button:hover{background:rgba(255,255,255,.05)!important;color:#fff}
+:root[data-theme=dark] #nyFilt button.on{background:#333!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
+:root[data-theme=dark] .seg2[data-g]{background:#1f1f1f!important;border-radius:999px!important;padding:4px!important;box-shadow:none!important;gap:2px}
+:root[data-theme=dark] .seg2[data-g] button{border-radius:999px!important;height:30px;padding:0 15px;color:#9a9aa0}
+:root[data-theme=dark] .seg2[data-g] button:hover{background:rgba(255,255,255,.05)!important;color:#fff}
+:root[data-theme=dark] .seg2[data-g] button.on{background:#333!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
+:root[data-theme=dark] #newBtn{background:#fff!important;border-color:#fff!important;color:#0a0a0a!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] #newBtn:hover{background:#e6e6e6!important;border-color:#e6e6e6!important}
+:root[data-theme=dark] #nyCards .btn.sm{background:#fff!important;border-color:#fff!important;color:#0a0a0a!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] #nyCards .btn.sm:hover{background:#e6e6e6!important;border-color:#e6e6e6!important}
+:root[data-theme=dark] .ph2 .acts .btn.pri{background:#fff!important;border-color:#fff!important;color:#0a0a0a!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] .ph2 .acts .btn.pri:hover{background:#e6e6e6!important;border-color:#e6e6e6!important}
+:root[data-theme=dark] .ph2 .acts .btn:not(.pri){background:#2a2a2a!important;border-color:transparent!important;color:#fff!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] .ph2 .acts .btn:not(.pri):hover{background:#333!important}
+:root[data-theme=dark] #agentTg{background:#2a2a2a!important;border-color:transparent!important;color:#fff!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] #agentTg:hover{background:#333!important}
+:root[data-theme=dark] #newBtn .ic{color:#0a0a0a}
+.ny.urgent{box-shadow:none!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
