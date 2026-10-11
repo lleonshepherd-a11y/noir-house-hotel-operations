@@ -1290,6 +1290,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 .tl-lab em{font-style:normal;font-weight:600;color:var(--red);font-size:11px}
 .tl-lab.l{transform:none;text-align:left;left:-6px}.tl-lab.r{transform:translateX(-100%);text-align:right;left:6px}
 .tl-v{display:none;padding:14px 0}
+.tl-v .tl-p{position:relative!important;top:auto!important;left:auto!important;width:auto!important;height:auto!important}
 .tl-v div{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:13px;position:relative}
 .tl-v div:not(:last-child)::after{content:"";position:absolute;left:6px;top:24px;bottom:-8px;width:2px;background:var(--track)}
 .tl-v .tl-dot{position:static;flex:none}
@@ -1330,6 +1331,7 @@ h1.title{font-size:32px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
 /* ===== Add & edit everywhere ===== */
 button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer}
 .ff input[type=number]::-webkit-inner-spin-button{opacity:0}
+:root[data-theme=dark] .nit.unread::after,:root[data-theme=dark] .nit .dot{background:#fff!important}
 .edb{width:28px;height:28px;border-radius:7px;display:inline-grid;place-items:center;color:var(--fg-3);flex:none;transition:background .12s,color .12s}
 .edb:hover{background:var(--hover);color:var(--fg)}
 .edb .ic{width:14px;height:14px}
@@ -1394,7 +1396,7 @@ td.ed{text-align:right;padding-right:6px!important}
 
 /* ===== Dark polish: shine, glow, highlights ===== */
 :root[data-theme=dark] body{background:radial-gradient(900px 600px at 0% 0%,rgba(74,155,237,.06),transparent 60%),#000}
-:root[data-theme=dark] .side{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 40%)}
+:root[data-theme=dark] .side{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 40%)}
 :root[data-theme=dark] .side::after{content:"";position:absolute;top:0;bottom:0;right:0;width:1px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.18) 20%,rgba(74,155,237,.6) 50%,rgba(255,255,255,.18) 80%,transparent);pointer-events:none}
 :root[data-theme=dark] .ni{color:#d9d9de}
 :root[data-theme=dark] .ni .ic{color:#8d8d95}
@@ -1565,6 +1567,62 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 .hc-t b{font-size:22px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
 .hc-t small{font-size:12px;color:var(--fg-3)}
 @media (max-width:640px){.hacts{align-items:flex-start!important;width:100%;flex-direction:row;justify-content:space-between}}
+
+/* ===== One button style: white main actions, charcoal the rest, no stray blue ===== */
+:root[data-theme=dark] .btn.pri,:root[data-theme=dark] .msg-btn,:root[data-theme=dark] .btn.sm.pri,:root[data-theme=dark] #ffSave,:root[data-theme=dark] #mCreate,:root[data-theme=dark] #nsGo,:root[data-theme=dark] #rvOk,:root[data-theme=dark] #cSend,:root[data-theme=dark] #sSave{background:#fff!important;border-color:#fff!important;color:#0a0a0a!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] .btn.pri:hover,:root[data-theme=dark] .msg-btn:hover{background:#e6e6e6!important;border-color:#e6e6e6!important}
+:root[data-theme=dark] .btn.pri .ic,:root[data-theme=dark] .btn.pri svg{color:#0a0a0a!important;stroke:currentColor}
+:root[data-theme=dark] .btn.pri:disabled,:root[data-theme=dark] #cSend:disabled,:root[data-theme=dark] #nsGo:disabled{opacity:.35}
+:root[data-theme=dark] .btn:not(.pri){background:#2a2a2a!important;border-color:transparent!important;color:#fff!important;border-radius:9px!important;box-shadow:none!important}
+:root[data-theme=dark] .btn:not(.pri):hover{background:#333!important}
+:root[data-theme=dark] .ub2,:root[data-theme=dark] .badge,:root[data-theme=dark] .spc .ub2,:root[data-theme=dark] .spi .ub2{background:#fff!important;color:#0a0a0a!important;box-shadow:none!important}
+:root[data-theme=dark] .snd{background:#fff!important;color:#0a0a0a!important}
+:root[data-theme=dark] .snd:disabled{background:#2a2a2a!important;color:#777!important}
+:root[data-theme=dark] .pvbar{background:#1f1f1f;border-bottom-color:rgba(255,255,255,.08)}
+:root[data-theme=dark] .pvbar .ic{color:#fff}
+:root[data-theme=dark] .link,:root[data-theme=dark] .ft2 .link{color:#fff!important;text-decoration:underline;text-decoration-color:rgba(255,255,255,.3);text-underline-offset:3px}
+
+/* ===== Tidy: calendar, projects, project page ===== */
+:root[data-theme=dark] #calFilt{background:#1f1f1f!important;border-radius:999px!important;padding:4px!important;gap:2px}
+:root[data-theme=dark] #calFilt button{border-radius:999px!important;height:30px;padding:0 14px;border:0!important;background:none;color:#9a9aa0}
+:root[data-theme=dark] #calFilt button.on{background:#333!important;color:#fff!important;box-shadow:none!important}
+:root[data-theme=dark] #calFilt button:not(.on){opacity:.55}
+:root[data-theme=dark] .cd{min-height:96px;padding:10px 10px;gap:6px;border-color:rgba(255,255,255,.06)!important}
+:root[data-theme=dark] .cd.out{background:transparent!important}
+:root[data-theme=dark] .cd.out .dn{color:#4a4a4f}
+:root[data-theme=dark] .cd .dn{font-size:13px;color:#cfcfd4;width:26px;height:26px}
+:root[data-theme=dark] .cd.today .dn{background:#fff;color:#0a0a0a;font-weight:600}
+:root[data-theme=dark] .cd.sel{background:rgba(255,255,255,.04)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)!important}
+:root[data-theme=dark] .cd:hover{background:rgba(255,255,255,.035)!important}
+.ce1{display:block;font-size:12px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cdots{display:flex;align-items:center;gap:4px;margin-top:2px}
+.cdots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+.cdots em{font-style:normal;font-size:11px;color:var(--fg-3);margin-left:3px}
+:root[data-theme=dark] .calh span{color:#6e6e74;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+@media (max-width:640px){.ce1{display:none}.cdots{justify-content:center}.cdots em{display:none}}
+/* projects roadmap */
+.pk-r{font-size:11.5px;font-weight:500;color:var(--red)}
+.pk-d{font-size:11.5px;color:var(--fg-3)}
+:root[data-theme=dark] .pcard{padding:16px 16px 14px;border-color:rgba(255,255,255,.07)!important;background:#1a1a1a!important;box-shadow:none!important;gap:8px}
+:root[data-theme=dark] .pcard:hover{background:#222!important;border-color:rgba(255,255,255,.15)!important;transform:none}
+:root[data-theme=dark] .pcard p{color:#8a8a8f;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+:root[data-theme=dark] .qh .now{background:#fff!important;color:#0a0a0a!important}
+:root[data-theme=dark] .qh .addb{opacity:.5}
+/* project page */
+:root[data-theme=dark] #view-project .htabs,:root[data-theme=dark] .htabs{background:#1f1f1f;border-radius:999px;padding:3px}
+:root[data-theme=dark] .htabs button{border-radius:999px!important;height:26px;padding:0 13px}
+:root[data-theme=dark] .htabs button.on{background:#333!important}
+:root[data-theme=dark] #pprops{gap:0;row-gap:6px}
+:root[data-theme=dark] #pprops .prop{background:none!important;border:0!important;padding:0 14px 0 0;margin-right:14px;border-right:1px solid rgba(255,255,255,.1)!important;border-radius:0!important;height:22px;color:#cfcfd4}
+:root[data-theme=dark] #pprops .prop:last-child{border-right:0!important}
+:root[data-theme=dark] #pRes button{background:none!important;border:0!important;padding:0;margin-right:18px;color:#8a8a8f;box-shadow:none!important}
+:root[data-theme=dark] #pRes button:hover{color:#fff;transform:none}
+:root[data-theme=dark] .picon{border-color:rgba(255,255,255,.1);background:#1f1f1f}
+:root[data-theme=dark] .tl-today{border-left-color:rgba(255,255,255,.5)}
+:root[data-theme=dark] .tl-today span{color:#fff}
+:root[data-theme=dark] .tl-p.goal .tl-dot{background:#fff;border-color:#fff}
+@media (max-width:640px){.seg2{flex-wrap:nowrap!important;overflow-x:auto;max-width:100%;scrollbar-width:none}.seg2::-webkit-scrollbar{display:none}.seg2 button{flex:none;white-space:nowrap}#calFilt{flex-wrap:nowrap!important}}
+@media (min-width:861px){:root[data-theme=dark] .side{position:relative}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2187,7 +2245,7 @@ function createSpaceForm(shared,pre=''){openForm(shared?'New shared space':'New 
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':l[0]==='guest'?esc(l[3].g.split(' ')[0])+': ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}" data-conv="${c.id}">${ic}<span class="ct"><b>${c.ch?c.ch:P[c.dm][0]}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${l?l[1]:''}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
-function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+CONVS.filter(c=>c.dm).map(convRow).join('');syncBadges()}
+function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(typeof VIEWER!=='undefined'&&VIEWER!=='AK'?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
 const gIni=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
 function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div class="sysm">${esc(txt)}</div>`;
  if(k==='guest'){const f2=!prev||prev[0]!=='guest'||(prev[3]||{}).g!==x.g;return `<div class="m${f2?' first':''}" data-i="${i}">${f2?`<span class="av md guest" title="${esc(x.g)}">${gIni(x.g)}</span>`:'<span></span>'}<div>${f2?`<div class="mh"><b>${esc(x.g)}</b><span class="gtag">${esc(c.shared||'Guest')}</span><time>${t}</time></div>`:''}<p>${fmt(txt)}</p></div></div>`}const first=!prev||prev[0]!==k||prev[1]!==t;
@@ -2255,8 +2313,8 @@ $('#msgNew').addEventListener('click',()=>openCompose());
 const msgQ=$('#msgQ');
 const hl=(t,q)=>{const e=esc(t),i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+esc(q).length)+'</mark>'+e.slice(i+esc(q).length)};
 function renderSearch(q){const ql=q.toLowerCase();
- const conv=CONVS.filter(c=>(c.ch||P[c.dm][0]).toLowerCase().includes(ql));
- const hits=[];CONVS.forEach(c=>c.msgs.forEach((m,i)=>{if(m[2].toLowerCase().includes(ql))hits.push([c,m,i])}));
+ const conv=CONVS.filter(c=>inSpace(c)&&(c.ch||P[c.dm][0]).toLowerCase().includes(ql));
+ const hits=[];CONVS.filter(inSpace).forEach(c=>c.msgs.forEach((m,i)=>{if(m[2].toLowerCase().includes(ql))hits.push([c,m,i])}));
  let h='';if(conv.length)h+='<h6>Spaces and people</h6>'+conv.map(convRow).join('');
  if(hits.length)h+=`<h6>Messages <span style="margin-left:6px;color:var(--fg-4)">${hits.length}</span></h6>`+hits.slice(-12).reverse().map(([c,m,i])=>`<button class="sr" data-hit="${c.id}" data-i="${i}">${m[0]==='AK'?`<span class="av md" style="--av:${P.AK[1]};--avc:${P.AK[2]}">AK</span>`:av(m[0],'md')}<span class="st2"><b>${m[0]==='AK'?'You':P[m[0]][0]}</b><span>in ${c.ch||P[c.dm][0]} · ${m[1]}</span><p>${hl(m[2],q)}</p></span></button>`).join('');
  $('#convList').innerHTML=h||`<div class="pal-empty" style="text-align:center;padding:30px 10px">Nothing found for “${esc(q)}”.<br>Try a name, a space or a word from a message.</div>`}
@@ -2434,7 +2492,7 @@ const PROJ=[PR('Q3 2026','Murmur first version','The smallest version people can
  PR('Q2 2027','Murmur Android app','Match the iOS and desktop experience','phone','none','todo',2,'Murmur','DW'),PR('Q2 2027','Series A preparation','Metrics pack and investor shortlist','money','none','todo',1,'Fundraising','AK')];
 const INI_IC='<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>';
 function renderRoadmap(){const total=PROJ.length;$('#rmCount').textContent=`${total} projects`;$('#projCount').textContent=total;
- $('#roadmap').innerHTML=QS.map(([qq,y,past,now])=>{const key=qq+' '+y,items=PROJ.filter(p=>p.q===key);return `<div class="qcol${past?' past':''}"><div class="qh">${qq}<span class="y">${y}</span><span class="n">${items.length}</span>${now?'<span class="now">Now</span>':''}<span class="r"><button class="addb" data-newproj="${key}" aria-label="New project in ${key}" title="New project in ${key}">${PLUS}</button><button class="addb" aria-label="More">${'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>'}</button></span></div>${items.map(p=>`<button class="pcard" data-pname="${esc(p.n)}"${PKEY[p.ini]?` data-view="project" data-pkey="${PKEY[p.ini]}"`:''}><div class="ph">${pic(p.i)}<span class="nm">${esc(p.n)}</span><span class="ics">${hicon(p.h)}${hex(p.s)}${pr(p.p)}</span></div><p>${esc(p.d)}</p><div class="ini">${INI_IC}${esc(p.ini)}<span class="avs">${av(p.lead,'xs')}</span></div></button>`).join('')}<button class="qadd" data-newproj="${key}">${PLUS}New project</button></div>`}).join('')}
+ $('#roadmap').innerHTML=QS.map(([qq,y,past,now])=>{const key=qq+' '+y,items=PROJ.filter(p=>p.q===key);return `<div class="qcol${past?' past':''}"><div class="qh">${qq}<span class="y">${y}</span><span class="n">${items.length}</span>${now?'<span class="now">Now</span>':''}<span class="r"><button class="addb" data-newproj="${key}" aria-label="New project in ${key}" title="New project in ${key}">${PLUS}</button><button class="addb" aria-label="More">${'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>'}</button></span></div>${items.map(p=>`<button class="pcard" data-pname="${esc(p.n)}"${PKEY[p.ini]?` data-view="project" data-pkey="${PKEY[p.ini]}"`:''}><div class="ph">${pic(p.i)}<span class="nm">${esc(p.n)}</span><span class="ics">${p.h==='risk'?'<span class="pk-r">At risk</span>':p.h==='off'?'<span class="pk-r">Off track</span>':p.s==='done'?'<span class="pk-d">Done</span>':''}</span></div><p>${esc(p.d)}</p><div class="ini">${INI_IC}${esc(p.ini)}<span class="avs">${av(p.lead,'xs')}</span></div></button>`).join('')}<button class="qadd" data-newproj="${key}">${PLUS}New project</button></div>`}).join('')}
 renderRoadmap();
 document.addEventListener('click',e=>{const c=e.target.closest('.pcard');if(c&&!c.dataset.view)toast(`<b>${c.dataset.pname}</b>`,'Company-wide work. Its tasks live in My tasks and the briefing')});
 
@@ -2697,7 +2755,7 @@ function renderCal(){const ev=calEvents(),by={};ev.forEach(e=>(by[e.d]=by[e.d]||
  $('#calHead').innerHTML=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<span>${d}</span>`).join('');
  const first=new Date(calM),start=new Date(first);start.setDate(1-((first.getDay()+6)%7));let h='';
  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);if(i===35&&d.getMonth()!==calM.getMonth())break;const k=iso(d),es=by[k]||[];
-  h+=`<button class="cd${d.getMonth()!==calM.getMonth()?' out':''}${k===iso(TODAY)?' today':''}${k===calSel?' sel':''}" data-cd="${k}" aria-label="${d.getDate()} ${MONL[d.getMonth()]}, ${es.length} events"><span class="dn">${d.getDate()}</span><span class="evs">${es.slice(0,3).map(e=>`<span class="ce" style="--c:${CK[e.k][1]}"><i></i><span>${esc(e.t)}</span></span>`).join('')}</span>${es.length>3?`<span class="more">+${es.length-3} more</span>`:''}</button>`}
+  h+=`<button class="cd${d.getMonth()!==calM.getMonth()?' out':''}${k===iso(TODAY)?' today':''}${k===calSel?' sel':''}" data-cd="${k}" aria-label="${d.getDate()} ${MONL[d.getMonth()]}, ${es.length} events"><span class="dn">${d.getDate()}</span><span class="evs">${es.length?`<span class="ce1">${esc(es[0].t)}</span><span class="cdots">${es.slice(0,4).map(e=>`<i style="--c:${CK[e.k][1]}"></i>`).join('')}${es.length>1?`<em>${es.length}</em>`:''}</span>`:''}</span></button>`}
  $('#calGrid').innerHTML=h;
  const sd=new Date(calSel+'T00:00');$('#calDow').textContent=sd.toLocaleDateString('en-GB',{weekday:'long'});$('#calDay').textContent=`${sd.getDate()} ${MONL[sd.getMonth()]}`;
  const evRow=e=>`<button class="cev" style="--c:${CK[e.k][1]}"${e.task?` data-ctask="${e.task}"`:''}><span class="bar2"></span><span><b>${esc(e.t)}</b><small>${esc(e.sub||CK[e.k][0])}</small></span></button>`;
@@ -2729,8 +2787,8 @@ const WK=['Jul 20','Jul 27','Aug 3','Aug 10','Aug 17','Aug 24','Aug 31','Sep 7',
 
 /* ---------- My tasks ---------- */
 function mtRow(t){return `<div class="lr" data-mytask="${t.id}">${pr(t.p)}<span class="id">${t.id}</span>${st(t.s,.5)}<div class="ttl"><b>${esc(t.t)}</b><small>${STAT[t.s]}</small></div><div class="meta">${lbl(t.l)}${t.o?av(t.o):''}<span class="dt">${t.d}</span></div></div>`}
-VIEWHOOK.mytasks=()=>{const mine=TASKS.filter(t=>t.o==='AK'&&t.s!=='done'),sign=TASKS.filter(t=>t.s==='sign'),oth=TASKS.filter(t=>t.o&&t.o!=='AK'&&t.s!=='done'&&t.s!=='sign').slice(0,6);
- $('#mtLead').textContent=`${mine.length} assigned to you · ${sign.length} waiting for your sign-off`;[['#mtMine','#mtN1',mine],['#mtSign','#mtN2',sign],['#mtOthers','#mtN3',oth]].forEach(([a,b,l])=>{$(b).textContent=l.length;$(a).innerHTML=l.map(mtRow).join('')||`<div class="pal-empty" style="padding:14px 10px">Nothing here. <button class="link" data-new-status="todo" style="color:var(--accent)">Create a task</button></div>`})};
+VIEWHOOK.mytasks=()=>{const W=typeof VIEWER==='undefined'?'AK':VIEWER,ceo=W==='AK';const mine=TASKS.filter(t=>t.o===W&&t.s!=='done'),sign=ceo?TASKS.filter(t=>t.s==='sign'):[],oth=ceo?TASKS.filter(t=>t.o&&t.o!=='AK'&&t.s!=='done'&&t.s!=='sign').slice(0,6):[];
+ $('#mtLead').textContent=ceo?`${mine.length} assigned to you · ${sign.length} waiting for your sign-off`:`${mine.length} assigned to you`;$$('#view-mytasks .sh').forEach((h,i)=>{if(i>0)h.style.display=ceo?'':'none'});$('#mtSign').style.display=$('#mtOthers').style.display=ceo?'':'none';[['#mtMine','#mtN1',mine],['#mtSign','#mtN2',sign],['#mtOthers','#mtN3',oth]].forEach(([a,b,l])=>{$(b).textContent=l.length;$(a).innerHTML=l.map(mtRow).join('')||`<div class="pal-empty" style="padding:14px 10px">Nothing here. <button class="link" data-new-status="todo" style="color:var(--accent)">Create a task</button></div>`})};
 $('#view-mytasks').addEventListener('click',e=>{const r=e.target.closest('[data-mytask]');if(r){const id=r.dataset.mytask;showView('project',{tab:'Issues'});flash(`#issues .lr[data-id="${id}"]`)}});
 
 /* ---------- Decisions ---------- */
@@ -3256,14 +3314,17 @@ NEWLBL.people='Add team member';NEWACT.people=()=>editTeamMember();stamp('ppStam
 /* ---------- Search ---------- */
 const ITEMS=[['Projects','Murmur','Stage 5 · Pilot',()=>openProject('murmur')],['Projects','Ledgerly','Stage 2 · Product plan',()=>openProject('ledgerly')],['Projects','Atlas Agent','Stage 4 · First version',()=>openProject('atlas')],['Pages','Calendar','October',()=>showView('calendar')],['Pages','Morning briefing','BRF-41',()=>showView('home')],['Pages','Stages & team','9 stages',()=>showView('stages')],
  ...ISS.flatMap(g=>g[2].map(r=>['Tasks',r[1],r[0],()=>{openProject(keyOfTask(r[0]),'Issues');flash(`#issues .lr[data-id="${r[0]}"]`)}])),
- ['Files','Seed pitch deck v7','Finance',()=>openProject('murmur','Files')],['Files','Launch film v3','Growth',()=>openProject('murmur','Files')],['Files','Interview synthesis','Ledgerly',()=>openProject('ledgerly','Files')],['Files','Cost model','Atlas Agent',()=>openProject('atlas','Files')],
- ...Object.keys(P).map(k=>['People',P[k][0],'Member',()=>{}])];
+ ['Files','Seed pitch deck v7','Finance',()=>openProject('murmur','Files'),'fundraise'],['Files','Launch film v3','Growth',()=>openProject('murmur','Files')],['Files','Interview synthesis','Ledgerly',()=>openProject('ledgerly','Files')],['Files','Cost model','Atlas Agent',()=>openProject('atlas','Files')],
+ ...Object.keys(P).map(k=>['People',P[k][0],'Member',()=>showView('people')])];
+[...document.querySelectorAll('.side .nav > [data-view]')].forEach(b=>{if(b.closest('#favs')||b.dataset.pkey)return;const v=b.dataset.view;let l=[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();if(l==='Briefing')l='Morning briefing';if(l&&!ITEMS.some(i=>i[0]==='Pages'&&i[1]===l))ITEMS.push(['Pages',l,'Page',()=>showView(v),v])});
+ITEMS.forEach(i=>{if(i[0]==='Pages'&&!i[4]){i[4]={'Calendar':'calendar','Morning briefing':'home','Stages & team':'stages'}[i[1]]}});
 let sel=0,shown=[];
 function openPal(){if($('.pal-bg'))return;closeSide();document.body.insertAdjacentHTML('beforeend',`<div class="pal-bg"><div class="pal" role="dialog" aria-label="Search"><div class="pal-in"><svg class="ic" viewBox="0 0 24 24" style="color:var(--fg-3)"><circle cx="11" cy="11" r="6"/><path d="M19.5 19.5L15.5 15.5"/></svg><input id="palIn" placeholder="Search tasks, projects, files and people" autocomplete="off"><span class="kbd">esc</span></div><div class="pal-list" id="palList"></div></div></div>`);
  const bg=$('.pal-bg'),inp=$('#palIn');bg.addEventListener('click',e=>{if(e.target===bg)closePal()});inp.addEventListener('input',()=>{sel=0;renderPal(inp.value)});
  inp.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){sel=Math.min(sel+1,shown.length-1);renderPal(inp.value);e.preventDefault()}else if(e.key==='ArrowUp'){sel=Math.max(sel-1,0);renderPal(inp.value);e.preventDefault()}else if(e.key==='Enter'&&shown[sel]){const f=shown[sel][3];closePal();f()}});
  renderPal('');inp.focus()}
-function renderPal(v){const s=v.toLowerCase();shown=ITEMS.filter(i=>(i[1]+' '+i[2]).toLowerCase().includes(s));let h='',g='';
+function itemOK(i){if(typeof VIEWER==='undefined'||VIEWER==='AK')return true;const r=roleOf(VIEWER);if(i[4])return can(i[4]);if(r==='Guest')return i[0]==='Projects'&&i[1]==='Murmur';if(i[0]==='Tasks'){const t=TASKS.find(x=>x.id===i[2]);return !(t&&t.l==='Finance')}return true}
+function renderPal(v){const s=v.toLowerCase();shown=ITEMS.filter(i=>itemOK(i)&&(i[1]+' '+i[2]).toLowerCase().includes(s));let h='',g='';
  shown.forEach((it,idx)=>{if(it[0]!==g){g=it[0];h+=`<h6>${g}</h6>`}const ic=it[0]==='People'?av(Object.keys(P).find(k=>P[k][0]===it[1]),'xs'):it[0]==='Tasks'?st('prog',.5):it[0]==='Files'?ICON.doc:it[0]==='Pages'?dia('now'):st('prog',.68);h+=`<button class="pal-it${idx===sel?' sel':''}" data-i="${idx}">${ic}<span>${it[1]}</span><small>${it[2]}</small></button>`});
  $('#palList').innerHTML=h||'<div class="pal-empty">No matches. Try a task, project, person or file.</div>';
  $$('.pal-it').forEach(b=>b.addEventListener('click',()=>{const f=shown[+b.dataset.i][3];closePal();f()}))}
@@ -3281,7 +3342,7 @@ let wgUnlocked=false,wgTimer=null;
 const ME='AK';
 const perYear=r=>r[4]==='hour'?r[3]*1600:r[4]==='month'?r[3]*12:r[3];
 function renderWages(){$('#wgLock').hidden=wgUnlocked;$('#wgOpen').hidden=!wgUnlocked;
- if(!wgUnlocked){$('#pinWho').textContent=`Access: ${WG.access.map(k=>P[k]?P[k][0]:k).join(', ')}`;$('#pinBoxes').classList.remove('bad');$$('#pinBoxes input').forEach(i=>i.value='');setTimeout(()=>{const i=$('#pinBoxes input');if(i&&curView==='wages')i.focus()},60);return}
+ if(!wgUnlocked){$('#pinWho').textContent=`Access: ${WG.access.map(k=>P[k]?P[k][0]:k).join(', ')}`;$('#pinBoxes').classList.remove('bad');$$('#pinBoxes input').forEach(i=>i.value='');setTimeout(()=>{const i=$('#pinBoxes input');if(i&&curView==='wages'&&!matchMedia('(max-width:860px)').matches)i.focus({preventScroll:true})},60);return}
  const sal=WG.rows.filter(r=>r[2]!=='Contractor'),con=WG.rows.filter(r=>r[2]==='Contractor');const tot=WG.rows.reduce((a,r)=>a+perYear(r),0);const soon=WG.rows.filter(r=>daysTo(r[6])<=90).length;
  $('#wgTiles').innerHTML=[['Total pay per year',kusd(tot),`${kusd(tot/12)} a month`],['Salaried',String(sal.length),`${kusd(sal.reduce((a,r)=>a+r[3],0))} a year`],['Contractors',String(con.length),`About ${kusd(con.reduce((a,r)=>a+perYear(r),0))} a year`],['Reviews due',String(soon),'In the next 90 days']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('');
  $('#wgN').textContent=WG.rows.length;
@@ -3290,8 +3351,8 @@ function renderWages(){$('#wgLock').hidden=wgUnlocked;$('#wgOpen').hidden=!wgUnl
  clearTimeout(wgTimer);wgTimer=setTimeout(()=>{wgUnlocked=false;if(curView==='wages')renderWages()},5*60*1000)}
 function tryPin(){const v=$$('#pinBoxes input').map(i=>i.value).join('');if(v.length<4)return;
  if(!WG.access.includes(ME)){$('#pinMsg').textContent='You don’t have access to wages. Ask an admin.';$('#pinMsg').classList.add('err');return}
- if(v===WG.pin){wgUnlocked=true;$('#pinMsg').classList.remove('err');$('#pinMsg').textContent='Sample PIN for this mockup: 1234';renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent='Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus()},350)}}
-$('#pinBoxes').addEventListener('input',e=>{const i=e.target;i.value=i.value.replace(/\D/g,'').slice(-1);if(i.value&&i.nextElementSibling)i.nextElementSibling.focus();tryPin()});
+ if(v===WG.pin){wgUnlocked=true;$('#pinMsg').classList.remove('err');$('#pinMsg').textContent='Sample PIN for this mockup: 1234';renderWages()}else{const b=$('#pinBoxes');b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');$('#pinMsg').textContent='Wrong PIN. Try again.';$('#pinMsg').classList.add('err');setTimeout(()=>{$$('#pinBoxes input').forEach(i=>i.value='');$('#pinBoxes input').focus({preventScroll:true})},350)}}
+$('#pinBoxes').addEventListener('input',e=>{const i=e.target;i.value=i.value.replace(/\D/g,'').slice(-1);if(i.value&&i.nextElementSibling)i.nextElementSibling.focus({preventScroll:true});tryPin()});
 $('#pinBoxes').addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&e.target.previousElementSibling)e.target.previousElementSibling.focus()});
 function wgDone(msg,sub){stamp('wgStamp');renderWages();toast(msg,sub)}
 function editPay(i){const r=i!=null?WG.rows[i]:null;const keys=Object.keys(P);openForm(r?'Edit pay':'Add pay',[{k:'who',label:'Person',opts:keys.map(k=>P[k][0]),v:r?P[r[0]][0]:keys.map(k=>P[k][0]).find(n=>!WG.rows.some(x=>P[x[0]]&&P[x[0]][0]===n))},{k:'role',label:'Role',v:r?r[1]:'',ph:'e.g. Senior engineer'},{k:'type',label:'Type',opts:['Salary','Contractor','Part-time'],v:r?r[2]:'Salary'},{k:'amt',label:'Pay (USD)',type:'number',v:r?r[3]:''},{k:'per',label:'Per',opts:['year','month','hour'],v:r?r[4]:'year'},{k:'last',label:'Last change',type:'date',v:r?r[5]:'2026-10-11'},{k:'next',label:'Next review',type:'date',v:r?r[6]:'2027-04-01'}],v=>{const k=keys.find(x=>P[x][0]===v.who)||'AK';const row=[k,v.role||'',v.type,num(v.amt),v.per,v.last,v.next];if(r)WG.rows[i]=row;else WG.rows.push(row);wgDone(`<b>${esc(v.who)}</b> pay ${r?'updated':'added'}`,'Only people with wages access can see this')},r?'Save':'Add pay',r?{label:'Remove',danger:1,fn:()=>{WG.rows.splice(i,1);wgDone('Pay record removed')}}:null)}
@@ -3340,6 +3401,25 @@ function tickClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),sec=d.ge
  const t=$('#hcTime');if(t)t.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
  const z=$('#hcZone');if(z&&!z.textContent){let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ')}catch(e){}z.textContent=tz||'Local time'}}
 tickClock();setInterval(tickClock,1000);
+
+/* ---------- Per-viewer counts, DMs and notifications ---------- */
+function viewerCounts(){const W=VIEWER,ceo=W==='AK';const mt=document.querySelector('.side [data-view="mytasks"] .c');if(mt)mt.textContent=TASKS.filter(t=>t.o===W&&t.s!=='done').length||'';
+ if(!ceo){const mine=TASKS.filter(t=>t.o===W);const pct=mine.length?Math.round(mine.filter(t=>t.s==='done').length/mine.length*100):0;$('#wkC').textContent=mine.length?pct+'%':'';
+  const wk=calEvents().filter(e=>{const n=(new Date(e.d+'T00:00')-TODAY)/864e5;return n>=0&&n<7&&(!e.task||(TASKS.find(t=>t.id===e.task)||{}).o===W)&&e.k!=='inv'&&e.k!=='legal'}).length;$('#calC').textContent=wk||''}
+ else{renderWK();renderCal()}
+ const n=CONVS.filter(c=>c.ch?inSpace(c):ceo).reduce((a,c)=>a+c.unread,0);const nm=$('#navMsg');if(nm){nm.textContent=n;nm.hidden=!n}}
+{const ut=unreadTotal;unreadTotal=function(){return typeof VIEWER==='undefined'||VIEWER==='AK'?ut():CONVS.filter(c=>c.ch&&inSpace(c)).reduce((a,c)=>a+c.unread,0)}}
+const NREAD=new Set();
+function notifList(){if(VIEWER==='AK')return NOTIF;const W=VIEWER;const out=[];
+ TASKS.filter(t=>t.o===W&&t.s!=='done').slice(0,4).forEach(t=>out.push([ 'AK',`<b>Alex</b> assigned you <b>${t.id}</b> ${esc(t.t)}`,t.d==='Today'?'Today':'This week',!NREAD.has(t.id),()=>{openProject(keyOfTask(t.id),'Issues');flash(`#issues .lr[data-id="${t.id}"]`)},null,t.id]));
+ (typeof ANN!=='undefined'?ANN:[]).slice(0,2).forEach((a,i)=>out.push([a.who,`<b>${esc(P[a.who][0].split(' ')[0])}</b> posted <b>${esc(a.t)}</b>`,i?'Earlier':'Today',!NREAD.has('ann'+i),()=>showView('announce'),null,'ann'+i]));
+ CONVS.filter(c=>c.ch&&inSpace(c)&&c.unread).forEach(c=>out.push([null,`New messages in <b>${esc(c.ch)}</b>`,'Today',!NREAD.has('sp'+c.id),()=>openSpace(c.id),'chat','sp'+c.id]));return out}
+{const bc=bellCount;bellCount=function(){if(VIEWER==='AK')return bc();const n=notifList().filter(x=>x[3]).length;$('#bellN').textContent=n;$('#bellN').hidden=!n}}
+{const rn=renderNotif;renderNotif=function(){if(VIEWER==='AK')return rn();const list=notifList().filter(x=>nTab==='all'||x[3]);$('.nlst').innerHTML=list.map((x,i)=>`<button class="nit${x[3]?' unread':''}" data-vn="${i}">${x[0]?av(x[0],'md'):`<span class="nic">${st('prog',.5)}</span>`}<span class="t">${x[1]}<small>${x[2]}</small></span></button>`).join('')||'<div class="pal-empty" style="padding:24px;text-align:center">You’re all caught up.</div>'}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-vn]');if(b){const list=notifList().filter(x=>nTab==='all'||x[3]);const x=list[+b.dataset.vn];if(x){NREAD.add(x[6]);bellCount();closeNotif();x[4]()}}
+ if(e.target.closest('#nAll')&&VIEWER!=='AK'){notifList().forEach(x=>NREAD.add(x[6]));bellCount();renderNotif()}},true);
+{const ar=applyRole;applyRole=function(){ar();viewerCounts();bellCount();document.body.classList.toggle('pv-dm',VIEWER!=='AK');if(curView==='mytasks')VIEWHOOK.mytasks()}}
+applyRole();
 
 /* ---------- Saving: keeps every change on this device ---------- */
 const SAVE_KEY='helm-data-v1';
