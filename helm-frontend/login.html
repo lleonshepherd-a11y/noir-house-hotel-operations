@@ -9,51 +9,149 @@
 <style>
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:#000;color:#f5f5f7;font-family:"Inter",ui-sans-serif,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;display:grid;place-items:center;padding:16px}
-.card{width:100%;max-width:400px;background:#161616;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:32px 28px 28px;box-shadow:0 40px 100px rgba(0,0,0,.6)}
-.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#fff,#a9d8ff);display:grid;place-items:center;margin-bottom:22px}
-.logo i{width:11px;height:11px;border-radius:50%;border:2px solid #0a0a0a}
-h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.03em}
-p.lead{margin:0 0 22px;color:#8a8a8f;font-size:14px;line-height:1.55}
-label{display:block;font-size:12.5px;color:#9a9aa0;font-weight:500;margin:14px 0 7px}
-input{width:100%;height:44px;border-radius:11px;background:#232323;border:1px solid transparent;color:#fff;font:inherit;font-size:14.5px;padding:0 14px;outline:none;transition:border-color .15s}
-input:focus{border-color:rgba(255,255,255,.3)}
-button{width:100%;height:44px;margin-top:22px;border:0;border-radius:11px;background:#fff;color:#0a0a0a;font:inherit;font-weight:600;font-size:14.5px;cursor:pointer;transition:background .15s}
-button:hover{background:#e6e6e6}
-button:disabled{opacity:.5;cursor:default}
-.err{color:#ff8a8e;font-size:13px;margin-top:14px;min-height:18px}
-.foot{margin-top:18px;font-size:12.5px;color:#6e6e74;text-align:center}
+body{background:#08090a;color:#f5f5f7;font-family:"Inter",ui-sans-serif,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;display:grid;place-items:center;padding:24px 16px}
+.wrap{width:100%;max-width:340px;text-align:center}
+.logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#fff,#a9d8ff);box-shadow:0 0 28px rgba(74,155,237,.3);display:grid;place-items:center;margin:0 auto 26px}
+.logo i{width:14px;height:14px;border-radius:50%;border:2.4px solid #0a0a0a}
+h1{margin:0 0 8px;font-size:22px;font-weight:600;letter-spacing:-.025em}
+p.lead{margin:0 auto;color:#8e8e94;font-size:14px;line-height:1.55}
+form{margin-top:30px;text-align:left}
+.stack{display:flex;flex-direction:column;gap:12px}
+/* pill buttons, like the rest of the sign-in flow */
+.pill{width:100%;height:48px;border-radius:999px;border:0;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .15s,transform .1s;background:#1c1c1e;color:#e8e8ea}
+.pill:hover{background:#252527}
+.pill:active{transform:scale(.99)}
+.pill.pri{background:#fff;color:#0a0a0a}
+.pill.pri:hover{background:#e6e6e6}
+.pill:disabled{opacity:.5;cursor:default}
+.pill svg{width:18px;height:18px;flex:none}
+.pill .st{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.last{font-size:13px;color:#7c7c82;margin:-2px 0 4px;text-align:center}
+.or{display:flex;align-items:center;gap:12px;color:#5c5c62;font-size:12px;margin:22px 0 16px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.08)}
+.row{margin-top:14px}
+.row:first-child{margin-top:0}
+.lbl{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
+label{font-size:12.5px;color:#a1a1a8;font-weight:500}
+.field{position:relative}
+input{width:100%;height:46px;border-radius:12px;background:#1c1c1e;border:1px solid rgba(255,255,255,.07);color:#fff;font:inherit;font-size:14.5px;padding:0 14px;outline:none;transition:border-color .15s,box-shadow .15s}
+input::placeholder{color:#5c5c62}
+input:focus{border-color:rgba(255,255,255,.28);box-shadow:0 0 0 3px rgba(255,255,255,.06)}
+input[readonly]{color:#a1a1a8}
+.field input{padding-right:44px}
+.eye{position:absolute;right:5px;top:5px;width:36px;height:36px;border:0;border-radius:9px;background:none;color:#8e8e94;display:grid;place-items:center;cursor:pointer;padding:0}
+.eye:hover{color:#fff;background:rgba(255,255,255,.06)}
+.eye svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.link{background:none;border:0;padding:0;font:inherit;font-size:13px;color:#e8e8ea;cursor:pointer;font-weight:500}
+.link:hover{color:#fff;text-decoration:underline}
+.lbl .link{font-size:12.5px;color:#a9d8ff}
+.caps{display:none;font-size:12px;color:#f5c26b;margin-top:7px}
+.caps.on{display:block}
+#go{margin-top:22px}
+.err{color:#ff8a8e;font-size:13px;line-height:1.5;margin-top:14px;text-align:center}
+.err:empty{display:none}
+.note{font-size:13.5px;color:#c9c9ce;line-height:1.6;background:#141416;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px 16px;text-align:left}
+.foot{margin-top:26px;font-size:13px;color:#7c7c82;text-align:center;line-height:1.7}
+.foot:empty{display:none}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
-<form class="card" id="f" autocomplete="on">
-  <div class="logo"><i></i></div>
-  <h1 id="h">Sign in to Helm</h1>
-  <p class="lead" id="lead">Use the email and password for your workspace.</p>
-  <div id="nameRow" hidden><label for="name">Your name</label><input id="name" autocomplete="name"></div>
-  <div id="emailRow"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
-  <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required minlength="10">
-  <div id="codeRow" hidden><label for="code">Setup code</label><input id="code" autocomplete="off" spellcheck="false"></div>
-  <button id="go" type="submit">Sign in</button>
+<main class="wrap">
+ <div class="logo" aria-hidden="true"><i></i></div>
+ <h1 id="h">Sign in to Helm</h1>
+ <p class="lead" id="lead" hidden></p>
+ <form id="f" autocomplete="on" novalidate>
+  <div class="note" id="note" hidden></div>
+  <!-- ways to sign in -->
+  <div class="stack" id="ways" hidden></div>
+  <div class="or" id="or" hidden>or choose a password</div>
+  <!-- the form screens -->
+  <div id="fields">
+   <div class="row" id="nameRow" hidden><div class="lbl"><label for="name">Your name</label></div><input id="name" autocomplete="name"></div>
+   <div class="row" id="emailRow"><div class="lbl"><label for="email">Email</label></div><input id="email" type="email" autocomplete="username" placeholder="you@company.com"></div>
+   <div class="row" id="codeRow" hidden><div class="lbl"><label for="code">Setup code</label></div><input id="code" autocomplete="off" spellcheck="false"></div>
+   <div class="row" id="pwRow"><div class="lbl"><label for="pw" id="pwLbl">Password</label><button type="button" class="link" id="forgot">Forgot password?</button></div>
+    <div class="field"><input id="pw" type="password" autocomplete="current-password"><button type="button" class="eye" id="eye" aria-label="Show password" title="Show password"></button></div>
+    <div class="caps" id="caps">Caps Lock is on</div></div>
+  </div>
+  <button class="pill pri" id="go" type="submit">Sign in</button>
   <div class="err" id="err" role="alert"></div>
-  <div class="foot" id="foot">Forgot your password? Ask your workspace owner to send a new invite.</div>
-</form>
+ </form>
+ <div class="foot" id="foot"></div>
+</main>
 <script>
-const $=s=>document.querySelector(s);const path=location.pathname,token=new URLSearchParams(location.search).get('t');
-let mode='login';
+const $=s=>document.querySelector(s);const path=location.pathname,qs=new URLSearchParams(location.search),token=qs.get('t');
+let mode='choose',st={};
+const show=(id,on)=>{$(id).hidden=!on};
+const PK=!!(window.PublicKeyCredential&&navigator.credentials);
+const LAST_KEY='helm-last-signin',last=(()=>{try{return localStorage.getItem(LAST_KEY)}catch(e){return null}})();
+const remember=w=>{try{localStorage.setItem(LAST_KEY,w)}catch(e){}};
+const IC={
+ google:'<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.6 12.2c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 010-4.3V7.1H2.1a11 11 0 000 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 002.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>',
+ email:'<svg viewBox="0 0 24 24" class="st"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>',
+ passkey:'<svg viewBox="0 0 24 24" class="st"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.5-3.4 3-5.5 6-5.5 1.3 0 2.5.4 3.4 1"/><circle cx="17.5" cy="13.5" r="2.5"/><path d="M17.5 16v5M17.5 19h1.8"/></svg>'};
+const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0112 5c6.5 0 10 7 10 7a17.6 17.6 0 01-3.2 4.2M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 005.4-1.6"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg>';
+$('#eye').innerHTML=EYE;
+// Builds the pill buttons. The way you used last time goes first, in white, with a note under it.
+function ways(list){const box=$('#ways');box.innerHTML='';const first=list.find(w=>w.id===last)||list[0];
+ [first,...list.filter(w=>w!==first)].forEach(w=>{const b=document.createElement('button');b.type='button';b.className='pill'+(w===first?' pri':'');b.id='w-'+w.id;b.innerHTML=IC[w.id]+`<span>${w.label}</span>`;b.addEventListener('click',w.go);box.append(b);
+  if(w===first&&w.id===last){const n=document.createElement('div');n.className='last';n.textContent=`You used ${w.name} to sign in last time`;box.append(n)}})}
+function setFoot(items){const f=$('#foot');f.innerHTML='';items.forEach((x,i)=>{if(i)f.append(document.createElement('br'));if(typeof x==='string'){f.append(x);return}const s=document.createElement('span');if(x[2])s.append(x[2]+' ');const b=document.createElement('button');b.type='button';b.className='link';b.textContent=x[0];b.addEventListener('click',x[1]);s.append(b);f.append(s)})}
+// One page, several screens: choose how, email, setup, join, can't sign in, owner recovery, and a sign-in link.
+function screen(m,o={}){mode=m;$('#err').textContent=o.err||'';$('#h').textContent=o.h;$('#lead').textContent=o.lead||'';show('#lead',!!o.lead);
+ show('#note',!!o.note);if(o.note)$('#note').textContent=o.note;
+ show('#ways',!!o.ways);if(o.ways)ways(o.ways);show('#or',!!o.or);$('#go').classList.toggle('pri',!o.or);
+ show('#fields',o.fields!==false);show('#nameRow',!!o.name);show('#emailRow',o.email!==false);show('#codeRow',!!o.code);show('#pwRow',o.pw!==false);show('#forgot',m==='login');show('#go',!!o.go);
+ $('#pwLbl').textContent=o.pwLabel||'Password';$('#pw').autocomplete=m==='login'?'current-password':'new-password';$('#go').textContent=o.go||'';$('#email').readOnly=!!o.lockEmail;
+ setFoot(o.foot||[]);
+ const first=['#name','#email','#code','#pw'].map($).find(i=>i&&!i.closest('[hidden]')&&!i.readOnly&&!i.value);if(first&&o.fields!==false&&matchMedia('(min-width:700px)').matches)first.focus()}
+const google=extra=>()=>{remember('google');location.href='/api/auth/google'+(extra||'')};
+const allWays=()=>[...(st.google?[{id:'google',name:'Google',label:'Continue with Google',go:google()}]:[]),{id:'email',name:'email',label:'Continue with email',go:toLogin},...(PK?[{id:'passkey',name:'a passkey',label:'Sign in with a passkey',go:passkey}]:[])];
+const toChoose=err=>screen('choose',{h:'Sign in to Helm',ways:allWays(),fields:false,err:typeof err==='string'?err:'',foot:[['Can’t sign in?',toForgot],'New here? Ask your team for an invite.']});
+const toLogin=()=>screen('login',{h:'Sign in with email',go:'Sign in',foot:[['Other ways to sign in',toChoose]]});
+const toForgot=()=>screen('forgot',{h:'Can’t sign in?',lead:'Your CEO or a manager can send you a sign-in link. It works once, for an hour.',pw:false,go:'Ask for a sign-in link',foot:[['Back to sign in',toChoose],...(st.ownerRecovery?[['I’m the workspace owner',toOwner]]:[])]});
+const toOwner=()=>screen('owner',{h:'Owner recovery',lead:'Use the setup code you chose when you deployed Helm, then pick a new password.',code:true,pwLabel:'New password',go:'Set password and sign in',foot:[['Back to sign in',toChoose]]});
+const b64u=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const ub64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'content-type':'application/json','x-helm':'1'},body:JSON.stringify(b||{})}).then(async r=>({r,j:await r.json().catch(()=>({}))}));
+async function passkey(){$('#err').textContent='';const btn=$('#w-passkey');if(btn)btn.disabled=true;
+ try{const o=await post('/api/passkey/options');if(!o.r.ok)throw new Error(o.j.retryAt?`Too many tries. Try again at ${at(o.j.retryAt)}.`:(o.j.error||'Try again.'));
+  const c=await navigator.credentials.get({publicKey:{challenge:ub64(o.j.challenge),rpId:o.j.rpId,timeout:o.j.timeout,userVerification:o.j.userVerification}});
+  const res=c.response,{r,j}=await post('/api/passkey/signin',{id:c.id,clientDataJSON:b64u(res.clientDataJSON),authenticatorData:b64u(res.authenticatorData),signature:b64u(res.signature)});
+  if(r.ok){remember('passkey');location.href='/';return}throw new Error(j.error||'That passkey didn’t work.')}
+ catch(e){$('#err').textContent=e&&e.name==='NotAllowedError'?'Passkey sign-in was cancelled.':(e&&e.message)||'That passkey didn’t work.'}
+ if(btn)btn.disabled=false}
 async function init(){
-  const st=await fetch('/api/status').then(r=>r.json()).catch(()=>({}));
-  if(st.setup){mode='setup';$('#h').textContent='Set up your workspace';$('#lead').textContent='You’re the first person here, so you’ll be the CEO. You can invite your team once you’re in.';$('#nameRow').hidden=false;$('#codeRow').hidden=false;$('#code').required=true;$('#go').textContent='Create workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters. The setup code is printed in the server log when Helm first starts, or it’s the SETUP_CODE you set.'}
-  else if(path==='/join'&&token){mode='join';const i=await fetch('/api/invite/info?t='+encodeURIComponent(token)).then(r=>r.ok?r.json():null).catch(()=>null);
-    if(!i){$('#h').textContent='Invite not found';$('#lead').textContent='This invite link has expired or was already used. Ask for a new one.';$('#go').hidden=true;$('#emailRow').hidden=true;$('#pw').parentNode.querySelectorAll('label[for=pw],#pw').forEach(x=>x.hidden=true);return}
-    $('#h').textContent='Join your team on Helm';$('#lead').textContent='Choose a password to finish setting up your account.';$('#nameRow').hidden=false;$('#name').value=i.name||'';$('#email').value=i.email;$('#email').readOnly=true;$('#go').textContent='Join workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters.'}
-}
-$('#f').addEventListener('submit',async e=>{e.preventDefault();$('#err').textContent='';$('#go').disabled=true;
-  const url=mode==='setup'?'/api/setup':mode==='join'?'/api/invite/accept':'/api/login';
-  const body=mode==='join'?{token,password:$('#pw').value,name:$('#name').value}:{email:$('#email').value,password:$('#pw').value,name:$('#name').value,code:$('#code').value};
-  try{const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','x-helm':'1'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));
-    if(r.ok){location.href='/';return}$('#err').textContent=j.error||'Something went wrong. Try again.'}catch(x){$('#err').textContent='Can’t reach the server. Check your connection.'}
-  $('#go').disabled=false});
+ st=await fetch('/api/status').then(r=>r.json()).catch(()=>({}));const err=qs.get('e')||'';if(err){qs.delete('e');history.replaceState(null,'',path+(qs.toString()?'?'+qs:''))}
+ if(st.setup){screen('setup',{h:'Set up your workspace',lead:'You’re the first person here, so you’ll be the CEO. You can invite your team once you’re in.',name:true,code:true,go:'Create workspace',foot:['The setup code is in the server log when Helm first starts, or it’s the SETUP_CODE you set.']});return}
+ if(path==='/join'&&token){const i=await fetch('/api/invite/info?t='+encodeURIComponent(token)).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!i){screen('dead',{h:'Invite not found',lead:'This invite link has expired or was already used. Ask for a new one.',fields:false,foot:[['Back to sign in',toChoose]]});return}
+  $('#name').value=i.name||'';$('#email').value=i.email;
+  screen('join',{h:'Join your team on Helm',lead:`You’ve been invited as ${i.email}.`,err,ways:st.google?[{id:'google',name:'Google',label:'Join with Google',go:google('?t='+encodeURIComponent(token))}]:null,or:st.google,name:true,lockEmail:true,pwLabel:'Choose a password',go:'Join workspace',foot:['Passwords need at least 10 characters.']});return}
+ if(path==='/reset'&&token){const i=await fetch('/api/reset/info?t='+encodeURIComponent(token)).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!i){screen('dead',{h:'Link not found',lead:'This sign-in link has expired or was already used. Links work once, for an hour.',fields:false,foot:[['Ask for a new one',toForgot],['Back to sign in',toChoose]]});return}
+  $('#email').value=i.email;screen('reset',{h:`Welcome back, ${String(i.name||'').split(' ')[0]}`,lead:'Choose a new password. Your other devices will be signed out.',lockEmail:true,pwLabel:'New password',go:'Save and sign in',foot:['At least 10 characters.']});return}
+ toChoose(err)}
+$('#forgot').addEventListener('click',toForgot);
+$('#eye').addEventListener('click',()=>{const p=$('#pw'),on=p.type==='password';p.type=on?'text':'password';$('#eye').innerHTML=on?EYE_OFF:EYE;$('#eye').setAttribute('aria-label',on?'Hide password':'Show password');$('#eye').title=on?'Hide password':'Show password';p.focus()});
+['keydown','keyup'].forEach(ev=>$('#pw').addEventListener(ev,e=>{if(e.getModifierState)$('#caps').classList.toggle('on',e.getModifierState('CapsLock'))}));
+$('#pw').addEventListener('blur',()=>$('#caps').classList.remove('on'));
+const at=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+$('#f').addEventListener('submit',async e=>{e.preventDefault();if(mode==='choose'||mode==='dead'||mode==='sent')return;$('#err').textContent='';
+ const email=$('#email').value.trim(),pw=$('#pw').value;
+ if(mode!=='reset'&&mode!=='join'&&!/^\S+@\S+\.\S+$/.test(email)){$('#err').textContent='Enter your email address.';$('#email').focus();return}
+ if(mode!=='forgot'&&!pw){$('#err').textContent='Enter your password.';$('#pw').focus();return}
+ if(['setup','join','reset','owner'].includes(mode)&&pw.length<10){$('#err').textContent='Use a password of at least 10 characters.';$('#pw').focus();return}
+ const api={setup:'/api/setup',join:'/api/invite/accept',reset:'/api/reset',owner:'/api/reset/owner',forgot:'/api/recover/ask',login:'/api/login'}[mode];
+ const body=mode==='join'?{token,password:pw,name:$('#name').value}:mode==='reset'?{token,password:pw}:mode==='forgot'?{email}:{email,password:pw,name:$('#name').value,code:$('#code').value};
+ $('#go').disabled=true;
+ try{const {r,j}=await post(api,body);
+  if(r.ok&&mode==='forgot'){screen('sent',{h:'Request sent',fields:false,note:`If ${email} has an account, your CEO and managers have been told. Ask one of them to send you the link.`,foot:[['Back to sign in',toChoose]]});$('#go').disabled=false;return}
+  if(r.ok){remember('email');location.href='/';return}
+  $('#err').textContent=r.status===429&&j.retryAt?`Too many tries. Try again at ${at(j.retryAt)}${mode==='login'?', or use Forgot password':''}.`:(j.error||'Something went wrong. Try again.')}
+ catch(x){$('#err').textContent='Can’t reach Helm. Check your connection.'}
+ $('#go').disabled=false});
 init();
 </script>
 </body>

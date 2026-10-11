@@ -34,7 +34,8 @@ Railway runs `npm start`. The health check is `/health`.
 
 | Area | How it works |
 | --- | --- |
-| Accounts | Email and password. Passwords are stored as scrypt hashes. Sessions use a secure, HTTP-only cookie that lasts 30 days; expired sessions are deleted. Login is limited to 10 tries per 15 minutes for each address and for each email, and gives the same answer whether or not an email has an account. |
+| Accounts | **Continue with Google**, **Continue with email** (email and password) or **Sign in with a passkey** (Face ID, a fingerprint or a security key; add one in Settings → **Passkeys**). The sign-in page puts the way you used last time first. Google sign-in uses the same Google app as Gmail and Calendar (shown once its keys are added) and only lets in people who already have an account or an invite for that email. Passwords are stored as scrypt hashes. Sessions use a secure, HTTP-only cookie that lasts 30 days; expired sessions are deleted. Login is limited to 10 tries per 15 minutes for each address and for each email, and gives the same answer whether or not an email has an account. |
+| Getting back in | **Remembered devices:** a device you've signed in on before is never locked out by someone else's wrong guesses. **Forgot password?** on the sign-in page lets the CEO and managers know you need help. They press **Sign-in link** (Settings → Members, or on the notice) and send you a link that works once, for an hour, and signs out your other devices. Managers can send links to Members and Guests; the CEO to anyone. The CEO recovers their own account with the `SETUP_CODE` variable. **New sign-ins** from another device show on your other devices with a **Not me** button. If you're locked out, the sign-in page says when you can try again. Show-password and Caps Lock warnings help avoid typos. |
 | First run | The first person creates the workspace and becomes the CEO. They need the setup code: `SETUP_CODE` if you set it, otherwise the one printed in the server log. Once the workspace exists, setup is closed for good. |
 | Inviting people | Settings → Members & permissions → **Invite** (for someone already on the team list) or **Invite people** (for someone new). Helm makes a one-time link to send them. They choose a password and they're in. Links stop working after 7 days; press **New link** to send another. |
 | Removing people | Settings → Members & permissions. **Sign out** ends someone's sessions on every device. **Remove** deletes their account so they can't sign in again; their name stays on their past work and open tasks until you reassign them. Anyone can use **Sign out everywhere** for their own account. |
@@ -95,7 +96,7 @@ Gusto, GitHub, Figma and Carta show as *Coming soon*.
 
 - **More connections.** Gusto payroll, GitHub, Figma and Carta.
 - **Email.** Invite links are shown to the CEO to send themselves, and notifications appear in the app. Sending emails needs an email service such as Resend or Postmark.
-- **Password reset by email.** For now the CEO can send a new invite.
+- **Sign-in codes by email.** Signing in with a code sent by email needs an email service such as Resend or Postmark.
 
 ## Files
 
@@ -103,7 +104,8 @@ Gusto, GitHub, Figma and Carta show as *Coming soon*.
 | --- | --- |
 | `index.html` | The app |
 | `server.mjs` | The backend |
-| `connectors.mjs` | Connections: Google, QuickBooks, Xero, Plaid and Stripe |
-| `login.html` | The sign-in, first-run setup and join-from-invite page |
+| `connectors.mjs` | Connections: Google, QuickBooks, Xero, Plaid and Stripe, and Google sign-in |
+| `passkeys.mjs` | Passkey sign-in (WebAuthn), checked with Node's built-in crypto |
+| `login.html` | Sign in (Google, email, passkey), first-run setup, joining from an invite, can't sign in, and sign-in links |
 | `serve.mjs` | A simple server for the demo only (no accounts) |
 | `SEED_FOUNDER_NEEDS.md` | What a seed-stage company needs from Helm |

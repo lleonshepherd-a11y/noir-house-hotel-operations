@@ -345,5 +345,25 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
     send(res, 404, { error: "Not found" }); return true;
   }
 
-  return { route };
+  /* ---------- Signing in with Google ---------- */
+  // Uses the same Google app and redirect URL as Gmail, Calendar and Drive, and only asks for the email address.
+  const googleSignInReady = () => !!appCreds("google");
+  function googleSignInStart(url, extra) {
+    const c = appCreds("google"); if (!c) return null;
+    const state = randomBytes(18).toString("hex"); states.set(state, { signin: true, ...extra, exp: Date.now() + 10 * 60e3 });
+    return U(APPS.google.auth) + "?" + form({ client_id: c.clientId, redirect_uri: redirectFor("google", url), response_type: "code", scope: "openid email", state, prompt: "select_account" });
+  }
+  // For a Google callback that belongs to a sign-in: { st, email } or { st, error }. null when it's a connection instead.
+  async function googleSignInFinish(url) {
+    const key = url.searchParams.get("state") || "", st = states.get(key); if (!st || !st.signin) return null; states.delete(key);
+    if (url.searchParams.get("error")) return { st, error: "Google sign-in was cancelled." };
+    try {
+      const t = await tokenRequest("google", { grant_type: "authorization_code", code: url.searchParams.get("code") || "", redirect_uri: redirectFor("google", url) });
+      const me = await call("https://openidconnect.googleapis.com/v1/userinfo", bearer({ access: t.access_token }));
+      if (!me.email || me.email_verified === false) return { st, error: "That Google account doesn’t have a verified email." };
+      return { st, email: String(me.email).toLowerCase() };
+    } catch (e) { return { st, error: e.message || "Google sign-in didn’t work. Try again." }; }
+  }
+
+  return { route, googleSignInReady, googleSignInStart, googleSignInFinish };
 }
