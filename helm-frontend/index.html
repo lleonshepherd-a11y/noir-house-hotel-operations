@@ -1889,6 +1889,20 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
 .ts-tbl td,.ts-tbl th{vertical-align:middle}
 .ts-tbl td:first-child{width:30%}
 .ts-tbl td.ts-best{color:#30d158;font-weight:600}
+
+/* Information tiles: separate lifted cards with a soft sheen (from the reference) */
+:root[data-theme=dark] .view .kpis,:root[data-theme=dark] .view .tiles{display:grid;gap:14px!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+:root[data-theme=dark] .view .kpis>*,:root[data-theme=dark] .view .tiles>*{position:relative;margin:0!important;border-radius:24px!important;border:1px solid rgba(255,255,255,.07)!important;
+ background:radial-gradient(120% 90% at 100% 100%,rgba(255,255,255,.075),transparent 55%),radial-gradient(90% 70% at 0% 0%,rgba(255,255,255,.04),transparent 60%),linear-gradient(150deg,#242424 0%,#151515 52%,#1b1b1b 100%)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.6),0 22px 44px -20px rgba(0,0,0,.95)!important;
+ padding:22px 22px 20px!important;min-height:148px;display:flex;flex-direction:column;justify-content:flex-end;
+ transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .3s!important;transform:none}
+:root[data-theme=dark] .view .kpis>*:hover,:root[data-theme=dark] .view .tiles>*:hover{transform:translateY(-4px)!important;border-color:rgba(255,255,255,.12)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.4),0 2px 4px rgba(0,0,0,.6),0 30px 56px -20px rgba(0,0,0,1)!important}
+:root[data-theme=dark] .view .kpis>*>span:first-child,:root[data-theme=dark] .view .tiles>*>span:first-child{font-size:13px;color:#9a9aa0;font-weight:500;letter-spacing:-.005em}
+:root[data-theme=dark] .view .kpis>* b,:root[data-theme=dark] .view .tiles>* b{font-size:30px;font-weight:500;letter-spacing:-.035em;line-height:1.2;margin-top:4px;color:#fff}
+:root[data-theme=dark] .view .kpis>* svg,:root[data-theme=dark] .view .tiles>* svg{margin-top:12px}
+@media (max-width:640px){:root[data-theme=dark] .view .kpis,:root[data-theme=dark] .view .tiles{gap:10px!important}:root[data-theme=dark] .view .kpis>*,:root[data-theme=dark] .view .tiles>*{border-radius:20px!important;min-height:124px;padding:16px!important}:root[data-theme=dark] .view .kpis>* b,:root[data-theme=dark] .view .tiles>* b{font-size:24px}}
 </style>
 </head>
 <body>
