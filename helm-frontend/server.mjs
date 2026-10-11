@@ -303,6 +303,18 @@ function stateFor(u) {
 async function hashPw(pw) { const salt = randomBytes(16); const h = await scrypt(pw, salt, 64); return salt.toString("hex") + ":" + h.toString("hex"); }
 async function checkPw(pw, stored) { if (!stored) { DUMMY_PW ??= await hashPw(randomBytes(12).toString("hex")); await checkPw(pw, DUMMY_PW); return false; } const [s, h] = stored.split(":"); const got = await scrypt(pw, Buffer.from(s, "hex"), 64); return timingSafeEqual(got, Buffer.from(h, "hex")); }
 const SESSION_DAYS = 30;
+const INVITE_DAYS = 7;
+// Sessions past their date are removed, not just ignored.
+const dropOldSessions = () => q("DELETE FROM sessions WHERE expires < ?").run(Date.now());
+dropOldSessions(); setInterval(dropOldSessions, 60 * 60e3).unref();
+const signOutAll = (uid) => { q("DELETE FROM sessions WHERE user_id=?").run(uid); for (const c of clients) if (c.user.id === uid) { try { c.res.end(); } catch {} clients.delete(c); } };
+const inviteOK = (x) => x && x.invite && (x.created || 0) + INVITE_DAYS * 864e5 > Date.now();
+// First-run setup needs a code, so nobody who finds a fresh install first can take it over.
+// Set SETUP_CODE yourself, or read the one printed in the server log. Once set up, setup stays closed for good.
+if (q("SELECT 1 FROM users LIMIT 1").get()) setSetting("setup_done", "1");
+const setupOpen = () => !getSetting("setup_done") && !q("SELECT 1 FROM users LIMIT 1").get();
+const SETUP_CODE = String(process.env.SETUP_CODE || randomBytes(5).toString("hex")).trim();
+if (setupOpen()) console.log(`First-run setup code: ${process.env.SETUP_CODE ? "(the SETUP_CODE you set)" : SETUP_CODE}`);
 function newSession(uid) { const t = randomBytes(32).toString("hex"); q("INSERT INTO sessions(token,user_id,expires) VALUES(?,?,?)").run(createHash("sha256").update(t).digest("hex"), uid, Date.now() + SESSION_DAYS * 864e5); return t; }
 function userFrom(req) {
   const m = /(?:^|;\s*)helm_s=([a-f0-9]{64})/.exec(req.headers.cookie || ""); if (!m) return null;
@@ -360,13 +372,17 @@ async function api(req, res, url) {
   // Every change must come from our own page (blocks cross-site form posts).
   if (m !== "GET" && req.headers["x-helm"] !== "1") return send(res, 403, { error: "Missing request header" });
 
-  if (p === "/api/status" && m === "GET") return send(res, 200, { setup: !q("SELECT 1 FROM users LIMIT 1").get() });
+  if (p === "/api/status" && m === "GET") return send(res, 200, { setup: setupOpen() });
 
   if (p === "/api/setup" && m === "POST") {
-    if (q("SELECT 1 FROM users LIMIT 1").get()) return send(res, 409, { error: "Already set up" });
+    if (!setupOpen()) return send(res, 409, { error: "Already set up" });
     const b = await json(req);
+    if (tooMany("i:" + ip)) return send(res, 429, { error: "Too many attempts. Try again in 15 minutes." });
+    const code = Buffer.from(String(b.code || "").trim()), want = Buffer.from(SETUP_CODE);
+    if (code.length !== want.length || !timingSafeEqual(code, want)) { addTry("i:" + ip); return send(res, 403, { error: "That setup code is wrong. It’s in the server log, or it’s the SETUP_CODE you set." }); }
     if (!validEmail(b.email) || !strongPw(b.password) || !b.name) return send(res, 400, { error: "Enter your name, a valid email and a password of at least 10 characters." });
     const r = q("INSERT INTO users(email,name,pkey,role,pass,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), String(b.name).slice(0, 80), "AK", "CEO", await hashPw(b.password), Date.now());
+    setSetting("setup_done", "1");
     if (b.seed && typeof b.seed === "object") for (const [k, v] of Object.entries(b.seed)) if (k === "WG") { if (v) writeSec("WG", { access: v.access, rows: v.rows }, r.lastInsertRowid); } else if (ACL[k]) writeSec(k, v, r.lastInsertRowid);
     const P = readSec("P") || {}; P.AK = [String(b.name).slice(0, 80), (P.AK || [])[1] || "#1c1d21", (P.AK || [])[2] || "#fff"]; writeSec("P", P, r.lastInsertRowid);
     audit(r.lastInsertRowid, "set up the workspace");
@@ -387,13 +403,13 @@ async function api(req, res, url) {
 
   if (p === "/api/invite/accept" && m === "POST") {
     const b = await json(req); const u = b.token && q("SELECT * FROM users WHERE invite=?").get(String(b.token));
-    if (!u) return send(res, 404, { error: "This invite link has expired or was already used." });
+    if (!inviteOK(u)) return send(res, 404, { error: "This invite link has expired or was already used." });
     if (!strongPw(b.password)) return send(res, 400, { error: "Use a password of at least 10 characters." });
     q("UPDATE users SET pass=?, invite=NULL, name=COALESCE(?,name) WHERE id=?").run(await hashPw(b.password), b.name ? String(b.name).slice(0, 80) : null, u.id);
     audit(u.id, "accepted invite");
     return send(res, 200, { ok: true }, { "set-cookie": cookie(req, newSession(u.id), SESSION_DAYS * 86400) });
   }
-  if (p === "/api/invite/info" && m === "GET") { const u = q("SELECT name,email FROM users WHERE invite=?").get(url.searchParams.get("t") || ""); return u ? send(res, 200, u) : send(res, 404, { error: "Invite not found" }); }
+  if (p === "/api/invite/info" && m === "GET") { const u = q("SELECT name,email,invite,created FROM users WHERE invite=?").get(url.searchParams.get("t") || ""); return inviteOK(u) ? send(res, 200, { name: u.name, email: u.email }) : send(res, 404, { error: "Invite not found" }); }
 
   const u = userFrom(req);
   if (!u) return send(res, 401, { error: "Sign in" });
@@ -443,16 +459,38 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true });
   }
 
-  if (p === "/api/users" && m === "GET") { if (u.role !== "CEO") return send(res, 403, { error: "CEO only" }); return send(res, 200, q("SELECT id,email,name,pkey,role, invite IS NOT NULL AS pending FROM users").all().map((x) => swapKeys(x, "AK", u.pkey))); }
+  if (p === "/api/users" && m === "GET") { if (u.role !== "CEO") return send(res, 403, { error: "CEO only" }); return send(res, 200, q("SELECT id,email,name,pkey,role, invite IS NOT NULL AS pending, (SELECT COUNT(*) FROM sessions s WHERE s.user_id=users.id AND s.expires>?) AS devices FROM users").all(Date.now()).map((x) => swapKeys(x, "AK", u.pkey))); }
+  // Sign someone out on every device: the CEO for anyone, or anyone for themselves.
+  let um = /^\/api\/users\/(\d+)\/signout$/.exec(p);
+  if (um && m === "POST") {
+    const id = +um[1]; if (u.role !== "CEO" && id !== u.id) return send(res, 403, { error: "Only the CEO can sign other people out." });
+    const x = q("SELECT id,name FROM users WHERE id=?").get(id); if (!x) return send(res, 404, { error: "No such person" });
+    signOutAll(id); audit(u.id, id === u.id ? "signed out everywhere" : "signed out " + x.name); return send(res, 200, { ok: true });
+  }
+  // Remove someone's account: they're signed out at once and can't sign in again. Their name stays on
+  // their past work and tasks, so nothing goes missing; reassign their open tasks after.
+  um = /^\/api\/users\/(\d+)$/.exec(p);
+  if (um && m === "DELETE") {
+    if (u.role !== "CEO") return send(res, 403, { error: "Only the CEO can remove people." });
+    const x = q("SELECT * FROM users WHERE id=?").get(+um[1]); if (!x) return send(res, 404, { error: "No such person" });
+    if (x.role === "CEO" || x.id === u.id) return send(res, 400, { error: "The CEO’s account can’t be removed." });
+    signOutAll(x.id); q("DELETE FROM users WHERE id=?").run(x.id);
+    writeSec("MEM", (readSec("MEM") || []).filter((mm) => mm[0] !== x.pkey), u.id);
+    const W = readSec("WG"); if (W && Array.isArray(W.access)) { W.access = W.access.filter((k) => k !== x.pkey); writeSec("WG", W, u.id); }
+    audit(u.id, "removed " + x.email); broadcast({ type: "changed", sections: ["MEM"], by: u.pkey }); return send(res, 200, { ok: true });
+  }
   if (p === "/api/invite" && m === "POST") {
     if (u.role !== "CEO") return send(res, 403, { error: "Only the CEO can invite people." });
     const b = await json(req); if (!validEmail(b.email)) return send(res, 400, { error: "Enter a valid email." });
     const role = ["Manager", "Member", "Guest"].includes(b.role) ? b.role : "Member";
-    if (q("SELECT 1 FROM users WHERE email=?").get(b.email.toLowerCase())) return send(res, 409, { error: "That person already has an account." });
+    const had = q("SELECT * FROM users WHERE email=?").get(b.email.toLowerCase());
+    if (had && !had.invite) return send(res, 409, { error: "That person already has an account." });
+    if (had) { const token = randomBytes(24).toString("hex"); q("UPDATE users SET invite=?, created=? WHERE id=?").run(token, Date.now(), had.id); audit(u.id, "sent a new invite to " + had.email); return send(res, 200, { link: `${url.origin}/join?t=${token}`, pkey: swapKeys(had.pkey, "AK", u.pkey) }); }
     let pkey = b.pkey ? swapKeys(String(b.pkey), "AK", u.pkey) : null;
     if (pkey && q("SELECT 1 FROM users WHERE pkey=?").get(pkey)) return send(res, 409, { error: "That team member already has an account." });
     const P = readSec("P") || {};
-    if (!pkey) { pkey = nextKey(b.name || b.email); P[pkey] = [String(b.name || b.email.split("@")[0]).slice(0, 80), "#efeff1", "#3f4148"]; writeSec("P", P, u.id); const mem = readSec("MEM") || []; mem.push([pkey, role]); writeSec("MEM", mem, u.id); }
+    if (!pkey) { pkey = nextKey(b.name || b.email); P[pkey] = [String(b.name || b.email.split("@")[0]).slice(0, 80), "#efeff1", "#3f4148"]; writeSec("P", P, u.id); }
+    { const mem = readSec("MEM") || []; if (!mem.some((x) => x[0] === pkey)) { mem.push([pkey, role]); writeSec("MEM", mem, u.id); } }
     const token = randomBytes(24).toString("hex");
     q("INSERT INTO users(email,name,pkey,role,invite,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), (P[pkey] || [b.name])[0], pkey, role, token, Date.now());
     audit(u.id, "invited " + b.email + " as " + role);

@@ -33,6 +33,7 @@ button:disabled{opacity:.5;cursor:default}
   <div id="nameRow" hidden><label for="name">Your name</label><input id="name" autocomplete="name"></div>
   <div id="emailRow"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
   <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required minlength="10">
+  <div id="codeRow" hidden><label for="code">Setup code</label><input id="code" autocomplete="off" spellcheck="false"></div>
   <button id="go" type="submit">Sign in</button>
   <div class="err" id="err" role="alert"></div>
   <div class="foot" id="foot">Forgot your password? Ask your workspace owner to send a new invite.</div>
@@ -42,14 +43,14 @@ const $=s=>document.querySelector(s);const path=location.pathname,token=new URLS
 let mode='login';
 async function init(){
   const st=await fetch('/api/status').then(r=>r.json()).catch(()=>({}));
-  if(st.setup){mode='setup';$('#h').textContent='Set up your workspace';$('#lead').textContent='You’re the first person here, so you’ll be the CEO. You can invite your team once you’re in.';$('#nameRow').hidden=false;$('#go').textContent='Create workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters.'}
+  if(st.setup){mode='setup';$('#h').textContent='Set up your workspace';$('#lead').textContent='You’re the first person here, so you’ll be the CEO. You can invite your team once you’re in.';$('#nameRow').hidden=false;$('#codeRow').hidden=false;$('#code').required=true;$('#go').textContent='Create workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters. The setup code is printed in the server log when Helm first starts, or it’s the SETUP_CODE you set.'}
   else if(path==='/join'&&token){mode='join';const i=await fetch('/api/invite/info?t='+encodeURIComponent(token)).then(r=>r.ok?r.json():null).catch(()=>null);
     if(!i){$('#h').textContent='Invite not found';$('#lead').textContent='This invite link has expired or was already used. Ask for a new one.';$('#go').hidden=true;$('#emailRow').hidden=true;$('#pw').parentNode.querySelectorAll('label[for=pw],#pw').forEach(x=>x.hidden=true);return}
     $('#h').textContent='Join your team on Helm';$('#lead').textContent='Choose a password to finish setting up your account.';$('#nameRow').hidden=false;$('#name').value=i.name||'';$('#email').value=i.email;$('#email').readOnly=true;$('#go').textContent='Join workspace';$('#pw').autocomplete='new-password';$('#foot').textContent='Password: at least 10 characters.'}
 }
 $('#f').addEventListener('submit',async e=>{e.preventDefault();$('#err').textContent='';$('#go').disabled=true;
   const url=mode==='setup'?'/api/setup':mode==='join'?'/api/invite/accept':'/api/login';
-  const body=mode==='join'?{token,password:$('#pw').value,name:$('#name').value}:{email:$('#email').value,password:$('#pw').value,name:$('#name').value};
+  const body=mode==='join'?{token,password:$('#pw').value,name:$('#name').value}:{email:$('#email').value,password:$('#pw').value,name:$('#name').value,code:$('#code').value};
   try{const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','x-helm':'1'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));
     if(r.ok){location.href='/';return}$('#err').textContent=j.error||'Something went wrong. Try again.'}catch(x){$('#err').textContent='Can’t reach the server. Check your connection.'}
   $('#go').disabled=false});

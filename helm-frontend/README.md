@@ -14,7 +14,7 @@ cd helm-frontend
 npm start
 ```
 
-Open http://localhost:5173. The first person to open it sets up the workspace and becomes the CEO. The app starts with sample data so you can see how it works.
+Open http://localhost:5173. The first person to open it sets up the workspace and becomes the CEO, using the setup code printed in the terminal. The app starts with sample data so you can see how it works.
 
 To look at the app on its own, without accounts or saving to a server, open `index.html` in a browser or run `npm run demo`.
 
@@ -25,7 +25,7 @@ To look at the app on its own, without accounts or saving to a server, open `ind
    - **Source → Branch:** `claude/nice-euler-o5jz2b`
    - **Source → Root Directory:** `/helm-frontend`
 3. Add a **Volume** to the service and mount it at `/data`. This is where the database and uploaded files live. Without a volume, everything is wiped on each deploy.
-4. In **Variables**, add `DATA_DIR=/data` and `HELM_SECRET` set to a long random string. Helm uses `HELM_SECRET` to encrypt connection tokens. If you change it later, you'll need to connect each tool again.
+4. In **Variables**, add `DATA_DIR=/data`, `HELM_SECRET` set to a long random string, and `SETUP_CODE` set to a code only you know (you type it once when you set up your account). Helm uses `HELM_SECRET` to encrypt connection tokens. If you change it later, you'll need to connect each tool again.
 5. Under **Networking**, click **Generate Domain**, then open that address and set up your account.
 
 Railway runs `npm start`. The health check is `/health`.
@@ -34,9 +34,10 @@ Railway runs `npm start`. The health check is `/health`.
 
 | Area | How it works |
 | --- | --- |
-| Accounts | Email and password. Passwords are stored as scrypt hashes. Sessions use a secure, HTTP-only cookie that lasts 30 days. Login is rate-limited to 10 tries per 15 minutes. |
-| First run | The first person creates the workspace and becomes the CEO. |
-| Inviting people | Settings → Members & permissions → **Invite** (for someone already on the team list) or **Invite people** (for someone new). Helm makes a one-time link to send them. They choose a password and they're in. |
+| Accounts | Email and password. Passwords are stored as scrypt hashes. Sessions use a secure, HTTP-only cookie that lasts 30 days; expired sessions are deleted. Login is limited to 10 tries per 15 minutes for each address and for each email, and gives the same answer whether or not an email has an account. |
+| First run | The first person creates the workspace and becomes the CEO. They need the setup code: `SETUP_CODE` if you set it, otherwise the one printed in the server log. Once the workspace exists, setup is closed for good. |
+| Inviting people | Settings → Members & permissions → **Invite** (for someone already on the team list) or **Invite people** (for someone new). Helm makes a one-time link to send them. They choose a password and they're in. Links stop working after 7 days; press **New link** to send another. |
+| Removing people | Settings → Members & permissions. **Sign out** ends someone's sessions on every device. **Remove** deletes their account so they can't sign in again; their name stays on their past work and open tasks until you reassign them. Anyone can use **Sign out everywhere** for their own account. |
 | Roles | CEO, Manager, Member and Guest. Roles are checked on the server: a Member's browser is never sent money, wages, fundraising, board and legal, connections or decisions data, and the server refuses any change to those areas. Changing someone's role in Settings updates their account. |
 | Wages | Based on role, with no PIN. The CEO always sees wages. The CEO can give access to Managers from Wages → **Access**, and those Managers can view wages but not change them. Members and Guests never can. Wages are never sent with the rest of the data, and the server checks access on every request. |
 | Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. |
