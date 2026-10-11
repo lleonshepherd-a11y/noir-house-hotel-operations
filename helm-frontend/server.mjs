@@ -313,6 +313,8 @@ async function hashPw(pw) { const salt = randomBytes(16); const h = await scrypt
 async function checkPw(pw, stored) { if (!stored) { DUMMY_PW ??= await hashPw(randomBytes(12).toString("hex")); await checkPw(pw, DUMMY_PW); return false; } const [s, h] = stored.split(":"); const got = await scrypt(pw, Buffer.from(s, "hex"), 64); return timingSafeEqual(got, Buffer.from(h, "hex")); }
 const SESSION_DAYS = 30;
 const INVITE_DAYS = 7;
+// The address people use to reach Helm. PUBLIC_URL (your custom domain) wins; otherwise the address of this request.
+const publicOrigin = (url) => (process.env.PUBLIC_URL || url.origin).replace(/\/$/, "");
 // Sessions past their date are removed, not just ignored.
 const dropOldSessions = () => q("DELETE FROM sessions WHERE expires < ?").run(Date.now());
 dropOldSessions(); setInterval(dropOldSessions, 60 * 60e3).unref();
@@ -493,7 +495,7 @@ async function api(req, res, url) {
     const role = ["Manager", "Member", "Guest"].includes(b.role) ? b.role : "Member";
     const had = q("SELECT * FROM users WHERE email=?").get(b.email.toLowerCase());
     if (had && !had.invite) return send(res, 409, { error: "That person already has an account." });
-    if (had) { const token = randomBytes(24).toString("hex"); q("UPDATE users SET invite=?, created=? WHERE id=?").run(token, Date.now(), had.id); audit(u.id, "sent a new invite to " + had.email); return send(res, 200, { link: `${url.origin}/join?t=${token}`, pkey: swapKeys(had.pkey, "AK", u.pkey) }); }
+    if (had) { const token = randomBytes(24).toString("hex"); q("UPDATE users SET invite=?, created=? WHERE id=?").run(token, Date.now(), had.id); audit(u.id, "sent a new invite to " + had.email); return send(res, 200, { link: `${publicOrigin(url)}/join?t=${token}`, pkey: swapKeys(had.pkey, "AK", u.pkey) }); }
     let pkey = b.pkey ? swapKeys(String(b.pkey), "AK", u.pkey) : null;
     if (pkey && q("SELECT 1 FROM users WHERE pkey=?").get(pkey)) return send(res, 409, { error: "That team member already has an account." });
     const P = readSec("P") || {};
@@ -502,7 +504,7 @@ async function api(req, res, url) {
     const token = randomBytes(24).toString("hex");
     q("INSERT INTO users(email,name,pkey,role,invite,created) VALUES(?,?,?,?,?,?)").run(b.email.toLowerCase(), (P[pkey] || [b.name])[0], pkey, role, token, Date.now());
     audit(u.id, "invited " + b.email + " as " + role);
-    return send(res, 200, { link: `${url.origin}/join?t=${token}`, pkey: swapKeys(pkey, "AK", u.pkey) });
+    return send(res, 200, { link: `${publicOrigin(url)}/join?t=${token}`, pkey: swapKeys(pkey, "AK", u.pkey) });
   }
 
   if (p === "/api/files" && m === "POST") {

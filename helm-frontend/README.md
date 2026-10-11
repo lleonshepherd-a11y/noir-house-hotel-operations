@@ -87,7 +87,7 @@ The CEO connects tools on the **Connections** page. Helm only reads from them. H
 3. Paste the Client ID and Secret into Helm. Or set them as Railway variables instead: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `QUICKBOOKS_CLIENT_ID` and `QUICKBOOKS_CLIENT_SECRET`, `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET`, or `PLAID_CLIENT_ID`, `PLAID_SECRET` and `PLAID_ENV` (`sandbox` or `production`).
 4. Press **Connect** and sign in.
 
-A Google app starts in *Testing* mode: add your own email as a test user in Google Cloud. Gmail is a restricted scope, so letting people outside your company use it needs Google's verification. For your own inbox, testing mode is enough. If Railway sits behind a custom domain, set `PUBLIC_URL` to that address so the redirect URL matches.
+A Google app starts in *Testing* mode: add your own email as a test user in Google Cloud. Gmail is a restricted scope, so letting people outside your company use it needs Google's verification. For your own inbox, testing mode is enough. If Railway sits behind a custom domain, set `PUBLIC_URL` to that address so the redirect URLs and invite links use it.
 
 Gusto, GitHub, Figma and Carta show as *Coming soon*.
 

@@ -10,7 +10,18 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 // Tests point every provider at a local mock server. Never set this in production.
+// Test-only: send every provider call to a local fake server. It would hand app secrets and tokens to that
+// address, so Helm refuses to start with it in production, on Railway, or pointing anywhere but this machine.
 const MOCK = process.env.HELM_MOCK_PROVIDERS;
+if (MOCK) {
+  let host = ""; try { host = new URL(MOCK).hostname; } catch {}
+  const live = process.env.NODE_ENV === "production" || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_ENVIRONMENT_NAME || process.env.PUBLIC_URL;
+  if (live || !["localhost", "127.0.0.1", "[::1]", "::1"].includes(host)) {
+    console.error("HELM_MOCK_PROVIDERS is for local tests only. Remove it: Helm won't start with it here.");
+    process.exit(1);
+  }
+  console.warn("Test mode: provider calls go to " + MOCK);
+}
 const U = (url) => (MOCK ? MOCK + "/" + url.replace(/^https:\/\//, "") : url);
 
 export const APPS = {
