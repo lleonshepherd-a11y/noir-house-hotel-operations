@@ -2108,6 +2108,29 @@ body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transitio
  .bar #crumb{flex:1;min-width:0;overflow:hidden}.bar #crumb .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .banner{flex-wrap:wrap;gap:10px 12px!important;padding:14px 16px!important}.banner>span{flex:1 1 calc(100% - 40px);min-width:0}.banner>.btn,.banner>button{margin-left:30px!important}
 }
+
+/* Recognisable file badges */
+.ftile.f-pdf{background:#e5252a!important;border-color:#e5252a!important;color:#fff!important;font-weight:800;letter-spacing:.02em}
+.ftile.f-vid{background:linear-gradient(135deg,#8b5cf6,#6d28d9)!important;border-color:transparent!important}
+.ftile.f-img{background:linear-gradient(135deg,#2d9bff,#1d6fd6)!important;border-color:transparent!important}
+.ftile.f-xls{background:#1d8f4e!important;border-color:#1d8f4e!important;color:#fff!important;font-weight:800}
+.ftile.f-doc{background:#2b63d9!important;border-color:#2b63d9!important;color:#fff!important;font-weight:800}
+
+/* Search boxes: one consistent style that sits in the page */
+:root[data-theme=dark] .sp-search,:root[data-theme=dark] .msearch{background:#000!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;height:36px;box-shadow:none!important;transition:border-color .15s,background .15s}
+:root[data-theme=dark] .sp-search:hover,:root[data-theme=dark] .msearch:hover{border-color:rgba(255,255,255,.2)!important}
+:root[data-theme=dark] .sp-search:focus-within,:root[data-theme=dark] .msearch:focus-within{border-color:rgba(255,255,255,.35)!important;background:#050505!important}
+:root[data-theme=dark] .sp-search input,:root[data-theme=dark] .msearch input,:root[data-theme=dark] #msgQ,:root[data-theme=dark] #nq{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#fff}
+:root[data-theme=dark] .sp-search input::placeholder,:root[data-theme=dark] .msearch input::placeholder{color:#6e6e74}
+:root[data-theme=dark] .sp-search .ic,:root[data-theme=dark] .msearch .ic{color:#6e6e74}
+
+:root[data-theme=dark] #ntitle{background:transparent!important;border:0!important;box-shadow:none!important}
+.sp-tools{align-items:center!important}
+
+/* File badges: black with white lettering */
+.ftile.f-mono{background:#000!important;border:1px solid rgba(255,255,255,.16)!important;color:#fff!important;font-weight:700;letter-spacing:.06em}
+:root[data-theme=dark] #ntitle{background:transparent!important;border:0!important;box-shadow:none!important}
+.sp-tools{align-items:center!important}
 </style>
 </head>
 <body>
@@ -2232,7 +2255,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
               <div class="cmt-h"><span class="av" style="--av:#fde2ea;--avc:#9b2c4f">SP</span><b>Sofia</b><span>· 4 min ago</span></div>
               <p>v3 of the launch video is up. Shorter hook, new music. <span class="mn">@Alex</span> I need it locked by Wednesday to book the ads.</p>
               <div class="reply" id="replies">
-                <div class="cmt-h"><span class="av" style="--av:#e1e7fb;--avc:#2c3e8f">JR</span><b>Jordan</b><span>· just now</span></div>
+                <div class="cmt-h"><span class="av" style="--av:#e1e7fb;--avc:#2c3e8f">MR</span><b>Marcus</b><span>· just now</span></div>
                 <p style="margin-left:30px"><span class="mn">@Alex</span> if we move to 2 Dec, the App Store review still fits with 4 days spare.</p>
               </div>
               <form class="reply-in" id="replyForm"><input id="replyIn" placeholder="Leave a reply…" autocomplete="off"><button class="snd" aria-label="Send reply"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke-width:2.2"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></form>
@@ -2629,8 +2652,8 @@ const ICON={doc:'<svg class="ic" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a.5
  spark:'<svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>',
  play:'<svg viewBox="0 0 12 14" width="11" height="12"><path d="M1 .8l10 6.2-10 6.2z" fill="var(--ink)"/></svg>'};
 
-const P={AK:['Alex Kim','var(--ink)','#fff'],JR:['Jordan R.','#e1e7fb','#2c3e8f'],SP:['Sofia P.','#fde2ea','#9b2c4f'],ML:['Maya L.','#dcf3e8','#1d6b4a'],TN:['Tara N.','#d9f1f2','#1d5f66'],PS:['Priya S.','#fbe9d3','#8a5212'],TO:['Tom O.','#ece5fb','#5b3fa0'],DW:['Dan W.','var(--soft)','var(--ink2)']};
-const av=(k,s='')=>`<span class="av ${s}" style="--av:${P[k][1]};--avc:${P[k][2]}" title="${esc(P[k][0])}">${window.HELM_BACKEND?esc(P[k][0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()):k}</span>`;
+const P={AK:['Alex Kim','var(--ink)','#fff'],JR:['Marcus R.','#e1e7fb','#2c3e8f'],SP:['Sofia P.','#fde2ea','#9b2c4f'],ML:['Maya L.','#dcf3e8','#1d6b4a'],TN:['Tara N.','#d9f1f2','#1d5f66'],PS:['Priya S.','#fbe9d3','#8a5212'],TO:['Tom O.','#ece5fb','#5b3fa0'],DW:['Dan W.','var(--soft)','var(--ink2)']};
+const av=(k,s='')=>`<span class="av ${s}" style="--av:${P[k][1]};--avc:${P[k][2]}" title="${esc(P[k][0])}">${window.HELM_BACKEND?esc(P[k][0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()):(k==='JR'?'MR':k)}</span>`;
 const LB={Launch:'#e5484d',Product:'#5e6ad2',Growth:'#8b8f97',Ops:'#8b8f97',Finance:'#5f636b',Design:'#8b8f97',Legal:'#8b8f97',Hiring:'#8b8f97'};
 Object.keys(LB).forEach(k=>LB[k]='#b4b7bd');LB.Launch='#e5484d';
 const lbl=n=>`<span class="lbl" style="--c:${LB[n]}"><i></i>${n}</span>`;
@@ -2649,8 +2672,8 @@ const PRIOS=[['risk',.68,'Launch Murmur publicly','Security review 8 days late',
 $('#prios').innerHTML=PRIOS.map(([k,p,t,s,l,o,d,c],i)=>`<div class="lr">${st(k,p)}<div class="ttl"><b>${t}</b><small>${s}</small></div><div class="meta">${lbl(l)}<span class="mbar"><i style="--w:${p*100}%;--c:${c};animation-delay:${.1+i*.08}s"></i></span><span class="pct">${Math.round(p*100)}%</span>${av(o)}<span class="dt">${d}</span></div></div>`).join('');
 
 const DECS=[
- {t:'Pick the public launch date',c:'The security review is late. Holding 18 Nov means launching before the pen-test fixes ship.',who:'JR',from:'Jordan R.',when:'since Thursday',o:[['Keep 18 Nov','Press stays booked. Ship without the security badge.'],['Move to 2 Dec','Full review done first. Press moves two weeks, about $9k of runway.',1]]},
- {t:'One senior engineer or two mid-level?',c:'Same budget, $310k a year. The top candidate’s other offer expires Friday.',who:'JR',from:'Jordan R.',when:'yesterday',o:[['One senior','Owns the speech model. Offer today, starts in four weeks.',1],['Two mid-level','More hands on the apps. Jordan mentors both.']]},
+ {t:'Pick the public launch date',c:'The security review is late. Holding 18 Nov means launching before the pen-test fixes ship.',who:'JR',from:'Marcus R.',when:'since Thursday',o:[['Keep 18 Nov','Press stays booked. Ship without the security badge.'],['Move to 2 Dec','Full review done first. Press moves two weeks, about $9k of runway.',1]]},
+ {t:'One senior engineer or two mid-level?',c:'Same budget, $310k a year. The top candidate’s other offer expires Friday.',who:'JR',from:'Marcus R.',when:'yesterday',o:[['One senior','Owns the speech model. Offer today, starts in four weeks.',1],['Two mid-level','More hands on the apps. Marcus mentors both.']]},
  {t:'Approve launch video v3',c:'The 45-second cut for Product Hunt and TikTok. Needs locking by Wednesday to book ads.',who:'SP',from:'Sofia P.',when:'today',o:[['Approve','Goes to ad scheduling today.'],['Request changes','Opens a thread with Sofia.']]}];
 $('#decs').innerHTML=DECS.map((d,i)=>`<div class="dec" data-dec="${i}"><div class="dec-h">${av(d.who)}<b>${d.from}</b> asked you to decide · ${d.when}</div><div class="dec-b"><h4>${d.t}</h4><p>${d.c}</p></div><div class="opts">${d.o.map(o=>`<button class="opt" data-choice="${o[0]}"><b>${o[0]}${o[2]?'<span class="rec">Recommended</span>':''}</b><small>${o[1]}</small></button>`).join('')}</div></div>`).join('');
 let openDec=3;
@@ -2683,7 +2706,7 @@ burnChart('#burn');
 const TEAMS=[['Development','risk','JR',.72,'Waiting on the security review to submit'],['Design','ok','TN',.8,'Onboarding in review, screenshots Monday'],['Marketing','ok','SP',.74,'Waitlist 18,420, up 2,310 this week'],['Operations','ok','TO',.6,'Help centre draft in review'],['Sales','ok','PS',.6,'3 of 5 pilots live'],['Fundraising','risk','ML',.4,'$1.6M of $4M, 2 term sheets']];
 $('#teams').innerHTML=TEAMS.map(([n,h,o,p,u],i)=>`<div class="lr"><svg class="ic" style="color:var(--fg-3)" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><div class="ttl"><b>${n}</b><small>${u}</small></div><div class="meta">${health(h)}${av(o)}<span class="mbar"><i style="--w:${p*100}%;animation-delay:${i*.05}s"></i></span><span class="pct">${Math.round(p*100)}%</span></div></div>`).join('');
 
-const ACT=[['JR','<b>Jordan</b> moved <b>MUR-142 Offline mode</b> to CEO sign-off','2h ago'],['PS','<b>Priya</b> marked the <b>Brightpath</b> pilot as live','3h ago'],['TN','<b>Tara</b> added the label <b>Launch</b> to 3 tasks','5h ago']];
+const ACT=[['JR','<b>Marcus</b> moved <b>MUR-142 Offline mode</b> to CEO sign-off','2h ago'],['PS','<b>Priya</b> marked the <b>Brightpath</b> pilot as live','3h ago'],['TN','<b>Tara</b> added the label <b>Launch</b> to 3 tasks','5h ago']];
 const aeHTML=(k,h,t)=>`<div class="ae">${k?av(k,'xs'):`<span class="ico">${ICON.spark}</span>`}<span>${h} · ${t}</span></div>`;
 $('#act').innerHTML=ACT.map(a=>aeHTML(...a)).join('');
 function addActivity(h){$('#act').insertAdjacentHTML('afterbegin',aeHTML('AK',h,'just now'));$('#act').firstElementChild.classList.add('new')}
@@ -3092,9 +3115,9 @@ const gav=(n,s='')=>`<span class="av ${s}" style="--av:var(--soft);--avc:#5f636b
 /* ---------- Notes ---------- */
 const NOTES_KEY='helm-notes-v1',DAY=864e5,NOW=Date.now();
 const NOTE0=[
- {id:'n1',t:'Board meeting prep · 14 Oct',proj:'Company',who:'AK',u:NOW-36e5,pin:true,b:'<h2>Agenda</h2><ul><li>Launch date: 18 Nov or 2 Dec</li><li>Seed round: $1.6M of $4M, two term sheets</li><li>Hiring: one senior or two mid-level engineers</li></ul><h2>Before the meeting</h2><ul class="chk"><li class="done">Send board pack by Friday</li><li>Update the financial model with September actuals</li><li>Ask Jordan for the security review timeline</li></ul>'},
+ {id:'n1',t:'Board meeting prep · 14 Oct',proj:'Company',who:'AK',u:NOW-36e5,pin:true,b:'<h2>Agenda</h2><ul><li>Launch date: 18 Nov or 2 Dec</li><li>Seed round: $1.6M of $4M, two term sheets</li><li>Hiring: one senior or two mid-level engineers</li></ul><h2>Before the meeting</h2><ul class="chk"><li class="done">Send board pack by Friday</li><li>Update the financial model with September actuals</li><li>Ask Marcus for the security review timeline</li></ul>'},
  {id:'n2',t:'Investor call: Northbeam Ventures',proj:'Fundraising',who:'AK',u:NOW-5*36e5,pin:false,b:'<p>Partner: Sam Ortiz. Liked the pilot retention numbers and the Slack integration.</p><h2>Their questions</h2><ul><li>How do we get from pilot to paid?</li><li>Gross margin once speech costs scale</li></ul><h2>Next steps</h2><ul class="chk"><li>Share the data room</li><li>Intro to two pilot customers</li></ul>'},
- {id:'n3',t:'1:1 with Jordan',proj:'People',who:'AK',u:NOW-DAY,pin:false,b:'<p>Jordan is stretched across both launch blockers. Agreed to move the help-centre review to Priya.</p><ul class="chk"><li class="done">Move MUR-139 to Priya</li><li>Decide the senior hire by Friday</li></ul>'},
+ {id:'n3',t:'1:1 with Marcus',proj:'People',who:'AK',u:NOW-DAY,pin:false,b:'<p>Marcus is stretched across both launch blockers. Agreed to move the help-centre review to Priya.</p><ul class="chk"><li class="done">Move MUR-139 to Priya</li><li>Decide the senior hire by Friday</li></ul>'},
  {id:'n4',t:'Pilot feedback themes',proj:'Murmur',who:'PS',u:NOW-2*DAY,pin:false,b:'<h2>Top themes</h2><ul><li>Accuracy in noisy rooms (31% of feedback)</li><li>People love the Slack integration</li><li>Two pilots want team admin controls before paying</li></ul>'},
  {id:'n5',t:'Launch checklist',proj:'Murmur',who:'SP',u:NOW-3*DAY,pin:true,b:'<ul class="chk"><li class="done">Product Hunt page drafted</li><li class="done">Launch video v3</li><li>App Store screenshots</li><li>Press list confirmed</li><li>Support rota for launch week</li></ul>'}];
 let NOTES=null;try{if(!window.HELM_BACKEND)NOTES=JSON.parse(localStorage.getItem(NOTES_KEY))}catch(e){}
@@ -3173,7 +3196,7 @@ const tk=s=>parseFloat(s.replace(/[$Mk]/g,''))*(s.includes('M')?1e6:1e3);
 function renderFrTiles(){const com=INV.filter(i=>i.stg==='Committed').reduce((a,i)=>a+tk(i.tk),0)+1e6,ts=INV.filter(i=>i.stg==='Term sheet').length;
  const T0=ROUND.target;$('#frTiles').innerHTML=[['Target',money2(T0),ROUND.name],['Committed',money2(com),`${Math.round(com/T0*100)}% of target`,com/T0],['Term sheets',String(ts),INV.filter(i=>i.stg==='Term sheet').map(i=>i.n.split(' ')[0]).join(', ')||'None yet'],['In the pipeline',String(INV.length),`${INV.filter(i=>i.stg==='Diligence').length} in diligence`]].map(([l,v,s2,p])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small>${p!=null?`<div class="bar2"><i style="--w:${Math.min(100,p*100)}%;--c:var(--green)"></i></div>`:''}</div>`).join('')}
 renderFR();renderFrTiles();
-const CAP=[['Alex Kim','Founder · common',4500000,'var(--ink)'],['Jordan R.','Co-founder · common',2500000,'#5e6ad2'],['Option pool · granted','Options',320000,'#8b8f97'],['Option pool · available','Options',680000,'#9fd8d0'],['Pre-seed SAFEs','SAFE · converts at seed',1180000,'#8b8f97']];
+const CAP=[['Alex Kim','Founder · common',4500000,'var(--ink)'],['Marcus R.','Co-founder · common',2500000,'#5e6ad2'],['Option pool · granted','Options',320000,'#8b8f97'],['Option pool · available','Options',680000,'#9fd8d0'],['Pre-seed SAFEs','SAFE · converts at seed',1180000,'#8b8f97']];
 const SEEDSH=1950000;
 TABHOOK.cap=t=>renderCap(t);
 function renderCap(mode='now'){const rows=CAP.map(r=>[...r]);if(mode==='seed')rows.push(['Seed investors','Preferred · seed round',SEEDSH,'#8b8f97']);const tot=rows.reduce((a,r)=>a+r[2],0);
@@ -3217,7 +3240,7 @@ const candCard=c=>`<div class="top"><span>${esc(c.r)}</span>${gav(c.n,'xs')}</di
 function renderHire(){dndBoard($('#hireBoard'),HR_ST,CANDS,'s',candCard,(c,s2)=>{toast(`<b>${esc(c.n)}</b> moved to ${s2}`,s2==='Offer'?'Draft the offer letter next':s2==='Hired'?'Onboarding checklist created':'');renderPPTiles()})}
 function renderPPTiles(){const ft=TEAMP.filter(t=>t[3]==='Full-time').length,urg=ROLES.find(r=>r[2]==='risk');$('#candN')&&($('#candN').textContent=CANDS.filter(c=>c.s!=='Hired').length);$('#ppTiles').innerHTML=[['Team',String(TEAMP.length),`${ft} full-time · ${TEAMP.length-ft} other`],['Open roles',String(ROLES.length),urg?`${urg[0].split(' (')[0]} is urgent`:'None urgent'],['Candidates',String(CANDS.filter(c=>c.s!=='Hired').length),`${CANDS.filter(c=>c.s==='Interview').length} interviewing`],['Offers out',String(CANDS.filter(c=>c.s==='Offer').length),CANDS.filter(c=>c.s==='Offer').map(c=>`${c.n} · ${c.nx}`)[0]||'None out']].map(([l,v,s2])=>`<div class="kpi"><span>${l}</span><b>${v}</b><small>${s2}</small></div>`).join('')}
 renderHire();renderPPTiles();renderRoles();
-const OB=[['Laptop and accounts set up','Done 6 Oct',1],['Sign employment contract and IP assignment','Done 6 Oct',1],['Payroll and benefits','Done 7 Oct',1],['Meet each team (15 minutes each)','3 of 6 done',0],['First task: MUR-148 Team admin controls','Due 1 Nov',0],['30-day goals agreed with Jordan','Due 31 Oct',0]];
+const OB=[['Laptop and accounts set up','Done 6 Oct',1],['Sign employment contract and IP assignment','Done 6 Oct',1],['Payroll and benefits','Done 7 Oct',1],['Meet each team (15 minutes each)','3 of 6 done',0],['First task: MUR-148 Team admin controls','Due 1 Nov',0],['30-day goals agreed with Marcus','Due 31 Oct',0]];
 function renderOB(){$('#obN').textContent=`${OB.filter(x=>x[2]).length} of ${OB.length} done`;$('#obList').innerHTML=OB.map((x,i)=>`<div class="obrow"><button class="obi${x[2]?' done':''}" data-ob="${i}"><span class="cb">${x[2]?ICON.check:''}</span><span class="tx">${esc(x[0])}</span><small>${esc(x[1])}</small></button>${edb(`data-obe="${i}"`,x[0])}</div>`).join('')}
 $('#obList').addEventListener('click',e=>{const b=e.target.closest('[data-ob]');if(b){const x=OB[+b.dataset.ob];x[2]=!x[2];renderOB()}});
 renderOB();
@@ -3234,7 +3257,7 @@ const CK={meet:['Meetings','#2d9bff'],inv:['Investors','#8b5cf6'],due:['Task due
 const CEV=[['2026-10-14','Q3 board meeting','meet','10:00 · Video call','legal'],['2026-10-14','AWS bill due · $4,700','legal','Auto-pay'],['2026-10-12','Weekly team sync','meet','09:30 · Office'],['2026-10-19','Weekly team sync','meet','09:30 · Office'],['2026-10-26','Weekly team sync','meet','09:30 · Office'],['2026-11-02','Weekly team sync','meet','09:30 · Office'],['2026-11-09','Weekly team sync','meet','09:30 · Office'],['2026-11-16','Weekly team sync','meet','09:30 · Office'],
  ['2026-10-13','Northbeam partner meeting','inv','15:00 · Their office · Alex, Maya'],['2026-10-15','Harbour Capital call','inv','11:00 · Zoom · terms follow-up'],['2026-10-22','Field Fund diligence call','inv','14:00 · Maya'],['2026-10-28','Oakline Partners first meeting','inv','10:30 · Alex'],['2026-11-04','Investor update #9 goes out','inv','Monthly update'],
  ['2026-10-20','Pen-test report deadline','legal','Decides 18 Nov or 2 Dec launch'],['2026-10-31','Delaware franchise tax','legal','Due today · $400'],['2026-11-08','83(b) election · Nadia K.','legal','30 days after grant · post to IRS'],['2026-11-01','Gusto payroll','legal','$21,400'],
- ['2026-10-21','Ledgerly prototype sessions','meet','3 design partners · Priya'],['2026-11-18','Murmur public launch','launch','Staged release · Product Hunt day'],['2026-11-17','Launch rehearsal','launch','All hands · 16:00'],['2026-10-16','Pilot review: Brightpath','meet','13:00 · Priya, Jordan'],['2026-10-27','1:1 with Jordan','meet','17:00'],['2026-10-30','Nadia K. starts','meet','Onboarding day 1']];
+ ['2026-10-21','Ledgerly prototype sessions','meet','3 design partners · Priya'],['2026-11-18','Murmur public launch','launch','Staged release · Product Hunt day'],['2026-11-17','Launch rehearsal','launch','All hands · 16:00'],['2026-10-16','Pilot review: Brightpath','meet','13:00 · Priya, Marcus'],['2026-10-27','1:1 with Marcus','meet','17:00'],['2026-10-30','Nadia K. starts','meet','Onboarding day 1']];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const TODAY=new Date(2026,9,10);
 const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -3347,7 +3370,7 @@ NEWLBL.money='Add bill';NEWACT.money=()=>addBill();
 
 /* ---------- Board & legal ---------- */
 const LG={meet:[{d:'2026-10-14',t:'Q3 board meeting',tm:'10:00',w:'Video call',ag:['Launch date: 18 Nov or 2 Dec','Seed round progress and terms','Hiring plan and option grants'],note:'Board pack 2 of 3 sections ready'},{d:'2026-07-15',t:'Q2 board meeting',ap:'Approved: option pool of 1M shares, priced seed round'},{d:'2026-04-16',t:'Q1 board meeting',ap:'Approved: hire a product designer, pre-seed SAFE terms'},{d:'2026-03-02',t:'First board meeting',ap:'Approved: incorporation, founder vesting, bank accounts'}],
- mem:[['AK','Alex Kim','Founder & CEO'],['JR','Jordan R.','Co-founder & CTO'],[null,'Sam Ortiz','Investor observer · Field Fund']],
+ mem:[['AK','Alex Kim','Founder & CEO'],['JR','Marcus R.','Co-founder & CTO'],[null,'Sam Ortiz','Investor observer · Field Fund']],
  fil:[{d:'2026-11-08',t:'83(b) election for Nadia K.',s:'Must be filed within 30 days of her share grant'},{d:'2026-12-31',t:'Option grants approved by the board',s:'Grants for Dan W. and Nadia K.'},{d:'2027-01-31',t:'1099 forms for contractors',s:'Tara N. and Tom O.'},{d:'2027-03-01',t:'Delaware franchise tax and annual report',s:'Use the assumed par value method'},{d:'2027-04-15',t:'Federal tax return',s:'Accountant prepares'},{d:'2027-06-01',t:'SOC 2 Type I audit',s:'Needed for larger pilot customers'}],
  ct:[{n:'Northwind pilot agreement',ty:'Customer',v:'$18,000 / year',r:'2026-11-01',o:'PS'},{n:'AWS enterprise agreement',ty:'Vendor',v:'$56,000 / year',r:'2026-11-30',o:'JR'},{n:'Office lease',ty:'Property',v:'$2,900 / month',r:'2027-03-31',o:'ML'},{n:'Support vendor (Helpdesk Co)',ty:'Vendor',v:'$2,400 / month',r:'',o:'TO'},{n:'Brightpath pilot agreement',ty:'Customer',v:'$12,000 / year',r:'2027-09-12',o:'PS'}]};
 function renderLegal(){LG.meet.sort((a,b)=>a.d<b.d?1:-1);const up=LG.meet.filter(m=>daysTo(m.d)>=0).sort((a,b)=>a.d<b.d?-1:1),next=up[0];const due=LG.fil.filter(f=>!f.done);const soonCt=LG.ct.filter(c=>c.r&&daysTo(c.r)>=0&&daysTo(c.r)<=60);
@@ -3376,7 +3399,7 @@ document.addEventListener('click',e=>{let b;
  else if(b=e.target.closest('[data-lgc]'))editContract(+b.dataset.lgc);
  else if(b=e.target.closest('[data-lgmem]'))editMember(+b.dataset.lgmem);
  else if(b=e.target.closest('[data-lgfile]')){const f=LG.fil[+b.dataset.lgfile];f.done=`${now()} by Alex`;lgDone(`<b>${esc(f.t)}</b> marked as filed`,'Kept in the compliance history')}
- else if(e.target.closest('[data-bpsend]'))toast('<b>Board pack sent</b>','To Jordan R. and Sam Ortiz')});
+ else if(e.target.closest('[data-bpsend]'))toast('<b>Board pack sent</b>','To Marcus R. and Sam Ortiz')});
 $('#lgAddMt').addEventListener('click',()=>editMeeting());$('#lgAddFiling').addEventListener('click',()=>editFiling());$('#lgAddFiling2').addEventListener('click',()=>editFiling());$('#lgAddCt').addEventListener('click',()=>editContract());$('#lgAddCt2').addEventListener('click',()=>editContract());$('#lgAddMem').addEventListener('click',()=>editMember());
 NEWLBL.legal='Add board meeting';NEWACT.legal=()=>editMeeting();
 /* =================== END STAGE 2 =================== */
@@ -3384,7 +3407,7 @@ NEWLBL.legal='Add board meeting';NEWACT.legal=()=>editMeeting();
 /* ===================== STAGE 3 ===================== */
 /* ---------- Notifications ---------- */
 const NOTIF=[['SP','<b>Sofia</b> mentioned you in <b>Launch</b>: “v3 of the launch video is up”','4m ago',1,()=>openConv('launch')],
- ['JR','<b>Jordan</b> assigned you <b>MUR-146</b> Reply to the Northbeam term sheet','1h ago',1,()=>showView('mytasks')],
+ ['JR','<b>Marcus</b> assigned you <b>MUR-146</b> Reply to the Northbeam term sheet','1h ago',1,()=>showView('mytasks')],
  [null,'<b>Decision waiting:</b> one senior engineer or two mid-level?','2h ago',1,()=>showView('decisions'),'sign'],
  [null,'<b>Filing due in 29 days:</b> 83(b) election for Nadia K.','Today',1,()=>{showView('legal');$('[data-g="lg"] [data-t2="Compliance"]').click()},'cal'],
  ['ML','<b>Maya</b> shared <b>Seed deck v8</b> in Fundraising','3h ago',1,()=>openConv('fundraising')],
@@ -3486,7 +3509,7 @@ if(!setupDone)setTimeout(openWizard,300);
 /* ---------- Stages ---------- */
 const STAGES=[["Set the company up to operate","CEO, startup lawyer, accountant","done","Mar"],["Turn the UI into a product plan","Founder, product designer, tech lead, prospective customers","done","Apr"],["Design the technical foundations","CTO, product designer, security adviser","done","May"],["Build the first usable version","Tech lead, engineers, designer, founder, AI specialist","done","Aug"],["Run a private pilot","Founder, product, engineers, pilot users, customer success","now","68%"],["Prepare for a public launch","Product, engineering, support, product marketer, lawyer","next","12%"],["Launch in stages","Founder, growth lead, customer success, engineering","next","18 Nov"],["Improve retention, find repeatable growth","Founder, product, engineering, customer success, sales","next","Q1 2027"],["Scale the company","Product and engineering, sales, success, operations, finance","next","Later"]];
 $('#stages').innerHTML=STAGES.map(([t,w,k,m],i)=>`<div class="lr">${dia(k)}<span class="id" style="width:22px">${i+1}</span><div class="ttl"><b style="${k==='next'?'color:var(--fg-2)':''}">${t}</b><small class="small-hide">${w}</small></div><div class="meta">${k==='now'?'<span class="lbl" style="--c:#8b8f97"><i></i>You are here</span>':''}<span class="dt" style="width:60px">${m}</span></div></div>`).join('');
-$('#team').innerHTML=[['Founder / CEO','Vision, customers, hiring, fundraising','AK','Alex Kim'],['CTO','Technical direction, building the product','JR','Jordan R.'],['Product engineers ×2','Core app and reliability','DW','1 hired · 1 open'],['Product designer','UI into a usable product','TN','Contractor'],['Customer success','Onboards pilot teams','AK','Founder covers it'],['Specialists','Lawyer, accountant, security, AI/ML','TO','4 on contract']].map(([r,c,a,w])=>`<div class="lr">${av(a)}<div class="ttl"><b>${r}</b><small>${c}</small></div><div class="meta"><span class="muted" style="font-size:12.5px">${w}</span></div></div>`).join('');
+$('#team').innerHTML=[['Founder / CEO','Vision, customers, hiring, fundraising','AK','Alex Kim'],['CTO','Technical direction, building the product','JR','Marcus R.'],['Product engineers ×2','Core app and reliability','DW','1 hired · 1 open'],['Product designer','UI into a usable product','TN','Contractor'],['Customer success','Onboards pilot teams','AK','Founder covers it'],['Specialists','Lawyer, accountant, security, AI/ML','TO','4 on contract']].map(([r,c,a,w])=>`<div class="lr">${av(a)}<div class="ttl"><b>${r}</b><small>${c}</small></div><div class="meta"><span class="muted" style="font-size:12.5px">${w}</span></div></div>`).join('');
 
 /* ---------- Views, header, tabs ---------- */
 const TABS=['Overview','Issues','Board','Files','Money','Funding'];
@@ -3579,7 +3602,10 @@ const KN={video:'Video',image:'Image',pdf:'PDF',sheet:'Spreadsheet',doc:'Documen
 function ftile(fl,sz=38){const st2=`width:${sz}px;height:${sz}px;${sz<34?'font-size:8px;border-radius:7px':''}`;
  if(fl.url&&fl.kind==='image')return `<span class="ftile" style="${st2}"><img src="${fl.url}" alt=""></span>`;
  if(fl.url&&fl.kind==='video')return `<span class="ftile" style="${st2}"><video src="${fl.url}#t=0.1" muted preload="metadata" playsinline></video><span class="pl">${ICON.play.replace('var(--ink)','#fff')}</span></span>`;
- return `<span class="ftile" style="${st2}">${fl.ext||KL[fl.kind]}</span>`}
+ const ic={video:'<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5.5" width="13" height="13" rx="2.5"/><path d="M15.5 10l6-3.5v11l-6-3.5z" fill="#fff"/></svg>',
+  image:'<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="9.5" r="1.8" fill="#fff"/><path d="M21 16l-5-5-9 9"/></svg>'}[fl.kind];
+ const cls={pdf:'f-pdf',video:'f-vid',sheet:'f-xls',doc:'f-doc',image:'f-img'}[fl.kind]||'';
+ return `<span class="ftile f-mono" style="${st2}">${fl.ext||KL[fl.kind]}</span>`}
 function setSpTab(t,quiet){spTab=t;$$('#spTabs [data-sptab]').forEach(b=>b.classList.toggle('on',b.dataset.sptab===t));const chat=t==='chat';
  $('#spPin').hidden=!chat;$('#spBody').hidden=!chat;$('#spForm').hidden=!chat;$('#spFiles').hidden=chat;if(!chat&&!quiet)renderSpFiles();if(chat&&!quiet){const b=$('#spBody');b.scrollTop=b.scrollHeight}}
 function renderSpFiles(){const c=CONVS.find(x=>x.id===spCur);if(!c)return;const x=sx(c);const q=$('#spfQ').value.trim().toLowerCase();
@@ -3771,7 +3797,7 @@ const CN=[
  {id:'carta',g:'Investors',n:'Carta',ic:'pie',on:0,d:'Cap table, SAFEs and option grants, kept in sync for diligence.',feeds:['Fundraising']},
  {id:'gmail',g:'Team',n:'Gmail',ic:'mail',on:1,sync:'3 min ago',d:'Your unread count and latest emails on the Briefing, so you see what needs a reply.',feeds:['Briefing']},
  {id:'xero',g:'Money',n:'Xero',ic:'book',on:0,d:'Bank account balances from your Xero books, so cash and runway stay current.',feeds:['Money']}];
-const GMAIL_DEMO={unread:12,recent:[{id:'d1',from:'Priya Shah',subject:'Re: Seed round, next steps',snippet:'Thanks Alex. Partners loved the pilot numbers. Can we do Thursday?',date:'2026-10-10T08:42:00Z',unread:true},{id:'d2',from:'AWS Billing',subject:'Your invoice for September is ready',snippet:'Total due $4,700.12. Auto-pay is on for this account.',date:'2026-10-10T07:15:00Z',unread:true},{id:'d3',from:'Jordan Reyes',subject:'Pen-test fixes landed',snippet:'All high-severity items closed. Two mediums left, both scheduled.',date:'2026-10-09T17:03:00Z',unread:false},{id:'d4',from:'Stripe',subject:'Payout of $2,940.00 is on its way',snippet:'Expected to arrive on 13 October.',date:'2026-10-09T09:30:00Z',unread:false},{id:'d5',from:'Maya Lin',subject:'Payroll approved for October',snippet:'Everything matches the plan. Contractors go out Friday.',date:'2026-10-08T15:20:00Z',unread:false}]};
+const GMAIL_DEMO={unread:12,recent:[{id:'d1',from:'Priya Shah',subject:'Re: Seed round, next steps',snippet:'Thanks Alex. Partners loved the pilot numbers. Can we do Thursday?',date:'2026-10-10T08:42:00Z',unread:true},{id:'d2',from:'AWS Billing',subject:'Your invoice for September is ready',snippet:'Total due $4,700.12. Auto-pay is on for this account.',date:'2026-10-10T07:15:00Z',unread:true},{id:'d3',from:'Marcus Reid',subject:'Pen-test fixes landed',snippet:'All high-severity items closed. Two mediums left, both scheduled.',date:'2026-10-09T17:03:00Z',unread:false},{id:'d4',from:'Stripe',subject:'Payout of $2,940.00 is on its way',snippet:'Expected to arrive on 13 October.',date:'2026-10-09T09:30:00Z',unread:false},{id:'d5',from:'Maya Lin',subject:'Payroll approved for October',snippet:'Everything matches the plan. Contractors go out Friday.',date:'2026-10-08T15:20:00Z',unread:false}]};
 function ibWhen(d){const t=new Date(d);if(isNaN(t))return'';const now=BK.on?new Date():new Date('2026-10-10T12:00:00Z');return t.toDateString()===now.toDateString()?t.toTimeString().slice(0,5):t.getDate()+' '+t.toLocaleString('en',{month:'short'})}
 function renderInbox(){const g=BK.on?(BK.cx&&BK.cx.gmail):((CN.find(c=>c.id==='gmail')||{}).on===1?GMAIL_DEMO:null);const show=!!g&&roleOf(VIEWER)==='CEO';$('#ibHead').hidden=$('#ibList').hidden=!show;if(!show)return;
  $('#ibN').textContent=g.unread+' unread';$('#ibList').innerHTML=(g.recent||[]).slice(0,5).map(m=>`<a class="ib-row${m.unread?' un':''}" href="https://mail.google.com/mail/u/0/#inbox/${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><span class="ib-from"><i></i>${esc(m.from)}</span><span class="ib-sub"><b>${esc(m.subject)}</b> <span>· ${esc(m.snippet)}</span></span><span class="ib-d">${ibWhen(m.date)}</span></a>`).join('')||'<div class="cal-empty" style="padding:18px">Nothing in your inbox.</div>'}
