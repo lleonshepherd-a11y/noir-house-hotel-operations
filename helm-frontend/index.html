@@ -1545,8 +1545,8 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 /* ===== Charcoal + white buttons + pill tabs ===== */
 :root[data-theme=dark] {--panel:#161616;--soft:#1f1f1f;--softer:#1a1a1a;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.06)}
 :root[data-theme=dark] body{background:#000}
-:root[data-theme=dark] .panel{background:#161616!important;border-color:rgba(255,255,255,.1)}
-:root[data-theme=dark] .bar{background:#161616!important;backdrop-filter:none}
+:root[data-theme=dark] .panel{background:#000!important;border-color:transparent!important;box-shadow:none!important}
+:root[data-theme=dark] .bar{background:#000!important;backdrop-filter:none}
 :root[data-theme=dark] .cards,:root[data-theme=dark] .kpis,:root[data-theme=dark] .tiles,:root[data-theme=dark] .jump,:root[data-theme=dark] .wk-top{background:#161616}
 :root[data-theme=dark] .tbl,:root[data-theme=dark] .chart,:root[data-theme=dark] .update,:root[data-theme=dark] .side-card,:root[data-theme=dark] .dec,:root[data-theme=dark] .ev,:root[data-theme=dark] .calg,:root[data-theme=dark] .calside,:root[data-theme=dark] .tl,:root[data-theme=dark] .mt-card,:root[data-theme=dark] .card,:root[data-theme=dark] .wk-ring,:root[data-theme=dark] .so,:root[data-theme=dark] .pc,:root[data-theme=dark] th,:root[data-theme=dark] .bcol,:root[data-theme=dark] .mod,:root[data-theme=dark] .pal,:root[data-theme=dark] .menu,:root[data-theme=dark] .npop,:root[data-theme=dark] .toast{background:#1a1a1a!important}
 :root[data-theme=dark] .pc:hover,:root[data-theme=dark] .card:hover,:root[data-theme=dark] .ev:hover,:root[data-theme=dark] .spc:hover,:root[data-theme=dark] .jc:hover,:root[data-theme=dark] .kpi:hover,:root[data-theme=dark] .cards>*:hover,:root[data-theme=dark] .kpis>*:hover,:root[data-theme=dark] .tiles>*:hover,:root[data-theme=dark] .jump>*:hover{background:#222!important}
@@ -1673,7 +1673,7 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 :root[data-theme=dark] .pp.hl{box-shadow:0 0 0 1px rgba(255,255,255,.35)!important}
 :root[data-theme=dark] .menu{border-radius:12px!important;padding:6px!important}
 /* ===== 2. Messages ===== */
-:root[data-theme=dark] .msgpage{background:#161616}
+:root[data-theme=dark] .msgpage{background:#000}
 :root[data-theme=dark] .mp-left{background:#131313;border-right-color:rgba(255,255,255,.06)!important}
 :root[data-theme=dark] .ci{border-radius:10px;padding:9px 10px}
 :root[data-theme=dark] .ci:hover{background:rgba(255,255,255,.04);transform:none}
@@ -1693,7 +1693,7 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 :root[data-theme=dark] #msgQ,:root[data-theme=dark] .mp-left input{background:#1f1f1f!important;border-color:transparent!important;border-radius:10px!important}
 :root[data-theme=dark] .mact{background:#222!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px}
 /* ===== 3. Notes ===== */
-:root[data-theme=dark] .notes{background:#161616}
+:root[data-theme=dark] .notes{background:#000}
 :root[data-theme=dark] .nl{background:#131313;border-right-color:rgba(255,255,255,.06)!important}
 :root[data-theme=dark] .ni2{border-radius:10px!important;padding:10px 12px!important}
 :root[data-theme=dark] .ni2:hover{background:rgba(255,255,255,.04)!important}
@@ -1759,6 +1759,12 @@ body.not-ceo .jump{grid-template-columns:repeat(3,minmax(0,1fr))}
 .bkdot.off{background:var(--red)}
 body.bk-loading:not(.bk-ready) #content{opacity:.4;pointer-events:none;transition:opacity .2s}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Tiles: charcoal, raised off the black page */
+:root[data-theme=dark] .cards,:root[data-theme=dark] .kpis,:root[data-theme=dark] .tiles,:root[data-theme=dark] .jump,:root[data-theme=dark] .wk-top,:root[data-theme=dark] .ib-list{background:linear-gradient(180deg,#1a1a1a 0%,#161616 100%)!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.6),0 18px 40px -16px rgba(0,0,0,.9)}
+:root[data-theme=dark] .cards>*,:root[data-theme=dark] .kpis>*,:root[data-theme=dark] .tiles>*,:root[data-theme=dark] .jump>*,:root[data-theme=dark] .wk-top>*{border-right-color:rgba(255,255,255,.07)!important;border-bottom-color:rgba(255,255,255,.07)!important;transition:background .2s,box-shadow .2s}
+:root[data-theme=dark] .cards>*:hover,:root[data-theme=dark] .kpis>*:hover,:root[data-theme=dark] .tiles>*:hover,:root[data-theme=dark] .jump>*:hover,:root[data-theme=dark] .wk-top>*:hover{background:#222!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
+:root[data-theme=dark] .ib-row:hover{background:#222}
 </style>
 </head>
 <body>
