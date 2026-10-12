@@ -721,6 +721,34 @@ button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 .hop-link{color:var(--fg);text-decoration:underline;text-underline-offset:2px}
 @media (max-width:640px){.hop-sm{display:none}.hop-bar{max-width:70px}}
 @media (max-width:860px){.eng-two,.eng-rel{grid-template-columns:1fr}}
+/* polish: the new cards and tables get the same lift as the board's tiles */
+.eng-two,.eng-rel{gap:12px}.eng-two{margin-top:12px}
+#ctoDash .kpis,#leDash .kpis,#mkDash .kpis{gap:12px}
+.eng-card,.tbl.bva{border-radius:20px;border:1px solid rgba(255,255,255,.07);background:radial-gradient(120% 80% at 100% 100%,rgba(255,255,255,.035),transparent 55%),linear-gradient(160deg,#1d1d1d 0%,#151515 60%,#181818 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.5),0 18px 36px -22px rgba(0,0,0,.9)}
+.eng-card{padding:18px 20px 12px}
+.eng-card h4{font-size:13.5px;margin:0 0 10px;letter-spacing:-.005em}
+.eng-sub{color:var(--fg-3);margin:-6px 0 10px}
+.eng-ch{margin:-6px -8px 0;padding:6px 8px 2px;width:calc(100% + 16px)}
+.eng-ch .eng-sub{margin-bottom:4px}
+.eng-ch+.eng-rr{padding-top:8px}
+.eng-rr{padding:11px 8px;margin:0 -8px;width:calc(100% + 16px)}
+.eng-rr b{font-size:13.5px;line-height:1.35}
+.eng-rr small{margin-top:4px}
+.dd-r{min-height:42px;padding:0 8px;margin:0 -8px;width:calc(100% + 16px)}
+.eng-m{color:#a1a1a6}
+.eng-t{font-size:13.5px}
+.eng-dot{width:6px;height:6px}
+.eng-v{background:rgba(255,255,255,.06);color:#b4b4b9;padding:2px 6px}
+.tbl.bva{overflow:hidden}.tbl.bva th{background:transparent!important}
+.tbl.bva td,.tbl.bva th{padding-top:12px;padding-bottom:12px}
+.tbl.bva tr.dd-tr:hover td{background:rgba(255,255,255,.035)}
+.kpi-spent .cfo-bar{background:rgba(255,255,255,.08)}
+@media (max-width:640px){.eng-card{padding:16px 16px 10px;border-radius:18px}.tbl.bva{border-radius:18px}
+ .bva td:first-child{white-space:normal;min-width:110px;line-height:1.35}.bva td,.bva th{padding-left:10px!important;padding-right:10px!important}
+ .dd-r .eng-m{gap:6px}.dd-r .eng-m .av+*{display:none}
+ .dd-r .eng-t{white-space:normal;overflow:visible;line-height:1.35;padding:9px 0}
+ .dd-r .eng-t .eng-v{flex:none}
+ .hop-date{width:50px;white-space:nowrap}}
 @media (max-width:640px){.bva-bars,.bva-p{display:none}.bva table{font-size:12.5px}.bva{overflow-x:auto}.bva td,.bva th{padding-left:8px;padding-right:8px}.cfo-hero b{font-size:32px!important}}
 .mod .vc-ro{padding:4px 30px 18px!important}
 #vnTitle,.vn-body{background:none!important;border:0!important;box-shadow:none!important;outline:0!important;padding-left:0;padding-right:0}
@@ -4914,7 +4942,7 @@ function hopDash(){const ms=hopMs(),fbTot=FB.reduce((a,f)=>a+f.v,0);
  <div class="sp-sec" style="margin-top:34px">Blockers <span>${BLK.length} waiting</span>${BLK.some(b=>b[4]>5)?`<span class="bva-flag">${BLK.filter(b=>b[4]>5).length} stuck over 5 days</span>`:''}</div>
  <div class="eng-card">${BLK.slice().sort((a,b)=>b[4]-a[4]).map((b,i)=>ddRow(`data-dd="hblk:${esc(b[2])}"`,`${esc(b[2])}<small class="hop-sm"> · ${esc(b[0])} waiting on ${esc(b[1]==='You'?'the CEO':b[1])}</small>`,`${b[4]} day${b[4]>1?'s':''}`,b[4]>5)).join('')}</div>
  <div class="sp-sec" style="margin-top:34px">Decisions log <span>${DECLOG.length} recent</span></div>
- <div class="eng-card">${DECLOG.slice(0,6).map((d,i)=>ddRow(`data-dd="hdec:${i}"`,`<span class="hop-date">${esc(d[0])}</span>${esc(d[1])}`,`${P[d[3]]?av(d[3]):''}${esc(d[2])}`)).join('')}</div>`}
+ <div class="eng-card">${DECLOG.slice(0,6).map((d,i)=>ddRow(`data-dd="hdec:${i}"`,`<span class="hop-date">${esc(d[0])}</span>${esc(d[1])}`,`${P[d[3]]?av(d[3]):''}<span>${esc(d[2])}</span>`)).join('')}</div>`}
 Object.assign(DD,{
  hms:x=>{const [k,i]=x.split(':');const p=PINFO[k];if(!p)return;const m=hopMs().find(y=>y.k===k&&y.i===+i);if(!m)return;const all=hopMs().filter(y=>y.k===k);
   ddOpen(m.n,`${esc(p.name)} · stage ${m.i+1} of ${all.length}`,kv([['Status',m.st==='done'?'Done':m.st==='now'?`In progress · ${Math.round(m.pr*100)}%`:'Not started'],['Date',esc(m.d)+(m.iso&&m.st!=='done'?` · ${m.iso<iso2()?'<span class="down">overdue</span>':inDays(m.iso)}`:'')],['Project lead',who(p.lead)]])+ddList('All stages',all.map(y=>ddRow(`data-dd="hms:${k}:${y.i}"`,`<i class="eng-dot${y.st==='now'?' on':''}"></i>${esc(y.n)}`,`${esc(y.d)} · ${y.st==='done'?'done':y.st==='now'?Math.round(y.pr*100)+'%':'next'}`)))+`<button class="btn dd-go" data-hproj="${k}">Open ${esc(p.name)}</button>`)},
@@ -4978,7 +5006,7 @@ const MKT={
   {id:'c7',n:'Founder podcast tour',st:'done',a:dOff(-60),b:dOff(-25),ch:'Podcasts',own:'AK',bud:500,sp:420,goal:'6 episodes',res:'7 episodes, 3,100 site visits'}],
  content:[[1,'Post','LinkedIn: why offline mode matters','SP','Scheduled'],[2,'Email','Waitlist update #6','SP','In review'],[3,'Blog','How we test accuracy in noisy rooms','JR','Drafting'],[4,'Video','45s launch film teaser','SP','Ready'],[5,'Post','X thread: pilot results','AK','Drafting'],
   [7,'Email','Webinar reminder','TO','Not started'],[8,'Post','Brightpath case study','PS','In review'],[9,'Blog','Pricing: what we’ve learned','ML','Not started'],[10,'Webinar','Accent accuracy webinar','TO','Scheduled'],[11,'Email','Launch date announcement','SP','Not started']],
- ch:[{n:'Social',k:'Engaged followers',v:[4820,4310],sub:[['Followers gained',[640,520]],['Engagement rate',['3.9%','3.4%']],['Link clicks',[1180,960]]]},
+ ch:[{n:'Social',k:'Engaged',v:[4820,4310],sub:[['Followers gained',[640,520]],['Engagement rate',['3.9%','3.4%']],['Link clicks',[1180,960]]]},
   {n:'Email',k:'Clicks',v:[2140,2380],sub:[['Emails sent',[18400,16900]],['Open rate',['46%','49%']],['Click rate',['11.6%','14.1%']]]},
   {n:'Paid',k:'Sign-ups',v:[410,355],sub:[['Spend',['£1,380','£1,240']],['Cost per sign-up',['£3.37','£3.49']],['Click-through rate',['1.8%','1.6%']]]},
   {n:'Website',k:'Visitors',v:[12600,11900],sub:[['Sign-up rate',['6.1%','5.8%']],['Demo requests',[22,15]],['Bounce rate',['41%','44%']]]}],
@@ -4989,20 +5017,20 @@ const MST={live:['Live','Running now'],sched:['Scheduled','Starting soon'],done:
 const campRow=c=>`<button class="eng-rr" data-dd="mkc:${c.id}"><b>${esc(c.n)}</b><small>${fD(c.a)}${c.b!==c.a?` – ${fD(c.b)}`:''}${c.sp>c.bud?' · <span class="down">over budget</span>':''}</small></button>`;
 const cDate=c=>{const d=new Date(wkStart()+'T00:00');d.setDate(d.getDate()+c[0]);return iso(d)};
 const cStatus=c=>cDate(c)<iso(TODAY)?'Published':c[4];
-const contRow=c=>{const d=cDate(c);const day=new Date(d+'T00:00');return ddRow(`data-dd="mkct:${c[2]}"${cStatus(c)==='Published'?' data-past':''}`,`<span class="hop-date">${day.toLocaleDateString('en-GB',{weekday:'short'})} ${day.getDate()}</span><span class="eng-v">${esc(c[1])}</span>${esc(c[2])}`,`${P[c[3]]?av(c[3]):''}${esc(fn1(c[3]))}`)};
+const contRow=c=>{const d=cDate(c);const day=new Date(d+'T00:00');return ddRow(`data-dd="mkct:${c[2]}"${cStatus(c)==='Published'?' data-past':''}`,`<span class="hop-date">${day.toLocaleDateString('en-GB',{weekday:'short'})} ${day.getDate()}</span><span class="eng-v">${esc(c[1])}</span>${esc(c[2])}`,`${P[c[3]]?av(c[3]):''}<span>${esc(fn1(c[3]))}</span>`)};
 function mkDash(){const ws=wkStart(),this_=MKT.content.filter(c=>c[0]<7),next=MKT.content.filter(c=>!this_.includes(c));
  const tile=(dd,l,n,sub,red)=>`<button class="kpi" data-dd="${dd}"><span>${l}</span><b${red?' class="down"':''}>${n}</b><small>${sub}</small></button>`,L=MKT.leads;
  const over=MKT.camp.filter(c=>c.sp>c.bud);
- return `<div class="sp-sec" style="margin-top:34px">Campaigns <span>${MKT.camp.length} this quarter</span></div>
- <div class="eng-rel">${['live','sched','done'].map(k=>{const l=MKT.camp.filter(c=>c.st===k).sort((a,b)=>a.a<b.a?-1:1);return `<div class="eng-card"><button class="eng-ch" data-dd="mkcol:${k}"><h4>${MST[k][0]} <span>${l.length}</span></h4><p class="eng-sub">${MST[k][1]}</p></button>${l.map(campRow).join('')}</div>`}).join('')}</div>
- <div class="sp-sec" style="margin-top:34px">Content calendar <span>This week and next</span></div>
- <div class="eng-two"><div class="eng-card"><h4>This week <span>${this_.length}</span></h4>${this_.map(contRow).join('')}</div><div class="eng-card"><h4>Next week <span>${next.length}</span></h4>${next.map(contRow).join('')}</div></div>
- <div class="sp-sec" style="margin-top:34px">Channel performance <span>This week vs last week</span></div>
+ return `<div class="sp-sec" style="margin-top:34px">Channel performance <span>This week vs last week</span></div>
  <div class="kpis" style="margin-top:0">${MKT.ch.map(c=>tile('mkch:'+c.n,`${c.n} · ${esc(c.k.toLowerCase())}`,c.v[0].toLocaleString('en-GB'),chg(c.v[0],c.v[1]))).join('')}</div>
  <div class="sp-sec" style="margin-top:34px">Leads and pipeline <span>This week</span></div>
  <div class="kpis" style="margin-top:0">${tile('mkleads','New leads',L.week[0],chg(L.week[0],L.week[1]))}${tile('mkleads','Passed to sales',L.sales[0],chg(L.sales[0],L.sales[1]))}${tile('mkleads','Lead to sales rate',Math.round(L.sales[0]/L.week[0]*100)+'%',`${Math.round(L.sales[1]/L.week[1]*100)}% last week`)}${tile('mksrc','Top source',esc(L.src[0][0]),`${Math.round(L.src[0][1]/L.week[0]*100)}% of new leads`)}</div>
  <div class="eng-two"><div class="eng-card"><h4>Where leads came from</h4>${L.src.map(([s,n])=>ddRow('data-dd="mksrc"',`${esc(s)}<span class="hop-bar"><i style="width:${Math.round(n/L.src[0][1]*100)}%"></i></span>`,`${n}`)).join('')}</div>
  <div class="eng-card"><h4>Latest leads</h4>${L.recent.map(r=>ddRow(`data-dd="mklead:${esc(r[0])}"`,`${esc(r[0])}<small class="hop-sm"> · ${esc(r[1])} · ${esc(r[2])}</small>`,esc(r[3]))).join('')}</div></div>
+ <div class="sp-sec" style="margin-top:34px">Campaigns <span>${MKT.camp.length} this quarter</span></div>
+ <div class="eng-rel">${['live','sched','done'].map(k=>{const l=MKT.camp.filter(c=>c.st===k).sort((a,b)=>a.a<b.a?-1:1);return `<div class="eng-card"><button class="eng-ch" data-dd="mkcol:${k}"><h4>${MST[k][0]} <span>${l.length}</span></h4><p class="eng-sub">${MST[k][1]}</p></button>${l.map(campRow).join('')}</div>`}).join('')}</div>
+ <div class="sp-sec" style="margin-top:34px">Content calendar <span>This week and next</span></div>
+ <div class="eng-two"><div class="eng-card"><h4>This week <span>${this_.length}</span></h4>${this_.map(contRow).join('')}</div><div class="eng-card"><h4>Next week <span>${next.length}</span></h4>${next.map(contRow).join('')}</div></div>
  <div class="sp-sec" style="margin-top:34px">Budget <span>By campaign</span>${over.length?`<span class="bva-flag">${over.length} over budget</span>`:''}</div>
  <div class="tbl bva"><table><thead><tr><th>Campaign</th><th class="num">Budget</th><th class="num">Spent</th><th class="bva-bars"><span class="bva-key"><i class="plan"></i>Budget<i class="act"></i>Spent</span></th><th class="num">Left</th></tr></thead><tbody>${MKT.camp.filter(c=>c.st!=='done'||c.sp>c.bud).sort((a,b)=>(b.sp-b.bud)-(a.sp-a.bud)).map(c=>{const mx=Math.max(c.sp,c.bud)||1,v=c.bud-c.sp;return `<tr class="dd-tr" data-dd="mkc:${c.id}" tabindex="0"${c.sp>c.bud?' data-over':''}><td>${esc(c.n)}</td><td class="num">${money(c.bud)}</td><td class="num">${money(c.sp)}</td><td class="bva-bars"><span class="bva-b plan" style="width:${c.bud/mx*100}%"></span><span class="bva-b act${c.sp>c.bud?' over':''}" style="width:${c.sp/mx*100}%"></span></td><td class="num">${v<0?`<span class="bva-v over">${money(-v)} over</span>`:`<span class="bva-v under">${money(v)}</span>`}</td></tr>`}).join('')}</tbody></table></div>`}
 Object.assign(DD,{
