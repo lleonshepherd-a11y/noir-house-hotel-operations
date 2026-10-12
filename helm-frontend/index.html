@@ -3323,7 +3323,9 @@ const CEV=[['2026-10-14','Q3 board meeting','meet','10:00 · Video call','legal'
  ['2026-10-20','Pen-test report deadline','legal','Decides 18 Nov or 2 Dec launch'],['2026-10-31','Delaware franchise tax','legal','Due today · $400'],['2026-11-08','83(b) election · Nadia K.','legal','30 days after grant · post to IRS'],['2026-11-01','Gusto payroll','legal','$21,400'],
  ['2026-10-21','Ledgerly prototype sessions','meet','3 design partners · Priya'],['2026-11-18','Murmur public launch','launch','Staged release · Product Hunt day'],['2026-11-17','Launch rehearsal','launch','All hands · 16:00'],['2026-10-16','Pilot review: Brightpath','meet','13:00 · Priya, Marcus'],['2026-10-27','1:1 with Marcus','meet','17:00'],['2026-10-30','Nadia K. starts','meet','Onboarding day 1']];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const TODAY=window.HELM_BACKEND?(d=>{d.setHours(0,0,0,0);return d})(new Date()):new Date(2026,9,10);
+// Today's date in the UK (midnight). The sample data in the demo is set around 10 October 2026.
+function homeToday(d=new Date()){const [y,m,dd]=new Intl.DateTimeFormat('en-CA',{timeZone:homeTz()}).format(d).split('-').map(Number);return new Date(y,m-1,dd)}
+const TODAY=window.HELM_BACKEND?homeToday():new Date(2026,9,10);
 const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 // A task's due day. Dates picked in Helm are kept as a full date (t.due), so the year is never guessed.
 // Older tasks only have a label like "Fri" or "Apr 20"; the server turns those into a full date the first time it saves them.
@@ -4030,7 +4032,10 @@ function greetWord(d=new Date()){const h=homeHour(d);return h<12?'Good morning':
 function dateLine(d=new Date()){const day=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:homeTz()});
  const [y,m,dd]=new Intl.DateTimeFormat('en-CA',{timeZone:homeTz()}).format(d).split('-').map(Number),u=new Date(Date.UTC(y,m-1,dd)),dow=u.getUTCDay()||7;u.setUTCDate(u.getUTCDate()+4-dow);
  return `${day} · Week ${Math.ceil(((u-Date.UTC(u.getUTCFullYear(),0,1))/864e5+1)/7)}`}
-function setDayText(){const hd=$('#hDate'),t=dateLine();if(hd&&hd.textContent!==t)hd.textContent=t;const hl=$('#hello');if(hl){const g=hl.textContent.replace(/^Good (morning|afternoon|evening)/,greetWord());if(g!==hl.textContent)hl.textContent=g}}
+// At midnight (UK time), move today on and redraw everything that depends on it: due today, late, escalations, the bell.
+function rollDay(){if(!window.HELM_BACKEND)return;const t=homeToday();if(t.getTime()===TODAY.getTime())return;const was=iso(TODAY);TODAY.setTime(t.getTime());if(calSel===was)calSel=iso(TODAY);
+ try{renderTasks()}catch(e){}try{viewerCounts()}catch(e){}try{acctAll()}catch(e){}try{bellCount()}catch(e){}}
+function setDayText(){rollDay();const hd=$('#hDate'),t=dateLine();if(hd&&hd.textContent!==t)hd.textContent=t;const hl=$('#hello');if(hl){const g=hl.textContent.replace(/^Good (morning|afternoon|evening)/,greetWord());if(g!==hl.textContent)hl.textContent=g}}
 function tickClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),sec=d.getSeconds();
  const set=(id,deg)=>{const e=document.getElementById(id);if(e)e.setAttribute('transform',`rotate(${deg} 20 20)`)};
  set('hcH',(h%12)*30+m*.5);set('hcM',m*6+sec*.1);set('hcS',sec*6);
