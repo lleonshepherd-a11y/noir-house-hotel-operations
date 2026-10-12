@@ -736,7 +736,11 @@ button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 .view :is(.kpis,.tiles,.wk-top)>.kpi:not(#_k)>small{padding-bottom:0!important}
 .view :is(.kpis,.tiles,.wk-top)>.kpi:not(#_k)>:not(span:first-child):not(b):not(small):not(svg){margin:12px 20px 0!important;width:auto!important}
 .view :is(.kpis,.tiles,.wk-top)>.kpi:not(#_k)>small+small{padding-top:2px!important}
-#view-home #hmCards.kpis .kpi{padding:0!important}
+#view-home #hmCards.kpis .kpi{padding:0 0 18px!important}
+@media (max-width:640px){#view-home #hmCards.kpis .kpi{padding:0 0 14px!important}}
+#numTop:not(:empty)~#nyHead,#cfoTop:not([hidden])~#nyHead{margin-top:34px}
+#cfoTop:not([hidden])~#nyTools{margin-top:34px}
+#nyTools+#nyHead{margin-top:14px!important}
 /* This week: the summary strip becomes separate tiles like everywhere else */
 .view .wk-top:not(#_k)>.kpi>small{white-space:normal!important;line-height:1.4}
 .view .wk-top:not(#_k){gap:12px!important;border:0!important;background:none!important;overflow:visible!important;border-radius:0!important}
@@ -2508,6 +2512,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
             <div class="sp-tools" id="nyTools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
             <div class="spgrid">
               <div id="cfoTop" hidden></div>
+              <div id="numTop"></div>
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
               <div class="cards" id="nyCards"></div>
               <div id="ctoDash" hidden></div>
@@ -4942,10 +4947,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.
 function roleDash(){const job=roleOf(VIEWER)==='CEO'?'CEO':jobOf(VIEWER);
  const ct=$('#ctoDash'),top=$('#cfoTop'),bv=$('#cfoBva');if(!ct)return;
  ct.hidden=job!=='CTO';ct.innerHTML=job==='CTO'?ctoDash():'';
- const cfo=job==='CFO'&&can('money');top.hidden=bv.hidden=!cfo;bv.innerHTML=cfo?cfoBva():'';cfoMoney(cfo);const sp=$('#hmCards .kpi-spent');if(sp)sp.outerHTML=spentTile()}
+ const cfo=job==='CFO'&&can('money');top.hidden=!(cfo||job==='CEO');bv.hidden=!cfo;bv.innerHTML=cfo?cfoBva():'';cfoMoney(cfo);const sp=$('#hmCards .kpi-spent');if(sp)sp.outerHTML=spentTile()}
 // CFO: the Money section sits at the top with money spent as its first tile, in smaller boxes; tasks follow.
 function cfoMoney(cfo){const head=$('#hmHead'),cards=$('#hmCards'),spot=$('#hmSpot'),top=$('#cfoTop');if(!head||!cards)return;
- if(cfo){top.append(head,cards);head.style.marginTop='6px';cards.classList.add('cfo-k');if(!cards.querySelector('.kpi-spent'))cards.insertAdjacentHTML('afterbegin',spentTile())}
+ if(cfo||isOwnCEO()){top.hidden=false;top.append(head,cards);head.style.marginTop='6px';if(cfo){cards.classList.add('cfo-k');if(!cards.querySelector('.kpi-spent'))cards.insertAdjacentHTML('afterbegin',spentTile())}}
  else if(head.parentNode===top){spot.after(head,cards);head.style.marginTop='34px';cards.classList.remove('cfo-k');cards.querySelectorAll('.kpi-spent').forEach(x=>x.remove())}}
 {const rh=renderHM;renderHM=function(){rh();cfoMoney(roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='CFO'&&can('money'))}}
 {const ar=applyRole;applyRole=function(){ar();roleDash()}}
@@ -5071,6 +5076,13 @@ Object.assign(DD,{
  mksrc:()=>{const L=MKT.leads;ddOpen('Where leads came from',`${L.week[0]} new leads this week`,`<div class="dd-list">${L.src.map(([s,n])=>`<div class="dd-r static"><span class="eng-t">${esc(s)}<span class="hop-bar"><i style="width:${Math.round(n/L.src[0][1]*100)}%"></i></span></span><span class="eng-m">${n} · ${Math.round(n/L.week[0]*100)}%</span></div>`).join('')}</div>`)},
  mklead:n=>{const r=MKT.leads.recent.find(x=>x[0]===n);if(!r)return;ddOpen(r[0],esc(r[1]),kv([['Size',esc(r[1])],['Came from',esc(r[2])],['Stage',esc(r[3])]]))}});
 {const rd=roleDash;roleDash=function(){rd();const el=$('#mkDash');if(!el)return;const on=roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='Marketing Lead';el.hidden=!on;el.innerHTML=on?mkDash():''}}
+// Numbers first: on every Briefing, sections with number tiles sit above the tasks; lists and tables follow them.
+{const rd=roleDash;roleDash=function(){rd();const top=$('#numTop');if(!top)return;top.innerHTML='';
+ ['#ctoDash','#hopDash','#leDash','#mkDash'].forEach(sel=>{const box=$(sel);if(!box||box.hidden)return;let grp=[];const groups=[];[...box.children].forEach(el=>{if(el.classList.contains('sp-sec')){grp=[el];groups.push(grp)}else if(grp.length)grp.push(el)});
+  groups.filter(g=>g.some(el=>el.classList.contains('kpis'))).forEach(g=>top.append(...g))});
+ const f=top.querySelector('.sp-sec');if(f)f.style.marginTop='6px'}}
+{const t=$('#nyTools'),h=$('#nyHead');if(t&&h)h.before(t)} // the Needs you filters sit with Needs you, under the numbers
+roleDash();
 // Pages a role doesn't use, even though its areas include them: the CFO has no customer feedback or announcements.
 const ROLE_HIDE={CFO:['feedback','announce']};
 {const c0=can;can=function(v,who=VIEWER){if(roleOf(who)!=='CEO'&&(ROLE_HIDE[jobOf(who)]||[]).includes(v))return false;return c0(v,who)}}
