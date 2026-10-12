@@ -655,6 +655,17 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .eng-rr b{display:block;font-size:13px;font-weight:500;color:var(--fg)}
 .eng-rr small{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--fg-3);margin-top:2px}
 .eng-v{font-family:var(--mono,ui-monospace,monospace);font-size:11px;padding:1px 6px;border-radius:5px;background:var(--soft);color:var(--fg-2)}
+#hmCards.cfo-k{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+#view-home #hmCards.cfo-k .kpi{padding:12px 14px 12px!important;min-height:0!important;border-radius:12px}
+#hmCards.cfo-k .kpi span{font-size:11.5px}
+#hmCards.cfo-k .kpi b{font-size:20px!important;line-height:1.3!important;margin:2px 0 0}
+#hmCards.cfo-k .kpi small{font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view-home #hmCards.cfo-k .kpi svg{height:18px;margin-top:6px}
+#view-home #hmCards.cfo-k .kpi{display:flex!important;flex-direction:column;justify-content:flex-start!important;align-items:stretch}
+#hmCards.cfo-k .cfo-bar{margin-top:auto;height:3px;transform:translateY(-7px)}
+@media (max-width:640px){#view-home #hmCards.cfo-k .kpi{padding:10px 12px!important}#hmCards.cfo-k .kpi b{font-size:18px!important}#view-home #hmCards.cfo-k .kpi svg{height:14px;margin-top:4px}#hmCards.cfo-k .cfo-bar{margin-top:10px;transform:none}}
+@media (max-width:860px){#hmCards.cfo-k{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){#hmCards.cfo-k{grid-template-columns:repeat(2,minmax(0,1fr))}#hmCards.cfo-k .kpi-spent{grid-column:1/-1}}
 .cfo-hero{padding:20px 22px 18px!important;display:block}
 .cfo-hero b{font-size:40px!important;line-height:1.15!important;margin:4px 0 2px}
 .cfo-bar{display:block;height:4px;border-radius:4px;background:var(--soft);margin-top:14px;overflow:hidden}
@@ -2435,7 +2446,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
               <div class="cards" id="nyCards"></div>
               <div id="ctoDash" hidden></div>
-              <div class="sp-sec ceo-only" style="margin-top:34px">Money <span>September</span></div>
+              <i id="hmSpot" hidden></i><div class="sp-sec ceo-only" id="hmHead" style="margin-top:34px">Money <span>September</span></div>
               <div class="kpis ceo-only" id="hmCards" style="margin-top:0"></div>
               <div id="cfoBva" hidden></div>
               <div class="sp-sec" style="margin-top:34px">Projects <span>3</span></div>
@@ -4851,8 +4862,8 @@ function ctoDash(){const down=ENG.svc.filter(s=>s.st!=='up'),open=ENG.inc.filter
  <div class="eng-card" style="margin-top:10px"><h4>Open security issues</h4>${ENG.sec.slice().sort((a,b)=>SEVS.indexOf(a.sev)-SEVS.indexOf(b.sev)).map(secRow).join('')}</div>
  <div class="sp-sec" style="margin-top:34px">Release status</div>
  <div class="eng-rel">${['ship','stage','live'].map(k=>`<div class="eng-card"><button class="eng-ch" data-dd="relcol:${k}"><h4>${REL_H[k][0]} <span>${ENG.rel[k].length}</span></h4><p class="eng-sub">${REL_H[k][1]}</p></button>${ENG.rel[k].map(r=>relRow(k,r)).join('')}</div>`).join('')}</div>`}
-function cfoTop(){const sp=MNY.B.reduce((a,b)=>a+(+b[1]||0),0),pl=MNY.B.reduce((a,b)=>a+(+b[2]||0),0),d=sp-pl,pct=pl?Math.min(100,sp/pl*100):0,mon=MONL[TODAY.getMonth()];
- return `<div class="sp-sec" style="margin-top:6px">Money spent <span>${mon}</span></div><div class="kpis" style="margin-top:0;grid-template-columns:1fr"><button class="kpi cfo-hero" data-dd="spent"><span>Spent so far this month</span><b>${money(sp)}</b><small>of ${money(pl)} planned · ${d>0?`<span class="down">${money(d)} over plan</span>`:`${money(-d)} left`}</small><span class="cfo-bar"><i style="width:${pct}%"${d>0?' class="over"':''}></i></span></button></div>`}
+function spentTile(){const sp=MNY.B.reduce((a,b)=>a+(+b[1]||0),0),pl=MNY.B.reduce((a,b)=>a+(+b[2]||0),0),d=sp-pl,pct=pl?Math.min(100,sp/pl*100):0;
+ return `<button class="kpi kpi-spent" data-dd="spent"><span>Money spent</span><b>${kmoney(sp)}</b><small>${d>0?`<span class="down">${kmoney(d)} over plan</span>`:`of ${kmoney(pl)} planned`}</small><span class="cfo-bar"><i style="width:${pct}%"${d>0?' class="over"':''}></i></span></button>`}
 function cfoBva(){const rows=MNY.B.map(([n,sp,pl])=>({n,sp:+sp||0,pl:+pl||0})),T={n:'Total',sp:rows.reduce((a,r)=>a+r.sp,0),pl:rows.reduce((a,r)=>a+r.pl,0)};
  const vr=r=>{const v=r.sp-r.pl,p=r.pl?Math.round(Math.abs(v)/r.pl*100):0;return v>0?`<span class="bva-v over">${money(v)} over<span class="bva-p"> · ${p}%</span></span>`:v<0?`<span class="bva-v under">${money(-v)} under<span class="bva-p"> · ${p}%</span></span>`:'<span class="bva-v">On plan</span>'};
  const tr=(r,tot)=>{const mx=Math.max(r.sp,r.pl)||1;return `<tr class="dd-tr${tot?' bva-tot':''}" data-dd="${tot?'spent':'bud:'+esc(r.n)}" tabindex="0"${r.sp>r.pl?' data-over':''}><td>${esc(r.n)}</td><td class="num">${money(r.pl)}</td><td class="num">${money(r.sp)}</td><td class="bva-bars"><span class="bva-b plan" style="width:${r.pl/mx*100}%"></span><span class="bva-b act${r.sp>r.pl?' over':''}" style="width:${r.sp/mx*100}%"></span></td><td class="num">${vr(r)}</td></tr>`};
@@ -4863,7 +4874,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.
 function roleDash(){const job=roleOf(VIEWER)==='CEO'?'CEO':jobOf(VIEWER);
  const ct=$('#ctoDash'),top=$('#cfoTop'),bv=$('#cfoBva');if(!ct)return;
  ct.hidden=job!=='CTO';ct.innerHTML=job==='CTO'?ctoDash():'';
- const cfo=job==='CFO'&&can('money');top.hidden=bv.hidden=!cfo;top.innerHTML=cfo?cfoTop():'';bv.innerHTML=cfo?cfoBva():''}
+ const cfo=job==='CFO'&&can('money');top.hidden=bv.hidden=!cfo;bv.innerHTML=cfo?cfoBva():'';cfoMoney(cfo);const sp=$('#hmCards .kpi-spent');if(sp)sp.outerHTML=spentTile()}
+// CFO: the Money section sits at the top with money spent as its first tile, in smaller boxes; tasks follow.
+function cfoMoney(cfo){const head=$('#hmHead'),cards=$('#hmCards'),spot=$('#hmSpot'),top=$('#cfoTop');if(!head||!cards)return;
+ if(cfo){top.append(head,cards);head.style.marginTop='6px';cards.classList.add('cfo-k');if(!cards.querySelector('.kpi-spent'))cards.insertAdjacentHTML('afterbegin',spentTile())}
+ else if(head.parentNode===top){spot.after(head,cards);head.style.marginTop='34px';cards.classList.remove('cfo-k');cards.querySelectorAll('.kpi-spent').forEach(x=>x.remove())}}
+{const rh=renderHM;renderHM=function(){rh();cfoMoney(roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='CFO'&&can('money'))}}
 {const ar=applyRole;applyRole=function(){ar();roleDash()}}
 {const h=VIEWHOOK.home;VIEWHOOK.home=function(){if(h)h();roleDash()}}
 // Pages a role doesn't use, even though its areas include them: the CFO has no customer feedback or announcements.
