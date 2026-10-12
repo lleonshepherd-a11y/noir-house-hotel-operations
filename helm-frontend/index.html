@@ -721,12 +721,35 @@ button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 .hop-link{color:var(--fg);text-decoration:underline;text-underline-offset:2px}
 @media (max-width:640px){.hop-sm{display:none}.hop-bar{max-width:70px}}
 @media (max-width:860px){.eng-two,.eng-rel{grid-template-columns:1fr}}
-/* polish: the new cards and tables get the same lift as the board's tiles */
+/* Dashboard cards and stat tiles use the same simple style as the task and project cards:
+   a flat panel, a thin border, 10px corners, and a header line with the label. */
 .eng-two,.eng-rel{gap:12px}.eng-two{margin-top:12px}
-#ctoDash .kpis,#leDash .kpis,#mkDash .kpis{gap:12px}
-.eng-card,.tbl.bva{border-radius:20px;border:1px solid rgba(255,255,255,.07);background:radial-gradient(120% 80% at 100% 100%,rgba(255,255,255,.035),transparent 55%),linear-gradient(160deg,#1d1d1d 0%,#151515 60%,#181818 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.5),0 18px 36px -22px rgba(0,0,0,.9)}
-.eng-card{padding:18px 20px 12px}
-.eng-card h4{font-size:13.5px;margin:0 0 10px;letter-spacing:-.005em}
+.view :is(.kpis,.tiles){gap:12px}
+.view :is(.kpis,.tiles)>.kpi:not(#_k),.eng-card,.tbl.bva{background:#161718!important;background-image:none!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;box-shadow:none!important}
+.view :is(.kpis,.tiles)>.kpi:not(#_k){padding:0!important;min-height:0!important;display:flex!important;flex-direction:column;justify-content:flex-start!important;align-items:stretch;transform:none!important;transition:background .15s,border-color .15s}
+.view :is(.kpis,.tiles)>.kpi:not(#_k):hover{background:#1c1d1f!important;border-color:rgba(255,255,255,.14)!important;transform:none!important;box-shadow:none!important}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>span:first-child{display:block;padding:15px 20px 13px;border-bottom:1px solid rgba(255,255,255,.07);font-size:12.5px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>b{padding:16px 20px 0;margin:0!important;font-size:26px!important;line-height:1.2!important;letter-spacing:-.02em}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>small{display:block;padding:4px 20px 18px;font-size:12.5px;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>svg{display:none}
+.view :is(.kpis,.tiles)>.kpi:not(#_k){padding-bottom:18px!important}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>small{padding-bottom:0!important}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>:not(span:first-child):not(b):not(small):not(svg){margin:12px 20px 0!important;width:auto!important}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)>small+small{padding-top:2px!important}
+#view-home #hmCards.kpis .kpi{padding:0!important}
+/* chart cards: flat like the task cards (only stat tiles get the blue edge) */
+.view .chart:not(#_k),.view .mt-card:not(#_k){background:#161718!important;background-image:none!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;box-shadow:none!important;transform:none!important}
+.view .chart:not(#_k):hover,.view .mt-card:not(#_k):hover{border-color:rgba(255,255,255,.14)!important;transform:none!important;box-shadow:none!important}
+/* stat tiles stand out with the side menu's edge: a thin line that turns blue in the middle */
+.view :is(.kpis,.tiles)>.kpi:not(#_k){position:relative;border-color:transparent!important}
+.view :is(.kpis,.tiles)>.kpi:not(#_k)::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(74,155,237,.85) 50%,rgba(255,255,255,.08));
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);transition:opacity .15s}
+.view :is(.kpis,.tiles)>.kpi:not(#_k):hover::before{background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(74,155,237,1) 50%,rgba(255,255,255,.14))}
+.view :is(.kpis,.tiles)>.kpi:not(#_k) .cfo-bar{margin:12px 20px 0!important;transform:none!important;height:3px}
+#hmCards.cfo-k .kpi>b{font-size:22px!important}
+.eng-card{padding:16px 20px 10px}
+.eng-card h4{font-size:13.5px;margin:0 0 10px}
 .eng-sub{color:var(--fg-3);margin:-6px 0 10px}
 .eng-ch{margin:-6px -8px 0;padding:6px 8px 2px;width:calc(100% + 16px)}
 .eng-ch .eng-sub{margin-bottom:4px}
@@ -743,7 +766,8 @@ button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 .tbl.bva td,.tbl.bva th{padding-top:12px;padding-bottom:12px}
 .tbl.bva tr.dd-tr:hover td{background:rgba(255,255,255,.035)}
 .kpi-spent .cfo-bar{background:rgba(255,255,255,.08)}
-@media (max-width:640px){.eng-card{padding:16px 16px 10px;border-radius:18px}.tbl.bva{border-radius:18px}
+@media (max-width:640px){.eng-card{padding:14px 16px 8px}
+ .view :is(.kpis,.tiles)>.kpi:not(#_k)>span:first-child{padding:12px 14px 10px;font-size:12px}.view :is(.kpis,.tiles)>.kpi:not(#_k)>b{padding:12px 14px 0;font-size:21px!important}.view :is(.kpis,.tiles)>.kpi:not(#_k)>small{padding:3px 14px 0;font-size:12px}.view :is(.kpis,.tiles)>.kpi:not(#_k){padding-bottom:14px!important}.view :is(.kpis,.tiles)>.kpi:not(#_k) .cfo-bar{margin:10px 14px 0!important}.view :is(.kpis,.tiles)>.kpi:not(#_k)>:not(span:first-child):not(b):not(small):not(svg){margin:10px 14px 0!important}
  .bva td:first-child{white-space:normal;min-width:110px;line-height:1.35}.bva td,.bva th{padding-left:10px!important;padding-right:10px!important}
  .dd-r .eng-m{gap:6px}.dd-r .eng-m .av+*{display:none}
  .dd-r .eng-t{white-space:normal;overflow:visible;line-height:1.35;padding:9px 0}
