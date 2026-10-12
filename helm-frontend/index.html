@@ -638,6 +638,26 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .vc-mode #calFilt{display:none!important}
 .no-search :is(#openSearch,.msearch,#nq,#msgQ,.pal-bg){display:none!important}
 .vc-tag{color:var(--fg-2)}
+.seat{border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#161718;padding:14px 18px;margin:0 0 14px}
+.seat-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--fg-2)}
+.seat-top b{color:var(--fg);font-weight:600}
+.seat-plan{color:var(--fg-3);display:inline-flex;gap:12px;align-items:baseline}
+.link-btn{background:none;border:0;padding:0;font:inherit;color:var(--fg);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.seat-track{display:block;height:4px;border-radius:4px;background:rgba(255,255,255,.07);margin-top:10px;overflow:hidden}.seat-track i{display:block;height:100%;background:var(--fg);border-radius:4px}
+.seat-note{margin:10px 0 0;font-size:12.5px;color:var(--fg-3);line-height:1.5}
+.seat-body{padding:0 22px}.seat-body p{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--fg-2)}.seat-body b{color:var(--fg)}
+.seat-sent{font-size:12.5px!important;color:var(--fg-3)!important}
+.seat-cmp{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:4px 0 14px}
+.seat-cmp>div{border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.seat-cmp>div.on{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.03)}
+.seat-cmp span{font-size:11.5px;color:var(--fg-3)}.seat-cmp b{font-size:15px}.seat-cmp small{font-size:12.5px;color:var(--fg-2)}
+.seat-cmp .ic{color:var(--fg-3)}
+.seat-list{padding:0 22px 6px;display:grid;gap:8px}
+.seat-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--fg);background:none;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;cursor:pointer}
+.seat-opt:hover{border-color:rgba(255,255,255,.18)}.seat-opt.on{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.03)}
+.seat-opt b{font-size:14px;font-weight:600;min-width:96px}.seat-opt span{font-size:13px;color:var(--fg-2)}
+.seat-opt em{margin-left:auto;font-style:normal;font-size:12px;color:var(--fg)}.seat-opt em.mut{color:var(--fg-3)}
+@media (max-width:640px){.seat-cmp{grid-template-columns:1fr}.seat-cmp .ic{transform:rotate(90deg);justify-self:center}}
 .acc-acts{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin-right:6px}.acc-tag{white-space:nowrap}
 .acc-ready{padding:2px 22px 6px;display:grid;gap:14px}
 .acc-pin,.acc-link{display:grid;gap:6px}.acc-pin span,.acc-link span{font-size:12.5px;color:var(--fg-3)}
@@ -2916,7 +2936,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
               <div class="set-row"><span></span><span><button class="btn pri" id="sSave">Save changes</button></span></div>
             </div>
             <div data-p2="st:Members" hidden>
-              <div class="ph2" style="margin-bottom:10px"><div class="muted2" id="memCount"></div><div class="acts"><button class="btn pri" id="memInvite">Invite people</button></div></div>
+              <div class="seat" id="seatBar" hidden></div><div class="ph2" style="margin-bottom:10px"><div class="muted2" id="memCount"></div><div class="acts"><button class="btn pri" id="memInvite">Invite people</button></div></div>
               <div class="tbl"><table><thead><tr><th>Person</th><th>Role</th><th>Can see</th><th>Change role</th><th></th></tr></thead><tbody id="memRows"></tbody></table></div>
               <div class="sh">What each role can see<button class="r addr" id="roleAdd">+ Add role</button></div>
               <div class="tbl pm"><table><thead><tr><th>Area</th><th>CEO</th><th>Manager</th><th>Member</th><th>Guest</th></tr></thead><tbody id="permRows"></tbody></table></div>
@@ -5108,6 +5128,49 @@ Object.assign(DD,{
  mksrc:()=>{const L=MKT.leads;ddOpen('Where leads came from',`${L.week[0]} new leads this week`,`<div class="dd-list">${L.src.map(([s,n])=>`<div class="dd-r static"><span class="eng-t">${esc(s)}<span class="hop-bar"><i style="width:${Math.round(n/L.src[0][1]*100)}%"></i></span></span><span class="eng-m">${n} · ${Math.round(n/L.week[0]*100)}%</span></div>`).join('')}</div>`)},
  mklead:n=>{const r=MKT.leads.recent.find(x=>x[0]===n);if(!r)return;ddOpen(r[0],esc(r[1]),kv([['Size',esc(r[1])],['Came from',esc(r[2])],['Stage',esc(r[3])]]))}});
 {const rd=roleDash;roleDash=function(){rd();const el=$('#mkDash');if(!el)return;const on=roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='Marketing Lead';el.hidden=!on;el.innerHTML=on?mkDash():''}}
+/* ---------- Plans and seats ----------
+   Everyone with access takes a seat: the owner, people who've joined and invites waiting. Removing someone or turning
+   their access off frees a seat at once. At the plan's limit the add buttons gently suggest the next plan; past 30 they
+   offer a special quote. Nothing is ever blocked: "Add anyway" is always there. */
+const PLANS=[{seats:5,price:59.99},{seats:10,price:119.99},{seats:20,price:215.99},{seats:30,price:299.99}];
+const SEAT={plan:10,quote:null}; // the sample workspace has 9 people on Up to 10
+const gbp=n=>'£'+n.toFixed(2);
+function seatState(){const live=typeof BK!=='undefined'&&BK.on&&BK.me;const used=live?(BK.users||[]).filter(u=>!u.blocked).length:MEM.length;const plan=PLANS.find(p=>p.seats===SEAT.plan)||PLANS[0];const next=PLANS.find(p=>p.seats>plan.seats);return {used,plan,next,full:used>=plan.seats}}
+async function seatLoad(){if(!(BK.on&&BK.me&&BK.me.role==='CEO'))return;try{const j=await (await bkApi('/api/plan')).json();if(j.plan){SEAT.plan=j.plan.seats;SEAT.quote=j.quote}}catch(e){}seatRender()}
+function seatRender(){const box=$('#seatBar');if(!box)return;const ceo=isOwnCEO();box.hidden=!ceo;if(!ceo)return;const s=seatState(),pct=Math.min(100,s.used/s.plan.seats*100);
+ box.innerHTML=`<div class="seat-top"><span><b>${s.used} of ${s.plan.seats}</b> seats used</span><span class="seat-plan">Up to ${s.plan.seats} · ${gbp(s.plan.price)} a month<button class="link-btn" id="seatPlans">Change plan</button></span></div><span class="seat-track"><i style="width:${pct}%"></i></span>${s.full?`<p class="seat-note">${s.next?`Your plan is full. Up to ${s.next.seats} is ${gbp(s.next.price)} a month if you’d like room for more.`:`You’re on our largest plan. For more than 30 people, <button class="link-btn" id="seatQuote">ask for a special quote</button>.`}</p>`:''}`;
+ const b=$('#memInvite');if(b){b.textContent=!s.full?'Invite people':s.next?`Add more · Up to ${s.next.seats}`:'Over 30? Get a quote';b.classList.add('pri');b.title=s.full&&s.next?`Your plan is full. Up to ${s.next.seats} is ${gbp(s.next.price)} a month.`:''}}
+async function seatSet(seats){if(BK.on&&BK.me){const r=await bkApi('/api/plan',{method:'POST',body:JSON.stringify({seats})});const j=await r.json().catch(()=>({}));if(!r.ok){toast('<b>Plan not changed</b>',esc(j.error||'Try again'));return false}}SEAT.plan=seats;seatRender();toast(`<b>You’re on Up to ${seats}</b>`,`${gbp(PLANS.find(p=>p.seats===seats).price)} a month`);return true}
+function seatModal(title,html,wire){closeModal();const bg=document.createElement('div');bg.className='mod-bg';bg.innerHTML=`<div class="mod" role="dialog" aria-modal="true" aria-label="${esc(title)}" style="max-width:460px"><div class="mod-h" style="padding-bottom:10px"><span style="font-weight:600;color:var(--fg);font-size:15px">${esc(title)}</span><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>${html}</div>`;
+ document.body.appendChild(bg);modal=bg;bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));bg.addEventListener('click',x=>{if(x.target===bg)closeModal()});wire(bg)}
+// The nudge: shown when adding someone to a full plan. go() carries on with the add.
+function seatNudge(go){const s=seatState();if(!s.next)return seatQuote(go);
+ seatModal('Room for one more?',`<div class="seat-body"><p>You’re using <b>${s.used} of ${s.plan.seats}</b> seats on Up to ${s.plan.seats}. Move to <b>Up to ${s.next.seats}</b> and keep growing the team.</p>
+  <div class="seat-cmp"><div><span>Now</span><b>Up to ${s.plan.seats}</b><small>${gbp(s.plan.price)} a month</small></div><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg><div class="on"><span>Next</span><b>Up to ${s.next.seats}</b><small>${gbp(s.next.price)} a month</small></div></div></div>
+  <div class="mod-f"><button class="btn" id="seatAnyway" style="margin-right:auto">Add anyway</button><button class="btn" data-close>Not now</button><button class="btn pri" id="seatUp">Move to Up to ${s.next.seats}</button></div>`,bg=>{
+  bg.querySelector('#seatAnyway').addEventListener('click',()=>{closeModal();go&&go()});
+  bg.querySelector('#seatUp').addEventListener('click',async()=>{if(await seatSet(s.next.seats)){closeModal();go&&go()}})})}
+// Past 30: a short form for a special quote.
+function seatQuote(go){const s=seatState();const em=(BK.on&&BK.me&&BK.me.email)||'';
+ seatModal('More than 30 people?',`<div class="seat-body"><p>Up to 30 is our largest plan. For bigger teams we put together a special price. Tell us a little and we’ll be in touch.</p>${SEAT.quote?`<p class="seat-sent">You asked for a quote on ${new Date(SEAT.quote.at).toLocaleDateString('en-GB',{day:'numeric',month:'long'})}. Send another if anything’s changed.</p>`:''}</div>
+  <div class="ff"><label for="sqN">How many people?</label><input id="sqN" type="number" inputmode="numeric" min="31" value="${Math.max(31,s.used+5)}"></div>
+  <div class="ff"><label for="sqE">Best email to reach you</label><input id="sqE" type="email" value="${esc(em)}" placeholder="you@company.com"></div>
+  <div class="ff"><label for="sqT">Anything we should know?</label><textarea id="sqT" class="ff-area" placeholder="e.g. we’re opening a second office in March"></textarea></div>
+  <div class="mod-f"><button class="btn" id="seatAnyway" style="margin-right:auto">${go?'Add anyway':'Close'}</button><button class="btn pri" id="sqGo">Ask for a quote</button></div>`,bg=>{
+  bg.querySelector('#seatAnyway').addEventListener('click',()=>{closeModal();go&&go()});
+  bg.querySelector('#sqGo').addEventListener('click',async()=>{const body={seats:+bg.querySelector('#sqN').value,email:bg.querySelector('#sqE').value.trim(),note:bg.querySelector('#sqT').value};
+   if(BK.on&&BK.me){const r=await bkApi('/api/quote',{method:'POST',body:JSON.stringify(body)});if(!r.ok){toast('<b>Not sent</b>','Try again');return}}
+   SEAT.quote={at:Date.now(),seats:body.seats};closeModal();toast('<b>Thanks, we’ll be in touch</b>',`About a plan for ${Math.max(31,Math.round(body.seats||0))} people`);seatRender();go&&go()})})}
+function seatPlans(){const s=seatState();seatModal('Plans',`<div class="seat-body"><p>Every person with access takes a seat, including invites waiting to be accepted. Removing someone or turning their access off frees their seat straight away.</p></div>
+  <div class="seat-list">${PLANS.map(p=>`<button class="seat-opt${p.seats===s.plan.seats?' on':''}" data-plan="${p.seats}"><b>Up to ${p.seats}</b><span>${gbp(p.price)} a month</span>${p.seats===s.plan.seats?'<em>Current</em>':s.used>p.seats?'<em class="mut">Fewer seats than your team</em>':''}</button>`).join('')}
+  <button class="seat-opt" id="seatMore"><b>More than 30</b><span>Special quote</span></button></div><div class="mod-f"><span style="margin-right:auto"></span><button class="btn" data-close>Done</button></div>`,bg=>{
+  bg.querySelectorAll('[data-plan]').forEach(b=>b.addEventListener('click',async()=>{const n=+b.dataset.plan;if(n===s.plan.seats)return;if(await seatSet(n))closeModal()}));bg.querySelector('#seatMore').addEventListener('click',()=>seatQuote(null))})}
+// The add buttons: at a full plan, show the nudge first. Always lets the add go ahead.
+document.addEventListener('click',e=>{const b=e.target.closest('#memInvite,[data-binv]');if(b&&!b.dataset.gatePass&&isOwnCEO()&&seatState().full){e.preventDefault();e.stopImmediatePropagation();seatNudge(()=>{b.dataset.gatePass='1';b.click();delete b.dataset.gatePass});return}
+ if(e.target.closest('#seatPlans')){seatPlans();return}if(e.target.closest('#seatQuote')){seatQuote(null)}},true);
+{const rm=renderMem;renderMem=function(){rm();seatRender()}}
+{const bu=bkUsers;bkUsers=async function(){await bu();await seatLoad()}}
+seatRender();
 // Numbers first: on every Briefing, sections with number tiles sit above the tasks; lists and tables follow them.
 {const rd=roleDash;roleDash=function(){rd();const top=$('#numTop');if(!top)return;top.innerHTML='';
  ['#ctoDash','#hopDash','#leDash','#mkDash'].forEach(sel=>{const box=$(sel);if(!box||box.hidden)return;let grp=[];const groups=[];[...box.children].forEach(el=>{if(el.classList.contains('sp-sec')){grp=[el];groups.push(grp)}else if(grp.length)grp.push(el)});

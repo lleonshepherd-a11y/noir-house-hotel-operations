@@ -465,6 +465,12 @@ function signIn(req, uid, how) {
   q("DELETE FROM help WHERE user_id=?").run(uid);
   return { "set-cookie": cookies };
 }
+/* ---------------- Plans ---------------- */
+const PLANS = [{ seats: 5, price: 59.99 }, { seats: 10, price: 119.99 }, { seats: 20, price: 215.99 }, { seats: 30, price: 299.99 }];
+db.exec("CREATE TABLE IF NOT EXISTS quotes(id INTEGER PRIMARY KEY, at INTEGER, user_id INTEGER, seats INTEGER, email TEXT, note TEXT)");
+const seatsUsed = () => q("SELECT COUNT(*) AS n FROM users WHERE COALESCE(blocked,0)=0").get().n;
+const planInfo = () => { const seats = PLANS.some((x) => x.seats === +getSetting("plan")) ? +getSetting("plan") : 5; const quote = q("SELECT at, seats FROM quotes ORDER BY at DESC LIMIT 1").get(); return { plan: PLANS.find((x) => x.seats === seats), used: seatsUsed(), plans: PLANS, quote: quote || null }; };
+
 /* ---------------- PINs ----------------
    Six digits, set by the workspace owner. Only a device that was set up with the owner's link can try a PIN, so
    nobody else can guess at it or lock anyone out. Five wrong PINs pause that one person until the owner gives them a
@@ -738,6 +744,21 @@ async function api(req, res, url) {
     if (x.id === u.id || x.role === "CEO") return send(res, 400, { error: "You can’t turn off the owner’s access." });
     if (b.on) { q("UPDATE users SET blocked=0 WHERE id=?").run(x.id); const link = newLink(x.id, url); audit(u.id, "turned on access for " + x.email); return send(res, 200, { link, days: LINK_DAYS }); }
     q("UPDATE users SET blocked=1, link=NULL, link_at=NULL WHERE id=?").run(x.id); signOutAll(x.id); pk.removeAll(x.id); audit(u.id, "turned off access for " + x.email); return send(res, 200, { ok: true });
+  }
+  // Plans and seats. Every account with access counts (the owner, people who've joined and invites waiting), so removing
+  // someone or turning their access off frees a seat at once. Going over is never blocked: Helm suggests the next plan.
+  if (p === "/api/plan" && m === "GET") { if (u.role !== "CEO") return send(res, 403, { error: "Owner only" }); return send(res, 200, planInfo()); }
+  if (p === "/api/plan" && m === "POST") {
+    if (u.role !== "CEO") return send(res, 403, { error: "Only the workspace owner changes the plan." });
+    const b = await json(req), t = PLANS.find((x) => x.seats === +b.seats); if (!t) return send(res, 400, { error: "Pick one of the plans." });
+    setSetting("plan", String(t.seats)); audit(u.id, `moved to the Up to ${t.seats} plan`); return send(res, 200, planInfo());
+  }
+  // More than 30 people: a request for a special quote, kept for the Helm team to answer.
+  if (p === "/api/quote" && m === "POST") {
+    if (u.role !== "CEO") return send(res, 403, { error: "Owner only" });
+    const b = await json(req), seats = Math.max(31, Math.min(100000, Math.round(+b.seats || 0))), email = validEmail(b.email) ? b.email : u.email;
+    q("INSERT INTO quotes(at,user_id,seats,email,note) VALUES(?,?,?,?,?)").run(Date.now(), u.id, seats, email, noTags(b.note, 2000)); audit(u.id, `asked for a quote for ${seats} people`);
+    return send(res, 200, { ok: true });
   }
   if (p === "/api/recover/asks" && m === "GET") return send(res, 200, []);
   if (p === "/api/recover/asks-old" && m === "GET") {
