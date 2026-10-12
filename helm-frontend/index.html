@@ -682,7 +682,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 /* tappable rows and the detail panel behind them */
 .dd-r,.eng-rr,.eng-ch{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer;padding:0 6px;margin:0 -6px;width:calc(100% + 12px);border-radius:8px;transition:background .15s}
 .dd-r:hover,.eng-rr:hover,.eng-ch:hover,.dd-tr:hover td{background:var(--hover)}
-.eng-card h4+.dd-r,.eng-ch+.eng-rr{border-top:0}
+.eng-card h4+.dd-r,.eng-ch+.eng-rr,.eng-card>.dd-r:first-child{border-top:0}
 .eng-ch{display:block;border-top:0;padding:6px;margin:-6px -6px 2px;min-height:0}.eng-ch h4{margin-bottom:6px}
 .eng-rr{display:block;padding:9px 6px}
 .dd-r.static{cursor:default}.dd-r.static:hover{background:none}
@@ -712,6 +712,14 @@ button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 .dd-go{margin-top:18px;width:100%;justify-content:center}
 .dd .tbl tr.dd-tr td{cursor:pointer}
 @media (max-width:640px){.dd-kv>div{grid-template-columns:96px 1fr}.dd-body{padding:4px 18px 22px}}
+.hop-bar{flex:1;max-width:160px;height:4px;border-radius:3px;background:var(--soft);margin-left:auto;overflow:hidden}.hop-bar i{display:block;height:100%;background:var(--fg-2)}
+.hop-sm{color:var(--fg-3);font-size:12px}
+.dd-r[data-past]{opacity:.5}
+.hop-date{flex:none;width:52px;color:var(--fg-3);font-size:12px;font-variant-numeric:tabular-nums}
+.eng-dot.on{background:var(--fg)}
+.hop-q{margin:0 0 12px;padding:12px 14px;border-left:2px solid var(--line);font-size:14px;line-height:1.55;color:var(--fg)}
+.hop-link{color:var(--fg);text-decoration:underline;text-underline-offset:2px}
+@media (max-width:640px){.hop-sm{display:none}.hop-bar{max-width:70px}}
 @media (max-width:860px){.eng-two,.eng-rel{grid-template-columns:1fr}}
 @media (max-width:640px){.bva-bars,.bva-p{display:none}.bva table{font-size:12.5px}.bva{overflow-x:auto}.bva td,.bva th{padding-left:8px;padding-right:8px}.cfo-hero b{font-size:32px!important}}
 .mod .vc-ro{padding:4px 30px 18px!important}
@@ -2446,6 +2454,9 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
               <div class="cards" id="nyCards"></div>
               <div id="ctoDash" hidden></div>
+              <div id="hopDash" hidden></div>
+              <div id="leDash" hidden></div>
+              <div id="mkDash" hidden></div>
               <i id="hmSpot" hidden></i><div class="sp-sec ceo-only" id="hmHead" style="margin-top:34px">Money <span>September</span></div>
               <div class="kpis ceo-only" id="hmCards" style="margin-top:0"></div>
               <div id="cfoBva" hidden></div>
@@ -4882,6 +4893,127 @@ function cfoMoney(cfo){const head=$('#hmHead'),cards=$('#hmCards'),spot=$('#hmSp
 {const rh=renderHM;renderHM=function(){rh();cfoMoney(roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='CFO'&&can('money'))}}
 {const ar=applyRole;applyRole=function(){ar();roleDash()}}
 {const h=VIEWHOOK.home;VIEWHOOK.home=function(){if(h)h();roleDash()}}
+/* ---------- Head of Product: roadmap, customer feedback, milestones, blockers and decisions ----------
+   Built from the projects' stages, the feedback list, the blockers and the decisions log, so it stays in step with
+   the rest of Helm. Every panel opens its detail. */
+const hopMs=()=>Object.entries(PINFO).flatMap(([k,p])=>(p.ms||[]).map(([n,st,pr,d],i)=>({k,p:p.name,n,st,pr,d,iso:taskDate(String(d).replace(/^([A-Z][a-z]{2}) (\d+)$/,'$1 $2')),i})));
+const inDays=iso=>{if(!iso)return '';const n=dayDiff(iso,iso2());return n<0?`${-n} days ago`:n===0?'Today':n===1?'Tomorrow':`in ${n} days`};
+const iso2=()=>iso(TODAY);
+function hopDash(){const ms=hopMs(),fbTot=FB.reduce((a,f)=>a+f.v,0);
+ const lane=(t,sub,items)=>`<div class="eng-card"><h4>${t} <span>${items.length}</span></h4><p class="eng-sub">${sub}</p>${items.map(m=>`<button class="eng-rr" data-dd="hms:${m.k}:${m.i}"><b>${esc(m.n)}</b><small><span class="eng-v">${esc(m.p)}</span>${esc(/\d/.test(m.d)?m.d:'No date yet')}${m.st==='now'?` · ${Math.round(m.pr*100)}%`:''}</small></button>`).join('')||'<p class="eng-sub">Nothing here.</p>'}</div>`;
+ const now=ms.filter(m=>m.st==='now'),nxt=Object.keys(PINFO).map(k=>ms.find(m=>m.k===k&&m.st==='next')).filter(Boolean),later=ms.filter(m=>m.st==='next'&&!nxt.includes(m)).sort((a,b)=>(a.iso||'')<(b.iso||'')?-1:1).slice(0,4);
+ const themes=Object.entries(FB.reduce((m,f)=>(m[f.th]=(m[f.th]||0)+f.v,m),{})).sort((a,b)=>b[1]-a[1]);
+ const up=ms.filter(m=>m.st!=='done'&&m.iso).sort((a,b)=>a.iso<b.iso?-1:1).slice(0,6);
+ return `<div class="sp-sec" style="margin-top:34px">Roadmap <span>Now, next and later</span></div>
+ <div class="eng-rel">${lane('Now','In progress',now)}${lane('Next','Starts after the current stage',nxt)}${lane('Later','Further out',later)}</div>
+ <div class="sp-sec" style="margin-top:34px">Customer feedback <span>${FB.length} pieces · ${fbTot} votes</span></div>
+ <div class="eng-two"><div class="eng-card"><h4>Top themes</h4>${themes.slice(0,5).map(([t,v])=>ddRow(`data-dd="hfbt:${esc(t)}"`,`${esc(t)}<span class="hop-bar"><i style="width:${Math.round(v/themes[0][1]*100)}%"></i></span>`,`${Math.round(v/fbTot*100)}%`)).join('')}</div>
+ <div class="eng-card"><h4>Most voted</h4>${FB.slice().sort((a,b)=>b.v-a.v).slice(0,5).map(f=>ddRow(`data-dd="hfb:${f.id}"`,`<i class="eng-dot${f.sen==='neg'?' red':''}"></i>${esc(f.c)}: ${esc(f.txt)}`,f.v+' votes')).join('')}</div></div>
+ <div class="sp-sec" style="margin-top:34px">Milestones <span>Next dates across projects</span></div>
+ <div class="eng-card">${up.map(m=>{const late=m.iso<iso2()&&m.st!=='done';return ddRow(`data-dd="hms:${m.k}:${m.i}"`,`<span class="eng-v">${esc(m.p)}</span>${esc(m.n)}`,`${esc(m.d)} · ${late?'overdue':inDays(m.iso)}`,late)}).join('')}</div>
+ <div class="sp-sec" style="margin-top:34px">Blockers <span>${BLK.length} waiting</span>${BLK.some(b=>b[4]>5)?`<span class="bva-flag">${BLK.filter(b=>b[4]>5).length} stuck over 5 days</span>`:''}</div>
+ <div class="eng-card">${BLK.slice().sort((a,b)=>b[4]-a[4]).map((b,i)=>ddRow(`data-dd="hblk:${esc(b[2])}"`,`${esc(b[2])}<small class="hop-sm"> · ${esc(b[0])} waiting on ${esc(b[1]==='You'?'the CEO':b[1])}</small>`,`${b[4]} day${b[4]>1?'s':''}`,b[4]>5)).join('')}</div>
+ <div class="sp-sec" style="margin-top:34px">Decisions log <span>${DECLOG.length} recent</span></div>
+ <div class="eng-card">${DECLOG.slice(0,6).map((d,i)=>ddRow(`data-dd="hdec:${i}"`,`<span class="hop-date">${esc(d[0])}</span>${esc(d[1])}`,`${P[d[3]]?av(d[3]):''}${esc(d[2])}`)).join('')}</div>`}
+Object.assign(DD,{
+ hms:x=>{const [k,i]=x.split(':');const p=PINFO[k];if(!p)return;const m=hopMs().find(y=>y.k===k&&y.i===+i);if(!m)return;const all=hopMs().filter(y=>y.k===k);
+  ddOpen(m.n,`${esc(p.name)} · stage ${m.i+1} of ${all.length}`,kv([['Status',m.st==='done'?'Done':m.st==='now'?`In progress · ${Math.round(m.pr*100)}%`:'Not started'],['Date',esc(m.d)+(m.iso&&m.st!=='done'?` · ${m.iso<iso2()?'<span class="down">overdue</span>':inDays(m.iso)}`:'')],['Project lead',who(p.lead)]])+ddList('All stages',all.map(y=>ddRow(`data-dd="hms:${k}:${y.i}"`,`<i class="eng-dot${y.st==='now'?' on':''}"></i>${esc(y.n)}`,`${esc(y.d)} · ${y.st==='done'?'done':y.st==='now'?Math.round(y.pr*100)+'%':'next'}`)))+`<button class="btn dd-go" data-hproj="${k}">Open ${esc(p.name)}</button>`)},
+ hfbt:t=>{const l=FB.filter(f=>f.th===t).sort((a,b)=>b.v-a.v),v=l.reduce((a,f)=>a+f.v,0);ddOpen(t,`${l.length} pieces of feedback · ${v} votes`,ddList('Most voted first',l.map(f=>ddRow(`data-dd="hfb:${f.id}"`,`<i class="eng-dot${f.sen==='neg'?' red':''}"></i>${esc(f.c)}: ${esc(f.txt)}`,f.v+' votes')))+`<button class="btn dd-go" data-view="feedback">Open all feedback</button>`)},
+ hfb:id=>{const f=FB.find(x=>x.id===+id);if(!f)return;ddOpen(f.c,`${esc(f.r)} · ${esc(f.src)}`,`<blockquote class="hop-q">${esc(f.txt)}</blockquote>`+kv([['Theme',esc(f.th)],['Tone',f.sen==='neg'?'<span class="down">Negative</span>':f.sen==='pos'?'Positive':'Neutral'],['Votes',String(f.v)],['Linked task',f.tk?`<a href="#" class="hop-link" data-ctask="${esc(f.tk)}">${esc(f.tk)}</a>`:'Not linked yet']])+`<button class="btn dd-go" data-view="feedback">Open all feedback</button>`)},
+ hblk:t=>{const b=BLK.find(x=>x[2]===t);if(!b)return;ddOpen(b[2],`${esc(b[0])} is waiting`,kv([['Waiting on',esc(b[1]==='You'?'the CEO':b[1])],['Why it matters',esc(b[3])],['Waiting for',`<span${b[4]>5?' class="down"':''}>${b[4]} day${b[4]>1?'s':''}</span>`],['Team',esc(b[0])]]))},
+ hdec:i=>{const d=DECLOG[+i];if(!d)return;ddOpen(d[1],`Decided ${esc(d[0])}`,kv([['Outcome',esc(d[2])],['Why',esc(d[4]||'')],['Decided by',who(d[3])]])+(can('decisions')?`<button class="btn dd-go" data-view="decisions">Open decisions</button>`:''))}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-hproj]');if(b){closeModal();openProject(b.dataset.hproj,'Overview')}});
+document.addEventListener('click',e=>{if(e.target.closest('.hop-link'))e.preventDefault()},true);
+{const rd=roleDash;roleDash=function(){rd();const el=$('#hopDash');if(!el)return;const on=roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='Head of Product';el.hidden=!on;el.innerHTML=on?hopDash():''}}
+/* ---------- Lead Engineer: build status, code quality and on-call ----------
+   Build status comes from the engineering team's tasks. Code quality and on-call are sample data until a code host
+   and paging tool are connected. Every panel opens its detail. */
+const CODE={tests:{total:1842,failing:[['offline-sync › resolves edited notes','MUR-142','DW',2],['speech › accent fallback below 0.6 confidence','MUR-137','JR',1],['billing › seat limit on invite','LED-22','TN',4]],flaky:5,cover:78,coverPrev:81},
+ prs:[['#482','Offline sync conflict handling','JR',1,'Changes requested'],['#479','Accent model fallback','DW',2,'Waiting for review'],['#474','Help centre search API','TN',4,'Waiting for review'],['#471','Seat limits for team admin','TN',6,'Waiting for review'],['#466','Upgrade audio parser to 4.2.1','DW',8,'Waiting for review'],['#463','Remove legacy export path','JR',11,'Draft']],
+ oncall:{now:'DW',next:'TN',until:'Mon 19 Oct, 09:00',rota:[['DW','12–19 Oct'],['TN','19–26 Oct'],['JR','26 Oct – 2 Nov'],['DW','2–9 Nov']],pages:[['11 Oct, 14:20','Speech worker queue over 5 min','JR','Acknowledged in 3 min'],['9 Oct, 08:05','EU latency over 2 s','DW','Acknowledged in 6 min'],['3 Oct, 16:40','Sign-in error rate over 5%','TN','Acknowledged in 2 min']]}};
+const engTeam=()=>MEM.filter(m=>['CTO','Lead Engineer','Dev'].includes(m[1])).map(m=>m[0]);
+function leBuild(){const team=engTeam(),A=(typeof acct==='function'?acct():[]),T=TASKS.filter(t=>team.includes(t.o)&&t.s!=='done');
+ const stuck=new Set(A.filter(a=>a.late||a.idle>=5).map(a=>a.t.id));
+ return {prog:T.filter(t=>t.s==='prog'&&!stuck.has(t.id)),blk:T.filter(t=>stuck.has(t.id)),rev:T.filter(t=>(t.s==='review'||t.s==='sign')&&!stuck.has(t.id))}}
+const leWhy=t=>{const a=(acct()||[]).find(x=>x.t.id===t.id);return a?whyText(a):''};
+const leTask=t=>`<button class="eng-rr" data-dd="letask:${esc(t.id)}"><b>${esc(t.t)}</b><small><span class="eng-v">${esc(t.id)}</span>${P[t.o]?esc(fn1(t.o)):''}${leWhy(t)?` · <span class="${/late|movement/.test(leWhy(t))?'down':''}">${esc(leWhy(t))}</span>`:''}</small></button>`;
+function leDash(){const b=leBuild(),oldPR=CODE.prs.filter(p=>p[3]>=5&&p[4]!=='Draft'),waitPR=CODE.prs.filter(p=>p[4]==='Waiting for review'),me=VIEWER,oc=CODE.oncall,mine=ENG.inc.filter(i=>i.open);
+ const tile=(dd,l,n,sub,red)=>`<button class="kpi" data-dd="${dd}"><span>${l}</span><b${red?' class="down"':''}>${n}</b><small>${sub}</small></button>`;
+ const col=(k,t,sub,l)=>`<div class="eng-card"><button class="eng-ch" data-dd="lecol:${k}"><h4>${t} <span>${l.length}</span></h4><p class="eng-sub">${sub}</p></button>${l.slice(0,4).map(leTask).join('')||'<p class="eng-sub">Nothing here.</p>'}${l.length>4?`<button class="eng-rr" data-dd="lecol:${k}"><small>${l.length-4} more</small></button>`:''}</div>`;
+ return `<div class="sp-sec" style="margin-top:34px">Build status <span>Engineering team</span>${b.blk.length?`<span class="bva-flag">${b.blk.length} blocked</span>`:''}</div>
+ <div class="eng-rel">${col('prog','In progress','Being built now',b.prog)}${col('blk','Blocked','Late or not moving for 5+ days',b.blk)}${col('rev','Ready to review','Waiting on review or sign-off',b.rev)}</div>
+ <div class="sp-sec" style="margin-top:34px">Code quality</div>
+ <div class="kpis" style="margin-top:0">${tile('letests','Failing tests',CODE.tests.failing.length,CODE.tests.failing.length?`<span class="down">of ${CODE.tests.total.toLocaleString('en-GB')} on main</span>`:'All passing',CODE.tests.failing.length)}${tile('leprs','Open pull requests',CODE.prs.length,oldPR.length?`<span class="down">${oldPR.length} waiting 5+ days</span>`:`${waitPR.length} waiting for review`,oldPR.length>=2)}${tile('lecover','Test coverage',CODE.tests.cover+'%',`<span class="down">${CODE.tests.cover-CODE.tests.coverPrev} pts</span> vs last month`)}${tile('leflaky','Flaky tests',CODE.tests.flaky,'Failed then passed this week')}</div>
+ <div class="eng-two"><div class="eng-card"><h4>Failing tests</h4>${CODE.tests.failing.map((f,i)=>ddRow(`data-dd="letest:${i}"`,`<i class="eng-dot red"></i>${esc(f[0])}`,`${f[3]}d`,true)).join('')}</div>
+ <div class="eng-card"><h4>Pull requests piling up</h4>${CODE.prs.slice().sort((a,b)=>b[3]-a[3]).slice(0,5).map(p=>ddRow(`data-dd="lepr:${esc(p[0])}"`,`<span class="eng-v">${esc(p[0])}</span>${esc(p[1])}`,`${P[p[2]]?av(p[2]):''}${p[3]}d`,p[3]>=5&&p[4]!=='Draft')).join('')}</div></div>
+ <div class="sp-sec" style="margin-top:34px">On-call and incidents</div>
+ <div class="kpis" style="margin-top:0">${tile('leoncall','On call now',oc.now===me?'You':esc(fn1(oc.now)),`Until ${esc(oc.until)}`)}${tile('leoncall','Next on call',oc.next===me?'You':esc(fn1(oc.next)),'Takes over at handover')}${tile('leinc','Open incidents',mine.length,mine.length?`<span class="down">${esc(mine.map(i=>i.svc).join(', '))}</span>`:'None open',mine.length)}${tile('lepages','Pages this month',oc.pages.length,'All acknowledged within 10 min')}</div>
+ <div class="eng-card" style="margin-top:10px"><h4>Incident ownership</h4>${ENG.inc.slice().sort((a,b)=>a.d<b.d?1:-1).map(i=>ddRow(`data-dd="inc:${esc(i.d+i.t)}"`,`<i class="eng-dot${i.open?' red':''}"></i>${esc(i.t)}`,`${P[i.own]?av(i.own):''}${i.own===me?'You':esc(fn1(i.own))} · ${i.open?'open':'resolved'}`,i.open)).join('')}</div>`}
+Object.assign(DD,{
+ lecol:k=>{const b=leBuild(),l=b[k],h={prog:['In progress','Being built now'],blk:['Blocked','Late or not moving for 5+ days'],rev:['Ready to review','Waiting on review or sign-off']}[k];ddOpen(h[0],`${l.length} task${l.length===1?'':'s'} · ${h[1]}`,l.length?`<div class="dd-list">${l.map(leTask).join('')}</div>`:'<p class="dd-p">Nothing here.</p>')},
+ letask:id=>{const t=TASKS.find(x=>x.id===id);if(!t)return;ddOpen(t.t,`${esc(t.id)} · ${esc(t.l||'')}`,kv([['Status',esc(STAT[t.s]||t.s)],['Owner',who(t.o)],['Due',esc(dueLab(t))],leWhy(t)&&['Flag',`<span class="down">${esc(leWhy(t))}</span>`]])+`<button class="btn dd-go" data-letask="${esc(t.id)}">Open task</button>`)},
+ letests:()=>ddOpen('Failing tests',`${CODE.tests.failing.length} of ${CODE.tests.total.toLocaleString('en-GB')} on main`,ddList('Longest failing first',CODE.tests.failing.slice().sort((a,b)=>b[3]-a[3]).map(f=>ddRow(`data-dd="letest:${CODE.tests.failing.indexOf(f)}"`,`<i class="eng-dot red"></i>${esc(f[0])}`,`${f[3]} day${f[3]>1?'s':''}`,true)))),
+ letest:i=>{const f=CODE.tests.failing[+i];if(!f)return;ddOpen(f[0],'Failing on main',kv([['Failing for',`<span class="down">${f[3]} day${f[3]>1?'s':''}</span>`],['Linked task',esc(f[1])],['Owner',who(f[2])]])+`<button class="btn dd-go" data-letask="${esc(f[1])}">Open ${esc(f[1])}</button>`)},
+ leprs:()=>ddOpen('Open pull requests',`${CODE.prs.length} open · oldest first`,ddList('By age',CODE.prs.slice().sort((a,b)=>b[3]-a[3]).map(p=>ddRow(`data-dd="lepr:${esc(p[0])}"`,`<span class="eng-v">${esc(p[0])}</span>${esc(p[1])}`,`${esc(p[4])} · ${p[3]}d`,p[3]>=5&&p[4]!=='Draft')))),
+ lepr:n=>{const p=CODE.prs.find(x=>x[0]===n);if(!p)return;ddOpen(p[1],`Pull request ${esc(p[0])}`,kv([['Status',esc(p[4])],['Open for',`<span${p[3]>=5&&p[4]!=='Draft'?' class="down"':''}>${p[3]} day${p[3]>1?'s':''}</span>`],['Author',who(p[2])],['Target','Reviewed within 2 working days']]))},
+ lecover:()=>ddOpen('Test coverage',`${CODE.tests.cover}% of lines · down from ${CODE.tests.coverPrev}%`,`<div class="dd-big">${CODE.tests.cover}%</div>`+kv([['Last month',CODE.tests.coverPrev+'%'],['Change',`<span class="down">${CODE.tests.cover-CODE.tests.coverPrev} points</span>`],['Why','Offline sync and seat limits merged with few tests'],['Target','80% or more']])),
+ leflaky:()=>ddOpen('Flaky tests',`${CODE.tests.flaky} failed then passed this week`,'<p class="dd-p">These pass on a retry, so they don’t block merges, but they slow every build and hide real failures. Quarantine or fix them before they pile up.</p>'),
+ leoncall:()=>{const oc=CODE.oncall;ddOpen('On-call rota',`${oc.now===VIEWER?'You are':esc(fn1(oc.now))+' is'} on call until ${esc(oc.until)}`,ddList('Rota',oc.rota.map(([k,w])=>`<div class="dd-r static"><span class="eng-t">${P[k]?av(k):''}${k===VIEWER?'You':esc(fn1(k))}</span><span class="eng-m">${esc(w)}</span></div>`)))},
+ lepages:()=>ddOpen('Pages this month',`${CODE.oncall.pages.length} alerts`,ddList('Most recent first',CODE.oncall.pages.map(p=>`<div class="dd-r static"><span class="eng-t">${esc(p[1])}<small class="hop-sm"> · ${esc(p[0])}</small></span><span class="eng-m">${P[p[2]]?av(p[2]):''}${esc(p[3])}</span></div>`))),
+ leinc:()=>DD.incidents()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-letask]');if(b){closeModal();const id=b.dataset.letask;openProject(keyOfTask(id),'Issues');flash(`#issues .lr[data-id="${id}"]`)}});
+{const rd=roleDash;roleDash=function(){rd();const el=$('#leDash');if(!el)return;const on=roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='Lead Engineer';el.hidden=!on;el.innerHTML=on?leDash():''}}
+/* ---------- Marketing Lead: campaigns, content, channels, leads and budget ----------
+   Sample data until the ad, email and analytics accounts are connected. Every panel opens its detail. */
+const dOff=n=>{const d=new Date(TODAY);d.setDate(d.getDate()+n);return iso(d)};
+const wkStart=()=>{const d=new Date(TODAY);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
+const fD=s=>{const d=new Date(s+'T00:00');return `${d.getDate()} ${MON[d.getMonth()]}`};
+const MKT={
+ camp:[{id:'c1',n:'Public launch: Murmur',st:'sched',a:dOff(37),b:dOff(67),ch:'Paid, social, email, press',own:'SP',bud:12000,sp:1800,goal:'5,000 sign-ups in the first month',res:'Press list and launch film ready'},
+  {id:'c2',n:'Waitlist referral push',st:'live',a:dOff(-12),b:dOff(9),ch:'Email, social',own:'SP',bud:3000,sp:2450,goal:'+5,000 waitlist sign-ups',res:'+2,310 this week, 18,420 total'},
+  {id:'c3',n:'Pilot case study: Brightpath',st:'live',a:dOff(-5),b:dOff(16),ch:'Website, LinkedIn',own:'PS',bud:1500,sp:1720,goal:'40 demo requests',res:'22 demo requests so far'},
+  {id:'c4',n:'Product Hunt launch',st:'sched',a:dOff(37),b:dOff(38),ch:'Product Hunt, social',own:'SP',bud:800,sp:0,goal:'Top 5 product of the day',res:'Page drafted, hunter confirmed'},
+  {id:'c5',n:'Accent accuracy webinar',st:'sched',a:dOff(10),b:dOff(10),ch:'Email, website',own:'TO',bud:600,sp:150,goal:'300 sign-ups',res:'112 registered'},
+  {id:'c6',n:'September beta announcement',st:'done',a:dOff(-40),b:dOff(-20),ch:'Email, social, paid',own:'SP',bud:4000,sp:4380,goal:'1,000 new testers',res:'1,240 new testers'},
+  {id:'c7',n:'Founder podcast tour',st:'done',a:dOff(-60),b:dOff(-25),ch:'Podcasts',own:'AK',bud:500,sp:420,goal:'6 episodes',res:'7 episodes, 3,100 site visits'}],
+ content:[[1,'Post','LinkedIn: why offline mode matters','SP','Scheduled'],[2,'Email','Waitlist update #6','SP','In review'],[3,'Blog','How we test accuracy in noisy rooms','JR','Drafting'],[4,'Video','45s launch film teaser','SP','Ready'],[5,'Post','X thread: pilot results','AK','Drafting'],
+  [7,'Email','Webinar reminder','TO','Not started'],[8,'Post','Brightpath case study','PS','In review'],[9,'Blog','Pricing: what we’ve learned','ML','Not started'],[10,'Webinar','Accent accuracy webinar','TO','Scheduled'],[11,'Email','Launch date announcement','SP','Not started']],
+ ch:[{n:'Social',k:'Engaged followers',v:[4820,4310],sub:[['Followers gained',[640,520]],['Engagement rate',['3.9%','3.4%']],['Link clicks',[1180,960]]]},
+  {n:'Email',k:'Clicks',v:[2140,2380],sub:[['Emails sent',[18400,16900]],['Open rate',['46%','49%']],['Click rate',['11.6%','14.1%']]]},
+  {n:'Paid',k:'Sign-ups',v:[410,355],sub:[['Spend',['£1,380','£1,240']],['Cost per sign-up',['£3.37','£3.49']],['Click-through rate',['1.8%','1.6%']]]},
+  {n:'Website',k:'Visitors',v:[12600,11900],sub:[['Sign-up rate',['6.1%','5.8%']],['Demo requests',[22,15]],['Bounce rate',['41%','44%']]]}],
+ leads:{week:[186,151],sales:[24,19],src:[['Website',72],['Paid',48],['Referral',31],['Social',22],['Events',13]],recent:[['Northwind','60 seats','Website','Passed to sales'],['Harbor & Co','25 seats','Referral','Passed to sales'],['Kestrel Labs','12 seats','Social','Qualifying'],['Atlas Freight','40 seats','Paid','Qualifying'],['Lumen Studio','8 seats','Website','New']]}};
+const pct=(a,b)=>b?Math.round((a-b)/b*100):0;
+const chg=(a,b,inv)=>{const p=pct(a,b);const bad=inv?p>0:p<0;return `<span class="${bad?'down':''}">${p>0?'+':''}${p}%</span> vs last week`};
+const MST={live:['Live','Running now'],sched:['Scheduled','Starting soon'],done:['Finished','Wrapped up']};
+const campRow=c=>`<button class="eng-rr" data-dd="mkc:${c.id}"><b>${esc(c.n)}</b><small>${fD(c.a)}${c.b!==c.a?` – ${fD(c.b)}`:''}${c.sp>c.bud?' · <span class="down">over budget</span>':''}</small></button>`;
+const cDate=c=>{const d=new Date(wkStart()+'T00:00');d.setDate(d.getDate()+c[0]);return iso(d)};
+const cStatus=c=>cDate(c)<iso(TODAY)?'Published':c[4];
+const contRow=c=>{const d=cDate(c);const day=new Date(d+'T00:00');return ddRow(`data-dd="mkct:${c[2]}"${cStatus(c)==='Published'?' data-past':''}`,`<span class="hop-date">${day.toLocaleDateString('en-GB',{weekday:'short'})} ${day.getDate()}</span><span class="eng-v">${esc(c[1])}</span>${esc(c[2])}`,`${P[c[3]]?av(c[3]):''}${esc(fn1(c[3]))}`)};
+function mkDash(){const ws=wkStart(),this_=MKT.content.filter(c=>c[0]<7),next=MKT.content.filter(c=>!this_.includes(c));
+ const tile=(dd,l,n,sub,red)=>`<button class="kpi" data-dd="${dd}"><span>${l}</span><b${red?' class="down"':''}>${n}</b><small>${sub}</small></button>`,L=MKT.leads;
+ const over=MKT.camp.filter(c=>c.sp>c.bud);
+ return `<div class="sp-sec" style="margin-top:34px">Campaigns <span>${MKT.camp.length} this quarter</span></div>
+ <div class="eng-rel">${['live','sched','done'].map(k=>{const l=MKT.camp.filter(c=>c.st===k).sort((a,b)=>a.a<b.a?-1:1);return `<div class="eng-card"><button class="eng-ch" data-dd="mkcol:${k}"><h4>${MST[k][0]} <span>${l.length}</span></h4><p class="eng-sub">${MST[k][1]}</p></button>${l.map(campRow).join('')}</div>`}).join('')}</div>
+ <div class="sp-sec" style="margin-top:34px">Content calendar <span>This week and next</span></div>
+ <div class="eng-two"><div class="eng-card"><h4>This week <span>${this_.length}</span></h4>${this_.map(contRow).join('')}</div><div class="eng-card"><h4>Next week <span>${next.length}</span></h4>${next.map(contRow).join('')}</div></div>
+ <div class="sp-sec" style="margin-top:34px">Channel performance <span>This week vs last week</span></div>
+ <div class="kpis" style="margin-top:0">${MKT.ch.map(c=>tile('mkch:'+c.n,`${c.n} · ${esc(c.k.toLowerCase())}`,c.v[0].toLocaleString('en-GB'),chg(c.v[0],c.v[1]))).join('')}</div>
+ <div class="sp-sec" style="margin-top:34px">Leads and pipeline <span>This week</span></div>
+ <div class="kpis" style="margin-top:0">${tile('mkleads','New leads',L.week[0],chg(L.week[0],L.week[1]))}${tile('mkleads','Passed to sales',L.sales[0],chg(L.sales[0],L.sales[1]))}${tile('mkleads','Lead to sales rate',Math.round(L.sales[0]/L.week[0]*100)+'%',`${Math.round(L.sales[1]/L.week[1]*100)}% last week`)}${tile('mksrc','Top source',esc(L.src[0][0]),`${Math.round(L.src[0][1]/L.week[0]*100)}% of new leads`)}</div>
+ <div class="eng-two"><div class="eng-card"><h4>Where leads came from</h4>${L.src.map(([s,n])=>ddRow('data-dd="mksrc"',`${esc(s)}<span class="hop-bar"><i style="width:${Math.round(n/L.src[0][1]*100)}%"></i></span>`,`${n}`)).join('')}</div>
+ <div class="eng-card"><h4>Latest leads</h4>${L.recent.map(r=>ddRow(`data-dd="mklead:${esc(r[0])}"`,`${esc(r[0])}<small class="hop-sm"> · ${esc(r[1])} · ${esc(r[2])}</small>`,esc(r[3]))).join('')}</div></div>
+ <div class="sp-sec" style="margin-top:34px">Budget <span>By campaign</span>${over.length?`<span class="bva-flag">${over.length} over budget</span>`:''}</div>
+ <div class="tbl bva"><table><thead><tr><th>Campaign</th><th class="num">Budget</th><th class="num">Spent</th><th class="bva-bars"><span class="bva-key"><i class="plan"></i>Budget<i class="act"></i>Spent</span></th><th class="num">Left</th></tr></thead><tbody>${MKT.camp.filter(c=>c.st!=='done'||c.sp>c.bud).sort((a,b)=>(b.sp-b.bud)-(a.sp-a.bud)).map(c=>{const mx=Math.max(c.sp,c.bud)||1,v=c.bud-c.sp;return `<tr class="dd-tr" data-dd="mkc:${c.id}" tabindex="0"${c.sp>c.bud?' data-over':''}><td>${esc(c.n)}</td><td class="num">${money(c.bud)}</td><td class="num">${money(c.sp)}</td><td class="bva-bars"><span class="bva-b plan" style="width:${c.bud/mx*100}%"></span><span class="bva-b act${c.sp>c.bud?' over':''}" style="width:${c.sp/mx*100}%"></span></td><td class="num">${v<0?`<span class="bva-v over">${money(-v)} over</span>`:`<span class="bva-v under">${money(v)}</span>`}</td></tr>`}).join('')}</tbody></table></div>`}
+Object.assign(DD,{
+ mkcol:k=>{const l=MKT.camp.filter(c=>c.st===k);ddOpen(MST[k][0]+' campaigns',`${l.length} · ${MST[k][1]}`,`<div class="dd-list">${l.map(c=>ddRow(`data-dd="mkc:${c.id}"`,esc(c.n),`${fD(c.a)}${c.b!==c.a?' – '+fD(c.b):''}`,c.sp>c.bud)).join('')}</div>`)},
+ mkc:id=>{const c=MKT.camp.find(x=>x.id===id);if(!c)return;const v=c.bud-c.sp;ddOpen(c.n,`${MST[c.st][0]} · ${fD(c.a)}${c.b!==c.a?' – '+fD(c.b):''}`,kv([['Status',MST[c.st][0]],['Dates',`${fD(c.a)}${c.b!==c.a?' to '+fD(c.b):''}`],['Channels',esc(c.ch)],['Goal',esc(c.goal)],['Results so far',esc(c.res)],['Budget',money(c.bud)],['Spent',`${money(c.sp)} · ${v<0?`<span class="down">${money(-v)} over</span>`:money(v)+' left'}`],['Owner',who(c.own)]])+`<div class="dd-h">Spent vs budget</div><div class="dd-pa"><span>Budget</span><i style="width:${Math.min(100,c.bud/Math.max(c.sp,c.bud,1)*100)}%"></i></div><div class="dd-pa act${v<0?' over':''}"><span>Spent</span><i style="width:${Math.min(100,c.sp/Math.max(c.sp,c.bud,1)*100)}%"></i></div>`)},
+ mkct:t=>{const c=MKT.content.find(x=>x[2]===t);if(!c)return;const d=new Date(cDate(c)+'T00:00');ddOpen(c[2],`${esc(c[1])} · ${d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}`,kv([['Type',esc(c[1])],['Due',d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})],['Status',esc(cStatus(c))],['Owner',who(c[3])]]))},
+ mkch:n=>{const c=MKT.ch.find(x=>x.n===n);if(!c)return;ddOpen(c.n,'This week vs last week',`<div class="tbl"><table><thead><tr><th>Measure</th><th class="num">This week</th><th class="num">Last week</th></tr></thead><tbody><tr><td>${esc(c.k)}</td><td class="num">${c.v[0].toLocaleString('en-GB')}</td><td class="num">${c.v[1].toLocaleString('en-GB')}</td></tr>${c.sub.map(([k,[a,b]])=>`<tr><td>${esc(k)}</td><td class="num">${typeof a==='number'?a.toLocaleString('en-GB'):esc(a)}</td><td class="num">${typeof b==='number'?b.toLocaleString('en-GB'):esc(b)}</td></tr>`).join('')}</tbody></table></div><p class="dd-p">${c.n}: ${chg(c.v[0],c.v[1])}.</p>`)},
+ mkleads:()=>{const L=MKT.leads;ddOpen('Leads and pipeline','This week vs last week',kv([['New leads',`${L.week[0]} · ${chg(L.week[0],L.week[1])}`],['Passed to sales',`${L.sales[0]} · ${chg(L.sales[0],L.sales[1])}`],['Lead to sales rate',`${Math.round(L.sales[0]/L.week[0]*100)}% (last week ${Math.round(L.sales[1]/L.week[1]*100)}%)`]])+ddList('Latest leads',L.recent.map(r=>ddRow(`data-dd="mklead:${esc(r[0])}"`,`${esc(r[0])}<small class="hop-sm"> · ${esc(r[1])}</small>`,esc(r[3])))))},
+ mksrc:()=>{const L=MKT.leads;ddOpen('Where leads came from',`${L.week[0]} new leads this week`,`<div class="dd-list">${L.src.map(([s,n])=>`<div class="dd-r static"><span class="eng-t">${esc(s)}<span class="hop-bar"><i style="width:${Math.round(n/L.src[0][1]*100)}%"></i></span></span><span class="eng-m">${n} · ${Math.round(n/L.week[0]*100)}%</span></div>`).join('')}</div>`)},
+ mklead:n=>{const r=MKT.leads.recent.find(x=>x[0]===n);if(!r)return;ddOpen(r[0],esc(r[1]),kv([['Size',esc(r[1])],['Came from',esc(r[2])],['Stage',esc(r[3])]]))}});
+{const rd=roleDash;roleDash=function(){rd();const el=$('#mkDash');if(!el)return;const on=roleOf(VIEWER)!=='CEO'&&jobOf(VIEWER)==='Marketing Lead';el.hidden=!on;el.innerHTML=on?mkDash():''}}
 // Pages a role doesn't use, even though its areas include them: the CFO has no customer feedback or announcements.
 const ROLE_HIDE={CFO:['feedback','announce']};
 {const c0=can;can=function(v,who=VIEWER){if(roleOf(who)!=='CEO'&&(ROLE_HIDE[jobOf(who)]||[]).includes(v))return false;return c0(v,who)}}
