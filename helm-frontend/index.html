@@ -668,6 +668,39 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .bva tr[data-over] td:first-child{box-shadow:inset 2px 0 0 var(--red)}
 .bva-tot td{font-weight:600;border-top:1px solid var(--line)}
 .bva-flag{margin-left:auto;color:var(--red);font-weight:500}
+/* tappable rows and the detail panel behind them */
+.dd-r,.eng-rr,.eng-ch{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer;padding:0 6px;margin:0 -6px;width:calc(100% + 12px);border-radius:8px;transition:background .15s}
+.dd-r:hover,.eng-rr:hover,.eng-ch:hover,.dd-tr:hover td{background:var(--hover)}
+.eng-card h4+.dd-r,.eng-ch+.eng-rr{border-top:0}
+.eng-ch{display:block;border-top:0;padding:6px;margin:-6px -6px 2px;min-height:0}.eng-ch h4{margin-bottom:6px}
+.eng-rr{display:block;padding:9px 6px}
+.dd-r.static{cursor:default}.dd-r.static:hover{background:none}
+.dd-r .eng-t{display:flex;align-items:center;gap:10px}
+.dd-chev{width:14px;height:14px;flex:none;color:var(--fg-3);opacity:.6}
+.dd-tr{cursor:pointer}
+button.kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.mod.dd{max-width:560px;width:100%;max-height:min(86vh,760px);display:flex;flex-direction:column}
+.mod.dd .mod-h{padding-bottom:10px;align-items:flex-start}
+.dd-title{display:block;font-weight:600;color:var(--fg);font-size:15px}
+.dd-sub{display:block;margin-top:3px;font-size:12.5px;color:var(--fg-3)}
+.dd-body{overflow:auto;padding:4px 22px 22px}
+.dd-big{font-size:34px;font-weight:600;letter-spacing:-.03em;color:var(--fg);margin:2px 0 10px;font-variant-numeric:tabular-nums}
+.dd-h{font-size:12px;font-weight:600;color:var(--fg-3);margin:18px 0 4px}
+.dd-list .dd-r:first-child{border-top:0}
+.dd-kv{display:grid;gap:0;border:1px solid var(--line);border-radius:12px;padding:2px 14px;margin-top:4px}
+.dd-kv>div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13px;line-height:1.5}.dd-kv>div:first-child{border-top:0}
+.dd-kv>div>span{color:var(--fg-3)}.dd-kv>div>div{color:var(--fg)}
+.dd-kv+.dd-kv{margin-top:10px}
+.dd-who{display:inline-flex;align-items:center;gap:8px}
+.dd-p{font-size:13px;color:var(--fg-3);margin:10px 0 0;line-height:1.5}
+.dd-ul{margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.8;color:var(--fg)}
+.dd-bars{display:flex;gap:3px;height:28px;margin-top:12px}.dd-bars i{flex:1;border-radius:2px;background:var(--fg-3);opacity:.5}.dd-bars i.bad{background:var(--red);opacity:1}
+.dd-bars-k{display:flex;justify-content:space-between;font-size:11.5px;color:var(--fg-3);margin-top:6px}
+.dd-pa{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:10px;font-size:12.5px;color:var(--fg-3);margin-top:8px}.dd-pa i{display:block;height:8px;border-radius:4px;background:var(--fg-3);opacity:.45}
+.dd-pa.act i{background:var(--fg);opacity:1}.dd-pa.over i{background:var(--red)}
+.dd-go{margin-top:18px;width:100%;justify-content:center}
+.dd .tbl tr.dd-tr td{cursor:pointer}
+@media (max-width:640px){.dd-kv>div{grid-template-columns:96px 1fr}.dd-body{padding:4px 18px 22px}}
 @media (max-width:860px){.eng-two,.eng-rel{grid-template-columns:1fr}}
 @media (max-width:640px){.bva-bars,.bva-p{display:none}.bva table{font-size:12.5px}.bva{overflow-x:auto}.bva td,.bva th{padding-left:8px;padding-right:8px}.cfo-hero b{font-size:32px!important}}
 .mod .vc-ro{padding:4px 30px 18px!important}
@@ -4754,30 +4787,79 @@ document.addEventListener('click',e=>{if(e.target.closest('#calAdd')&&vcCal()){e
 applyRole();
 /* ---------- Role dashboards on the Briefing ----------
    CTO: system health, security posture and release status. CFO: money spent as the headline, then tasks, then budget
-   versus actual. Engineering numbers are sample data until a monitoring source is connected. */
-const ENG={svc:[['API','up','99.99%'],['Web app','up','100%'],['Speech workers','degraded','99.71%'],['Database','up','100%'],['Sign-in','up','99.98%']],
- inc:[['2026-10-09','Speech workers slow in EU','Resolved in 42 min'],['2026-10-03','Sign-in errors after deploy','Resolved in 18 min'],['2026-10-11','Speech workers degraded','Open']],
- sec:[['High','Dependency with known exploit in audio parser','DW',9],['High','Admin endpoints missing rate limit','JR',4],['Medium','Session cookie lifetime too long','DW',12],['Medium','S3 bucket allows public listing','TN',6],['Low','Outdated TLS cipher on staging','TN',20]],
- rel:{ship:[['v2.4.0','Offline mode','Thu 15 Oct'],['v2.4.1','Accent accuracy fix','Mon 19 Oct']],stage:[['v2.3.9','Help centre search','On staging since Oct 9'],['v2.3.8','Team admin controls','Testing with 2 pilots']],live:[['v2.3.7','Meeting notes export','Live Oct 6'],['v2.3.6','Faster summaries','Live Sep 29']]}};
-function ctoDash(){const down=ENG.svc.filter(s=>s.status!=='up'&&s[1]!=='up'),open=ENG.inc.filter(i=>i[2]==='Open'),hi=ENG.sec.filter(s=>s[0]==='Critical'||s[0]==='High'),old=Math.max(...ENG.sec.map(s=>s[3]));
- const tile=(l,n,sub,red)=>`<div class="kpi"><span>${l}</span><b${red?' class="down"':''}>${n}</b><small>${sub}</small></div>`;
- const row=(dot,t,r,red)=>`<div class="eng-r"><i class="eng-dot${red?' red':''}">${dot}</i><span class="eng-t">${t}</span><span class="eng-m${red?' down':''}">${r}</span></div>`;
+   versus actual. Every tile and row opens the detail behind it. Engineering numbers are sample data until a
+   monitoring source is connected. */
+const ENG={
+ svc:[{n:'API',st:'up',up:99.99,p50:84,p95:190,own:'JR',last:'No incidents in 30 days',note:'Serves the apps and integrations.'},
+  {n:'Web app',st:'up',up:100,p50:120,p95:260,own:'DW',last:'No incidents in 30 days',note:'The dashboard customers sign in to.'},
+  {n:'Speech workers',st:'degraded',up:99.71,p50:410,p95:1240,own:'JR',last:'Degraded since 11 Oct, 14:20',note:'Turns audio into text. Queue is backing up in the EU region.'},
+  {n:'Database',st:'up',up:100,p50:6,p95:22,own:'DW',last:'No incidents in 30 days',note:'Primary Postgres with a hot standby.'},
+  {n:'Sign-in',st:'up',up:99.98,p50:95,p95:220,own:'TN',last:'3 Oct · errors after deploy, fixed in 18 min',note:'Accounts, sessions and passkeys.'}],
+ inc:[{d:'2026-10-11',t:'Speech workers degraded',open:1,svc:'Speech workers',sev:'Major',dur:'Ongoing',own:'JR',cause:'EU worker pool hit its memory limit after the new accent model shipped.',fix:'Rolling back the model on half the pool; larger instances requested.',imp:'About 8% of EU transcriptions take over a minute.'},
+  {d:'2026-10-09',t:'Speech workers slow in EU',svc:'Speech workers',sev:'Minor',dur:'42 min',own:'JR',cause:'Autoscaling lagged behind a traffic spike.',fix:'Raised the minimum pool size.',imp:'Slower transcripts for EU users.'},
+  {d:'2026-10-03',t:'Sign-in errors after deploy',svc:'Sign-in',sev:'Major',dur:'18 min',own:'TN',cause:'A config value was missing in production.',fix:'Rolled back, then added a deploy check for it.',imp:'About 6% of sign-ins failed.'}],
+ sec:[{sev:'High',t:'Dependency with known exploit in audio parser',own:'DW',age:9,due:'Fri 16 Oct',src:'Dependency scan',risk:'A crafted audio file could crash a worker.',plan:'Upgrade the parser to 4.2.1 and add a fuzz test.'},
+  {sev:'High',t:'Admin endpoints missing rate limit',own:'JR',age:4,due:'Mon 19 Oct',src:'Pen test',risk:'Admin sign-in could be brute-forced.',plan:'Add per-IP and per-account limits; alert on spikes.'},
+  {sev:'Medium',t:'Session cookie lifetime too long',own:'DW',age:12,due:'30 Oct',src:'Internal review',risk:'A stolen cookie stays useful for longer.',plan:'Cut to 14 days and rotate on privilege change.'},
+  {sev:'Medium',t:'S3 bucket allows public listing',own:'TN',age:6,due:'23 Oct',src:'Cloud config scan',risk:'File names in the exports bucket are visible.',plan:'Block public access and move exports to signed links.'},
+  {sev:'Low',t:'Outdated TLS cipher on staging',own:'TN',age:20,due:'6 Nov',src:'Cloud config scan',risk:'Staging only; no customer data.',plan:'Update the load balancer policy.'}],
+ rel:{ship:[{v:'v2.4.0',t:'Offline mode',when:'Thu 15 Oct',own:'JR',items:['Record and transcribe with no connection','Sync when back online','Conflict handling for edited notes'],chk:['Tests passing','QA signed off','Waiting on CEO sign-off']},
+   {v:'v2.4.1',t:'Accent accuracy fix',when:'Mon 19 Oct',own:'DW',items:['New accent model for noisy rooms','Fallback to the old model on low confidence'],chk:['Tests passing','QA in progress']}],
+  stage:[{v:'v2.3.9',t:'Help centre search',when:'On staging since 9 Oct',own:'PS',items:['Search across help articles','Suggested articles in the app'],chk:['Tests passing','Copy review in progress']},
+   {v:'v2.3.8',t:'Team admin controls',when:'Testing with 2 pilots',own:'JR',items:['Invite and remove team members','Admin roles and seat limits'],chk:['Tests passing','Pilot feedback due 20 Oct']}],
+  live:[{v:'v2.3.7',t:'Meeting notes export',when:'Live 6 Oct',own:'DW',items:['Export notes to Docs and PDF'],chk:['No errors since release','Used by 41% of active teams']},
+   {v:'v2.3.6',t:'Faster summaries',when:'Live 29 Sep',own:'TN',items:['Summaries 2.3x faster','Lower token cost per meeting'],chk:['No errors since release','Cost per meeting down 18%']}]}};
+const SEVS=['Critical','High','Medium','Low'],REL_H={ship:['Shipping','Next to go out'],stage:['Staged','Built and being tested'],live:['Live','Out with customers']};
+const who=k=>P[k]?`<span class="dd-who">${av(k)}${esc(P[k][0])}</span>`:'—';
+const dDate=s=>{const d=new Date(s+'T00:00');return `${d.getDate()} ${MON[d.getMonth()]}`};
+function ddOpen(title,sub,body){closeModal();const bg=document.createElement('div');bg.className='mod-bg';
+ bg.innerHTML=`<div class="mod dd" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mod-h"><div><span class="dd-title">${esc(title)}</span>${sub?`<small class="dd-sub">${sub}</small>`:''}</div><button class="ib x" aria-label="Close" data-close><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="dd-body">${body}</div></div>`;
+ document.body.appendChild(bg);modal=bg;bg.addEventListener('click',x=>{if(x.target===bg)closeModal()});bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal))}
+const kv=rows=>`<div class="dd-kv">${rows.filter(Boolean).map(([k,v])=>`<div><span>${k}</span><div>${v}</div></div>`).join('')}</div>`;
+const ddList=(h,rows)=>`<div class="dd-h">${h}</div><div class="dd-list">${rows.join('')}</div>`;
+const ddRow=(attr,t,m,red)=>`<button class="dd-r" ${attr}><span class="eng-t">${t}</span><span class="eng-m${red?' down':''}">${m}</span><svg class="ic dd-chev" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></button>`;
+const svcRow=s=>ddRow(`data-dd="svc:${esc(s.n)}"`,`<i class="eng-dot${s.st!=='up'?' red':''}"></i>${esc(s.n)}`,s.st==='up'?s.up+'% up':'Degraded',s.st!=='up');
+const incRow=i=>ddRow(`data-dd="inc:${esc(i.d+i.t)}"`,esc(i.t),i.open?'Open':`${dDate(i.d)} · fixed in ${esc(i.dur)}`,i.open);
+const secRow=s=>`<button class="dd-r" data-dd="sec:${esc(s.t)}"><span class="tag ${s.sev==='Critical'||s.sev==='High'?'warn':'n'} eng-sev">${s.sev}</span><span class="eng-t">${esc(s.t)}</span><span class="eng-m">${P[s.own]?av(s.own):''}${s.age}d</span><svg class="ic dd-chev" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></button>`;
+const relRow=(k,r)=>`<button class="eng-rr" data-dd="rel:${k}:${esc(r.v)}"><b>${esc(r.t)}</b><small><span class="eng-v">${esc(r.v)}</span>${esc(r.when)}</small></button>`;
+const bars=(n,seed,bad)=>`<div class="dd-bars" aria-label="Daily uptime, last ${n} days">${Array.from({length:n},(_,i)=>{const b=bad.includes(n-1-i);return `<i class="${b?'bad':''}" title="${b?'Incident':'100% up'}"></i>`}).join('')}</div><div class="dd-bars-k"><span>30 days ago</span><span>Today</span></div>`;
+const incDays=svc=>ENG.inc.filter(i=>!svc||i.svc===svc).map(i=>dayDiff(iso(TODAY),i.d));
+const DD={
+ uptime:()=>ddOpen('Uptime','Last 30 days, all services',`<div class="dd-big">99.94%</div>${bars(30,1,incDays())}${ddList('By service',ENG.svc.map(svcRow))}`),
+ incidents:()=>ddOpen('Incidents',`${ENG.inc.length} in the last 30 days`,ddList('Most recent first',ENG.inc.slice().sort((a,b)=>a.d<b.d?1:-1).map(incRow))),
+ down:()=>{const d=ENG.svc.filter(s=>s.st!=='up');ddOpen('Down now',d.length?`${d.length} service${d.length>1?'s':''} not fully up`:'All systems up',d.length?d.map(s=>{const i=ENG.inc.find(x=>x.open&&x.svc===s.n);return kv([['Service',esc(s.n)],['Status','<span class="down">Degraded</span>'],['Since',esc(s.last.replace('Degraded since ',''))],i&&['Impact',esc(i.imp)],i&&['What we’re doing',esc(i.fix)],['On it',who(s.own)]])}).join('')+ddList('Open incidents',ENG.inc.filter(i=>i.open).map(incRow)):'<p class="dd-p">Every service is running normally.</p>')},
+ resp:()=>ddOpen('Response time','p50 and p95 by service, last 24 hours',`<div class="tbl"><table><thead><tr><th>Service</th><th class="num">p50</th><th class="num">p95</th></tr></thead><tbody>${ENG.svc.map(s=>`<tr data-dd="svc:${esc(s.n)}" class="dd-tr"><td>${esc(s.n)}</td><td class="num">${s.p50} ms</td><td class="num${s.p95>300?' down':''}">${s.p95} ms</td></tr>`).join('')}</tbody></table></div><p class="dd-p">Target: p95 under 300 ms. Red is over target.</p>`),
+ svc:n=>{const s=ENG.svc.find(x=>x.n===n);if(!s)return;ddOpen(s.n,esc(s.note),kv([['Status',s.st==='up'?'Up':'<span class="down">Degraded</span>'],['Uptime',s.up+'% (30 days)'],['Response','p50 '+s.p50+' ms · p95 <span'+(s.p95>300?' class="down"':'')+'>'+s.p95+' ms</span>'],['Last incident',esc(s.last)],['Owner',who(s.own)]])+bars(30,2,incDays(s.n))+(ENG.inc.some(i=>i.svc===s.n)?ddList('Incidents',ENG.inc.filter(i=>i.svc===s.n).map(incRow)):''))},
+ inc:k=>{const i=ENG.inc.find(x=>x.d+x.t===k);if(!i)return;ddOpen(i.t,`${dDate(i.d)} · ${esc(i.svc)}`,kv([['Status',i.open?'<span class="down">Open</span>':'Resolved'],['Severity',esc(i.sev)],['Duration',esc(i.dur)],['Impact',esc(i.imp)],['Cause',esc(i.cause)],[i.open?'Fix in progress':'Fix',esc(i.fix)],['Owner',who(i.own)]]))},
+ secall:f=>{const l=ENG.sec.filter(s=>!f||s.sev===f).sort(f==='old'?(a,b)=>b.age-a.age:(a,b)=>SEVS.indexOf(a.sev)-SEVS.indexOf(b.sev));ddOpen(f&&f!=='old'?f+' issues':f==='old'?'Oldest open issues':'Open security issues',f==='old'?'Longest open first · target under 30 days':`${l.length} open`,l.length?ddList(f==='old'?'By age':'By severity',l.map(secRow)):'<p class="dd-p">Nothing open at this level.</p>')},
+ sec:t=>{const s=ENG.sec.find(x=>x.t===t);if(!s)return;ddOpen(s.t,`${s.sev} · open ${s.age} days`,kv([['Severity',s.sev==='Critical'||s.sev==='High'?`<span class="down">${s.sev}</span>`:s.sev],['Risk',esc(s.risk)],['Plan',esc(s.plan)],['Found by',esc(s.src)],['Fix due',esc(s.due)],['Owner',who(s.own)]]))},
+ relcol:k=>ddOpen(REL_H[k][0],REL_H[k][1],ddList(`${ENG.rel[k].length} release${ENG.rel[k].length>1?'s':''}`,ENG.rel[k].map(r=>ddRow(`data-dd="rel:${k}:${esc(r.v)}"`,`<span class="eng-v">${esc(r.v)}</span>${esc(r.t)}`,esc(r.when))))),
+ rel:x=>{const [k,v]=x.split(':');const r=(ENG.rel[k]||[]).find(y=>y.v===v);if(!r)return;ddOpen(r.t,`${esc(r.v)} · ${REL_H[k][0]}`,kv([['Status',REL_H[k][0]+' · '+esc(r.when)],['Owner',who(r.own)]])+`<div class="dd-h">What’s in it</div><ul class="dd-ul">${r.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul><div class="dd-h">Checks</div><ul class="dd-ul">${r.chk.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`)},
+ spent:()=>{const rows=MNY.B.slice().sort((a,b)=>b[1]-a[1]),sp=rows.reduce((a,b)=>a+(+b[1]||0),0),pl=rows.reduce((a,b)=>a+(+b[2]||0),0);
+  ddOpen('Money spent',`${MONL[TODAY.getMonth()]} so far`,`<div class="dd-big">${money(sp)}</div><p class="dd-p" style="margin-top:0">of ${money(pl)} planned${sp>pl?` · <span class="down">${money(sp-pl)} over</span>`:` · ${money(pl-sp)} left`}</p>${ddList('By team',rows.map(([n,s,p])=>ddRow(`data-dd="bud:${esc(n)}"`,esc(n),money(s)+(s>p?' · over':''),s>p)))}${ddList('Bills still to pay this month',MNY.BL.filter(b=>b[0].slice(0,7)===iso(TODAY).slice(0,7)&&b[0]>=iso(TODAY)).map(b=>`<div class="dd-r static"><span class="eng-t">${esc(b[1])}<small> · ${esc(b[2])}</small></span><span class="eng-m">${dDate(b[0])} · ${money(b[3])}</span></div>`))}<button class="btn dd-go" data-view="money">Open Money</button>`)},
+ bud:n=>{const b=MNY.B.find(x=>x[0]===n);if(!b)return;const [,sp,pl]=b,v=sp-pl,all=MNY.B.reduce((a,x)=>a+(+x[1]||0),0);
+  ddOpen(n,`Budget vs actual · ${MONL[TODAY.getMonth()]}`,kv([['Planned',money(pl)],['Actual',money(sp)],['Variance',v>0?`<span class="down">${money(v)} over (${Math.round(v/pl*100)}%)</span>`:v<0?`${money(-v)} under (${Math.round(-v/pl*100)}%)`:'On plan'],['Used',Math.round(sp/pl*100)+'% of budget'],['Share of spend',Math.round(sp/all*100)+'% of all team spend this month']])+`<div class="dd-h">Plan vs actual</div><div class="dd-pa"><span>Plan</span><i style="width:${Math.min(100,pl/Math.max(sp,pl)*100)}%"></i></div><div class="dd-pa act${v>0?' over':''}"><span>Actual</span><i style="width:${Math.min(100,sp/Math.max(sp,pl)*100)}%"></i></div><button class="btn dd-go" data-view="money">Open Money</button>`)}};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-dd]');if(!b)return;e.preventDefault();const [k,...r]=b.dataset.dd.split(':');if(DD[k])DD[k](r.join(':'))});
+document.addEventListener('click',e=>{if(e.target.closest('.dd-go'))closeModal()},true);
+function ctoDash(){const down=ENG.svc.filter(s=>s.st!=='up'),open=ENG.inc.filter(i=>i.open),hi=ENG.sec.filter(s=>s.sev==='Critical'||s.sev==='High'),old=Math.max(...ENG.sec.map(s=>s.age));
+ const tile=(dd,l,n,sub,red)=>`<button class="kpi" data-dd="${dd}"><span>${l}</span><b${red?' class="down"':''}>${n}</b><small>${sub}</small></button>`;
  return `<div class="sp-sec" style="margin-top:34px">System health <span>Last 30 days</span></div>
- <div class="kpis" style="margin-top:0">${tile('Uptime','99.94%','Across all services')}${tile('Incidents',ENG.inc.length,open.length?`<span class="down">${open.length} open</span>`:'All resolved')}${tile('Down now',down.length?down.length+' service'+(down.length>1?'s':''):'Nothing',down.length?esc(down.map(s=>s[0]).join(', ')):'All systems up',down.length)}${tile('Response time','240 ms','p95, within 300 ms target')}</div>
- <div class="eng-two"><div class="eng-card"><h4>Services</h4>${ENG.svc.map(s=>row('',esc(s[0]),s[1]==='up'?esc(s[2])+' up':'Degraded',s[1]!=='up')).join('')}</div><div class="eng-card"><h4>Recent incidents</h4>${ENG.inc.slice().sort((a,b)=>a[0]<b[0]?1:-1).map(i=>{const d=new Date(i[0]+'T00:00');return row('',esc(i[1]),i[2]==='Open'?'Open':`${d.getDate()} ${MON[d.getMonth()]} · ${esc(i[2].replace('Resolved in ','fixed in '))}`,i[2]==='Open')}).join('')}</div></div>
+ <div class="kpis" style="margin-top:0">${tile('uptime','Uptime','99.94%','Across all services')}${tile('incidents','Incidents',ENG.inc.length,open.length?`<span class="down">${open.length} open</span>`:'All resolved')}${tile('down','Down now',down.length?down.length+' service'+(down.length>1?'s':''):'Nothing',down.length?esc(down.map(s=>s.n).join(', ')):'All systems up',down.length)}${tile('resp','Response time','240 ms','p95, within 300 ms target')}</div>
+ <div class="eng-two"><div class="eng-card"><h4>Services</h4>${ENG.svc.map(svcRow).join('')}</div><div class="eng-card"><h4>Recent incidents</h4>${ENG.inc.slice().sort((a,b)=>a.d<b.d?1:-1).map(incRow).join('')}</div></div>
  <div class="sp-sec" style="margin-top:34px">Security posture <span>${ENG.sec.length} open</span></div>
- <div class="kpis" style="margin-top:0">${tile('Open issues',ENG.sec.length,'Across app and infrastructure')}${tile('Critical',ENG.sec.filter(s=>s[0]==='Critical').length,'None open')}${tile('High',ENG.sec.filter(s=>s[0]==='High').length,hi.length?'<span class="down">Fix this sprint</span>':'None open',hi.length)}${tile('Oldest open',old+' days','Target: under 30 days')}</div>
- <div class="eng-card" style="margin-top:10px"><h4>Open security issues</h4>${ENG.sec.slice().sort((a,b)=>['Critical','High','Medium','Low'].indexOf(a[0])-['Critical','High','Medium','Low'].indexOf(b[0])).map(s=>`<div class="eng-r"><span class="tag ${s[0]==='Critical'||s[0]==='High'?'warn':'n'} eng-sev">${s[0]}</span><span class="eng-t">${esc(s[1])}</span><span class="eng-m">${P[s[2]]?av(s[2]):''}${s[3]}d</span></div>`).join('')}</div>
+ <div class="kpis" style="margin-top:0">${tile('secall','Open issues',ENG.sec.length,'Across app and infrastructure')}${tile('secall:Critical','Critical',ENG.sec.filter(s=>s.sev==='Critical').length,'None open')}${tile('secall:High','High',ENG.sec.filter(s=>s.sev==='High').length,hi.length?'<span class="down">Fix this sprint</span>':'None open',hi.length)}${tile('secall:old','Oldest open',old+' days','Target: under 30 days')}</div>
+ <div class="eng-card" style="margin-top:10px"><h4>Open security issues</h4>${ENG.sec.slice().sort((a,b)=>SEVS.indexOf(a.sev)-SEVS.indexOf(b.sev)).map(secRow).join('')}</div>
  <div class="sp-sec" style="margin-top:34px">Release status</div>
- <div class="eng-rel">${[['Shipping','ship','Next to go out'],['Staged','stage','Built and being tested'],['Live','live','Out with customers']].map(([h,k,sub])=>`<div class="eng-card"><h4>${h} <span>${ENG.rel[k].length}</span></h4><p class="eng-sub">${sub}</p>${ENG.rel[k].map(r=>`<div class="eng-rr"><b>${esc(r[1])}</b><small><span class="eng-v">${esc(r[0])}</span>${esc(r[2])}</small></div>`).join('')}</div>`).join('')}</div>`}
+ <div class="eng-rel">${['ship','stage','live'].map(k=>`<div class="eng-card"><button class="eng-ch" data-dd="relcol:${k}"><h4>${REL_H[k][0]} <span>${ENG.rel[k].length}</span></h4><p class="eng-sub">${REL_H[k][1]}</p></button>${ENG.rel[k].map(r=>relRow(k,r)).join('')}</div>`).join('')}</div>`}
 function cfoTop(){const sp=MNY.B.reduce((a,b)=>a+(+b[1]||0),0),pl=MNY.B.reduce((a,b)=>a+(+b[2]||0),0),d=sp-pl,pct=pl?Math.min(100,sp/pl*100):0,mon=MONL[TODAY.getMonth()];
- return `<div class="sp-sec" style="margin-top:6px">Money spent <span>${mon}</span></div><div class="kpis" style="margin-top:0;grid-template-columns:1fr"><div class="kpi cfo-hero"><span>Spent so far this month</span><b>${money(sp)}</b><small>of ${money(pl)} planned · ${d>0?`<span class="down">${money(d)} over plan</span>`:`${money(-d)} left`}</small><span class="cfo-bar"><i style="width:${pct}%"${d>0?' class="over"':''}></i></span></div></div>`}
+ return `<div class="sp-sec" style="margin-top:6px">Money spent <span>${mon}</span></div><div class="kpis" style="margin-top:0;grid-template-columns:1fr"><button class="kpi cfo-hero" data-dd="spent"><span>Spent so far this month</span><b>${money(sp)}</b><small>of ${money(pl)} planned · ${d>0?`<span class="down">${money(d)} over plan</span>`:`${money(-d)} left`}</small><span class="cfo-bar"><i style="width:${pct}%"${d>0?' class="over"':''}></i></span></button></div>`}
 function cfoBva(){const rows=MNY.B.map(([n,sp,pl])=>({n,sp:+sp||0,pl:+pl||0})),T={n:'Total',sp:rows.reduce((a,r)=>a+r.sp,0),pl:rows.reduce((a,r)=>a+r.pl,0)};
  const vr=r=>{const v=r.sp-r.pl,p=r.pl?Math.round(Math.abs(v)/r.pl*100):0;return v>0?`<span class="bva-v over">${money(v)} over<span class="bva-p"> · ${p}%</span></span>`:v<0?`<span class="bva-v under">${money(-v)} under<span class="bva-p"> · ${p}%</span></span>`:'<span class="bva-v">On plan</span>'};
- const tr=(r,tot)=>{const mx=Math.max(r.sp,r.pl)||1;return `<tr${tot?' class="bva-tot"':''}${r.sp>r.pl?' data-over':''}><td>${esc(r.n)}</td><td class="num">${money(r.pl)}</td><td class="num">${money(r.sp)}</td><td class="bva-bars"><span class="bva-b plan" style="width:${r.pl/mx*100}%"></span><span class="bva-b act${r.sp>r.pl?' over':''}" style="width:${r.sp/mx*100}%"></span></td><td class="num">${vr(r)}</td></tr>`};
+ const tr=(r,tot)=>{const mx=Math.max(r.sp,r.pl)||1;return `<tr class="dd-tr${tot?' bva-tot':''}" data-dd="${tot?'spent':'bud:'+esc(r.n)}" tabindex="0"${r.sp>r.pl?' data-over':''}><td>${esc(r.n)}</td><td class="num">${money(r.pl)}</td><td class="num">${money(r.sp)}</td><td class="bva-bars"><span class="bva-b plan" style="width:${r.pl/mx*100}%"></span><span class="bva-b act${r.sp>r.pl?' over':''}" style="width:${r.sp/mx*100}%"></span></td><td class="num">${vr(r)}</td></tr>`};
  const over=rows.filter(r=>r.sp>r.pl);
  return `<div class="sp-sec" style="margin-top:34px">Budget vs actual <span>${MONL[TODAY.getMonth()]}</span>${over.length?`<span class="bva-flag">${over.length} team${over.length>1?'s':''} over</span>`:''}</div>
  <div class="tbl bva"><table><thead><tr><th>Team</th><th class="num">Planned</th><th class="num">Actual</th><th class="bva-bars"><span class="bva-key"><i class="plan"></i>Plan<i class="act"></i>Actual</span></th><th class="num">Variance</th></tr></thead><tbody>${rows.sort((a,b)=>(b.sp-b.pl)-(a.sp-a.pl)).map(r=>tr(r)).join('')}${tr(T,1)}</tbody></table></div>`}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.target.matches('tr[data-dd]'))e.target.click()});
 function roleDash(){const job=roleOf(VIEWER)==='CEO'?'CEO':jobOf(VIEWER);
  const ct=$('#ctoDash'),top=$('#cfoTop'),bv=$('#cfoBva');if(!ct)return;
  ct.hidden=job!=='CTO';ct.innerHTML=job==='CTO'?ctoDash():'';
