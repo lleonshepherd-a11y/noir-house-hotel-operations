@@ -2220,6 +2220,7 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
  #budRows td:nth-child(2),#budRows~* th:nth-child(2),#view-money .tbl thead th:nth-child(2){display:none}
  #wgOpen .tbl th:nth-child(2),#wgOpen .tbl td:nth-child(2),#wgOpen .tbl th:nth-child(3),#wgOpen .tbl td:nth-child(3),#wgOpen .tbl th:nth-child(6),#wgOpen .tbl td:nth-child(6),#wgOpen .tbl th:nth-child(7),#wgOpen .tbl td:nth-child(7){display:none}
 }
+.side-foot small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* role grid */
 .pm .pm-role{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .pm .pm-x{border:0;background:none;color:var(--fg-3);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
@@ -3654,6 +3655,7 @@ function applyRole(){const ceo=roleOf(VIEWER)==='CEO';document.body.classList.to
  if($('#sideSpaces'))$('#sideSpaces').hidden=!can('spaces');
  const bar=$('#pvBar');bar.hidden=VIEWER==='AK';if(VIEWER!=='AK')bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Previewing as <b>${esc(P[VIEWER][0])}</b> · ${esc(jobOf(VIEWER))}. This is exactly what they see.</span><button class="btn sm" id="pvExit">Exit preview</button>`;
  const foot=$('.side-foot');if(foot){const b=foot.querySelector('b');if(b)b.textContent=P[VIEWER][0]}
+ {const hp=$('#hpCards');if(hp){const on=can('projects');hp.hidden=!on;const h=hp.previousElementSibling;if(h&&h.classList.contains('sp-sec'))h.hidden=!on}} // the Briefing's Projects section follows the role too
  renderNY();renderJump&&renderJump()}
 function previewAs(k){VIEWER=k;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${esc(jobOf(k))} · ${esc(seeText(k))}`)}
 document.addEventListener('click',e=>{const p=e.target.closest('[data-preview]');if(p){previewAs(p.dataset.preview);return}if(e.target.closest('#pvExit')){VIEWER='AK';applyRole();showView('settings');$('[data-g="st"] [data-t2="Members"]').click()}});
@@ -4331,7 +4333,7 @@ function bkUI(){
   const all=document.createElement('button');all.className='btn';all.id='signOutAll';all.textContent='Sign out everywhere';b.after(all);
   if(window.PublicKeyCredential){const pkb=document.createElement('button');pkb.className='btn';pkb.id='pkBtn';pkb.textContent='Passkeys';b.before(pkb);pkb.addEventListener('click',bkPasskeys)}all.addEventListener('click',async()=>{if(!confirm('Sign out of Helm on every device, including this one?'))return;await bkSave();bkStashClear();await bkApi(`/api/users/${BK.me.id}/signout`,{method:'POST'});location.href='/login'})}}
  const foot=$('.side-foot');if(foot&&!$('#bkDot')){const d=document.createElement('span');d.id='bkDot';d.className='bkdot';foot.appendChild(d)}
- const sm=$('.side-foot small');if(sm)sm.textContent=`${BK.me.role} · Settings`;const fa=$('.side-foot .av');if(fa)fa.textContent=P.AK[0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+ const sm=$('.side-foot small');if(sm)sm.textContent=`${BK.me.job||BK.me.role} · Settings`;const fa=$('.side-foot .av');if(fa)fa.textContent=P.AK[0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
  if(BK.me.role==='CEO'){const mi=$('#memInvite');if(mi){const n=mi.cloneNode(true);mi.replaceWith(n);n.addEventListener('click',()=>bkInvite())}bkUsers()}
  const pb=$$('[data-preview]');pb.forEach(b=>{if(BK.me.role!=='CEO')b.remove()})}
 if(BK.on){const rm=renderMem;renderMem=function(){rm();if(!BK.me||BK.me.role!=='CEO')return;$$('#memRows tr').forEach((tr,i)=>{const k=MEM[i]&&MEM[i][0];const acc=BK.users.find(u=>u.pkey===k);const cell=tr.lastElementChild;if(!cell||!P[k])return;if(acc&&acc.pending)cell.insertAdjacentHTML('afterbegin',`<span class="tag n" style="margin-right:6px">Invite sent</span><button class="btn sm" data-binv="${esc(k)}" style="margin-right:6px">New link</button>`);else if(acc&&k!=='AK')cell.insertAdjacentHTML('afterbegin',`${(BK.asks||[]).some(x=>x.id===acc.id)?'<span class="tag warn" style="margin-right:6px">Can’t sign in</span>':''}<button class="btn sm" data-brec="${acc.id}" style="margin-right:6px" title="A one-time link to get back in, for an hour">Sign-in link</button><button class="btn sm" data-bout="${acc.id}" style="margin-right:6px" title="Signed in on ${acc.devices} device${acc.devices===1?'':'s'}">Sign out</button><button class="btn sm" data-brm="${acc.id}" style="margin-right:6px">Remove</button>`);else if(!acc&&k!=='AK')cell.insertAdjacentHTML('afterbegin',`<button class="btn sm" data-binv="${esc(k)}" style="margin-right:6px">Invite</button>`)})}
