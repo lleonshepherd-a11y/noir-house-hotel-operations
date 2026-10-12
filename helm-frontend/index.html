@@ -638,6 +638,38 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .vc-mode #calFilt{display:none!important}
 .no-search :is(#openSearch,.msearch,#nq,#msgQ,.pal-bg){display:none!important}
 .vc-tag{color:var(--fg-2)}
+/* CTO and CFO sections on the Briefing */
+.eng-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.eng-rel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.eng-card{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px 18px 10px;min-width:0}
+.eng-card h4{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--fg);display:flex;gap:8px}.eng-card h4 span{color:var(--fg-3);font-weight:500}
+.eng-sub{margin:-4px 0 8px;font-size:12px;color:var(--fg-3)}
+.eng-r{display:flex;align-items:center;gap:10px;min-height:38px;border-top:1px solid var(--line);font-size:13px}
+.eng-card h4+.eng-r{border-top:0}
+.eng-dot{width:7px;height:7px;border-radius:50%;background:var(--fg-3);flex:none}.eng-dot.red{background:var(--red)}
+.eng-m.down,.kpi b.down,.kpi small .down{color:var(--red)!important}
+.eng-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)}
+.eng-m{flex:none;color:var(--fg-3);font-size:12.5px;display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.eng-sev{width:64px;justify-content:center;flex:none}
+.eng-rr{padding:9px 0;border-top:1px solid var(--line)}.eng-sub+.eng-rr{border-top:0}
+.eng-rr b{display:block;font-size:13px;font-weight:500;color:var(--fg)}
+.eng-rr small{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--fg-3);margin-top:2px}
+.eng-v{font-family:var(--mono,ui-monospace,monospace);font-size:11px;padding:1px 6px;border-radius:5px;background:var(--soft);color:var(--fg-2)}
+.cfo-hero{padding:20px 22px 18px!important;display:block}
+.cfo-hero b{font-size:40px!important;line-height:1.15!important;margin:4px 0 2px}
+.cfo-bar{display:block;height:4px;border-radius:4px;background:var(--soft);margin-top:14px;overflow:hidden}
+.cfo-bar i{display:block;height:100%;background:var(--fg)}.cfo-bar i.over{background:var(--red)}
+.bva table{width:100%}.bva td,.bva th{white-space:nowrap}
+.bva-bars{width:32%}
+.bva-b{display:block;height:5px;border-radius:3px;min-width:2px}.bva-b+.bva-b{margin-top:3px}
+.bva-b.plan{background:var(--fg-3);opacity:.45}.bva-b.act{background:var(--fg)}.bva-b.act.over{background:var(--red)}
+.bva-key{display:inline-flex;align-items:center;gap:6px;font-weight:500}.bva-key i{width:10px;height:4px;border-radius:2px;display:inline-block}.bva-key i.plan{background:var(--fg-3);opacity:.45}.bva-key i.act{background:var(--fg);margin-left:8px}
+.bva-v{font-size:12.5px;color:var(--fg-2)}.bva-v.over{color:var(--red);font-weight:600}.bva-v.under{color:var(--fg-2)}
+.bva tr[data-over] td:first-child{box-shadow:inset 2px 0 0 var(--red)}
+.bva-tot td{font-weight:600;border-top:1px solid var(--line)}
+.bva-flag{margin-left:auto;color:var(--red);font-weight:500}
+@media (max-width:860px){.eng-two,.eng-rel{grid-template-columns:1fr}}
+@media (max-width:640px){.bva-bars,.bva-p{display:none}.bva table{font-size:12.5px}.bva{overflow-x:auto}.bva td,.bva th{padding-left:8px;padding-right:8px}.cfo-hero b{font-size:32px!important}}
 .mod .vc-ro{padding:4px 30px 18px!important}
 #vnTitle,.vn-body{background:none!important;border:0!important;box-shadow:none!important;outline:0!important;padding-left:0;padding-right:0}
 /* investors: Money, Messages, Notes, Calendar, in that order */
@@ -2366,10 +2398,13 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
             <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg><span id="hDate"></span></span><h1 class="title" id="hello"></h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
             <div class="sp-tools" id="nyTools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
             <div class="spgrid">
+              <div id="cfoTop" hidden></div>
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
               <div class="cards" id="nyCards"></div>
+              <div id="ctoDash" hidden></div>
               <div class="sp-sec ceo-only" style="margin-top:34px">Money <span>September</span></div>
               <div class="kpis ceo-only" id="hmCards" style="margin-top:0"></div>
+              <div id="cfoBva" hidden></div>
               <div class="sp-sec" style="margin-top:34px">Projects <span>3</span></div>
               <div class="cards" id="hpCards"></div>
               <div class="sp-sec ceo-only" id="ibHead" style="margin-top:34px" hidden>Inbox <span id="ibN"></span><a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener" style="margin-left:auto;color:var(--fg-3);font-weight:500;text-decoration:none">Open Gmail ↗</a></div>
@@ -4717,6 +4752,45 @@ document.addEventListener('click',e=>{if(e.target.closest('#calAdd')&&vcCal()){e
 {const bl=bkLive;bkLive=function(){bl();try{BK.es.addEventListener('message',e=>{try{const m=JSON.parse(e.data);if(m.type==='changed'&&(m.sections||[]).includes('VCAL')&&hasArea('mycal'))bkApi('/api/mine/cal').then(r=>r.ok?r.json():null).then(j=>{if(!j)return;MINE.shared=j.shared||[];if(curView==='calendar')renderCal()}).catch(()=>{})}catch(x){}})}catch(e){}}}
 {const op=openPal;openPal=function(){if(isOutsider())return;return op()}}
 applyRole();
+/* ---------- Role dashboards on the Briefing ----------
+   CTO: system health, security posture and release status. CFO: money spent as the headline, then tasks, then budget
+   versus actual. Engineering numbers are sample data until a monitoring source is connected. */
+const ENG={svc:[['API','up','99.99%'],['Web app','up','100%'],['Speech workers','degraded','99.71%'],['Database','up','100%'],['Sign-in','up','99.98%']],
+ inc:[['2026-10-09','Speech workers slow in EU','Resolved in 42 min'],['2026-10-03','Sign-in errors after deploy','Resolved in 18 min'],['2026-10-11','Speech workers degraded','Open']],
+ sec:[['High','Dependency with known exploit in audio parser','DW',9],['High','Admin endpoints missing rate limit','JR',4],['Medium','Session cookie lifetime too long','DW',12],['Medium','S3 bucket allows public listing','TN',6],['Low','Outdated TLS cipher on staging','TN',20]],
+ rel:{ship:[['v2.4.0','Offline mode','Thu 15 Oct'],['v2.4.1','Accent accuracy fix','Mon 19 Oct']],stage:[['v2.3.9','Help centre search','On staging since Oct 9'],['v2.3.8','Team admin controls','Testing with 2 pilots']],live:[['v2.3.7','Meeting notes export','Live Oct 6'],['v2.3.6','Faster summaries','Live Sep 29']]}};
+function ctoDash(){const down=ENG.svc.filter(s=>s.status!=='up'&&s[1]!=='up'),open=ENG.inc.filter(i=>i[2]==='Open'),hi=ENG.sec.filter(s=>s[0]==='Critical'||s[0]==='High'),old=Math.max(...ENG.sec.map(s=>s[3]));
+ const tile=(l,n,sub,red)=>`<div class="kpi"><span>${l}</span><b${red?' class="down"':''}>${n}</b><small>${sub}</small></div>`;
+ const row=(dot,t,r,red)=>`<div class="eng-r"><i class="eng-dot${red?' red':''}">${dot}</i><span class="eng-t">${t}</span><span class="eng-m${red?' down':''}">${r}</span></div>`;
+ return `<div class="sp-sec" style="margin-top:34px">System health <span>Last 30 days</span></div>
+ <div class="kpis" style="margin-top:0">${tile('Uptime','99.94%','Across all services')}${tile('Incidents',ENG.inc.length,open.length?`<span class="down">${open.length} open</span>`:'All resolved')}${tile('Down now',down.length?down.length+' service'+(down.length>1?'s':''):'Nothing',down.length?esc(down.map(s=>s[0]).join(', ')):'All systems up',down.length)}${tile('Response time','240 ms','p95, within 300 ms target')}</div>
+ <div class="eng-two"><div class="eng-card"><h4>Services</h4>${ENG.svc.map(s=>row('',esc(s[0]),s[1]==='up'?esc(s[2])+' up':'Degraded',s[1]!=='up')).join('')}</div><div class="eng-card"><h4>Recent incidents</h4>${ENG.inc.slice().sort((a,b)=>a[0]<b[0]?1:-1).map(i=>{const d=new Date(i[0]+'T00:00');return row('',esc(i[1]),i[2]==='Open'?'Open':`${d.getDate()} ${MON[d.getMonth()]} · ${esc(i[2].replace('Resolved in ','fixed in '))}`,i[2]==='Open')}).join('')}</div></div>
+ <div class="sp-sec" style="margin-top:34px">Security posture <span>${ENG.sec.length} open</span></div>
+ <div class="kpis" style="margin-top:0">${tile('Open issues',ENG.sec.length,'Across app and infrastructure')}${tile('Critical',ENG.sec.filter(s=>s[0]==='Critical').length,'None open')}${tile('High',ENG.sec.filter(s=>s[0]==='High').length,hi.length?'<span class="down">Fix this sprint</span>':'None open',hi.length)}${tile('Oldest open',old+' days','Target: under 30 days')}</div>
+ <div class="eng-card" style="margin-top:10px"><h4>Open security issues</h4>${ENG.sec.slice().sort((a,b)=>['Critical','High','Medium','Low'].indexOf(a[0])-['Critical','High','Medium','Low'].indexOf(b[0])).map(s=>`<div class="eng-r"><span class="tag ${s[0]==='Critical'||s[0]==='High'?'warn':'n'} eng-sev">${s[0]}</span><span class="eng-t">${esc(s[1])}</span><span class="eng-m">${P[s[2]]?av(s[2]):''}${s[3]}d</span></div>`).join('')}</div>
+ <div class="sp-sec" style="margin-top:34px">Release status</div>
+ <div class="eng-rel">${[['Shipping','ship','Next to go out'],['Staged','stage','Built and being tested'],['Live','live','Out with customers']].map(([h,k,sub])=>`<div class="eng-card"><h4>${h} <span>${ENG.rel[k].length}</span></h4><p class="eng-sub">${sub}</p>${ENG.rel[k].map(r=>`<div class="eng-rr"><b>${esc(r[1])}</b><small><span class="eng-v">${esc(r[0])}</span>${esc(r[2])}</small></div>`).join('')}</div>`).join('')}</div>`}
+function cfoTop(){const sp=MNY.B.reduce((a,b)=>a+(+b[1]||0),0),pl=MNY.B.reduce((a,b)=>a+(+b[2]||0),0),d=sp-pl,pct=pl?Math.min(100,sp/pl*100):0,mon=MONL[TODAY.getMonth()];
+ return `<div class="sp-sec" style="margin-top:6px">Money spent <span>${mon}</span></div><div class="kpis" style="margin-top:0;grid-template-columns:1fr"><div class="kpi cfo-hero"><span>Spent so far this month</span><b>${money(sp)}</b><small>of ${money(pl)} planned · ${d>0?`<span class="down">${money(d)} over plan</span>`:`${money(-d)} left`}</small><span class="cfo-bar"><i style="width:${pct}%"${d>0?' class="over"':''}></i></span></div></div>`}
+function cfoBva(){const rows=MNY.B.map(([n,sp,pl])=>({n,sp:+sp||0,pl:+pl||0})),T={n:'Total',sp:rows.reduce((a,r)=>a+r.sp,0),pl:rows.reduce((a,r)=>a+r.pl,0)};
+ const vr=r=>{const v=r.sp-r.pl,p=r.pl?Math.round(Math.abs(v)/r.pl*100):0;return v>0?`<span class="bva-v over">${money(v)} over<span class="bva-p"> · ${p}%</span></span>`:v<0?`<span class="bva-v under">${money(-v)} under<span class="bva-p"> · ${p}%</span></span>`:'<span class="bva-v">On plan</span>'};
+ const tr=(r,tot)=>{const mx=Math.max(r.sp,r.pl)||1;return `<tr${tot?' class="bva-tot"':''}${r.sp>r.pl?' data-over':''}><td>${esc(r.n)}</td><td class="num">${money(r.pl)}</td><td class="num">${money(r.sp)}</td><td class="bva-bars"><span class="bva-b plan" style="width:${r.pl/mx*100}%"></span><span class="bva-b act${r.sp>r.pl?' over':''}" style="width:${r.sp/mx*100}%"></span></td><td class="num">${vr(r)}</td></tr>`};
+ const over=rows.filter(r=>r.sp>r.pl);
+ return `<div class="sp-sec" style="margin-top:34px">Budget vs actual <span>${MONL[TODAY.getMonth()]}</span>${over.length?`<span class="bva-flag">${over.length} team${over.length>1?'s':''} over</span>`:''}</div>
+ <div class="tbl bva"><table><thead><tr><th>Team</th><th class="num">Planned</th><th class="num">Actual</th><th class="bva-bars"><span class="bva-key"><i class="plan"></i>Plan<i class="act"></i>Actual</span></th><th class="num">Variance</th></tr></thead><tbody>${rows.sort((a,b)=>(b.sp-b.pl)-(a.sp-a.pl)).map(r=>tr(r)).join('')}${tr(T,1)}</tbody></table></div>`}
+function roleDash(){const job=roleOf(VIEWER)==='CEO'?'CEO':jobOf(VIEWER);
+ const ct=$('#ctoDash'),top=$('#cfoTop'),bv=$('#cfoBva');if(!ct)return;
+ ct.hidden=job!=='CTO';ct.innerHTML=job==='CTO'?ctoDash():'';
+ const cfo=job==='CFO'&&can('money');top.hidden=bv.hidden=!cfo;top.innerHTML=cfo?cfoTop():'';bv.innerHTML=cfo?cfoBva():''}
+{const ar=applyRole;applyRole=function(){ar();roleDash()}}
+{const h=VIEWHOOK.home;VIEWHOOK.home=function(){if(h)h();roleDash()}}
+// Pages a role doesn't use, even though its areas include them: the CFO has no customer feedback or announcements.
+const ROLE_HIDE={CFO:['feedback','announce']};
+{const c0=can;can=function(v,who=VIEWER){if(roleOf(who)!=='CEO'&&(ROLE_HIDE[jobOf(who)]||[]).includes(v))return false;return c0(v,who)}}
+{const nl=notifList;notifList=function(){const l=nl();return can('announce')?l:l.filter(x=>!String(x[6]||'').startsWith('ann'))}}
+{const sv=showView;showView=function(v,...a){if(!can(v)&&(ROLE_HIDE[jobOf(VIEWER)]||[]).includes(v))v='home';return sv.call(this,v,...a)}}
+applyRole();
+roleDash();
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
 </script>
 </body>
