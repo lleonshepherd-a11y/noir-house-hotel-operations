@@ -72,35 +72,40 @@ const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
    Everyone except the CEO has a job role (CTO, Finance, Marketing, Engineering…). Each one has a level, which decides
    what they can change (Manager, Member or Guest), and the areas of Helm they see. The CEO edits these in Settings.
    An area that isn't ticked is never sent to that person, and changes to it are refused. */
-const AREA_IDS = ["work", "msg", "notes", "proj", "people", "metrics", "dec", "money", "wages", "fund", "legal"];
+const AREA_IDS = ["work", "msg", "ceochat", "notes", "proj", "people", "metrics", "dec", "money", "figures", "wages", "fund", "legal"];
 const DEFAULT_ROLES = [
   { name: "CTO", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics", "dec"] },
-  { name: "Finance", base: "Member", areas: ["work", "msg", "notes", "people", "metrics", "money", "wages", "fund", "legal"] },
-  { name: "Marketing", base: "Member", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
-  { name: "Engineering", base: "Member", areas: ["work", "msg", "notes", "proj"] },
-  { name: "Manager", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
-  { name: "Member", base: "Member", areas: ["work", "msg", "notes", "proj", "people"] },
-  { name: "Investor", base: "Guest", areas: ["msg", "money", "metrics"] }, // view-only: the numbers, and chat
+  { name: "CFO", base: "Manager", areas: ["work", "msg", "notes", "people", "metrics", "dec", "money", "wages", "fund", "legal"] },
+  { name: "Head of Product", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics", "dec"] },
+  { name: "Lead Engineer", base: "Manager", areas: ["work", "msg", "notes", "proj", "people"] },
+  { name: "Marketing Lead", base: "Member", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
+  { name: "Ops", base: "Member", areas: ["work", "msg", "notes", "proj", "people", "legal"] },
+  { name: "Dev", base: "Member", areas: ["work", "msg", "notes", "proj"] },
+  // Investors: the headline money figures and one conversation, with the CEO. Nothing about staff.
+  { name: "VC", base: "Guest", areas: ["figures", "ceochat"] },
   { name: "Guest", base: "Guest", areas: ["msg", "proj"] },
 ];
+// Role names used before; accounts that still have one keep working with the role it became.
+const OLD_ROLES = { Finance: "CFO", Marketing: "Marketing Lead", Engineering: "Lead Engineer", Manager: "Head of Product", Member: "Dev", Investor: "VC" };
 // Which saved parts belong to which area. Parts not listed (people, spaces, settings) follow the level alone.
 const SEC_AREAS = {
   TASKS: ["work", "proj"], CEV: ["work"], WK: ["work", "metrics"], NOTES: ["notes"], PROJ: ["proj"], SIDEP: ["proj"], STGS: ["proj"],
   TEAMP: ["people"], ANN: ["people"], MROWS: ["metrics"], MET: ["metrics"], SO: ["dec"], dec: ["dec"], DECLOG: ["dec"],
-  MNY_B: ["money"], MNY_BL: ["money"], MNY_acc: ["money"], MNY_tx: ["money"], MNYn: ["money"], TOK: ["money"],
+  MNY_B: ["money"], MNY_BL: ["money"], MNY_acc: ["money", "figures"], MNY_tx: ["money"], MNYn: ["money", "figures"], TOK: ["money"], // figures = cash and burn only
   INV: ["fund"], SAFES: ["fund"], CAP: ["fund"], DR: ["fund"], ROUND: ["fund"], UPD: ["fund"], TS: ["fund"],
   LG_meet: ["legal"], LG_mem: ["legal"], LG_fil: ["legal"], LG_ct: ["legal"],
 };
 // Areas where being given access also means being able to make changes (money, fundraising, legal, metrics, decisions).
 const WRITE_GRANT = new Set(["money", "fund", "legal", "metrics", "dec"]);
 const roleDefs = () => { const r = readSec("RDEF"); return Array.isArray(r) && r.length ? r : DEFAULT_ROLES; };
-const roleDef = (name) => roleDefs().find((x) => x.name === name) || DEFAULT_ROLES.find((x) => x.name === name);
+// A role name nobody recognises gets the least access: messages with the CEO, view only.
+const roleDef = (name) => roleDefs().find((x) => x.name === (OLD_ROLES[name] && !roleDefs().some((r) => r.name === name) ? OLD_ROLES[name] : name)) || DEFAULT_ROLES.find((x) => x.name === (OLD_ROLES[name] || name)) || { name, base: "Guest", areas: ["ceochat"] };
 const baseOf = (name) => (name === "CEO" ? "CEO" : roleDef(name)?.base || "Member");
 // A signed-in person: u.job is their job role, u.role their level (used by every check), u.areas what they see.
 function withRole(u) {
   if (!u) return u; u.job = u.role;
   if (u.role === "CEO") { u.areas = AREA_IDS; return u; }
-  const d = roleDef(u.role) || roleDef("Member"); u.role = d.base; u.areas = d.areas || []; return u;
+  const d = roleDef(u.role); u.role = d.base; u.areas = d.areas || []; return u;
 }
 function mayRead(sec, u) {
   const ar = SEC_AREAS[sec]; if (u.role === "CEO" || !ar) return canRead(sec, u.role);
@@ -114,7 +119,7 @@ function mayWrite(sec, u) {
   return canWrite(sec, u.role) || (u.role !== "Guest" && g.some((a) => WRITE_GRANT.has(a)));
 }
 const jobNames = () => roleDefs().map((x) => x.name);
-const FILE_AREA = { space: ALL, legal: CEO, dataroom: CEO, wages: CEO, project: STAFF };
+const FILE_AREA = { space: ALL, legal: CEO, dataroom: CEO, wages: CEO, project: STAFF, dm: ALL };
 // Wages files follow wages access: Managers the CEO lets see wages can open them; only the CEO adds them.
 const FILE_GRANT = { legal: "legal", dataroom: "fund" };
 const canFile = (area, u, write) => area === "wages" && !write ? wagesOK(u) : !!FILE_AREA[area]?.includes(u.role) || (!!FILE_GRANT[area] && u.areas?.includes(FILE_GRANT[area]));
@@ -137,6 +142,7 @@ function cleanMsgExtra(x) {
   if (x.rx) o.rx = cleanRx(x.rx);
   if (x.file) o.file = noTags(x.file, 200);
   if (isId(x.fid)) o.fid = x.fid;
+  if (typeof x.url === "string" && /^\/api\/files\/[a-f0-9]{32}$/.test(x.url)) o.url = x.url; // a file sent in a direct message
   if (x.g) o.g = noTags(x.g, 60);
   if (x.reply && typeof x.reply === "string") o.reply = noTags(x.reply, 40);
   return o;
@@ -240,9 +246,13 @@ function swapKeys(v, a, b) {
 const convMembers = (c) => (c.ch ? c.mem || [] : c.parts || ["AK", c.dm]);
 const canSeeConv = (c, u) => (c.ch ? !c.mem || c.mem.includes(u.pkey) || u.role === "CEO" && !c.parts : convMembers(c).includes(u.pkey));
 
+// Chat scope: "all" (spaces and messages), "ceo" (only a conversation with the CEO) or "none".
+const ceoPkey = () => q("SELECT pkey FROM users WHERE role='CEO' LIMIT 1").get()?.pkey || "AK";
+const chatScope = (u) => (u.role === "CEO" || u.areas?.includes("msg") ? "all" : u.areas?.includes("ceochat") ? "ceo" : "none");
+const chatAllowed = (c, u) => { const sc = chatScope(u); if (sc === "all") return true; if (sc === "none" || c.ch) return false; const m = convMembers(c); return m.length === 2 && m.includes(u.pkey) && m.includes(ceoPkey()); };
 function convsFor(u) {
   const all = readSec("CONVS") || [];
-  return all.filter((c) => canSeeConv(c, u)).map((c) => {
+  return all.filter((c) => canSeeConv(c, u) && chatAllowed(c, u)).map((c) => {
     if (c.ch) return c;
     const other = convMembers(c).find((k) => k !== u.pkey) || c.dm;
     const unread = (c.unreadBy || {})[u.pkey] || 0;
@@ -284,6 +294,7 @@ function mergeConvs(incoming, u) {
     if (!c || typeof c !== "object") continue;
     let cur;
     if (c.ch) {
+      if (chatScope(u) !== "all") continue; // no spaces for people limited to the CEO
       if (!isId(c.id) || c.id.startsWith("dm_")) continue; // never trust the id: it must be a plain space id
       cur = chans.get(c.id);
       if (!cur) {
@@ -295,6 +306,7 @@ function mergeConvs(incoming, u) {
       } else if (!canSeeConv(cur, u)) continue; // only people in the space can change it
     } else {
       if (!isId(c.dm) || c.dm === u.pkey) continue;
+      if (chatScope(u) === "none" || (chatScope(u) === "ceo" && c.dm !== ceoPkey())) continue; // e.g. investors only talk to the CEO
       cur = dms.get(dmKey(u.pkey, c.dm));
       if (!cur) { cur = { id: "dm_" + [u.pkey, c.dm].sort().join("_"), dm: c.dm, parts: [u.pkey, c.dm], unread: 0, unreadBy: {}, msgs: [] }; all.push(cur); dms.set(dmKey(u.pkey, c.dm), cur); }
       else if (!convMembers(cur).includes(u.pkey)) continue;
@@ -361,6 +373,13 @@ function stateFor(u) {
   // Roles come from accounts, not from what a browser sent.
   if (out.MEM) out.MEM = out.MEM.map((m) => { const acc = q("SELECT role FROM users WHERE pkey=?").get(m[0]); return acc ? [m[0], acc.role] : m; });
   if (out.SPX && u.role !== "CEO") { const mine = new Set(convsFor(u).filter((c) => c.ch).map((c) => c.id)); out.SPX = Object.fromEntries(Object.entries(out.SPX).filter(([k]) => mine.has(k))); }
+  // No staff details for people outside the team (e.g. investors): only their own name and the CEO's.
+  if (u.role !== "CEO" && !u.areas.includes("msg") && !u.areas.includes("people")) {
+    const keep = new Set([u.pkey, ceoPkey()]);
+    if (out.P) out.P = Object.fromEntries(Object.entries(out.P).filter(([k]) => keep.has(k)));
+    if (out.MEM) out.MEM = out.MEM.filter((m) => keep.has(m[0]));
+    for (const k of ["stamps", "cnt", "SPX", "TEAMP", "ANN", "WG"]) delete out[k];
+  }
   // Guests only see the tasks they own, not the whole company's work.
   if (u.role === "Guest" && out.TASKS) out.TASKS = out.TASKS.filter((t) => t.o === u.pkey);
   if (u.role !== "CEO" && out.CEV) out.CEV = out.CEV.filter((e) => e[2] !== "inv" && e[2] !== "legal" && e[4] !== "google"); // the CEO's own Google Calendar stays private
@@ -700,6 +719,10 @@ async function api(req, res, url) {
   if (p === "/api/files" && m === "POST") {
     const area = url.searchParams.get("area") || "space"; if (!canFile(area, u, true)) return send(res, 403, { error: "Not allowed" });
     let space = null;
+    // A file sent in a direct message: only the two people in that conversation can open it.
+    if (area === "dm") { const other = swapKeys(String(url.searchParams.get("space") || ""), "AK", u.pkey); const pair = [u.pkey, other].sort();
+      if (!isId(other) || other === u.pkey || !q("SELECT 1 FROM users WHERE pkey=?").get(other) || !chatAllowed({ parts: pair }, u)) return send(res, 403, { error: "You can’t send files to this person." });
+      space = "dm:" + pair.join("|"); }
     if (area === "space") { space = url.searchParams.get("space"); const conv = (readSec("CONVS") || []).find((c) => c.ch && c.id === space); if (!conv || !canSeeConv(conv, u)) return send(res, 403, { error: "You’re not in that space." }); }
     let name = "file"; try { name = decodeURIComponent(String(req.headers["x-file-name"] || "file")); } catch {}
     name = name.replace(/[\\/\0<>\u0000-\u001f]/g, "_").trim().slice(0, 200) || "file";
@@ -716,6 +739,7 @@ async function api(req, res, url) {
   const fm = /^\/api\/files\/([a-f0-9]{32})$/.exec(p);
   if (fm && m === "GET") {
     const f = q("SELECT * FROM files WHERE id=?").get(fm[1]); if (!f || !canFile(f.area, u, false)) return send(res, 404, { error: "Not found" });
+    if (f.area === "dm" && !String(f.space || "").slice(3).split("|").includes(u.pkey)) return send(res, 404, { error: "Not found" });
     if (f.area === "space" && u.role !== "CEO") { // only members of the space (or whoever uploaded it) can open a space file
       const conv = f.space && (readSec("CONVS") || []).find((c) => c.ch && c.id === f.space);
       if (!(conv ? canSeeConv(conv, u) : f.owner === u.id || u.role === "Manager")) return send(res, 404, { error: "Not found" });

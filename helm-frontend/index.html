@@ -2224,10 +2224,21 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 .vas{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel,#141416);color:var(--fg);font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap}
 .vas:hover{border-color:rgba(255,255,255,.18)}.vas .ic{width:14px;height:14px;color:var(--fg-3)}.vas .chev{width:12px;height:12px}
 @media (max-width:640px){.vas{padding:0 8px}.vas .ic:first-child{display:none}}
+.menu.vas-menu{width:190px;padding:4px!important}
+.menu.vas-menu .mi{padding:5px 8px;gap:9px;font-size:13px;min-height:30px}
+.menu.vas-menu .av.xs{flex:none}
+.vas-none{background:transparent!important;border:1px dashed rgba(255,255,255,.22)}
 /* view-only roles (investors, guests): no edit buttons on the money, metrics, fundraising and legal pages */
 .view-only :is(#view-money,#view-metrics,#view-fundraise,#view-legal,#view-wages) :is(.ph2 .acts,.addr,.edb,.ed){display:none!important}
 .view-only :is(#view-money,#view-metrics) [data-mnupd]{pointer-events:none}
 .view-only #newBtn{display:none!important}
+/* VC and anyone who may only message the CEO: no spaces, no other chats, no new conversations, no search of the team */
+.chat-ceo-only :is(#sideSpaces,[data-view="spaces"],#spaceAdd,#shAdd,#dmAdd,#agentTg,#newTaskSide,#openSearch){display:none!important}
+.chat-ceo-only #convList h6{display:none}
+/* headline money figures only: the four figures and the spend chart, nothing about staff, budgets, bills or costs */
+.figures-only #view-money :is(.two2,#tokWrap,.stampl,.ph2 .acts,#txWrap){display:none!important}
+.figures-only #view-money .mn-row{grid-template-columns:1fr}
+.figures-only #htabs{display:none!important}
 /* role grid */
 .pm .pm-role{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .pm .pm-x{border:0;background:none;color:var(--fg-3);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
@@ -2765,7 +2776,7 @@ const ICON={doc:'<svg class="ic" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a.5
 
 // People by key. Someone who has left can still own tasks or old messages: reading them gives a neutral
 // "Former teammate" instead of breaking the page. ('k in P' and the saved list are unchanged.)
-const P=new Proxy({AK:['Alex Kim','var(--ink)','#fff'],JR:['Marcus R.','#e1e7fb','#2c3e8f'],SP:['Sofia P.','#fde2ea','#9b2c4f'],ML:['Maya L.','#dcf3e8','#1d6b4a'],TN:['Tara N.','#d9f1f2','#1d5f66'],PS:['Priya S.','#fbe9d3','#8a5212'],TO:['Tom O.','#ece5fb','#5b3fa0'],DW:['Dan W.','var(--soft)','var(--ink2)']},{get:(t,k)=>k in t||typeof k!=='string'||!/^[A-Z][A-Z0-9]{1,4}$/.test(k)?t[k]:['Former teammate','#2a2b30','#a1a1a8']});
+const P=new Proxy({AK:['Alex Kim','var(--ink)','#fff'],JR:['Marcus R.','#e1e7fb','#2c3e8f'],SP:['Sofia P.','#fde2ea','#9b2c4f'],ML:['Maya L.','#dcf3e8','#1d6b4a'],TN:['Tara N.','#d9f1f2','#1d5f66'],PS:['Priya S.','#fbe9d3','#8a5212'],TO:['Tom O.','#ece5fb','#5b3fa0'],DW:['Dan W.','var(--soft)','var(--ink2)'],SM:['Sam Ortiz','#1f2a3a','#cfe3ff']},{get:(t,k)=>k in t||typeof k!=='string'||!/^[A-Z][A-Z0-9]{1,4}$/.test(k)?t[k]:['Former teammate','#2a2b30','#a1a1a8']});
 const av=(k,s='')=>`<span class="av ${s}" style="--av:${P[k][1]};--avc:${P[k][2]}" title="${esc(P[k][0])}">${window.HELM_BACKEND?esc(P[k][0].split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()):(k==='JR'?'MR':k)}</span>`;
 const LB={Launch:'#e5484d',Product:'#5e6ad2',Growth:'#8b8f97',Ops:'#8b8f97',Finance:'#5f636b',Design:'#8b8f97',Legal:'#8b8f97',Hiring:'#8b8f97'};
 Object.keys(LB).forEach(k=>LB[k]='#b4b7bd');LB.Launch='#e5484d';
@@ -2799,6 +2810,15 @@ $$('.dec').forEach(d=>d.querySelectorAll('.opt').forEach(o=>o.addEventListener('
 const BLK=[['Development','Outside auditor','Pen-test report for Murmur','Blocks App Store submission',8],['Marketing','Design','Final product screenshots','For the App Store page',3],['Sales','Legal','Pilot contract template','Northwind signs once it’s ready',2],['Engineering hire','You','Senior or two mid-level','Candidate’s offer expires Friday',1]];
 $('#blocked').innerHTML=BLK.map(([a,b,t,s,d])=>`<div class="lr blk">${st(d>5?'risk':'sign',.5)}<span class="who">${a}${ICON.arrow}<span style="${b==='You'?'color:var(--accent)':''}">${b}</span></span><div class="ttl"><b>${t}</b><small>${s}</small></div><span class="days ${d>5?'late':''}">${d}d</span></div>`).join('');
 
+/* ---------- Files in direct messages ---------- */
+// Videos, decks and updates sent in a direct message. Only the two people in the conversation can open them.
+function dmAttach(){const c=CONVS.find(x=>x.id===cur);if(!c||c.ch)return;const inp=document.createElement('input');inp.type='file';inp.multiple=true;
+ inp.addEventListener('change',async()=>{for(const fl of inp.files){let url;
+  if(window.HELM_BACKEND){const r=await fetch('/api/files?area=dm&space='+encodeURIComponent(c.dm),{method:'POST',credentials:'same-origin',headers:{'x-helm':'1','x-file-name':encodeURIComponent(fl.name),'content-type':fl.type||'application/octet-stream'},body:fl}).catch(()=>null);const j=r&&await r.json().catch(()=>({}));
+   if(!r||!r.ok){toast(`<b>${esc(fl.name)}</b> didn’t send`,esc((j&&j.error)||'Files can be up to 25 MB'));continue}url=j.url}else url=URL.createObjectURL(fl);
+  c.msgs.push(['AK',now(),fl.name.slice(0,200),{file:fl.name.slice(0,200),url}])}renderThread();renderConvList();saveSoon()});inp.click()}
+document.addEventListener('click',e=>{const a=e.target.closest('#view-messages .ib[aria-label="Attach file"]');if(a){e.preventDefault();dmAttach();return}
+ const f=e.target.closest('.fileatt[data-url]');if(f&&!f.closest('#view-spaces')){window.open(f.dataset.url,'_blank','noopener')}});
 /* ---------- Currency ---------- */
 // Amounts are kept in US dollars and shown in the workspace currency (Settings → Currency) at a fixed rate.
 const CUR={code:'GBP',rates:{USD:1,GBP:0.75,EUR:0.86}};
@@ -2885,13 +2905,16 @@ function createSpaceForm(shared,pre=''){openForm(shared?'New shared space':'New 
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':l[0]==='guest'?esc(l[3].g.split(' ')[0])+': ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}${typeof cur!=='undefined'&&c.id===cur?' on':''}" data-conv="${esc(c.id)}">${ic}<span class="ct"><b>${esc(c.ch?c.ch:(P[c.dm]||[c.dm])[0])}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${esc(l?l[1]:'')}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
-function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.arch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&!c.arch&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(!isOwnCEO()?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
+function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.arch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&!c.arch&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(document.body.classList.contains('chat-ceo-only')?ceoChatRow():!isOwnCEO()&&!window.HELM_BACKEND?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
+// For people who may only message the CEO: one conversation, with the CEO.
+function ceoKey2(){return (MEM.find(m=>m[1]==='CEO')||['AK'])[0]}
+function ceoChatRow(){const k=ceoKey2();let c=CONVS.find(x=>!x.ch&&x.dm===k);if(!c){c={id:k,dm:k,unread:0,msgs:[]};CONVS.push(c)}return convRow(c)}
 const gIni=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
 function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div class="sysm">${esc(txt)}</div>`;
  if(k==='guest'){const f2=!prev||prev[0]!=='guest'||(prev[3]||{}).g!==x.g;return `<div class="m${f2?' first':''}" data-i="${i}">${f2?`<span class="av md guest" title="${esc(x.g)}">${gIni(x.g)}</span>`:'<span></span>'}<div>${f2?`<div class="mh"><b>${esc(x.g)}</b><span class="gtag">${esc(c.shared||'Guest')}</span><time>${esc(t)}</time></div>`:''}<p>${fmt(txt)}</p></div></div>`}const first=!prev||prev[0]!==k||prev[1]!==t;
  const rx=x.rx?`<div class="rx">${Object.entries(x.rx).map(([e,n])=>`<button class="rxb${x.mine&&x.mine[e]?' on':''}" data-rx="${esc(e)}" data-i="${i}">${esc(e)} ${+n||0}</button>`).join('')}</div>`:'';
- const file=x.file?`<span class="fileatt" data-n="${esc(x.file)}" role="button" tabindex="0"><i>${x.fid?'<svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M14.5 2.5H6.5a2 2 0 00-2 2v15a2 2 0 002 2h11a2 2 0 002-2v-12z"/><path d="M14 2.5v4a1.5 1.5 0 001.5 1.5h4"/></svg>':ICON.play}</i>${esc(x.file)}</span>`:'';
- return `<div class="m${first?' first':''}${k==='AK'?' mine':''}" data-i="${i}">${first?(k==='AK'?`<span class="av md" style="--av:${P.AK[1]};--avc:${P.AK[2]}">AK</span>`:av(k,'md')):'<span></span>'}<div>${first?`<div class="mh"><b>${k==='AK'?'You':FIRST(k)}</b><time>${esc(t)}</time></div>`:''}<p>${fmt(txt)}</p>${file}${rx}</div><div class="mact"><button data-addrx="👍" data-i="${i}" aria-label="React thumbs up">👍</button><button data-addrx="🙌" data-i="${i}" aria-label="React raised hands">🙌</button><button data-addrx="✅" data-i="${i}" aria-label="React done">✅</button><button data-reply="${k}" aria-label="Reply">↩</button></div></div>`}
+ const file=x.file?`<span class="fileatt" data-n="${esc(x.file)}"${x.url&&/^(\/api\/files\/[a-f0-9]{32}|blob:)/.test(x.url)?` data-url="${esc(x.url)}"`:''} role="button" tabindex="0"><i>${x.fid?'<svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M14.5 2.5H6.5a2 2 0 00-2 2v15a2 2 0 002 2h11a2 2 0 002-2v-12z"/><path d="M14 2.5v4a1.5 1.5 0 001.5 1.5h4"/></svg>':ICON.play}</i>${esc(x.file)}</span>`:'';
+ return `<div class="m${first?' first':''}${k==='AK'?' mine':''}" data-i="${i}">${first?(k==='AK'?`<span class="av md" style="--av:${P.AK[1]};--avc:${P.AK[2]}">AK</span>`:av(k,'md')):'<span></span>'}<div>${first?`<div class="mh"><b>${k==='AK'?'You':FIRST(k)}</b><time>${esc(t)}</time></div>`:''}${x.file&&txt===x.file?'':`<p>${fmt(txt)}</p>`}${file}${rx}</div><div class="mact"><button data-addrx="👍" data-i="${i}" aria-label="React thumbs up">👍</button><button data-addrx="🙌" data-i="${i}" aria-label="React raised hands">🙌</button><button data-addrx="✅" data-i="${i}" aria-label="React done">✅</button><button data-reply="${k}" aria-label="Reply">↩</button></div></div>`}
 function renderThread(scroll=true){const c=CONVS.find(x=>x.id===cur);const b=$('#thBody');
  b.innerHTML=(c.msgs.length?'<div class="day">Today</div>':`<div class="typing" style="justify-content:center;padding:30px 0">This is the start of your conversation with ${esc(P[c.dm][0])}.</div>`)+c.msgs.map((m,i)=>msgHTML(c,m,i,c.msgs[i-1])).join('')+(c.seen?`<div class="seen">Seen by ${c.dm?FIRST(c.dm):'the team'}</div>`:'');
  if(scroll)b.scrollTop=b.scrollHeight}
@@ -3618,15 +3641,19 @@ renderFB();
 /* ---------- Settings ---------- */
 VIEWHOOK.settings=()=>{if(!$('#sStage').options.length)$('#sStage').innerHTML=STAGES.map((x,i)=>`<option value="${i+1}">${i+1}. ${x[0]}</option>`).join('');$('#sStage').value=String(STGS.company)};
 $('#sSave').addEventListener('click',()=>toast('<b>Settings saved</b>',$('#sName').value));
-const MEM=[['AK','CEO'],['JR','CTO'],['ML','Finance'],['SP','Marketing'],['PS','Manager'],['DW','Engineering'],['TN','Guest'],['TO','Guest'],['Sam Ortiz','Guest']];
+const MEM=[['AK','CEO'],['JR','CTO'],['ML','CFO'],['PS','Head of Product'],['DW','Lead Engineer'],['SP','Marketing Lead'],['TO','Ops'],['TN','Dev'],['SM','VC']];
 /* ---------- Roles: who sees what ---------- */
 const ROLE_LIST=['CEO','Manager','Member','Guest']; // levels: what someone can change
 // Job roles: each has a level and the areas of Helm it sees. The CEO edits them in Settings; the server enforces the same.
-const AREA_IDS=['work','msg','notes','proj','people','metrics','dec','money','wages','fund','legal','conn','settings'];
+const AREA_IDS=['work','msg','ceochat','notes','proj','people','metrics','dec','money','figures','wages','fund','legal','conn','settings'];
 const CEO_ONLY_AREAS=['conn','settings'];
-const RDEF=[{name:'CTO',base:'Manager',areas:['work','msg','notes','proj','people','metrics','dec']},{name:'Finance',base:'Member',areas:['work','msg','notes','people','metrics','money','wages','fund','legal']},{name:'Marketing',base:'Member',areas:['work','msg','notes','proj','people','metrics']},{name:'Engineering',base:'Member',areas:['work','msg','notes','proj']},{name:'Manager',base:'Manager',areas:['work','msg','notes','proj','people','metrics']},{name:'Member',base:'Member',areas:['work','msg','notes','proj','people']},{name:'Investor',base:'Guest',areas:['msg','money','metrics']},{name:'Guest',base:'Guest',areas:['msg','proj']}];
+const RDEF=[{name:'CTO',base:'Manager',areas:['work','msg','notes','proj','people','metrics','dec']},{name:'CFO',base:'Manager',areas:['work','msg','notes','people','metrics','dec','money','wages','fund','legal']},{name:'Head of Product',base:'Manager',areas:['work','msg','notes','proj','people','metrics','dec']},{name:'Lead Engineer',base:'Manager',areas:['work','msg','notes','proj','people']},{name:'Marketing Lead',base:'Member',areas:['work','msg','notes','proj','people','metrics']},{name:'Ops',base:'Member',areas:['work','msg','notes','proj','people','legal']},{name:'Dev',base:'Member',areas:['work','msg','notes','proj']},{name:'VC',base:'Guest',areas:['figures','ceochat']},{name:'Guest',base:'Guest',areas:['msg','proj']}];
+const RDEF_V=4; // version of the role list; older saves had Finance, Marketing, Engineering, Manager and Member
+const OLD_ROLE={Investor:'VC',Finance:'CFO',Marketing:'Marketing Lead',Engineering:'Lead Engineer',Manager:'Head of Product',Member:'Dev'};
+const SAMPLE_JOB={JR:'CTO',ML:'CFO',PS:'Head of Product',DW:'Lead Engineer',SP:'Marketing Lead',TO:'Ops',TN:'Dev',SM:'VC','Sam Ortiz':'VC'};
+function migrateRoles(){MEM.forEach(m=>{if(m[1]==='CEO'||RDEF.some(x=>x.name===m[1]))return;m[1]=SAMPLE_JOB[m[0]]||OLD_ROLE[m[1]]||'Guest'})}
 const LEVEL_TXT={Manager:'Can change most things',Member:'Changes their own work',Guest:'View only'};
-const AREAS=[['Briefing, my tasks, this week, calendar',['home','mytasks','week','calendar'],[1,1,1,0]],['Messages and spaces',['messages','spaces'],[1,1,1,'Spaces they’re in']],['Notes',['notes'],[1,1,1,0]],['Projects, initiatives, stages',['projects','project','initiatives','stages'],[1,1,1,'Shared projects']],['Team directory and announcements',['people','announce','feedback'],[1,1,1,0]],['Metrics',['metrics'],[1,1,0,0]],['Decisions and sign-offs',['decisions','signoff'],[1,0,0,0]],['Money, bank and budgets',['money'],[1,0,0,0]],['Wages',['wages'],[1,'If the CEO gives access',0,0]],['Fundraising and cap table',['fundraise'],[1,0,0,0]],['Board & legal',['legal'],[1,0,0,0]],['Connections (bank, Stripe, Google…)',['connections'],[1,0,0,0]],['Settings and permissions',['settings'],[1,0,0,0]]];
+const AREAS=[['Briefing, my tasks, this week, calendar',['home','mytasks','week','calendar'],[1,1,1,0]],['Messages and spaces',['messages','spaces'],[1,1,1,'Spaces they’re in']],['Messages with the CEO only',['messages'],[1,0,0,0]],['Notes',['notes'],[1,1,1,0]],['Projects, initiatives, stages',['projects','project','initiatives','stages'],[1,1,1,'Shared projects']],['Team directory and announcements',['people','announce','feedback'],[1,1,1,0]],['Metrics',['metrics'],[1,1,0,0]],['Decisions and sign-offs',['decisions','signoff'],[1,0,0,0]],['Money, bank and budgets',['money'],[1,0,0,0]],['Headline money figures only (cash, burn, runway, revenue)',['money'],[1,0,0,0]],['Wages',['wages'],[1,'If the CEO gives access',0,0]],['Fundraising and cap table',['fundraise'],[1,0,0,0]],['Board & legal',['legal'],[1,0,0,0]],['Connections (bank, Stripe, Google…)',['connections'],[1,0,0,0]],['Settings and permissions',['settings'],[1,0,0,0]]];
 let PV_JOB=null,PV_BACK=null; // the role being viewed when nobody has it yet; the page to go back to after
 const jobOf=k=>{if(PV_JOB&&k===VIEWER)return PV_JOB;const m=MEM.find(x=>x[0]===k);return m?m[1]:'Member'};
 const roleDefOf=k=>RDEF.find(x=>x.name===jobOf(k))||RDEF.find(x=>x.name==='Member')||{base:'Member',areas:[]};
@@ -3635,11 +3662,11 @@ const roleOf=k=>jobOf(k)==='CEO'?'CEO':roleDefOf(k).base; // the level
 function canEditTask(t){const r=roleOf(VIEWER);return r==='CEO'||r==='Manager'||(r==='Member'&&t.o===VIEWER)}
 function noTaskEdit(t){toast(`<b>${esc(t.id)}</b> belongs to ${esc(fn1(t.o))}`,'Only they or a manager can change it. Message them instead.')}
 let VIEWER='AK';
-function can(v,who=VIEWER){const r=roleOf(who);if(r==='CEO')return true;const i=AREAS.findIndex(x=>x[1].includes(v));if(i<0)return false;const id=AREA_IDS[i];if(CEO_ONLY_AREAS.includes(id))return false;const d=roleDefOf(who);
- if(id==='wages'){if(typeof BK!=='undefined'&&BK.on&&who==='AK')return !!(BK.me&&BK.me.wages);return d.areas.includes('wages')||(r==='Manager'&&typeof WG!=='undefined'&&WG.access.includes(who))}
- if(!d.areas.includes(id))return false;if(r==='Guest'&&id==='proj')return v==='project';return true} // view-only roles see shared projects, not the project list
+function can(v,who=VIEWER){const r=roleOf(who);if(r==='CEO')return true;const ids=AREA_IDS.filter((id,i)=>AREAS[i]&&AREAS[i][1].includes(v));if(!ids.length)return false;const d=roleDefOf(who);
+ if(ids.includes('wages')){if(typeof BK!=='undefined'&&BK.on&&who==='AK')return !!(BK.me&&BK.me.wages);return d.areas.includes('wages')||(r==='Manager'&&typeof WG!=='undefined'&&WG.access.includes(who))}
+ const got=ids.filter(id=>!CEO_ONLY_AREAS.includes(id)&&d.areas.includes(id));if(!got.length)return false;if(r==='Guest'&&got.every(id=>id==='proj'))return v==='project';return true} // a page is open if any area that contains it is ticked
 function seeText(k){if(roleOf(k)==='CEO')return 'Everything, including money, wages and connections';const d=roleDefOf(k);const n=AREA_IDS.filter(a=>d.areas.includes(a)).map(a=>AREA_SHORT[a]);return n.length?n.join(', '):'Nothing yet'}
-const AREA_SHORT={work:'tasks',msg:'messages',notes:'notes',proj:'projects',people:'team',metrics:'metrics',dec:'decisions',money:'money',wages:'wages',fund:'fundraising',legal:'board & legal'};
+const AREA_SHORT={ceochat:'messages with the CEO',figures:'headline money figures',work:'tasks',msg:'messages',notes:'notes',proj:'projects',people:'team',metrics:'metrics',dec:'decisions',money:'money',wages:'wages',fund:'fundraising',legal:'board & legal'};
 function renderMem(){$('#memCount').textContent=`${MEM.length} people · 1 CEO · ${MEM.filter(m=>m[1]==='Guest').length} guests`;
  $('#memRows').innerHTML=MEM.map(([k,r],i)=>`<tr><td><span style="display:flex;align-items:center;gap:10px">${P[k]?av(k):gav(k)}<span><b style="font-weight:500">${P[k]?esc(P[k][0]):esc(k)}</b><small>${P[k]?(k==='TN'||k==='TO'?'Contractor':'Team'):k.includes('@')?'Invite sent':'Investor · Field Fund'}</small></span></span></td><td><span class="tag ${r==='CEO'?'good':'n'}">${esc(r)}</span></td><td class="muted2">${esc(seeText(k))}</td><td>${r==='CEO'?'<span class="muted2">Owner</span>':`<select class="rsel" data-mem="${i}" aria-label="Role">${RDEF.map(o=>`<option${o.name===r?' selected':''}>${esc(o.name)}</option>`).join('')}</select>`}</td><td>${P[k]&&k!=='AK'?`<button class="btn sm" data-preview="${k}">Preview</button>`:''}</td></tr>`).join('');
  renderPerms()}
@@ -3658,7 +3685,7 @@ $('#memRows').addEventListener('change',e=>{const s2=e.target.closest('[data-mem
 $('#roleAdd').addEventListener('click',()=>addRole());
 $('#memInvite').addEventListener('click',()=>openForm('Invite people',[{k:'e',label:'Email address',ph:'name@company.com'},{k:'r',label:'Role',opts:RDEF.map(d=>d.name),v:'Member'}],v=>{MEM.push([v.e,v.r]);renderMem();toast(`<b>Invite sent</b>`,`${v.e} · ${v.r}`)},'Send invite'));
 renderMem();
-function applyRole(){const ceo=roleOf(VIEWER)==='CEO';document.body.classList.toggle('not-ceo',!ceo);document.body.classList.toggle('view-only',roleOf(VIEWER)==='Guest');
+function applyRole(){const ceo=roleOf(VIEWER)==='CEO';document.body.classList.toggle('not-ceo',!ceo);document.body.classList.toggle('view-only',roleOf(VIEWER)==='Guest');{const d=roleOf(VIEWER)==='CEO'?null:roleDefOf(VIEWER);document.body.classList.toggle('chat-ceo-only',!!d&&!d.areas.includes('msg')&&d.areas.includes('ceochat'));document.body.classList.toggle('figures-only',!!d&&!d.areas.includes('money')&&d.areas.includes('figures'))}
  $$('.side [data-view]').forEach(b=>{if(b.closest('.side-foot')||b.classList.contains('side-foot'))return;b.hidden=!can(b.dataset.view)});
  $$('.side .grp').forEach(g=>{const items=[...g.querySelectorAll('[data-view],[data-sconv]')];if(items.length)g.hidden=items.every(x=>x.hidden)});
  if($('#sideSpaces'))$('#sideSpaces').hidden=!can('spaces');
@@ -3673,8 +3700,10 @@ const realCEO=()=>{if(!window.HELM_BACKEND)return true;try{return !!(BK.me&&BK.m
 function previewRole(role){if(role==='CEO'){PV_JOB=null;VIEWER='AK';applyRole();showView(PV_BACK||'home');PV_BACK=null;return}
  const m=MEM.find(x=>x[1]===role&&x[0]!=='AK'&&(x[0] in P));if(m){previewAs(m[0]);return}
  if(VIEWER==='AK'&&!PV_JOB)PV_BACK=curView;VIEWER='AK';PV_JOB=role;applyRole();showView(can('home')?'home':['money','messages','projects'].find(v=>can(v))||'messages');toast(`Viewing as the <b>${esc(role)}</b> role`,esc(seeText('AK')))}
-document.addEventListener('click',e=>{const b=e.target.closest('#viewAs');if(!b)return;const who=r=>{const m=MEM.find(x=>x[1]===r&&x[0]!=='AK'&&(x[0] in P));return r==='CEO'?'You':m?P[m[0]][0]:'Nobody yet'};
- openMenu(b,[{v:'CEO',label:'CEO',meta:'You'},...RDEF.map(d=>({v:d.name,label:esc(d.name),meta:esc(who(d.name))}))],PV_JOB||jobOf(VIEWER),r=>previewRole(r))});
+document.addEventListener('click',e=>{const b=e.target.closest('#viewAs');if(!b)return;
+ const who=r=>r==='CEO'?'AK':(MEM.find(x=>x[1]===r&&x[0]!=='AK'&&(x[0] in P))||[])[0];
+ const ic=r=>{const k=who(r);return k?av(k,'xs'):'<span class="av xs vas-none" title="Nobody has this role yet"></span>'};
+ openMenu(b,['CEO',...RDEF.map(d=>d.name).filter(n=>n!=='Guest')].map(n=>({v:n,label:esc(n),icon:ic(n)})),PV_JOB||jobOf(VIEWER),r=>previewRole(r));if(menuEl)menuEl.classList.add('vas-menu')});
 function previewAs(k){if(VIEWER==='AK'&&!PV_JOB)PV_BACK=curView;PV_JOB=null;VIEWER=k;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${esc(jobOf(k))} · ${esc(seeText(k))}`)}
 document.addEventListener('click',e=>{const p=e.target.closest('[data-preview]');if(p){previewAs(p.dataset.preview);return}if(e.target.closest('#pvExit')){PV_JOB=null;VIEWER='AK';applyRole();const back=PV_BACK||'home';PV_BACK=null;showView(back);if(back==='settings'){const t=$('[data-g="st"] [data-t2="Members"]');if(t)t.click()}}});
 $('#nPrefs').innerHTML=[['Someone mentions me','In Messages, notes and tasks',1],['A task is assigned to me','Or its due date changes',1],['A decision is waiting on me','Reminder after 24 hours',1],['Filing and contract deadlines','30, 7 and 1 day before',1],['Daily briefing email','Every weekday at 8:00',1],['Every message in spaces I’m in','Can get noisy',0]].map(([t,s2,on],i)=>`<div class="tglr" data-tg="${i}"><span class="t">${t}<small>${s2}</small></span><span class="tgl${on?' on':''}"></span></div>`).join('');
@@ -4127,7 +4156,7 @@ let wsOpen=false;
 function layoutWorkspace(){const g=$('#wsHead').closest('.grp');g.classList.toggle('closed',!wsOpen);$('#wsHead').classList.toggle('open',wsOpen);const m=$('#wsMore');if(m)m.remove();g.querySelectorAll('.wsx').forEach(b=>b.classList.remove('wsx'))}
 $('#wsHead').addEventListener('click',e=>{e.stopImmediatePropagation();const g=$('#wsHead').closest('.grp');g.classList.remove('closed');wsOpen=!wsOpen;layoutWorkspace()},true);
 document.addEventListener('click',e=>{if(e.target.closest('#wsMore')){wsOpen=!wsOpen;layoutWorkspace()}});
-{const ar=applyRole;applyRole=function(){ar();const _c=isOwnCEO();NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=P[VIEWER][0].split(' ')[0];$('#hello').textContent=`${greetWord()}, ${nm}`;const ceo=isOwnCEO();
+{const ar=applyRole;applyRole=function(){ar();const _c=isOwnCEO();NEWLBL.people=_c?'Add team member':'New task';NEWACT.people=_c?()=>editTeamMember():()=>openCreate('task',{});if(curView)$('#newLbl').textContent=NEWLBL[curView]||'New task';const nm=PV_JOB?'':String(P[VIEWER][0]).split(' ')[0];$('#hello').textContent=nm?`${greetWord()}, ${nm}`:greetWord();const ceo=isOwnCEO();
  ['#navDec'].forEach(x=>{const e=$(x);if(e&&!ceo)e.hidden=true});
  renderSideSpaces();renderConvList();if(curView==='spaces'&&typeof spShow==='function'){spCur=null;spShow()}
  layoutWorkspace()}}
@@ -4183,7 +4212,7 @@ applyRole();
 const SAVE_KEY='helm-data-v1';
 const DEC_DONE=window.DEC_DONE||{};
 const ARR={NOTES:()=>NOTES,MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD,TS:()=>TS};
-function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:Object.fromEntries(CN.map(x=>[x.id,x.on===2?0:x.on])),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,STGS:window.STGS,NYP:[...(window.NYPIN||[])],SPSET:window.SPSET||{create:'Managers and CEO'},WG,CUR,TOK,RDEF};
+function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:Object.fromEntries(CN.map(x=>[x.id,x.on===2?0:x.on])),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,STGS:window.STGS,NYP:[...(window.NYPIN||[])],SPSET:window.SPSET||{create:'Managers and CEO'},WG,CUR,TOK,RDEF,RDEFv:RDEF_V};
  for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'&&typeof v==='string'&&v.startsWith('blob:')?undefined:v)}
 let saveT=null,saveOK=true;
 function saveNow(){if(window.HELM_BACKEND){bkSave();return}try{localStorage.setItem(SAVE_KEY,snapshot());saveOK=true}catch(e){if(saveOK)toast('<b>Couldn’t save</b>','This browser is blocking storage, so changes last until you close the page');saveOK=false}}
@@ -4200,11 +4229,12 @@ function applyData(d){
  (d.NY||[]).forEach((x,i)=>{if(NY[i])NY[i].done=x});(d.SO||[]).forEach((x,i)=>{if(SO[i]){SO[i].st=x[0];SO[i].note=x[1]}});if(Array.isArray(d.CN)){const old=['bank','stripe','qb','gusto','gcal','drive','','github','figma','carta','gmail','xero'];d.CN.forEach((x,i)=>{const c=CN.find(y=>y.id===old[i]);if(c)c.on=x})}else if(d.CN)CN.forEach(c=>{if(c.id in d.CN)c.on=d.CN[c.id]});
  for(const k in d.SPX||{}){sx({id:k,desc:''});SPX[k].files=d.SPX[k]}
  if(d.cnt){nextId=d.cnt.nextId||nextId;gN=d.cnt.gN||gN;Object.assign(NEXT,d.cnt.NEXT||{})}
- if(d.stamps)Object.assign(STAMP,d.stamps);if(d.STGS)window.STGS=d.STGS;if(d.NYP)window.NYPIN=new Set(d.NYP);if(d.SPSET)window.SPSET=d.SPSET;if(d.CUR&&CUR_SYM[d.CUR.code]&&setCurrency(d.CUR)&&window.__curOn)location.reload();if(d.TOK&&Array.isArray(d.TOK.keys))Object.assign(TOK,d.TOK);if(Array.isArray(d.RDEF)&&d.RDEF.length)RDEF.splice(0,RDEF.length,...d.RDEF);if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
+ if(d.stamps)Object.assign(STAMP,d.stamps);if(d.STGS)window.STGS=d.STGS;if(d.NYP)window.NYPIN=new Set(d.NYP);if(d.SPSET)window.SPSET=d.SPSET;if(d.CUR&&CUR_SYM[d.CUR.code]&&setCurrency(d.CUR)&&window.__curOn)location.reload();if(d.TOK&&Array.isArray(d.TOK.keys))Object.assign(TOK,d.TOK);if(Array.isArray(d.RDEF)&&d.RDEF.length&&d.RDEFv>=RDEF_V)RDEF.splice(0,RDEF.length,...d.RDEF);if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
  Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
  ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
  const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,()=>{try{renderTS()}catch(e){}},renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
  R.forEach(fn=>{try{fn&&fn()}catch(e){}});return true}
+{const ad=applyData;applyData=function(d){const r=ad(d);if(d&&!(d.RDEFv>=RDEF_V))migrateRoles();return r}}
 const hadSaved=loadSaved();
 
 /* ================= Backend connection (only when served by server.mjs) ================= */
