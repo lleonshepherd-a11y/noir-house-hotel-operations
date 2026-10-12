@@ -2220,6 +2220,14 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
  #budRows td:nth-child(2),#budRows~* th:nth-child(2),#view-money .tbl thead th:nth-child(2){display:none}
  #wgOpen .tbl th:nth-child(2),#wgOpen .tbl td:nth-child(2),#wgOpen .tbl th:nth-child(3),#wgOpen .tbl td:nth-child(3),#wgOpen .tbl th:nth-child(6),#wgOpen .tbl td:nth-child(6),#wgOpen .tbl th:nth-child(7),#wgOpen .tbl td:nth-child(7){display:none}
 }
+/* role grid */
+.pm .pm-role{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.pm .pm-x{border:0;background:none;color:var(--fg-3);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
+.pm .pm-x:hover{color:#ff8a8e}
+.pm .pm-ck{width:16px;height:16px;accent-color:#fff;cursor:pointer}
+.pm .pm-lvl select{font-size:12px;padding:4px 22px 4px 8px;height:auto;width:auto;background-color:#1c1c1e;color:var(--fg);border:1px solid rgba(255,255,255,.1);border-radius:7px}
+.pm td:first-child{min-width:190px}
+.pm th,.pm td{text-align:center}.pm th:first-child,.pm td:first-child{text-align:left}
 /* Touch screens: small icon buttons get a bigger invisible tap area, without changing how they look */
 @media (pointer:coarse){.edb,.ny-pin,.ny-done,.ib{position:relative}.edb::after,.ny-pin::after,.ny-done::after,.ib::after{content:"";position:absolute;inset:-8px}}
 .rate-in{display:flex;align-items:center;gap:8px;color:var(--fg-2)}
@@ -2277,7 +2285,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
         <nav class="nav" id="favs"></nav>
       </div>
     </div>
-    <button class="side-foot" data-view="settings" style="width:100%;text-align:left" title="Settings"><span class="av md" style="--av:var(--ink);--avc:#fff">AK</span><div style="flex:1"><b style="font-weight:500">Alex Kim</b><small>Founder &amp; CEO · Settings</small></div><svg class="ic" style="color:var(--fg-3)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></button>
+    <button class="side-foot" data-view="settings" style="width:100%;text-align:left" title="Settings"><span class="av md" style="--av:var(--ink);--avc:#fff">AK</span><div style="flex:1"><b style="font-weight:500">Alex Kim</b><small>Founder &amp; CEO · Settings</small></div><svg class="ic" style="color:var(--fg-3)" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
   </aside>
   <div class="scrim" id="scrim"></div>
 
@@ -2686,7 +2694,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
             <div data-p2="st:Members" hidden>
               <div class="ph2" style="margin-bottom:10px"><div class="muted2" id="memCount"></div><div class="acts"><button class="btn pri" id="memInvite">Invite people</button></div></div>
               <div class="tbl"><table><thead><tr><th>Person</th><th>Role</th><th>Can see</th><th>Change role</th><th></th></tr></thead><tbody id="memRows"></tbody></table></div>
-              <div class="sh">What each role can see</div>
+              <div class="sh">What each role can see<button class="r addr" id="roleAdd">+ Add role</button></div>
               <div class="tbl pm"><table><thead><tr><th>Area</th><th>CEO</th><th>Manager</th><th>Member</th><th>Guest</th></tr></thead><tbody id="permRows"></tbody></table></div>
             </div>
             <div data-p2="st:Notif" hidden><div id="nPrefs"></div></div>
@@ -3601,31 +3609,53 @@ renderFB();
 /* ---------- Settings ---------- */
 VIEWHOOK.settings=()=>{if(!$('#sStage').options.length)$('#sStage').innerHTML=STAGES.map((x,i)=>`<option value="${i+1}">${i+1}. ${x[0]}</option>`).join('');$('#sStage').value=String(STGS.company)};
 $('#sSave').addEventListener('click',()=>toast('<b>Settings saved</b>',$('#sName').value));
-const MEM=[['AK','CEO'],['JR','Manager'],['ML','Manager'],['SP','Member'],['PS','Member'],['DW','Member'],['TN','Guest'],['TO','Guest'],['Sam Ortiz','Guest']];
+const MEM=[['AK','CEO'],['JR','CTO'],['ML','Finance'],['SP','Marketing'],['PS','Manager'],['DW','Engineering'],['TN','Guest'],['TO','Guest'],['Sam Ortiz','Guest']];
 /* ---------- Roles: who sees what ---------- */
-const ROLE_LIST=['CEO','Manager','Member','Guest'];
+const ROLE_LIST=['CEO','Manager','Member','Guest']; // levels: what someone can change
+// Job roles: each has a level and the areas of Helm it sees. The CEO edits them in Settings; the server enforces the same.
+const AREA_IDS=['work','msg','notes','proj','people','metrics','dec','money','wages','fund','legal','conn','settings'];
+const CEO_ONLY_AREAS=['conn','settings'];
+const RDEF=[{name:'CTO',base:'Manager',areas:['work','msg','notes','proj','people','metrics','dec']},{name:'Finance',base:'Member',areas:['work','msg','notes','people','metrics','money','wages','fund','legal']},{name:'Marketing',base:'Member',areas:['work','msg','notes','proj','people','metrics']},{name:'Engineering',base:'Member',areas:['work','msg','notes','proj']},{name:'Manager',base:'Manager',areas:['work','msg','notes','proj','people','metrics']},{name:'Member',base:'Member',areas:['work','msg','notes','proj','people']},{name:'Guest',base:'Guest',areas:['msg','proj']}];
+const LEVEL_TXT={Manager:'Can change most things',Member:'Changes their own work',Guest:'View only'};
 const AREAS=[['Briefing, my tasks, this week, calendar',['home','mytasks','week','calendar'],[1,1,1,0]],['Messages and spaces',['messages','spaces'],[1,1,1,'Spaces they’re in']],['Notes',['notes'],[1,1,1,0]],['Projects, initiatives, stages',['projects','project','initiatives','stages'],[1,1,1,'Shared projects']],['Team directory and announcements',['people','announce','feedback'],[1,1,1,0]],['Metrics',['metrics'],[1,1,0,0]],['Decisions and sign-offs',['decisions','signoff'],[1,0,0,0]],['Money, bank and budgets',['money'],[1,0,0,0]],['Wages',['wages'],[1,'If the CEO gives access',0,0]],['Fundraising and cap table',['fundraise'],[1,0,0,0]],['Board & legal',['legal'],[1,0,0,0]],['Connections (bank, Stripe, Google…)',['connections'],[1,0,0,0]],['Settings and permissions',['settings'],[1,0,0,0]]];
-const roleOf=k=>{const m=MEM.find(x=>x[0]===k);return m?m[1]:'Member'};
+const jobOf=k=>{const m=MEM.find(x=>x[0]===k);return m?m[1]:'Member'};
+const roleDefOf=k=>RDEF.find(x=>x.name===jobOf(k))||RDEF.find(x=>x.name==='Member')||{base:'Member',areas:[]};
+const roleOf=k=>jobOf(k)==='CEO'?'CEO':roleDefOf(k).base; // the level
 // Tasks: the CEO and Managers change any task; Members change only their own; Guests change none. The server checks the same.
 function canEditTask(t){const r=roleOf(VIEWER);return r==='CEO'||r==='Manager'||(r==='Member'&&t.o===VIEWER)}
 function noTaskEdit(t){toast(`<b>${esc(t.id)}</b> belongs to ${esc(fn1(t.o))}`,'Only they or a manager can change it. Message them instead.')}
 let VIEWER='AK';
-function can(v,who=VIEWER){const r=roleOf(who),ri=ROLE_LIST.indexOf(r);const a=AREAS.find(x=>x[1].includes(v));if(!a)return r==='CEO';const c=a[2][ri];if(v==='wages')return r==='CEO'||(!!c&&(typeof BK!=='undefined'&&BK.on&&who==='AK'?!!(BK.me&&BK.me.wages):typeof WG!=='undefined'&&WG.access.includes(who)));if(r==='Guest')return v==='messages'||v==='spaces'||v==='project';return !!c}
-function seeText(k){const r=roleOf(k);return r==='CEO'?'Everything, including money, wages and connections':r==='Manager'?'Normal work plus metrics':r==='Member'?'Normal work: tasks, projects, messages':'Only spaces and projects shared with them'}
+function can(v,who=VIEWER){const r=roleOf(who);if(r==='CEO')return true;const i=AREAS.findIndex(x=>x[1].includes(v));if(i<0)return false;const id=AREA_IDS[i];if(CEO_ONLY_AREAS.includes(id))return false;const d=roleDefOf(who);
+ if(id==='wages'){if(typeof BK!=='undefined'&&BK.on&&who==='AK')return !!(BK.me&&BK.me.wages);return d.areas.includes('wages')||(r==='Manager'&&typeof WG!=='undefined'&&WG.access.includes(who))}
+ if(!d.areas.includes(id))return false;if(r==='Guest')return v==='messages'||v==='spaces'||v==='project';return true}
+function seeText(k){if(roleOf(k)==='CEO')return 'Everything, including money, wages and connections';const d=roleDefOf(k);const n=AREA_IDS.filter(a=>d.areas.includes(a)).map(a=>AREA_SHORT[a]);return n.length?n.join(', '):'Nothing yet'}
+const AREA_SHORT={work:'tasks',msg:'messages',notes:'notes',proj:'projects',people:'team',metrics:'metrics',dec:'decisions',money:'money',wages:'wages',fund:'fundraising',legal:'board & legal'};
 function renderMem(){$('#memCount').textContent=`${MEM.length} people · 1 CEO · ${MEM.filter(m=>m[1]==='Guest').length} guests`;
- $('#memRows').innerHTML=MEM.map(([k,r],i)=>`<tr><td><span style="display:flex;align-items:center;gap:10px">${P[k]?av(k):gav(k)}<span><b style="font-weight:500">${P[k]?esc(P[k][0]):esc(k)}</b><small>${P[k]?(k==='TN'||k==='TO'?'Contractor':'Team'):k.includes('@')?'Invite sent':'Investor · Field Fund'}</small></span></span></td><td><span class="tag ${r==='CEO'?'good':'n'}">${r}</span></td><td class="muted2">${seeText(k)}</td><td>${r==='CEO'?'<span class="muted2">Owner</span>':`<select class="rsel" data-mem="${i}" aria-label="Role">${ROLE_LIST.slice(1).map(o=>`<option${o===r?' selected':''}>${o}</option>`).join('')}</select>`}</td><td>${P[k]&&k!=='AK'?`<button class="btn sm" data-preview="${k}">Preview</button>`:''}</td></tr>`).join('');
- $('#permRows').innerHTML=AREAS.map(([a,,r])=>`<tr><td style="font-weight:500">${a}</td>${r.map(x=>`<td>${x===1?'<span class="yes">✓</span>':x===0?'<span class="no">—</span>':`<span class="muted2">${x}</span>`}</td>`).join('')}</tr>`).join('')}
+ $('#memRows').innerHTML=MEM.map(([k,r],i)=>`<tr><td><span style="display:flex;align-items:center;gap:10px">${P[k]?av(k):gav(k)}<span><b style="font-weight:500">${P[k]?esc(P[k][0]):esc(k)}</b><small>${P[k]?(k==='TN'||k==='TO'?'Contractor':'Team'):k.includes('@')?'Invite sent':'Investor · Field Fund'}</small></span></span></td><td><span class="tag ${r==='CEO'?'good':'n'}">${esc(r)}</span></td><td class="muted2">${esc(seeText(k))}</td><td>${r==='CEO'?'<span class="muted2">Owner</span>':`<select class="rsel" data-mem="${i}" aria-label="Role">${RDEF.map(o=>`<option${o.name===r?' selected':''}>${esc(o.name)}</option>`).join('')}</select>`}</td><td>${P[k]&&k!=='AK'?`<button class="btn sm" data-preview="${k}">Preview</button>`:''}</td></tr>`).join('');
+ renderPerms()}
+// What each role can see: a tick grid the CEO can change. Connections and Settings stay with the CEO.
+function renderPerms(){const ceo=isOwnCEO(),th=$('#permRows').closest('table').querySelector('thead tr');
+ th.innerHTML=`<th>Area</th><th>CEO</th>${RDEF.map((d,ri)=>`<th><span class="pm-role">${esc(d.name)}${ceo&&!MEM.some(m=>m[1]===d.name)?`<button class="pm-x" data-rdel="${ri}" aria-label="Remove ${esc(d.name)}" title="Remove role">×</button>`:''}</span></th>`).join('')}`;
+ const lvl=`<tr class="pm-lvl"><td class="muted2">Level</td><td class="muted2">Owner</td>${RDEF.map((d,ri)=>`<td>${ceo?`<select data-rlvl="${ri}" aria-label="${esc(d.name)} level">${['Manager','Member','Guest'].map(b=>`<option value="${b}"${b===d.base?' selected':''}>${b==='Guest'?'View only':b==='Manager'?'Manager':'Member'}</option>`).join('')}</select>`:`<span class="muted2">${d.base}</span>`}</td>`).join('')}</tr>`;
+ $('#permRows').innerHTML=lvl+AREAS.map(([a],ai)=>{const id=AREA_IDS[ai],lock=CEO_ONLY_AREAS.includes(id);return `<tr><td style="font-weight:500">${a}</td><td><span class="yes">✓</span></td>${RDEF.map((d,ri)=>`<td>${lock?'<span class="no">—</span>':ceo?`<input type="checkbox" class="pm-ck" data-rck="${ri}:${id}"${d.areas.includes(id)?' checked':''} aria-label="${esc(d.name)}: ${esc(a)}">`:d.areas.includes(id)?'<span class="yes">✓</span>':'<span class="no">—</span>'}</td>`).join('')}</tr>`}).join('')}
+document.addEventListener('change',e=>{const c=e.target.closest('[data-rck]');if(c){const [ri,id]=c.dataset.rck.split(':'),d=RDEF[+ri];if(!d)return;d.areas=c.checked?[...new Set([...d.areas,id])]:d.areas.filter(x=>x!==id);rolesChanged(`<b>${esc(d.name)}</b> ${c.checked?'can now see':'can no longer see'} ${esc(AREAS[AREA_IDS.indexOf(id)][0].toLowerCase())}`);return}
+ const l=e.target.closest('[data-rlvl]');if(l){const d=RDEF[+l.dataset.rlvl];d.base=l.value;rolesChanged(`<b>${esc(d.name)}</b>: ${LEVEL_TXT[d.base].toLowerCase()}`)}});
+document.addEventListener('click',e=>{const x=e.target.closest('[data-rdel]');if(!x)return;const d=RDEF[+x.dataset.rdel];if(!d||MEM.some(m=>m[1]===d.name))return;if(!confirm(`Remove the ${d.name} role?`))return;RDEF.splice(+x.dataset.rdel,1);rolesChanged(`<b>${esc(d.name)}</b> role removed`)});
+function rolesChanged(msg){saveSoon();renderMem();applyRole();toast(msg)}
+function addRole(){openForm('Add a role',[{k:'n',label:'Role name',ph:'e.g. Sales, Design, Operations'},{k:'b',label:'Level',opts:['Member','Manager','View only'],v:'Member',hint:'Members change their own work; Managers can change most things; View only can’t change anything.'},{k:'c',label:'Start from',opts:RDEF.map(d=>d.name),v:'Member',hint:'Copies what that role can see. Change it after in the grid.'}],v=>{const n=String(v.n||'').trim().slice(0,30);if(!n||n==='CEO'||RDEF.some(d=>d.name.toLowerCase()===n.toLowerCase())){toast('<b>Pick a new role name</b>');return}
+ const from=RDEF.find(d=>d.name===v.c);RDEF.push({name:n,base:v.b==='View only'?'Guest':v.b,areas:[...(from?from.areas:['work','msg'])]});rolesChanged(`<b>${esc(n)}</b> role added`)},'Add role')}
 $('#memRows').addEventListener('change',e=>{const s2=e.target.closest('[data-mem]');if(!s2)return;const m=MEM[+s2.dataset.mem];m[1]=s2.value;renderMem();toast(`<b>${P[m[0]]?P[m[0]][0]:m[0]}</b> is now ${/^[AEIOU]/.test(s2.value)?'an':'a'} ${s2.value}`,seeText(m[0]))});
-$('#memInvite').addEventListener('click',()=>openForm('Invite people',[{k:'e',label:'Email address',ph:'name@company.com'},{k:'r',label:'Role',opts:ROLE_LIST.slice(1),v:'Member'}],v=>{MEM.push([v.e,v.r]);renderMem();toast(`<b>Invite sent</b>`,`${v.e} · ${v.r}`)},'Send invite'));
+$('#roleAdd').addEventListener('click',()=>addRole());
+$('#memInvite').addEventListener('click',()=>openForm('Invite people',[{k:'e',label:'Email address',ph:'name@company.com'},{k:'r',label:'Role',opts:RDEF.map(d=>d.name),v:'Member'}],v=>{MEM.push([v.e,v.r]);renderMem();toast(`<b>Invite sent</b>`,`${v.e} · ${v.r}`)},'Send invite'));
 renderMem();
 function applyRole(){const ceo=roleOf(VIEWER)==='CEO';document.body.classList.toggle('not-ceo',!ceo);
  $$('.side [data-view]').forEach(b=>{if(b.closest('.side-foot')||b.classList.contains('side-foot'))return;b.hidden=!can(b.dataset.view)});
  $$('.side .grp').forEach(g=>{const items=[...g.querySelectorAll('[data-view],[data-sconv]')];if(items.length)g.hidden=items.every(x=>x.hidden)});
  if($('#sideSpaces'))$('#sideSpaces').hidden=!can('spaces');
- const bar=$('#pvBar');bar.hidden=VIEWER==='AK';if(VIEWER!=='AK')bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Previewing as <b>${esc(P[VIEWER][0])}</b> · ${roleOf(VIEWER)}. This is exactly what they see.</span><button class="btn sm" id="pvExit">Exit preview</button>`;
+ const bar=$('#pvBar');bar.hidden=VIEWER==='AK';if(VIEWER!=='AK')bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Previewing as <b>${esc(P[VIEWER][0])}</b> · ${esc(jobOf(VIEWER))}. This is exactly what they see.</span><button class="btn sm" id="pvExit">Exit preview</button>`;
  const foot=$('.side-foot');if(foot){const b=foot.querySelector('b');if(b)b.textContent=P[VIEWER][0]}
  renderNY();renderJump&&renderJump()}
-function previewAs(k){VIEWER=k;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${roleOf(k)} · ${seeText(k)}`)}
+function previewAs(k){VIEWER=k;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${esc(jobOf(k))} · ${esc(seeText(k))}`)}
 document.addEventListener('click',e=>{const p=e.target.closest('[data-preview]');if(p){previewAs(p.dataset.preview);return}if(e.target.closest('#pvExit')){VIEWER='AK';applyRole();showView('settings');$('[data-g="st"] [data-t2="Members"]').click()}});
 $('#nPrefs').innerHTML=[['Someone mentions me','In Messages, notes and tasks',1],['A task is assigned to me','Or its due date changes',1],['A decision is waiting on me','Reminder after 24 hours',1],['Filing and contract deadlines','30, 7 and 1 day before',1],['Daily briefing email','Every weekday at 8:00',1],['Every message in spaces I’m in','Can get noisy',0]].map(([t,s2,on],i)=>`<div class="tglr" data-tg="${i}"><span class="t">${t}<small>${s2}</small></span><span class="tgl${on?' on':''}"></span></div>`).join('');
 $('#nPrefs').addEventListener('click',e=>{const r=e.target.closest('[data-tg]');if(r){const t=r.querySelector('.tgl');t.classList.toggle('on');toast(t.classList.contains('on')?'Notifications on':'Notifications off',r.querySelector('.t').firstChild.textContent)}});
@@ -4133,7 +4163,7 @@ applyRole();
 const SAVE_KEY='helm-data-v1';
 const DEC_DONE=window.DEC_DONE||{};
 const ARR={NOTES:()=>NOTES,MEM:()=>MEM,MNY_B:()=>MNY.B,MNY_BL:()=>MNY.BL,MNY_acc:()=>MNY.acc,MNY_tx:()=>MNY.tx,MROWS:()=>MROWS,WK:()=>WK,LG_meet:()=>LG.meet,LG_mem:()=>LG.mem,LG_fil:()=>LG.fil,LG_ct:()=>LG.ct,INV:()=>INV,SAFES:()=>SAFES,CAP:()=>CAP,DR:()=>DR,TEAMP:()=>TEAMP,ROLES:()=>ROLES,CANDS:()=>CANDS,OB:()=>OB,CEV:()=>CEV,TASKS:()=>TASKS,CONVS:()=>CONVS,PROJ:()=>PROJ,SIDEP:()=>SIDEP,DECLOG:()=>DECLOG,ANN:()=>ANN,UPD:()=>UPD,TS:()=>TS};
-function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:Object.fromEntries(CN.map(x=>[x.id,x.on===2?0:x.on])),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,STGS:window.STGS,NYP:[...(window.NYPIN||[])],SPSET:window.SPSET||{create:'Managers and CEO'},WG,CUR,TOK};
+function snapshot(){const d={v:1,arr:{},P,ROUND,MNYn:{burn:MNY.burn,burnPrev:MNY.burnPrev,mrr:MNY.mrr,mrrPrev:MNY.mrrPrev},MET:MET.map(m=>({v:m.v,tgt:m.tgt,last:m.last})),NY:NY.map(x=>!!x.done),SO:SO.map(x=>[x.st,x.note||'']),CN:Object.fromEntries(CN.map(x=>[x.id,x.on===2?0:x.on])),SPX:Object.fromEntries(Object.entries(SPX).map(([k,x])=>[k,x.files||[]])),dec:DEC_DONE,cnt:{nextId,gN,NEXT},stamps:STAMP,STGS:window.STGS,NYP:[...(window.NYPIN||[])],SPSET:window.SPSET||{create:'Managers and CEO'},WG,CUR,TOK,RDEF};
  for(const k in ARR)d.arr[k]=ARR[k]();return JSON.stringify(d,(k,v)=>k==='url'&&typeof v==='string'&&v.startsWith('blob:')?undefined:v)}
 let saveT=null,saveOK=true;
 function saveNow(){if(window.HELM_BACKEND){bkSave();return}try{localStorage.setItem(SAVE_KEY,snapshot());saveOK=true}catch(e){if(saveOK)toast('<b>Couldn’t save</b>','This browser is blocking storage, so changes last until you close the page');saveOK=false}}
@@ -4150,7 +4180,7 @@ function applyData(d){
  (d.NY||[]).forEach((x,i)=>{if(NY[i])NY[i].done=x});(d.SO||[]).forEach((x,i)=>{if(SO[i]){SO[i].st=x[0];SO[i].note=x[1]}});if(Array.isArray(d.CN)){const old=['bank','stripe','qb','gusto','gcal','drive','','github','figma','carta','gmail','xero'];d.CN.forEach((x,i)=>{const c=CN.find(y=>y.id===old[i]);if(c)c.on=x})}else if(d.CN)CN.forEach(c=>{if(c.id in d.CN)c.on=d.CN[c.id]});
  for(const k in d.SPX||{}){sx({id:k,desc:''});SPX[k].files=d.SPX[k]}
  if(d.cnt){nextId=d.cnt.nextId||nextId;gN=d.cnt.gN||gN;Object.assign(NEXT,d.cnt.NEXT||{})}
- if(d.stamps)Object.assign(STAMP,d.stamps);if(d.STGS)window.STGS=d.STGS;if(d.NYP)window.NYPIN=new Set(d.NYP);if(d.SPSET)window.SPSET=d.SPSET;if(d.CUR&&CUR_SYM[d.CUR.code]&&setCurrency(d.CUR)&&window.__curOn)location.reload();if(d.TOK&&Array.isArray(d.TOK.keys))Object.assign(TOK,d.TOK);if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
+ if(d.stamps)Object.assign(STAMP,d.stamps);if(d.STGS)window.STGS=d.STGS;if(d.NYP)window.NYPIN=new Set(d.NYP);if(d.SPSET)window.SPSET=d.SPSET;if(d.CUR&&CUR_SYM[d.CUR.code]&&setCurrency(d.CUR)&&window.__curOn)location.reload();if(d.TOK&&Array.isArray(d.TOK.keys))Object.assign(TOK,d.TOK);if(Array.isArray(d.RDEF)&&d.RDEF.length)RDEF.splice(0,RDEF.length,...d.RDEF);if(d.WG){Object.assign(WG,d.WG);delete WG.pin}
  Object.entries(d.dec||{}).forEach(([i,ch])=>{DEC_DONE[i]=ch;const el=document.querySelector(`.dec[data-dec="${i}"]`);if(el&&!el.dataset.done){el.dataset.done=1;const o=el.querySelector('.opts');if(o)o.outerHTML=`<div class="decided"><span class="ck">${ICON.check}</span><span><b>${esc(ch)}.</b> ${DECS[i].from} has been told and the plan is updated.</span></div>`;openDec--}});
  ['#decN','#navDec','#navDec2'].forEach(s2=>{const e=$(s2);if(e)e.textContent=openDec});if($('#navDec'))$('#navDec').hidden=!openDec;
  const R=[()=>{if(typeof renderNoteList==="function"&&curView==="notes")renderNoteList()},renderTasks,renderRoadmap,renderSideProjects,renderFR,renderFrTiles,renderSafes,()=>renderCap('now'),renderDR,renderTeam,renderHire,renderPPTiles,renderRoles,renderOB,renderNY,renderHP,renderHM,renderSO,renderCN,renderConvList,renderCal,()=>{try{renderTS()}catch(e){}},renderJump,renderWK,renderUpd,typeof renderAnn==='function'?renderAnn:null];
@@ -4159,12 +4189,12 @@ const hadSaved=loadSaved();
 
 /* ================= Backend connection (only when served by server.mjs) ================= */
 const BK={on:!!window.HELM_BACKEND,me:null,ver:{},sent:{},es:null,wgLoaded:false,users:[],cx:{},cn:null};
-const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps','NYP','SPSET','STGS','CUR','TOK'];
+const SEC_EXTRA=['P','ROUND','MNYn','MET','NY','SO','CN','SPX','dec','cnt','stamps','NYP','SPSET','STGS','CUR','TOK','RDEF'];
 function secsFromSnap(){const d=JSON.parse(snapshot());const o={...d.arr};SEC_EXTRA.forEach(k=>o[k]=d[k]);return o}
 function dataFromSecs(S){const d={arr:{}};for(const k in ARR)if(S[k])d.arr[k]=S[k];SEC_EXTRA.forEach(k=>{if(S[k]!==undefined)d[k]=S[k]});return d}
 async function bkApi(path,opt={}){const r=await fetch(path,{credentials:'same-origin',...opt,headers:{'x-helm':'1','content-type':'application/json',...(opt.headers||{})}});if(r.status===401){location.href='/login';throw new Error('signin')}return r}
 let bkSaving=null;
-const SEC_NAME={CONVS:'Messages',TASKS:'Tasks',CEV:'Calendar',SPX:'Space files',NOTES:'Notes',PROJ:'Projects',SIDEP:'Projects',ANN:'Announcements',TEAMP:'Team',MEM:'Members',P:'People',MROWS:'Metrics',WK:'This week',MET:'Metrics',STGS:'Stages',SPSET:'Space settings',CUR:'Currency',TOK:'Token spend',NY:'Briefing',NYP:'Pins',MNY_B:'Budgets',MNY_BL:'Bills',MNY_acc:'Accounts',MNY_tx:'Transactions',MNYn:'Money',INV:'Investors',SAFES:'SAFEs',CAP:'Cap table',DR:'Data room',ROUND:'Round',UPD:'Investor updates',TS:'Term sheets',LG_meet:'Board meetings',LG_mem:'Board',LG_fil:'Filings',LG_ct:'Contracts',ROLES:'Roles',CANDS:'Candidates',OB:'Onboarding',CN:'Connections',DECLOG:'Decision log',stamps:'Updates',cnt:'Task numbers'};
+const SEC_NAME={CONVS:'Messages',TASKS:'Tasks',CEV:'Calendar',SPX:'Space files',NOTES:'Notes',PROJ:'Projects',SIDEP:'Projects',ANN:'Announcements',TEAMP:'Team',MEM:'Members',P:'People',MROWS:'Metrics',WK:'This week',MET:'Metrics',STGS:'Stages',SPSET:'Space settings',CUR:'Currency',TOK:'Token spend',RDEF:'Roles',NY:'Briefing',NYP:'Pins',MNY_B:'Budgets',MNY_BL:'Bills',MNY_acc:'Accounts',MNY_tx:'Transactions',MNYn:'Money',INV:'Investors',SAFES:'SAFEs',CAP:'Cap table',DR:'Data room',ROUND:'Round',UPD:'Investor updates',TS:'Term sheets',LG_meet:'Board meetings',LG_mem:'Board',LG_fil:'Filings',LG_ct:'Contracts',ROLES:'Roles',CANDS:'Candidates',OB:'Onboarding',CN:'Connections',DECLOG:'Decision log',stamps:'Updates',cnt:'Task numbers'};
 const secName=k=>SEC_NAME[k]||k;
 async function bkSave(keepalive,force){if(!BK.me)return;const S=secsFromSnap(),ch={};for(const k in S){const j=JSON.stringify(S[k]);if(BK.sent[k]!==j)ch[k]=S[k]}if(!Object.keys(ch).length)return true;
  const base={};for(const k in ch)if(BK.ver[k]!=null)base[k]=BK.ver[k];
@@ -4294,7 +4324,7 @@ async function bkPasskeys(){const list=await (await bkApi('/api/passkeys')).json
    if(!r.ok){e.textContent=j.error||'That didn’t work. Try again.';return}try{localStorage.setItem('helm-last-signin','passkey')}catch(x){}toast('<b>Passkey added</b>','Next time, choose Sign in with a passkey');bkPasskeys()}
   catch(x){e.textContent=x&&x.name==='NotAllowedError'?'Cancelled.':x&&x.name==='InvalidStateError'?'This device already has a passkey for you.':'That didn’t work. Try again.'}})}
 async function bkUsers(){if(!BK.me||BK.me.role!=='CEO')return;try{BK.users=await (await bkApi('/api/users')).json()}catch(e){BK.users=[]}renderMem()}
-function bkInvite(pkey,name){openForm(pkey?`Invite ${name}`:'Invite people',[{k:'e',label:'Their email address',ph:'name@company.com'},...(pkey?[]:[{k:'n',label:'Name',ph:'Full name'}]),{k:'r',label:'Role',opts:['Member','Manager','Guest'],v:pkey?(MEM.find(m=>m[0]===pkey)||[])[1]||'Member':'Member'}],async v=>{const r=await bkApi('/api/invite',{method:'POST',body:JSON.stringify({email:v.e,name:v.n||name,role:v.r,pkey})});const j=await r.json().catch(()=>({}));if(!r.ok){toast('<b>Invite not sent</b>',j.error||'Try again');return}
+function bkInvite(pkey,name){openForm(pkey?`Invite ${name}`:'Invite people',[{k:'e',label:'Their email address',ph:'name@company.com'},...(pkey?[]:[{k:'n',label:'Name',ph:'Full name'}]),{k:'r',label:'Role',opts:RDEF.map(d=>d.name),v:pkey?(MEM.find(m=>m[0]===pkey)||[])[1]||'Member':'Member'}],async v=>{const r=await bkApi('/api/invite',{method:'POST',body:JSON.stringify({email:v.e,name:v.n||name,role:v.r,pkey})});const j=await r.json().catch(()=>({}));if(!r.ok){toast('<b>Invite not sent</b>',j.error||'Try again');return}
   await bkPull(false);await bkUsers();openForm('Invite link ready',[{k:'l',label:'Send this link to them. It works once.',v:j.link}],()=>{},'Done',{label:'Copy link',fn:()=>{navigator.clipboard&&navigator.clipboard.writeText(j.link).then(()=>toast('<b>Link copied</b>'),()=>{})}})},'Create invite')}
 function bkUI(){
  const st=$('#view-settings .ph2 .acts');if(st){$('#resetData').hidden=true;if(!$('#signOut')){const b=document.createElement('button');b.className='btn';b.id='signOut';b.textContent='Sign out';st.prepend(b);b.addEventListener('click',async()=>{await bkSave();bkStashClear();await bkApi('/api/logout',{method:'POST'});location.href='/login'});

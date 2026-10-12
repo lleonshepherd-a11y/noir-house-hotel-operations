@@ -56,7 +56,7 @@ const ACL = {
   TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [STAFF, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
   TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, STAFF], stamps: [ALL, STAFF], // SPX is merged per space below
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
-  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], CUR: [ALL, CEO], TOK: [CEO, CEO], STGS: [STAFF, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
+  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], CUR: [ALL, CEO], RDEF: [ALL, CEO], TOK: [CEO, CEO], STGS: [STAFF, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
   INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO], TS: [CEO, CEO],
@@ -67,9 +67,55 @@ const ACL = {
 };
 const canRead = (sec, role) => ACL[sec]?.[0].includes(role);
 const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
+
+/* ---------------- Job roles: what each kind of person sees ----------------
+   Everyone except the CEO has a job role (CTO, Finance, Marketing, Engineering…). Each one has a level, which decides
+   what they can change (Manager, Member or Guest), and the areas of Helm they see. The CEO edits these in Settings.
+   An area that isn't ticked is never sent to that person, and changes to it are refused. */
+const AREA_IDS = ["work", "msg", "notes", "proj", "people", "metrics", "dec", "money", "wages", "fund", "legal"];
+const DEFAULT_ROLES = [
+  { name: "CTO", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics", "dec"] },
+  { name: "Finance", base: "Member", areas: ["work", "msg", "notes", "people", "metrics", "money", "wages", "fund", "legal"] },
+  { name: "Marketing", base: "Member", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
+  { name: "Engineering", base: "Member", areas: ["work", "msg", "notes", "proj"] },
+  { name: "Manager", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
+  { name: "Member", base: "Member", areas: ["work", "msg", "notes", "proj", "people"] },
+  { name: "Guest", base: "Guest", areas: ["msg", "proj"] },
+];
+// Which saved parts belong to which area. Parts not listed (people, spaces, settings) follow the level alone.
+const SEC_AREAS = {
+  TASKS: ["work", "proj"], CEV: ["work"], WK: ["work", "metrics"], NOTES: ["notes"], PROJ: ["proj"], SIDEP: ["proj"], STGS: ["proj"],
+  TEAMP: ["people"], ANN: ["people"], MROWS: ["metrics"], MET: ["metrics"], SO: ["dec"], dec: ["dec"], DECLOG: ["dec"],
+  MNY_B: ["money"], MNY_BL: ["money"], MNY_acc: ["money"], MNY_tx: ["money"], MNYn: ["money"], TOK: ["money"],
+  INV: ["fund"], SAFES: ["fund"], CAP: ["fund"], DR: ["fund"], ROUND: ["fund"], UPD: ["fund"], TS: ["fund"],
+  LG_meet: ["legal"], LG_mem: ["legal"], LG_fil: ["legal"], LG_ct: ["legal"],
+};
+// Areas where being given access also means being able to make changes (money, fundraising, legal, metrics, decisions).
+const WRITE_GRANT = new Set(["money", "fund", "legal", "metrics", "dec"]);
+const roleDefs = () => { const r = readSec("RDEF"); return Array.isArray(r) && r.length ? r : DEFAULT_ROLES; };
+const roleDef = (name) => roleDefs().find((x) => x.name === name) || DEFAULT_ROLES.find((x) => x.name === name);
+const baseOf = (name) => (name === "CEO" ? "CEO" : roleDef(name)?.base || "Member");
+// A signed-in person: u.job is their job role, u.role their level (used by every check), u.areas what they see.
+function withRole(u) {
+  if (!u) return u; u.job = u.role;
+  if (u.role === "CEO") { u.areas = AREA_IDS; return u; }
+  const d = roleDef(u.role) || roleDef("Member"); u.role = d.base; u.areas = d.areas || []; return u;
+}
+function mayRead(sec, u) {
+  const ar = SEC_AREAS[sec]; if (u.role === "CEO" || !ar) return canRead(sec, u.role);
+  if (!ar.some((a) => u.areas.includes(a))) return false;
+  return u.role === "Guest" ? canRead(sec, "Guest") : true;
+}
+function mayWrite(sec, u) {
+  const ar = SEC_AREAS[sec]; if (u.role === "CEO" || !ar) return canWrite(sec, u.role);
+  const g = ar.filter((a) => u.areas.includes(a)); if (!g.length) return false;
+  return canWrite(sec, u.role) || (u.role !== "Guest" && g.some((a) => WRITE_GRANT.has(a)));
+}
+const jobNames = () => roleDefs().map((x) => x.name);
 const FILE_AREA = { space: ALL, legal: CEO, dataroom: CEO, wages: CEO, project: STAFF };
 // Wages files follow wages access: Managers the CEO lets see wages can open them; only the CEO adds them.
-const canFile = (area, u, write) => area === "wages" && !write ? wagesOK(u) : !!FILE_AREA[area]?.includes(u.role);
+const FILE_GRANT = { legal: "legal", dataroom: "fund" };
+const canFile = (area, u, write) => area === "wages" && !write ? wagesOK(u) : !!FILE_AREA[area]?.includes(u.role) || (!!FILE_GRANT[area] && u.areas?.includes(FILE_GRANT[area]));
 
 /* ---------------- Checking what people send before it is saved ----------------
    Nothing that looks like HTML is stored in names, titles, ids or labels, and each
@@ -164,6 +210,8 @@ function mergeSpx(incoming, u) {
 }
 function cleanSection(k, v) {
   v = clamp(v);
+  // Job roles: a name, a level and the areas they see.
+  if (k === "RDEF") { const seen = new Set(); return (Array.isArray(v) ? v : []).slice(0, 30).map((r) => ({ name: noTags(r?.name, 30).trim(), base: ["Manager", "Member", "Guest"].includes(r?.base) ? r.base : "Member", areas: (Array.isArray(r?.areas) ? r.areas : []).filter((a) => AREA_IDS.includes(a)) })).filter((r) => r.name && r.name !== "CEO" && !seen.has(r.name) && seen.add(r.name)); }
   // Workspace currency: a known code and sensible fixed rates (per US dollar).
   if (k === "CUR") { const codes = ["USD", "GBP", "EUR"], o = { code: codes.includes(v?.code) ? v.code : "GBP", rates: { USD: 1 } }; for (const c of ["GBP", "EUR"]) { const r = +v?.rates?.[c]; if (r > 0.01 && r < 100) o.rates[c] = r; } return o; }
   // Token spend by API key: [name, masked key, model, dollars this month], plus six monthly totals.
@@ -304,7 +352,7 @@ function tidySpaces() {
 function stateFor(u) {
   const out = {};
   for (const r of q("SELECT name,json FROM sections").all()) {
-    if (r.name === "CONVS" || !canRead(r.name, u.role)) continue;
+    if (r.name === "CONVS" || !mayRead(r.name, u)) continue;
     out[r.name] = JSON.parse(r.json);
   }
   out.CONVS = convsFor(u).map((c) => (c.ch ? { ...c, unread: (c.unreadBy || {})[u.pkey] || 0, unreadBy: undefined } : c));
@@ -343,7 +391,7 @@ function newSession(uid) { const t = randomBytes(32).toString("hex"); q("INSERT 
 function userFrom(req) {
   const m = /(?:^|;\s*)helm_s=([a-f0-9]{64})/.exec(req.headers.cookie || ""); if (!m) return null;
   const r = q("SELECT u.* , s.expires FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?").get(createHash("sha256").update(m[1]).digest("hex"));
-  if (!r || r.expires < Date.now()) return null; return r;
+  if (!r || r.expires < Date.now()) return null; return withRole(r);
 }
 const secure = (req) => (process.env.COOKIE_SECURE === "1" || req.headers["x-forwarded-proto"] === "https" ? "; Secure" : "");
 const cookie = (req, t, maxAge) => `helm_s=${t}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure(req)}`;
@@ -399,8 +447,8 @@ function clientIp(req) {
 }
 // Checked when the email has no account (or no password yet), so a wrong email takes as long as a wrong password.
 let DUMMY_PW = null;
-const wagesOK = (u) => u.role === "CEO" || (u.role === "Manager" && ((readSec("WG") || {}).access || []).includes(u.pkey));
-const pub = (u) => ({ id: u.id, email: u.email, name: u.name, pkey: u.pkey, role: u.role });
+const wagesOK = (u) => u.role === "CEO" || !!u.areas?.includes("wages") || (u.role === "Manager" && ((readSec("WG") || {}).access || []).includes(u.pkey));
+const pub = (u) => ({ id: u.id, email: u.email, name: u.name, pkey: u.pkey, role: u.role, job: u.job, areas: u.areas });
 
 /* ---------------- Live updates (server-sent events) ---------------- */
 const clients = new Set();
@@ -553,7 +601,7 @@ async function api(req, res, url) {
     return send(res, 200, { ...pub(u), wages: wagesOK(u), seeded: !!q("SELECT 1 FROM sections WHERE name='TASKS'").get(), signins });
   }
   // Who can send a sign-in link to whom: the CEO to anyone else, a Manager to Members and Guests.
-  const canRecover = (x) => x && x.id !== u.id && !x.invite && (u.role === "CEO" || (u.role === "Manager" && (x.role === "Member" || x.role === "Guest")));
+  const canRecover = (x) => x && x.id !== u.id && !x.invite && (u.role === "CEO" || (u.role === "Manager" && (baseOf(x.role) === "Member" || baseOf(x.role) === "Guest")));
   if (p === "/api/recover/asks" && m === "GET") {
     if (u.role !== "CEO" && u.role !== "Manager") return send(res, 200, []);
     return send(res, 200, q("SELECT u.id, u.name, u.email, u.role, u.invite, h.at FROM help h JOIN users u ON u.id=h.user_id ORDER BY h.at DESC").all().filter(canRecover).map(({ invite, ...x }) => x));
@@ -567,18 +615,18 @@ async function api(req, res, url) {
     const base = b.base && typeof b.base === "object" ? b.base : {}, force = new Set(Array.isArray(b.force) ? b.force : []);
     const stale = (k) => { if (k === "CONVS" || force.has(k) || base[k] == null) return null; const r = q("SELECT updated, by FROM sections WHERE name=?").get(k); return r && r.updated > base[k] && r.by !== u.id ? r : null; };
     for (let [k, v] of Object.entries(secs)) {
-      const st = canWrite(k, u.role) || k === "SPX" ? stale(k) : null;
+      const st = mayWrite(k, u) || k === "SPX" ? stale(k) : null;
       if (st) { const w = st.by && q("SELECT name FROM users WHERE id=?").get(st.by); conflicts.push({ sec: k, by: w ? String(w.name).split(" ")[0] : "Someone", at: st.updated }); continue; }
       const put = (val) => { if (tooBig(k, val)) big.push(k); else { writeSec(k, val, u.id); done.push(k); } };
       if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") put(cleanSeedConvs(v)); else if (mergeConvs(v, u)) done.push(k); else big.push(k); continue; }
-      if (k === "TASKS") { if (!canWrite(k, u.role)) { refused.push(k); continue; } put(mergeTasks(v, u)); continue; }
-      if (k === "CEV") { if (!canWrite(k, u.role)) { refused.push(k); continue; } put(mergeCev(v, u)); continue; }
+      if (k === "TASKS") { if (!mayWrite(k, u)) { refused.push(k); continue; } put(mergeTasks(v, u)); continue; }
+      if (k === "CEV") { if (!mayWrite(k, u)) { refused.push(k); continue; } put(mergeCev(v, u)); continue; }
       if (k === "SPX") { put(mergeSpx(v, u)); continue; }
       if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
       if (k === "MEM" && u.role === "CEO") { // role changes go to accounts too
-        for (const [pk, role] of v || []) if (pk !== u.pkey && ["Manager", "Member", "Guest"].includes(role)) q("UPDATE users SET role=? WHERE pkey=? AND role<>'CEO'").run(role, pk);
+        for (const [pk, role] of v || []) if (pk !== u.pkey && role !== "CEO" && jobNames().includes(role)) q("UPDATE users SET role=? WHERE pkey=? AND role<>'CEO'").run(role, pk);
       }
-      if (!canWrite(k, u.role)) { refused.push(k); continue; }
+      if (!mayWrite(k, u)) { refused.push(k); continue; }
       put(cleanSection(k, v));
     }
     if (done.length) { audit(u.id, "updated " + done.join(", ")); broadcast({ type: "changed", sections: done, by: u.pkey }, (x) => x.id !== u.id); }
@@ -632,7 +680,7 @@ async function api(req, res, url) {
   if (p === "/api/invite" && m === "POST") {
     if (u.role !== "CEO") return send(res, 403, { error: "Only the CEO can invite people." });
     const b = await json(req); if (!validEmail(b.email)) return send(res, 400, { error: "Enter a valid email." });
-    const role = ["Manager", "Member", "Guest"].includes(b.role) ? b.role : "Member";
+    const role = b.role !== "CEO" && jobNames().includes(b.role) ? b.role : "Member";
     const had = q("SELECT * FROM users WHERE email=?").get(b.email.toLowerCase());
     if (had && !had.invite) return send(res, 409, { error: "That person already has an account." });
     if (had) { const token = randomBytes(24).toString("hex"); q("UPDATE users SET invite=?, created=? WHERE id=?").run(token, Date.now(), had.id); audit(u.id, "sent a new invite to " + had.email); return send(res, 200, { link: `${publicOrigin(url)}/join?t=${token}`, pkey: swapKeys(had.pkey, "AK", u.pkey) }); }
