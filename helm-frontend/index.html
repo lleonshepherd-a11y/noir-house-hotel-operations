@@ -2207,6 +2207,21 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 .tiles.tok-wrap{grid-template-columns:1fr!important;margin:0}
 .tok-wrap .kpi.tok{justify-content:flex-start!important;height:100%}
 @media (max-width:900px){.mn-row{grid-template-columns:1fr}}
+/* Phones */
+@media (max-width:640px){
+ .tiles .kpi>span .cur-tag,.sm-hide{display:none}
+ #view-money .tbl th,#view-money .tbl td{padding-left:5px;padding-right:5px}
+ #view-money .tbl{font-size:13px}#view-money .tbl .tag{font-size:11px;padding:2px 7px}
+ #view-money .tbl td:first-child,#view-money .tbl th:first-child{padding-left:12px} /* the page heading already says the currency */
+ .lr{flex-wrap:wrap;row-gap:4px;padding-top:9px;padding-bottom:9px}
+ .lr .ttl{flex:1 1 0;min-width:150px}
+ .lr .ttl b{white-space:normal;line-height:1.35}
+ .lr .meta{flex:1 0 100%;justify-content:flex-end}
+ #budRows td:nth-child(2),#budRows~* th:nth-child(2),#view-money .tbl thead th:nth-child(2){display:none}
+ #wgOpen .tbl th:nth-child(2),#wgOpen .tbl td:nth-child(2),#wgOpen .tbl th:nth-child(3),#wgOpen .tbl td:nth-child(3),#wgOpen .tbl th:nth-child(6),#wgOpen .tbl td:nth-child(6),#wgOpen .tbl th:nth-child(7),#wgOpen .tbl td:nth-child(7){display:none}
+}
+/* Touch screens: small icon buttons get a bigger invisible tap area, without changing how they look */
+@media (pointer:coarse){.edb,.ny-pin,.ny-done,.ib{position:relative}.edb::after,.ny-pin::after,.ny-done::after,.ib::after{content:"";position:absolute;inset:-8px}}
 .rate-in{display:flex;align-items:center;gap:8px;color:var(--fg-2)}
 .rate-in b{font-weight:500;color:var(--fg)}
 .rate-in input{width:110px}
@@ -2785,10 +2800,10 @@ function curText(s){if(CUR.code==='USD'||typeof s!=='string'||s.indexOf('$')<0)r
 function burnChart(el){
  const M=['Apr','May','Jun','Jul','Aug','Sep','Oct'],A=[22.1,24.8,27.3,30.2,34.1,38.2,39.6].map(toCur),PL=[25,26,28,30,32,34,35].map(toCur);
  const st=Math.ceil(Math.max(...A,...PL)/3/5)*5; // thousands, in the workspace currency, so the axis has round steps
- const W=720,H=190,L=38,R=10,T=12,B=24,max=st*3,x=i=>L+i*(W-L-R)/6,y=v=>T+(1-v/max)*(H-T-B);
+ const W=matchMedia('(max-width:640px)').matches?380:720,H=W<500?200:190,L=38,R=10,T=12,B=24,max=st*3,x=i=>L+i*(W-L-R)/6,y=v=>T+(1-v/max)*(H-T-B);
  const path=(a,n)=>a.slice(0,n).map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
  let g='';[0,st,st*2,st*3].forEach(v=>g+=`<line class="g" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-8}" y="${y(v)+3.5}" text-anchor="end">${curSym()}${v}k</text>`);
- M.forEach((m,i)=>g+=`<text x="${x(i)}" y="${H-5}" text-anchor="${i===6?'end':'middle'}">${m}${i===6?' est.':''}</text>`);
+ M.forEach((m,i)=>g+=`<text x="${x(i)}" y="${H-5}" text-anchor="${i===6?'end':'middle'}">${m}${i===6&&W>500?' est.':''}</text>`);
  const a=path(A,6),id='ag'+el.slice(1),step=(W-L-R)/6;
  $(el).innerHTML=`<div class="chart-h"><div class="stats"><div><span style="font-size:13px;font-weight:600;color:var(--fg)">Spend vs plan</span></div></div><div class="legend"><span><i></i>Actual</span><span><i class="p"></i>Plan</span></div></div>
  <svg viewBox="0 0 ${W} ${H}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d9bff" stop-opacity=".32"/><stop offset="1" stop-color="#2d9bff" stop-opacity="0"/></linearGradient><linearGradient id="${id}p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".2"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs>${g}<path d="${path(PL,7)} L${x(6)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#${id}p)"/>
@@ -3470,7 +3485,7 @@ function renderMoney(){const cash=MNY.acc.reduce((a,x)=>a+x[2],0),run=Math.floor
  const bp=Math.round((MNY.burn/MNY.burnPrev-1)*100),mp=Math.round((MNY.mrr/MNY.mrrPrev-1)*100);
  $('#mnTiles').innerHTML=[['Cash in the bank',kmoney(cash),`Across ${MNY.acc.length} account${MNY.acc.length>1?'s':''}`],['Monthly burn',kmoney(MNY.burn),`<span class="${bp>0?'down':''}">${bp>0?'+':''}${bp}%</span> vs last month`],['Runway',`${run} mo`,`Until ${MONL[until.getMonth()]} ${until.getFullYear()}`],['Revenue',`${kmoney(MNY.mrr)} MRR`,`${mp>=0?'+':''}${mp}% vs last month`]].map(([l,v,s2])=>`<button class="kpi" data-mnupd><span>${l}${l==='Runway'?'':' '+curTag()}</span><b>${v}</b><small>${s2}</small></button>`).join('');$('#tokWrap').innerHTML=tokCard();
  if(!$('#burn3').innerHTML)burnChart('#burn3');
- $('#budRows').innerHTML=MNY.B.map(([n,sp,bu],i)=>{const r=bu?sp/bu:0;return `<tr><td style="font-weight:500">${esc(n)}</td><td><span class="mbar" style="width:100%;display:block"><i style="--w:${Math.min(100,r*100)}%;--c:${r>1?'#e5484d':r>.9?'#8b8f97':'#5e6ad2'};animation-delay:${i*.05}s"></i></span></td><td class="num">${money(sp)}</td><td class="num muted2">${money(bu)}</td><td>${r>1?'<span class="tag bad">Over by '+money(sp-bu)+'</span>':r>.9?'<span class="tag warn">Near limit</span>':'<span class="tag good">On budget</span>'}</td><td class="ed">${edb(`data-bud="${i}"`,n)}</td></tr>`}).join('');
+ $('#budRows').innerHTML=MNY.B.map(([n,sp,bu],i)=>{const r=bu?sp/bu:0;return `<tr><td style="font-weight:500">${esc(n)}</td><td><span class="mbar" style="width:100%;display:block"><i style="--w:${Math.min(100,r*100)}%;--c:${r>1?'#e5484d':r>.9?'#8b8f97':'#5e6ad2'};animation-delay:${i*.05}s"></i></span></td><td class="num">${money(sp)}</td><td class="num muted2">${money(bu)}</td><td>${r>1?'<span class="tag bad">Over<span class="sm-hide"> by '+money(sp-bu)+'</span></span>':r>.9?'<span class="tag warn">Near limit</span>':'<span class="tag good">On budget</span>'}</td><td class="ed">${edb(`data-bud="${i}"`,n)}</td></tr>`}).join('');
  MNY.BL.sort((a,b)=>a[0]<b[0]?-1:1);$('#billN').textContent=MNY.BL.length;
  $('#bills').innerHTML=MNY.BL.map(([dt,n,s2,a],i)=>{const d=isoD(dt);return `<div class="bill"><span class="dt-ic"><span>${MON[d.getMonth()]}</span><b>${d.getDate()}</b></span><span class="t">${esc(n)}<small>${esc(s2)}</small></span><span class="amt2">${money(a)}</span>${edb(`data-bill="${i}"`,n)}</div>`}).join('')||'<div class="cal-empty">No bills coming up.</div>';
  $('#accts').innerHTML=MNY.acc.map(([n,s2,a],i)=>`<div class="bill"><span class="hash-ic" style="width:32px;height:32px;border-radius:9px;background:var(--soft);display:grid;place-items:center">${pic('money')}</span><span class="t">${esc(n)}<small>${esc(s2)}</small></span><span class="amt2">${money(a)}</span>${edb(`data-acct="${i}"`,n)}</div>`).join('');
@@ -4496,7 +4511,8 @@ VIEWHOOK.stages=renderStages;renderStages();
   if(window.HELM_BACKEND)await bkSave();else saveNow();location.reload()};
  sel.addEventListener('change',()=>{$('#sRate').value=CUR.rates[sel.value];showRate();apply()});$('#sRate').addEventListener('change',apply)}}
 // A small label on the pages that show money, so the currency is obvious.
-{const put=()=>[['money','Money'],['wages','Wages'],['fundraise','Fundraising'],['metrics','Metrics']].forEach(([v])=>{const h=$(`#view-${v} .ph2 h1.title`);if(h&&!h.querySelector('.cur-tag'))h.insertAdjacentHTML('beforeend',' '+curTag())});put();const sv=showView;showView=function(...a){const r=sv.apply(this,a);put();return r}}
+{const put=()=>{[['money','Money'],['wages','Wages'],['fundraise','Fundraising'],['metrics','Metrics']].forEach(([v])=>{const h=$(`#view-${v} .ph2 h1.title`);if(h&&!h.querySelector('.cur-tag'))h.insertAdjacentHTML('beforeend',' '+curTag())});
+ $$('#view-home .sp-sec').forEach(h=>{if(/^Money\b/.test(h.textContent)&&!h.querySelector('.cur-tag'))h.insertAdjacentHTML('beforeend',curTag())})};put();const sv=showView;showView=function(...a){const r=sv.apply(this,a);put();return r}}
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
 </script>
 </body>
