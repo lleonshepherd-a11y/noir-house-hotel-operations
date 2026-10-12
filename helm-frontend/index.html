@@ -4474,6 +4474,8 @@ function acctNotifs(W){const out=[],ceo=roleOf(W)==='CEO';const A=acct();
  return out}
 // merge into the bell
 {const base=notifList;notifList=function(){const b=base();const A=acctNotifs(VIEWER).map(x=>{x[3]=NREAD.has(x[6])?0:1;return x});return isOwnCEO()?b:[...A,...b]}}
+// Investors: the bell only ever shows new messages from the CEO. No staff pings, task alerts or anything else.
+{const nl=notifList;notifList=function(){const l=nl();return !isOwnCEO()&&document.body.classList.contains('chat-ceo-only')?l.filter(x=>String(x[6]||'').startsWith('dm')):l}}
 function acctBell(){if(!isOwnCEO()){bellCount();return}for(let i=NOTIF.length-1;i>=0;i--)if(String(NOTIF[i][6]||'').startsWith('acct:'))NOTIF.splice(i,1);
  const A=acctNotifs('AK').map(x=>{const id=x[6],fn=x[4];x[3]=NREAD.has(id)?0:1;x[4]=()=>{NREAD.add(id);fn()};return x});NOTIF.unshift(...A);bellCount()}
 // chase and reassign

@@ -473,7 +473,15 @@ const pub = (u) => ({ id: u.id, email: u.email, name: u.name, pkey: u.pkey, role
 
 /* ---------------- Live updates (server-sent events) ---------------- */
 const clients = new Set();
-function broadcast(evt, filter = () => true) { for (const c of clients) if (filter(c.user)) { try { c.res.write(`data: ${JSON.stringify(evt)}\n\n`); } catch {} } }
+// People outside the team (e.g. investors) only ever hear that their chat with the CEO changed: no staff pings,
+// no task or announcement updates, and never who made a change.
+const isOutsider = (u) => u && u.role !== "CEO" && !u.areas?.includes("msg") && !u.areas?.includes("people");
+function outsiderEvt(evt, u) {
+  if (evt.type !== "changed") return null;
+  const secs = (evt.sections || []).filter((k) => k === "CONVS" ? evt.by === ceoPkey() || evt.by === u.pkey : mayRead(k, u));
+  return secs.length ? { type: "changed", sections: secs, by: "sys" } : null;
+}
+function broadcast(evt, filter = () => true) { for (const c of clients) if (filter(c.user)) { const e = isOutsider(c.user) ? outsiderEvt(evt, c.user) : evt; if (!e) continue; try { c.res.write(`data: ${JSON.stringify(e)}\n\n`); } catch {} } }
 setInterval(() => { for (const c of clients) try { c.res.write(": ping\n\n"); } catch {} }, 25e3);
 
 const cx = makeConnections({ db, q, readSec, writeSec, getSetting, setSetting, audit, broadcast, DATA });
