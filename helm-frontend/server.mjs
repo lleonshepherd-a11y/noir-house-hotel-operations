@@ -72,7 +72,7 @@ const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
    Everyone except the CEO has a job role (CTO, Finance, Marketing, Engineering…). Each one has a level, which decides
    what they can change (Manager, Member or Guest), and the areas of Helm they see. The CEO edits these in Settings.
    An area that isn't ticked is never sent to that person, and changes to it are refused. */
-const AREA_IDS = ["work", "msg", "ceochat", "notes", "proj", "people", "metrics", "dec", "money", "figures", "wages", "fund", "legal"];
+const AREA_IDS = ["work", "msg", "ceochat", "notes", "proj", "people", "metrics", "dec", "money", "figures", "wages", "fund", "legal", "mynotes", "mycal"];
 const DEFAULT_ROLES = [
   { name: "CTO", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics", "dec"] },
   { name: "CFO", base: "Manager", areas: ["work", "msg", "notes", "people", "metrics", "dec", "money", "wages", "fund", "legal"] },
@@ -81,8 +81,9 @@ const DEFAULT_ROLES = [
   { name: "Marketing Lead", base: "Member", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
   { name: "Ops", base: "Member", areas: ["work", "msg", "notes", "proj", "people", "legal"] },
   { name: "Dev", base: "Member", areas: ["work", "msg", "notes", "proj"] },
-  // Investors: the headline money figures and one conversation, with the CEO. Nothing about staff.
-  { name: "VC", base: "Guest", areas: ["figures", "ceochat"] },
+  // Investors: the headline money figures, one conversation (with the CEO), a private notepad and their own calendar.
+  // Nothing about staff.
+  { name: "VC", base: "Guest", areas: ["figures", "ceochat", "mynotes", "mycal"] },
   { name: "Guest", base: "Guest", areas: ["msg", "proj"] },
 ];
 // Role names used before; accounts that still have one keep working with the role it became.
@@ -185,6 +186,7 @@ function cleanEv(e) {
   const r = [e[0], noTags(e[1], 120), CEV_K.includes(e[2]) ? e[2] : "meet", noTags(e[3], 80)];
   if (e[4] !== undefined || e[5] !== undefined) r.push(e[4] === undefined || e[4] === null ? "" : noTags(e[4], 20));
   if (isId(e[5])) r.push(e[5]);
+  if (e[6] === "vc") { while (r.length < 6) r.push(""); r[6] = "vc"; } // shared with investors
   return r;
 }
 function mergeCev(incoming, u) {
@@ -194,9 +196,29 @@ function mergeCev(incoming, u) {
   const curKeys = new Set(cur.map(keyOf));
   const keep = cur.filter((e) => isPrivateEv(e) || (u.role !== "Manager" && e[5] !== u.pkey));
   const mine = clean.filter((e) => !isPrivateEv(e) && (u.role === "Manager" || e[5] === u.pkey || !curKeys.has(keyOf(e))))
-    .map((e) => { const r = e.slice(0, 4); r[2] = r[2] === "inv" || r[2] === "legal" ? "meet" : r[2]; r[4] = e[4] === "google" ? "" : (e[4] || ""); r[5] = e[5] && curKeys.has(keyOf(e)) ? e[5] : u.pkey; return r; });
+    .map((e) => { const r = e.slice(0, 4); r[2] = r[2] === "inv" || r[2] === "legal" ? "meet" : r[2]; r[4] = e[4] === "google" ? "" : (e[4] || ""); r[5] = e[5] && curKeys.has(keyOf(e)) ? e[5] : u.pkey;
+      const was = cur.find((x) => keyOf(x) === keyOf(e)); if (was?.[6] === "vc") r[6] = "vc"; return r; }); // only the CEO decides what investors see
   return [...keep, ...mine];
 }
+/* ---------------- Private notes and calendars (investors) ----------------
+   Kept per account, apart from the team's notes and calendar. Only the person who wrote them can read them back:
+   nothing here is ever in /api/state, live updates or anyone else's request, the CEO's included. */
+db.exec("CREATE TABLE IF NOT EXISTS mine(user_id INTEGER, kind TEXT, json TEXT, updated INTEGER, PRIMARY KEY(user_id, kind))");
+const readMine = (uid, kind) => { const r = q("SELECT json FROM mine WHERE user_id=? AND kind=?").get(uid, kind); return r ? JSON.parse(r.json) : []; };
+const writeMine = (uid, kind, v) => q("INSERT INTO mine(user_id,kind,json,updated) VALUES(?,?,?,?) ON CONFLICT(user_id,kind) DO UPDATE SET json=excluded.json,updated=excluded.updated").run(uid, kind, JSON.stringify(v), Date.now());
+const MINE_ID = /^[A-Za-z0-9_-]{4,40}$/;
+const mineId = (v) => (MINE_ID.test(String(v)) ? String(v) : "m" + randomBytes(6).toString("hex"));
+const cleanMyNote = (n) => n && typeof n === "object" ? { id: mineId(n.id), t: noTags(n.t, 200), b: String(n.b ?? "").slice(0, 20000), u: Math.max(0, +n.u || Date.now()) } : null;
+const cleanMyEv = (e) => e && typeof e === "object" && DATE_RE.test(String(e.d)) ? { id: mineId(e.id), d: e.d, t: noTags(e.t, 120), tm: /^\d\d:\d\d$/.test(e.tm) ? e.tm : "", n: String(e.n ?? "").slice(0, 2000) } : null;
+// Events the CEO shares with investors: title, date and time only. Where it is and who is invited never leave.
+function syncShared() {
+  const list = (readSec("CEV") || []).filter((e) => e[6] === "vc" && e[4] !== "google")
+    .map((e) => ({ id: "s" + sha(e[0] + "|" + e[1]).slice(0, 16), d: e[0], t: noTags(e[1], 120), tm: (/^(\d\d:\d\d)/.exec(String(e[3] || "")) || [])[1] || "" }));
+  if (JSON.stringify(list) === JSON.stringify(readSec("VSHARE") || [])) return;
+  writeSec("VSHARE", list, null); // not in ACL: never sent by /api/state, only by /api/mine/cal
+  broadcast({ type: "changed", sections: ["VCAL"], by: "sys" }, (x) => x.areas?.includes("mycal"));
+}
+
 // Space files: people only change the file lists of spaces they are in, and members only add or remove their own files.
 function cleanFile(f) {
   if (!f || typeof f !== "object") return null;
@@ -233,6 +255,8 @@ function cleanSection(k, v) {
 /* ---------------- Section storage ---------------- */
 const readSec = (name) => { const r = q("SELECT json FROM sections WHERE name=?").get(name); return r ? JSON.parse(r.json) : undefined; };
 const writeSec = (name, val, uid) => q("INSERT INTO sections(name,json,updated,by) VALUES(?,?,?,?) ON CONFLICT(name) DO UPDATE SET json=excluded.json,updated=excluded.updated,by=excluded.by").run(name, JSON.stringify(val), Date.now(), uid);
+// Once: investors get the private notepad and calendar on workspaces saved before they existed.
+if (!getSetting("roles-v5")) { const r = readSec("RDEF"); if (Array.isArray(r)) { const vc = r.find((x) => x.name === "VC"); if (vc) { vc.areas = [...new Set([...(vc.areas || []), "mynotes", "mycal"])]; writeSec("RDEF", r, null); } } setSetting("roles-v5", "1"); }
 
 // Each person's own key is shown to their browser as "AK" (the front end's "me"),
 // and the real "AK" gets their key. Applied on the way out and undone on the way in.
@@ -478,7 +502,7 @@ const clients = new Set();
 const isOutsider = (u) => u && u.role !== "CEO" && !u.areas?.includes("msg") && !u.areas?.includes("people");
 function outsiderEvt(evt, u) {
   if (evt.type !== "changed") return null;
-  const secs = (evt.sections || []).filter((k) => k === "CONVS" ? evt.by === ceoPkey() || evt.by === u.pkey : mayRead(k, u));
+  const secs = (evt.sections || []).filter((k) => k === "CONVS" ? evt.by === ceoPkey() || evt.by === u.pkey : k === "VCAL" ? u.areas.includes("mycal") : mayRead(k, u));
   return secs.length ? { type: "changed", sections: secs, by: "sys" } : null;
 }
 function broadcast(evt, filter = () => true) { for (const c of clients) if (filter(c.user)) { const e = isOutsider(c.user) ? outsiderEvt(evt, c.user) : evt; if (!e) continue; try { c.res.write(`data: ${JSON.stringify(e)}\n\n`); } catch {} } }
@@ -636,6 +660,17 @@ async function api(req, res, url) {
     return send(res, 200, q("SELECT u.id, u.name, u.email, u.role, u.invite, h.at FROM help h JOIN users u ON u.id=h.user_id ORDER BY h.at DESC").all().filter(canRecover).map(({ invite, ...x }) => x));
   }
   if (p === "/api/state" && m === "GET") return send(res, 200, stateFor(u));
+  // A person's own private notes and calendar. Read and written by that account only.
+  if (p === "/api/mine/notes" || p === "/api/mine/cal") {
+    const kind = p.endsWith("notes") ? "notes" : "cal", area = kind === "notes" ? "mynotes" : "mycal";
+    if (u.role === "CEO" || !u.areas.includes(area)) return send(res, 403, { error: "Not available for your role." });
+    if (m === "GET") return send(res, 200, kind === "notes" ? { notes: readMine(u.id, "notes") } : { own: readMine(u.id, "cal"), shared: readSec("VSHARE") || [] });
+    if (m === "PUT") {
+      const b = await json(req, 4 * MB), list = Array.isArray(kind === "notes" ? b.notes : b.own) ? (kind === "notes" ? b.notes : b.own) : [];
+      const seen = new Set(), clean = list.slice(0, kind === "notes" ? 500 : 2000).map(kind === "notes" ? cleanMyNote : cleanMyEv).filter((x) => x && !seen.has(x.id) && seen.add(x.id));
+      writeMine(u.id, kind, clean); return send(res, 200, { ok: true });
+    }
+  }
 
   if (p === "/api/state" && m === "PUT") {
     const b = await json(req, MAX_JSON); const secs = swapKeys(b.sections || {}, "AK", u.pkey); const done = [], refused = [], conflicts = [], big = [];
@@ -649,7 +684,7 @@ async function api(req, res, url) {
       const put = (val) => { if (tooBig(k, val)) big.push(k); else { writeSec(k, val, u.id); done.push(k); } };
       if (k === "CONVS") { if (!readSec("CONVS") && u.role === "CEO") put(cleanSeedConvs(v)); else if (mergeConvs(v, u)) done.push(k); else big.push(k); continue; }
       if (k === "TASKS") { if (!mayWrite(k, u)) { refused.push(k); continue; } put(mergeTasks(v, u)); continue; }
-      if (k === "CEV") { if (!mayWrite(k, u)) { refused.push(k); continue; } put(mergeCev(v, u)); continue; }
+      if (k === "CEV") { if (!mayWrite(k, u)) { refused.push(k); continue; } put(mergeCev(v, u)); syncShared(); continue; }
       if (k === "SPX") { put(mergeSpx(v, u)); continue; }
       if (k === "WG") { if (u.role === "CEO" && !readSec("WG") && v) { writeSec("WG", { access: v.access, rows: v.rows }, u.id); done.push(k); } else refused.push(k); continue; }
       if (k === "MEM" && u.role === "CEO") { // role changes go to accounts too
