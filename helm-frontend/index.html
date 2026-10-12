@@ -2267,7 +2267,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
         <!-- ======== BRIEFING ======== -->
         <section class="view" id="view-home">
           <div class="wrap wide">
-            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg><span id="hDate">Saturday 10 October · Week 41</span></span><h1 class="title" id="hello">Good morning, Alex</h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
+            <div class="ph2"><div><span class="eyebrow"><svg class="ic" viewBox="0 0 24 24"><path d="M8 2.5v4M16 2.5v4"/><rect x="3.5" y="4.5" width="17" height="16.5" rx="2.5"/><path d="M3.5 10h17"/></svg><span id="hDate"></span></span><h1 class="title" id="hello"></h1><p class="lead" id="homeLead">6 things need you today. Murmur’s launch is at risk because the outside security review is 8 days late.</p></div><div class="acts hacts"><div class="hclock" aria-label="Current time"><span class="hc-t"><b id="hcTime">--:--</b><small id="hcZone"></small></span></div><button class="sum-flag" data-view="project" data-pkey="murmur"><i></i>Murmur launch at risk</button></div></div>
             <div class="sp-tools" id="nyTools"><div class="seg2" id="nyFilt" style="margin:0"></div><span class="ny-hint">Tick a card when it’s done</span></div>
             <div class="spgrid">
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
@@ -4023,12 +4023,19 @@ $('#sideSp').addEventListener('click',e=>{if(spSideOpen){spSideOpen=false;layout
 layoutSpacesMenu();
 
 /* ---------- Briefing clock ---------- */
-function greetWord(){const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
+// Dateline and greeting run on UK time and are refreshed by the clock, so they roll over at midnight.
+function homeTz(){return 'Europe/London'}
+function homeHour(d=new Date()){return +new Intl.DateTimeFormat('en-GB',{hour:'numeric',hourCycle:'h23',timeZone:homeTz()}).format(d)}
+function greetWord(d=new Date()){const h=homeHour(d);return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
+function dateLine(d=new Date()){const day=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:homeTz()});
+ const [y,m,dd]=new Intl.DateTimeFormat('en-CA',{timeZone:homeTz()}).format(d).split('-').map(Number),u=new Date(Date.UTC(y,m-1,dd)),dow=u.getUTCDay()||7;u.setUTCDate(u.getUTCDate()+4-dow);
+ return `${day} · Week ${Math.ceil(((u-Date.UTC(u.getUTCFullYear(),0,1))/864e5+1)/7)}`}
+function setDayText(){const hd=$('#hDate'),t=dateLine();if(hd&&hd.textContent!==t)hd.textContent=t;const hl=$('#hello');if(hl){const g=hl.textContent.replace(/^Good (morning|afternoon|evening)/,greetWord());if(g!==hl.textContent)hl.textContent=g}}
 function tickClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),sec=d.getSeconds();
  const set=(id,deg)=>{const e=document.getElementById(id);if(e)e.setAttribute('transform',`rotate(${deg} 20 20)`)};
  set('hcH',(h%12)*30+m*.5);set('hcM',m*6+sec*.1);set('hcS',sec*6);
  const t=$('#hcTime');if(t)t.innerHTML=`${String(h).padStart(2,'0')}<span class="hc-col">:</span>${String(m).padStart(2,'0')}`;
- if(sec===0||!tickClock.g){tickClock.g=1;const hl=$('#hello');if(hl)hl.textContent=hl.textContent.replace(/^Good (morning|afternoon|evening)/,greetWord())}
+ if(sec===0||!tickClock.g){tickClock.g=1;setDayText()}
  const z=$('#hcZone');if(z&&!z.textContent){let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ')}catch(e){}z.textContent=tz||'Local time'}}
 tickClock();setInterval(tickClock,1000);
 
@@ -4367,7 +4374,7 @@ function spTidyBell(){if(!isOwnCEO())return;for(let i=NOTIF.length-1;i>=0;i--)if
  const ar=applyRole;applyRole=function(){ar();try{sel.disabled=!isOwnCEO();$$('#spNew,#spNew2').forEach(b=>b.hidden=!canCreateSpace())}catch(e){}}}}
 {const sv=showView;showView=function(v,o){if(v==='spaces'||v==='messages')try{spTidy();spTidyBell()}catch(e){}const r=sv(v,o);if(v==='messages')try{renderConvList()}catch(e){}return r}}
 spTidy();spTidyBell();try{renderSideSpaces();renderNY()}catch(e){}
-{const hd=$('#hDate');if(hd){const d=TODAY,j=new Date(d.getFullYear(),0,1),wk=Math.ceil(((d-j)/864e5+((j.getDay()+6)%7)+1)/7);hd.textContent=`${d.toLocaleDateString('en-GB',{weekday:'long'})} ${d.getDate()} ${d.toLocaleDateString('en-GB',{month:'long'})} · Week ${wk}`}}
+setDayText();
 {const rp=renderProject;renderProject=function(){try{if(curProj==='murmur'){const K=PINFO.murmur.kpis;const pm=new Date(TODAY);pm.setMonth(pm.getMonth()-1);const sp=K.find(k=>/^Spent in/.test(k[0]));if(sp){const ch=MNY.burnPrev?Math.round((MNY.burn-MNY.burnPrev)/MNY.burnPrev*100):0;sp[0]='Spent in '+MON[pm.getMonth()];sp[1]=kusd(MNY.burn);sp[2]=`<span class="${ch>0?'down':'up'}">${ch>0?'+':''}${ch}%</span> vs ${MON[(pm.getMonth()+11)%12]}`}const rs=K.find(k=>k[0]==='Raised');if(rs){rs[1]=money2(seedCommitted());rs[2]=`Seed, of ${money2(ROUND.target)}`}}}catch(e){}return rp.apply(this,arguments)}}
 /* ================= The 9 stages: what has to be true before you move on ================= */
 const STG_CHECK=[
