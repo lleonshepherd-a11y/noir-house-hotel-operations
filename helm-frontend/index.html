@@ -2234,7 +2234,8 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 .view-only #newBtn{display:none!important}
 /* VC and anyone who may only message the CEO: no spaces, no other chats, no new conversations, no search of the team */
 .chat-ceo-only :is(#sideSpaces,[data-view="spaces"],#spaceAdd,#shAdd,#dmAdd,#agentTg,#newTaskSide,#openSearch){display:none!important}
-.chat-ceo-only #convList h6{display:none}
+.chat-ceo-only :is(#addPeople,#thMembers,#atBtn,.ac,#view-messages .hint){display:none!important}
+.chat-ceo-only #convList h6,.chat-ceo-only #msgNew,.chat-ceo-only #view-messages .msearch,.chat-ceo-only #msgQ,.chat-ceo-only :has(>#msgQ){display:none!important}
 /* headline money figures only: the four figures and the spend chart, nothing about staff, budgets, bills or costs */
 .figures-only #view-money :is(.two2,#tokWrap,.stampl,.ph2 .acts,#txWrap){display:none!important}
 .figures-only #view-money .mn-row{grid-template-columns:1fr}
@@ -2905,7 +2906,7 @@ function createSpaceForm(shared,pre=''){openForm(shared?'New shared space':'New 
 function convRow(c){const l=last(c);const prev=l?(l[0]==='sys'?esc(l[2]):`${l[0]==='AK'?'You: ':l[0]==='guest'?esc(l[3].g.split(' ')[0])+': ':c.ch?FIRST(l[0])+': ':''}${esc(l[2])}`):'Say hello 👋';
  const ic=c.ch?spIc(c):`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span>`;
  return `<button class="ci${c.unread?' unread':''}${typeof cur!=='undefined'&&c.id===cur?' on':''}" data-conv="${esc(c.id)}">${ic}<span class="ct"><b>${esc(c.ch?c.ch:(P[c.dm]||[c.dm])[0])}</b><small>${prev}</small></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><time>${esc(l?l[1]:'')}</time>${c.unread?`<span class="ub2">${c.unread}</span>`:''}</span></button>`}
-function renderConvList(){renderSideSpaces();if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.arch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&!c.arch&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(document.body.classList.contains('chat-ceo-only')?ceoChatRow():!isOwnCEO()&&!window.HELM_BACKEND?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
+function renderConvList(){renderSideSpaces();if(document.body.classList.contains('chat-ceo-only')){$('#convList').innerHTML=ceoChatRow();syncBadges();const id=CONVS.find(x=>!x.ch&&x.dm===ceoKey2()).id;if(cur!==id){cur=id;if(curView==='messages')setTimeout(()=>openConv(id),0)}return}if(msgQ&&msgQ.value.trim())return renderSearch(msgQ.value.trim());$('#convList').innerHTML=`<h6>Spaces<button class="addb" id="spaceAdd" aria-label="New space" title="New space">${PLUS}</button></h6>`+CONVS.filter(c=>c.ch&&!c.arch&&!c.shared&&inSpace(c)).map(convRow).join('')+`<h6>Shared spaces<button class="addb" id="shAdd" aria-label="New shared space" title="New shared space">${PLUS}</button></h6>`+CONVS.filter(c=>c.shared&&!c.arch&&inSpace(c)).map(convRow).join('')+`<h6>Direct messages<button class="addb" id="dmAdd" aria-label="New direct message" title="New direct message">${PLUS}</button></h6>`+(document.body.classList.contains('chat-ceo-only')?ceoChatRow():!isOwnCEO()&&!window.HELM_BACKEND?'<div class="pal-empty" style="padding:8px 12px;font-size:12.5px">Direct messages are private to each person.</div>':CONVS.filter(c=>c.dm).map(convRow).join(''));syncBadges()}
 // For people who may only message the CEO: one conversation, with the CEO.
 function ceoKey2(){return (MEM.find(m=>m[1]==='CEO')||['AK'])[0]}
 function ceoChatRow(){const k=ceoKey2();let c=CONVS.find(x=>!x.ch&&x.dm===k);if(!c){c={id:k,dm:k,unread:0,msgs:[]};CONVS.push(c)}return convRow(c)}
@@ -2918,7 +2919,7 @@ function msgHTML(c,m,i,prev){const [k,t,txt,x={}]=m;if(k==='sys')return `<div cl
 function renderThread(scroll=true){const c=CONVS.find(x=>x.id===cur);const b=$('#thBody');
  b.innerHTML=(c.msgs.length?'<div class="day">Today</div>':`<div class="typing" style="justify-content:center;padding:30px 0">This is the start of your conversation with ${esc(P[c.dm][0])}.</div>`)+c.msgs.map((m,i)=>msgHTML(c,m,i,c.msgs[i-1])).join('')+(c.seen?`<div class="seen">Seen by ${c.dm?FIRST(c.dm):'the team'}</div>`:'');
  if(scroll)b.scrollTop=b.scrollHeight}
-function openConv(id,show){cur=id;const c=CONVS.find(x=>x.id===id);c.unread=0;renderConvList();
+function openConv(id,show){if(document.body.classList.contains('chat-ceo-only')){const k=ceoKey2(),c0=CONVS.find(x=>x.id===id);if(!c0||c0.ch||c0.dm!==k){ceoChatRow();id=CONVS.find(x=>!x.ch&&x.dm===k).id}}cur=id;const c=CONVS.find(x=>x.id===id);c.unread=0;renderConvList();
  $('#thHead').innerHTML=c.ch?`${spIc(c)}<span style="min-width:0"><b>${esc(c.ch)}</b><span class="sub" style="display:block">${esc(c.desc)} · ${c.mem.length} people${c.guests?` · ${c.guests.length} guest${c.guests.length>1?'s':''}`:''}</span></span>`:`<span class="pres">${av(c.dm,'md')}<i class="${c.on?'on':''}"></i></span><span><b>${esc((P[c.dm]||[c.dm])[0])}</b><span class="sub" style="display:block">${c.on?'Online':'Away'}</span></span>`;
  $('#thMembers').innerHTML=(c.ch?c.mem:['AK',c.dm]).slice(0,4).map(k=>av(k,'xs')).join('');
  $('#mIn').placeholder=c.ch?`Message ${c.ch}`:`Message ${FIRST(c.dm)}`;
@@ -3690,11 +3691,19 @@ function applyRole(){const ceo=roleOf(VIEWER)==='CEO';document.body.classList.to
  $$('.side .grp').forEach(g=>{const items=[...g.querySelectorAll('[data-view],[data-sconv]')];if(items.length)g.hidden=items.every(x=>x.hidden)});
  if($('#sideSpaces'))$('#sideSpaces').hidden=!can('spaces');
  const pv=VIEWER!=='AK'||!!PV_JOB,bar=$('#pvBar');bar.hidden=!pv;if(pv)bar.innerHTML=`<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Viewing as ${PV_JOB?`the <b>${esc(PV_JOB)}</b> role`:`<b>${esc(P[VIEWER][0])}</b> · ${esc(jobOf(VIEWER))}`}. This is exactly what they see.</span><button class="btn sm" id="pvExit">Exit preview</button>`;
- const foot=$('.side-foot');if(foot){const b=foot.querySelector('b');if(b)b.textContent=P[VIEWER][0]}
+ const foot=$('.side-foot');if(foot){const b=foot.querySelector('b');if(b)b.textContent=P[VIEWER][0];
+  const sm=foot.querySelector('small');if(sm)sm.textContent=`${roleOf(VIEWER)==='CEO'?'Founder & CEO':jobOf(VIEWER)} · Settings`;
+  const fa=foot.querySelector('.av');if(fa)fa.textContent=String(P[VIEWER][0]).split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()}
  {const vb=$('#viewAs');if(vb){vb.hidden=!realCEO();vb.querySelector('span').textContent=PV_JOB||jobOf(VIEWER)}}
  {const ms=[...document.querySelectorAll('#view-home .sp-sec')].find(h=>/^Money\b/.test(h.textContent));if(ms){const on=can('money');ms.classList.toggle('ceo-only',!on);const g=$('#hmCards');if(g)g.classList.toggle('ceo-only',!on)}}
+ // tabs at the top of a page only show pages this role can open; Your projects and More follow the role too
+ roleTabs();
+ $$('.side .grp-h').forEach(h=>{if(/^Your projects/.test(h.textContent.trim())){const g=h.closest('.grp');if(g)g.hidden=!can('project')}});
+ {const nm=$('#navMore');if(nm)nm.hidden=document.body.classList.contains('chat-ceo-only')}
  {const hp=$('#hpCards');if(hp){const on=can('projects');hp.hidden=!on;const h=hp.previousElementSibling;if(h&&h.classList.contains('sp-sec'))h.hidden=!on}} // the Briefing's Projects section follows the role too
  renderNY();renderJump&&renderJump()}
+function roleTabs(){$$('.gtabs').forEach(g=>{const t=[...g.querySelectorAll('[data-gt]')];t.forEach(b=>{b.style.display=can(b.dataset.gt)?'':'none'});g.style.display=t.filter(b=>b.style.display!=='none').length<2?'none':''})}
+{const sv=showView;showView=function(...a){const r=sv.apply(this,a);try{roleTabs();if(a[0]==='messages'&&document.body.classList.contains('chat-ceo-only'))openConv(CONVS.find(x=>!x.ch&&x.dm===ceoKey2())?.id||(ceoChatRow(),CONVS.find(x=>!x.ch&&x.dm===ceoKey2()).id))}catch(e){}return r}}
 // View as: the CEO switches between each role's dashboard. Uses a real person in that role when there is one.
 const realCEO=()=>{if(!window.HELM_BACKEND)return true;try{return !!(BK.me&&BK.me.role==='CEO')}catch(e){return false}}; // BK isn't ready during the first draw
 function previewRole(role){if(role==='CEO'){PV_JOB=null;VIEWER='AK';applyRole();showView(PV_BACK||'home');PV_BACK=null;return}
@@ -3704,7 +3713,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('#viewAs');if(!b)
  const who=r=>r==='CEO'?'AK':(MEM.find(x=>x[1]===r&&x[0]!=='AK'&&(x[0] in P))||[])[0];
  const ic=r=>{const k=who(r);return k?av(k,'xs'):'<span class="av xs vas-none" title="Nobody has this role yet"></span>'};
  openMenu(b,['CEO',...RDEF.map(d=>d.name).filter(n=>n!=='Guest')].map(n=>({v:n,label:esc(n),icon:ic(n)})),PV_JOB||jobOf(VIEWER),r=>previewRole(r));if(menuEl)menuEl.classList.add('vas-menu')});
-function previewAs(k){if(VIEWER==='AK'&&!PV_JOB)PV_BACK=curView;PV_JOB=null;VIEWER=k;applyRole();showView('home');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${esc(jobOf(k))} · ${esc(seeText(k))}`)}
+function previewAs(k){if(VIEWER==='AK'&&!PV_JOB)PV_BACK=curView;PV_JOB=null;VIEWER=k;applyRole();showView(can('home')?'home':['money','messages','projects'].find(v=>can(v))||'messages');toast(`Previewing as <b>${esc(P[k][0])}</b>`,`${esc(jobOf(k))} · ${esc(seeText(k))}`)}
 document.addEventListener('click',e=>{const p=e.target.closest('[data-preview]');if(p){previewAs(p.dataset.preview);return}if(e.target.closest('#pvExit')){PV_JOB=null;VIEWER='AK';applyRole();const back=PV_BACK||'home';PV_BACK=null;showView(back);if(back==='settings'){const t=$('[data-g="st"] [data-t2="Members"]');if(t)t.click()}}});
 $('#nPrefs').innerHTML=[['Someone mentions me','In Messages, notes and tasks',1],['A task is assigned to me','Or its due date changes',1],['A decision is waiting on me','Reminder after 24 hours',1],['Filing and contract deadlines','30, 7 and 1 day before',1],['Daily briefing email','Every weekday at 8:00',1],['Every message in spaces I’m in','Can get noisy',0]].map(([t,s2,on],i)=>`<div class="tglr" data-tg="${i}"><span class="t">${t}<small>${s2}</small></span><span class="tgl${on?' on':''}"></span></div>`).join('');
 $('#nPrefs').addEventListener('click',e=>{const r=e.target.closest('[data-tg]');if(r){const t=r.querySelector('.tgl');t.classList.toggle('on');toast(t.classList.contains('on')?'Notifications on':'Notifications off',r.querySelector('.t').firstChild.textContent)}});
@@ -4145,7 +4154,8 @@ NEWLBL.wages='Add pay';NEWACT.wages=()=>{if(roleOf(VIEWER)==='CEO')editPay()};
 {const rn=renderNY;renderNY=function(){const ceo=roleOf(VIEWER)==='CEO';$('#nyTools').hidden=!ceo;if(ceo){$('#nyHead').firstChild.textContent='Needs you ';return rn()}
  const mine=TASKS.filter(t=>t.o===VIEWER&&t.s!=='done');$('#nyHead').firstChild.textContent='Your tasks ';$('#nyN').textContent=mine.length;
  $('#homeLead').textContent=mine.length?`You have ${mine.length} open task${mine.length>1?'s':''}. Here’s what’s on today.`:'Nothing assigned to you right now.';
- $('#nyCards').innerHTML=mine.map(t=>`<div class="spc ny" data-mytask="${esc(t.id)}" role="button" tabindex="0"><div class="ny-top"><span class="nytag">${st(t.s,.5)}${STAT[t.s]}</span><span class="ny-due">${esc(dueLab(t))}</span></div><b class="ny-t">${esc(t.t)}</b><p>${esc(t.id)} · ${esc(t.l)}</p><div class="spc-f"><span class="ny-acts"><button class="btn sm">Open</button></span></div></div>`).join('')||'<div class="ny-empty"><b>All clear</b>Nothing assigned to you right now.</div>'}}
+ $('#nyCards').innerHTML=mine.map(t=>{const d=taskDue(t),n=d?dayDiff(d,iso(TODAY)):null,flag=n!=null&&n<0?'Late':n!=null&&n<=1?'Urgent':'';
+  return `<div class="spc ny" data-mytask="${esc(t.id)}" role="button" tabindex="0"><div class="ny-hero"><span class="ny-ic">${st(t.s,.5)}${flag?`<em class="ny-urg">${flag}</em>`:''}</span><span class="ny-due">${esc(dueLab(t))}</span></div><div class="ny-body"><span class="nytag">${STAT[t.s]}</span><b class="ny-t">${esc(t.t)}</b><p>${esc(t.id)} · ${esc(t.l)}</p></div><div class="spc-f"><span class="ny-acts"><button class="btn sm">Open</button></span></div></div>`}).join('')||'<div class="ny-empty"><b>All clear</b>Nothing assigned to you right now.</div>'}}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-mytask]');if(t){const id=t.dataset.mytask;openProject(keyOfTask(id),'Issues');flash(`#issues .lr[data-id="${id}"]`)}});
 {const rj=renderJump;renderJump=function(){rj();$$('#jump .jc').forEach(c=>c.hidden=!can(c.dataset.view))}}
 applyRole();
@@ -4410,8 +4420,8 @@ const PARENT={};Object.entries(GROUPS).forEach(([g,l])=>l.forEach(([v])=>PARENT[
   const more=document.createElement('button');more.className='ni more-t';more.id='navMore';more.innerHTML='<svg class="ic" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>More';nav.appendChild(more);
   ['feedback','announce'].forEach(v=>{const b=nav.querySelector(`[data-view="${v}"]`);if(b){b.classList.add('more-i');nav.appendChild(b)}});
   more.addEventListener('click',()=>nav.classList.toggle('more-open'))}}
-function gtabsFor(v){const g=PARENT[v];if(!g)return '';return `<div class="gtabs" role="tablist">${GROUPS[g].filter(([k])=>k!=='wages'||can('wages')).map(([k,l])=>`<button role="tab" data-gt="${k}" class="${k===v?'on':''}">${l}</button>`).join('')}</div>`}
-function placeTabs(v){const sec=document.getElementById('view-'+v);if(!sec||!PARENT[v])return;let t=sec.querySelector(':scope .gtabs');const html=gtabsFor(v);
+function gtabsFor(v){const g=PARENT[v];if(!g)return '';const tabs=GROUPS[g].filter(([k])=>can(k));if(tabs.length<2)return '';return `<div class="gtabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-gt="${k}" class="${k===v?'on':''}">${l}</button>`).join('')}</div>`}
+function placeTabs(v){const sec=document.getElementById('view-'+v);if(!sec||!PARENT[v])return;let t=sec.querySelector(':scope .gtabs');const html=gtabsFor(v);if(!html){if(t)t.remove();return}
  if(!t){const host=v==='projects'?sec.querySelector('.rm-top'):(sec.querySelector('.wrap')||sec);const d=document.createElement('div');d.innerHTML=html;t=d.firstElementChild;if(v==='projects'){host.querySelector('h1').after(t)}else host.prepend(t)}else t.outerHTML=html}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-gt]');if(b)showView(b.dataset.gt)});
 {const sv=showView;showView=function(v,o){const r=sv(v,o);try{placeTabs(v);const par=PARENT[v];if(par&&par!==v)$$('.side .nav [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===par));
