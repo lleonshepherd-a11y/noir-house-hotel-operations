@@ -80,6 +80,7 @@ const DEFAULT_ROLES = [
   { name: "Engineering", base: "Member", areas: ["work", "msg", "notes", "proj"] },
   { name: "Manager", base: "Manager", areas: ["work", "msg", "notes", "proj", "people", "metrics"] },
   { name: "Member", base: "Member", areas: ["work", "msg", "notes", "proj", "people"] },
+  { name: "Investor", base: "Guest", areas: ["msg", "money", "metrics"] }, // view-only: the numbers, and chat
   { name: "Guest", base: "Guest", areas: ["msg", "proj"] },
 ];
 // Which saved parts belong to which area. Parts not listed (people, spaces, settings) follow the level alone.
@@ -104,7 +105,8 @@ function withRole(u) {
 function mayRead(sec, u) {
   const ar = SEC_AREAS[sec]; if (u.role === "CEO" || !ar) return canRead(sec, u.role);
   if (!ar.some((a) => u.areas.includes(a))) return false;
-  return u.role === "Guest" ? canRead(sec, "Guest") : true;
+  // View-only roles read the areas they're given, except the project list and stages (they see shared projects only).
+  return u.role === "Guest" && ["PROJ", "SIDEP", "STGS"].includes(sec) ? canRead(sec, "Guest") : true;
 }
 function mayWrite(sec, u) {
   const ar = SEC_AREAS[sec]; if (u.role === "CEO" || !ar) return canWrite(sec, u.role);
