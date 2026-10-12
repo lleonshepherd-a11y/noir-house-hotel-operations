@@ -56,7 +56,7 @@ const ACL = {
   TASKS: [ALL, STAFF], NOTES: [STAFF, STAFF], PROJ: [STAFF, MGR], SIDEP: [STAFF, MGR], CEV: [STAFF, STAFF], ANN: [STAFF, MGR],
   TEAMP: [STAFF, CEO], MEM: [ALL, CEO], P: [ALL, CEO], SPX: [ALL, ALL], cnt: [ALL, STAFF], stamps: [ALL, STAFF], // SPX is merged per space below
   MROWS: [MGR, MGR], WK: [MGR, MGR], MET: [MGR, MGR],
-  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], STGS: [STAFF, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
+  NY: [CEO, CEO], NYP: [CEO, CEO], SO: [CEO, CEO], SPSET: [ALL, CEO], CUR: [ALL, CEO], TOK: [CEO, CEO], STGS: [STAFF, MGR], dec: [CEO, CEO], DECLOG: [CEO, CEO],
   MNY_B: [CEO, CEO], MNY_BL: [CEO, CEO], MNY_acc: [CEO, CEO], MNY_tx: [CEO, CEO], MNYn: [CEO, CEO],
   LG_meet: [CEO, CEO], LG_mem: [CEO, CEO], LG_fil: [CEO, CEO], LG_ct: [CEO, CEO],
   INV: [CEO, CEO], SAFES: [CEO, CEO], CAP: [CEO, CEO], DR: [CEO, CEO], ROUND: [CEO, CEO], UPD: [CEO, CEO], TS: [CEO, CEO],
@@ -164,6 +164,10 @@ function mergeSpx(incoming, u) {
 }
 function cleanSection(k, v) {
   v = clamp(v);
+  // Workspace currency: a known code and sensible fixed rates (per US dollar).
+  if (k === "CUR") { const codes = ["USD", "GBP", "EUR"], o = { code: codes.includes(v?.code) ? v.code : "GBP", rates: { USD: 1 } }; for (const c of ["GBP", "EUR"]) { const r = +v?.rates?.[c]; if (r > 0.01 && r < 100) o.rates[c] = r; } return o; }
+  // Token spend by API key: [name, masked key, model, dollars this month], plus six monthly totals.
+  if (k === "TOK" && v && typeof v === "object") return { sample: !!v.sample, keys: (Array.isArray(v.keys) ? v.keys : []).slice(0, 50).filter(Array.isArray).map((x) => [noTags(x[0], 80), noTags(x[1], 40), noTags(x[2], 60), Math.max(0, +x[3] || 0)]), months: (Array.isArray(v.months) ? v.months : []).slice(-12).map((n) => Math.max(0, +n || 0)) };
   if (k === "P" && v && typeof v === "object") { const o = {}; for (const [pk, x] of Object.entries(v)) if (isId(pk) && Array.isArray(x)) o[pk] = [noTags(x[0], 80), colorTok(x[1]), colorTok(x[2])]; return o; }
   if (k === "stamps" && v && typeof v === "object") { const o = {}; for (const [id, x] of Object.entries(v)) if (isId(id) && Array.isArray(x)) o[id] = [noTags(x[0], 40), noTags(x[1], 40)]; return o; }
   if (k === "cnt" && v && typeof v === "object") { const o = {}; for (const [id, x] of Object.entries(v)) o[noTags(id, 40)] = typeof x === "number" ? x : clamp(x); return o; }
