@@ -1,4 +1,4 @@
-// Helm backend: accounts, roles enforced on the server, a SQLite database,
+// Tasflow backend: accounts, roles enforced on the server, a SQLite database,
 // file storage and live updates. Zero npm dependencies (Node 22.13+).
 //   node server.mjs            → http://localhost:5173
 // Env: PORT, DATA_DIR (put this on a Railway volume), COOKIE_SECURE=1 behind HTTPS,
@@ -72,7 +72,7 @@ const canWrite = (sec, role) => ACL[sec]?.[1].includes(role);
 
 /* ---------------- Job roles: what each kind of person sees ----------------
    Everyone except the CEO has a job role (CTO, Finance, Marketing, Engineering…). Each one has a level, which decides
-   what they can change (Manager, Member or Guest), and the areas of Helm they see. The CEO edits these in Settings.
+   what they can change (Manager, Member or Guest), and the areas of Tasflow they see. The CEO edits these in Settings.
    An area that isn't ticked is never sent to that person, and changes to it are refused. */
 const AREA_IDS = ["work", "msg", "ceochat", "notes", "proj", "people", "metrics", "dec", "money", "figures", "wages", "fund", "legal", "mynotes", "mycal"];
 const DEFAULT_ROLES = [
@@ -421,7 +421,7 @@ async function hashPw(pw) { const salt = randomBytes(16); const h = await scrypt
 async function checkPw(pw, stored) { if (!stored) { DUMMY_PW ??= await hashPw(randomBytes(12).toString("hex")); await checkPw(pw, DUMMY_PW); return false; } const [s, h] = stored.split(":"); const got = await scrypt(pw, Buffer.from(s, "hex"), 64); return timingSafeEqual(got, Buffer.from(h, "hex")); }
 const SESSION_MS = 12 * 3600e3, DEVICE_DAYS = 365, RESET_MINUTES = 60, LINK_DAYS = 7, PIN_TRIES = 5;
 const INVITE_DAYS = 7;
-// The address people use to reach Helm. PUBLIC_URL (your custom domain) wins; otherwise the address of this request.
+// The address people use to reach Tasflow. PUBLIC_URL (your custom domain) wins; otherwise the address of this request.
 const publicOrigin = (url) => (process.env.PUBLIC_URL || url.origin).replace(/\/$/, "");
 // Sessions past their date are removed, not just ignored.
 const dropOldSessions = () => { const now = Date.now(); q("DELETE FROM sessions WHERE expires < ?").run(now); q("DELETE FROM devices WHERE last < ?").run(now - DEVICE_DAYS * 864e5); q("DELETE FROM signins WHERE at < ?").run(now - 30 * 864e5); q("DELETE FROM help WHERE at < ?").run(now - 7 * 864e5); };
@@ -591,8 +591,8 @@ async function api(req, res, url) {
     const u = q("SELECT * FROM users WHERE email=?").get(email);
     // Same message, same work and same timing whether or not the email has an account.
     const ok = await checkPw(String(b.password || ""), u && !u.pin && u.role === "CEO" ? u.pass : null);
-    // Helm uses PINs now. A password only still works for an owner who hasn't set a PIN yet, and they're asked to set one straight away.
-    if (!u || !ok) return send(res, 401, { error: "Helm uses PINs now. Open the sign-in link from your workspace owner." });
+    // Tasflow uses PINs now. A password only still works for an owner who hasn't set a PIN yet, and they're asked to set one straight away.
+    if (!u || !ok) return send(res, 401, { error: "Tasflow uses PINs now. Open the sign-in link from your workspace owner." });
     keys.forEach((k) => tries.delete(k));
     return send(res, 200, { ok: true }, signIn(req, u.id, "password"));
   }
@@ -603,7 +603,7 @@ async function api(req, res, url) {
     return send(res, 200, x ? { name: String(x.name).split(" ")[0], email: x.email, owner: ownerFirst() } : { owner: ownerFirst() });
   }
   if (p === "/api/pin" && m === "POST") {
-    const dev = deviceOf(req); if (!dev) return send(res, 403, { error: `This device isn’t set up for Helm yet. Open the sign-in link ${ownerFirst()} sent you.`, noDevice: true });
+    const dev = deviceOf(req); if (!dev) return send(res, 403, { error: `This device isn’t set up for Tasflow yet. Open the sign-in link ${ownerFirst()} sent you.`, noDevice: true });
     const k = "d:" + dev.token; if (tooMany(k)) return send(res, 429, tooManyMsg([k])); addTry(k);
     const x = q("SELECT * FROM users WHERE id=?").get(dev.user_id); if (!x) return send(res, 403, { error: "This account was removed.", noDevice: true });
     const b = await json(req), bad = await pinCheck(x, b.pin); if (bad) return send(res, bad.status, { error: bad.error });
@@ -630,7 +630,7 @@ async function api(req, res, url) {
   }
   // A sign-in link someone was given: it works once, for an hour, and signs out every other device.
   if (p === "/api/reset/info" && m === "GET") { const x = q("SELECT name,email,reset,reset_at FROM users WHERE reset=?").get(sha(url.searchParams.get("t") || "")); return resetOK(x) ? send(res, 200, { name: x.name, email: x.email }) : send(res, 404, { error: "Link not found" }); }
-  if (p === "/api/reset" && m === "POST") return send(res, 410, { error: `Helm uses PINs now. Ask ${ownerFirst()} for a new PIN.` });
+  if (p === "/api/reset" && m === "POST") return send(res, 410, { error: `Tasflow uses PINs now. Ask ${ownerFirst()} for a new PIN.` });
   if (p === "/api/reset-old" && m === "POST") {
     const b = await json(req); const x = b.token && q("SELECT * FROM users WHERE reset=?").get(sha(b.token));
     if (!resetOK(x)) return send(res, 404, { error: "This link has expired or was already used. Ask for a new one." });
@@ -680,13 +680,13 @@ async function api(req, res, url) {
         q("UPDATE users SET invite=NULL WHERE id=?").run(x.id); audit(x.id, "accepted invite with Google");
       } else {
         x = q("SELECT * FROM users WHERE email=? AND invite IS NULL").get(r.email);
-        if (!x) return back(`No Helm account uses ${r.email}. Ask your CEO for an invite.`);
+        if (!x) return back(`No Tasflow account uses ${r.email}. Ask your CEO for an invite.`);
       }
       res.writeHead(302, { location: "/", ...signIn(req, x.id, r.st.invite ? "invite" : "google") }); res.end(); return;
     }
   }
   // Sign in with a passkey.
-  if ((p === "/api/passkey/options" || p === "/api/passkey/signin") && m === "POST") return send(res, 410, { error: "Helm uses PINs now." });
+  if ((p === "/api/passkey/options" || p === "/api/passkey/signin") && m === "POST") return send(res, 410, { error: "Tasflow uses PINs now." });
   if (p === "/api/passkey/options-old" && m === "POST") { const k = "p:" + ip; if (tooMany(k)) return send(res, 429, tooManyMsg([k])); addTry(k); return send(res, 200, pk.signInOptions(rpOf(url).rpId)); }
   if (p === "/api/passkey/signin-old" && m === "POST") {
     const b = await json(req), { rpId, origin } = rpOf(url);
@@ -746,14 +746,14 @@ async function api(req, res, url) {
     q("UPDATE users SET blocked=1, link=NULL, link_at=NULL WHERE id=?").run(x.id); signOutAll(x.id); pk.removeAll(x.id); audit(u.id, "turned off access for " + x.email); return send(res, 200, { ok: true });
   }
   // Plans and seats. Every account with access counts (the owner, people who've joined and invites waiting), so removing
-  // someone or turning their access off frees a seat at once. Going over is never blocked: Helm suggests the next plan.
+  // someone or turning their access off frees a seat at once. Going over is never blocked: Tasflow suggests the next plan.
   if (p === "/api/plan" && m === "GET") { if (u.role !== "CEO") return send(res, 403, { error: "Owner only" }); return send(res, 200, planInfo()); }
   if (p === "/api/plan" && m === "POST") {
     if (u.role !== "CEO") return send(res, 403, { error: "Only the workspace owner changes the plan." });
     const b = await json(req), t = PLANS.find((x) => x.seats === +b.seats); if (!t) return send(res, 400, { error: "Pick one of the plans." });
     setSetting("plan", String(t.seats)); audit(u.id, `moved to the Up to ${t.seats} plan`); return send(res, 200, planInfo());
   }
-  // More than 30 people: a request for a special quote, kept for the Helm team to answer.
+  // More than 30 people: a request for a special quote, kept for the Tasflow team to answer.
   if (p === "/api/quote" && m === "POST") {
     if (u.role !== "CEO") return send(res, 403, { error: "Owner only" });
     const b = await json(req), seats = Math.max(31, Math.min(100000, Math.round(+b.seats || 0))), email = validEmail(b.email) ? b.email : u.email;
@@ -941,4 +941,4 @@ createServer(async (req, res) => {
     if (e.code === 413) res.on("finish", () => req.destroy()); // stop reading the rest of an oversized upload
     if (e.code !== 413 && e.code !== 400) console.error(e);
   }
-}).listen(PORT, () => console.log(`Helm running at http://localhost:${PORT} (data in ${DATA})`));
+}).listen(PORT, () => console.log(`Tasflow running at http://localhost:${PORT} (data in ${DATA})`));

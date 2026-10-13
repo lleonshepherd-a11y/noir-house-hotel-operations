@@ -1,5 +1,5 @@
-// Helm connections: Gmail, Google Calendar, Google Drive, QuickBooks, Xero,
-// bank accounts (Plaid) and Stripe. Read-only: Helm never moves money
+// Tasflow connections: Gmail, Google Calendar, Google Drive, QuickBooks, Xero,
+// bank accounts (Plaid) and Stripe. Read-only: Tasflow never moves money
 // or changes anything in these tools.
 //
 // OAuth apps (client ID and secret) come from environment variables, or the CEO
@@ -11,13 +11,13 @@ import { join } from "node:path";
 
 // Tests point every provider at a local mock server. Never set this in production.
 // Test-only: send every provider call to a local fake server. It would hand app secrets and tokens to that
-// address, so Helm refuses to start with it in production, on Railway, or pointing anywhere but this machine.
+// address, so Tasflow refuses to start with it in production, on Railway, or pointing anywhere but this machine.
 const MOCK = process.env.HELM_MOCK_PROVIDERS;
 if (MOCK) {
   let host = ""; try { host = new URL(MOCK).hostname; } catch {}
   const live = process.env.NODE_ENV === "production" || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_ENVIRONMENT_NAME || process.env.PUBLIC_URL;
   if (live || !["localhost", "127.0.0.1", "[::1]", "::1"].includes(host)) {
-    console.error("HELM_MOCK_PROVIDERS is for local tests only. Remove it: Helm won't start with it here.");
+    console.error("HELM_MOCK_PROVIDERS is for local tests only. Remove it: Tasflow won't start with it here.");
     process.exit(1);
   }
   console.warn("Test mode: provider calls go to " + MOCK);
@@ -59,7 +59,7 @@ export const CONNECTORS = {
 
 export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetting, audit, broadcast, DATA }) {
   db.exec("CREATE TABLE IF NOT EXISTS connections(id TEXT PRIMARY KEY, secret TEXT, account TEXT, status TEXT, last_sync INTEGER, error TEXT, created INTEGER)");
-  // Tools Helm no longer offers: drop their saved keys and status so nothing is left behind.
+  // Tools Tasflow no longer offers: drop their saved keys and status so nothing is left behind.
   for (const r of q("SELECT id FROM connections").all()) if (!CONNECTORS[r.id]) q("DELETE FROM connections WHERE id=?").run(r.id);
   { const cx = readSec("CX"); if (cx && Object.keys(cx).some((k) => !CONNECTORS[k])) writeSec("CX", Object.fromEntries(Object.entries(cx).filter(([k]) => CONNECTORS[k])), null); }
 
@@ -277,7 +277,7 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
           account = (await call(`${qbHost()}/v3/company/${sec.realmId}/companyinfo/${sec.realmId}?minorversion=75`, bearer(sec))).CompanyInfo?.CompanyName;
         } else if (app === "xero") {
           const ts = await call("https://api.xero.com/connections", bearer(sec)); const tn = (ts || []).find((x) => x.tenantType === "ORGANISATION") || ts?.[0];
-          if (!tn) throw new ProviderError("No Xero organisation was shared with Helm.", 400);
+          if (!tn) throw new ProviderError("No Xero organisation was shared with Tasflow.", 400);
           sec.tenantId = tn.tenantId; sec.connectionId = tn.id; account = tn.tenantName;
         }
         save(st.id, { secret: sec, account: account ? String(account).slice(0, 120) : null, status: "on", error: null });
@@ -292,7 +292,7 @@ export function makeConnections({ db, q, readSec, writeSec, getSetting, setSetti
     if (p === "/api/connect/bank/link" && m === "POST") {
       const c = appCreds("plaid"); if (!c) { send(res, 400, { error: "Add the Plaid keys first." }); return true; }
       try {
-        const j = await call(plaidHost() + "/link/token/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_id: c.clientId, secret: c.clientSecret, client_name: "Helm", language: "en", country_codes: (process.env.PLAID_COUNTRIES || "US,GB").split(","), user: { client_user_id: "helm-" + u.id }, products: ["transactions"] }) });
+        const j = await call(plaidHost() + "/link/token/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_id: c.clientId, secret: c.clientSecret, client_name: "Tasflow", language: "en", country_codes: (process.env.PLAID_COUNTRIES || "US,GB").split(","), user: { client_user_id: "helm-" + u.id }, products: ["transactions"] }) });
         send(res, 200, { link_token: j.link_token });
       } catch (e) { send(res, 502, { error: e.message }); }
       return true;

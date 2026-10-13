@@ -1,4 +1,4 @@
-// Passkeys (Face ID, Touch ID, Windows Hello, a phone or a security key) for signing in to Helm.
+// Passkeys (Face ID, Touch ID, Windows Hello, a phone or a security key) for signing in to Tasflow.
 // Standard WebAuthn, checked here with Node's own crypto: no extra packages.
 import { randomBytes, createHash, createPublicKey, verify } from "node:crypto";
 
@@ -55,7 +55,7 @@ export function makePasskeys({ db, q }) {
   return {
     addOptions(u, rpId) {
       const have = q("SELECT id FROM passkeys WHERE user_id=?").all(u.id);
-      return { challenge: newChallenge("add", u.id), rp: { id: rpId, name: "Helm" }, user: { id: b64u(Buffer.from("helm-" + u.id)), name: u.email, displayName: u.name },
+      return { challenge: newChallenge("add", u.id), rp: { id: rpId, name: "Tasflow" }, user: { id: b64u(Buffer.from("helm-" + u.id)), name: u.email, displayName: u.name },
         pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }], timeout: 120000, attestation: "none",
         authenticatorSelection: { residentKey: "required", requireResidentKey: true, userVerification: "preferred" }, excludeCredentials: have.map((x) => ({ type: "public-key", id: x.id })) };
     },
@@ -72,7 +72,7 @@ export function makePasskeys({ db, q }) {
     // Returns the user id the passkey belongs to.
     use(b, rpId, origin) {
       checkClient(b.clientDataJSON, "use", origin);
-      const pk = q("SELECT * FROM passkeys WHERE id=?").get(String(b.id || "")); if (!pk) throw new Error("This passkey isn’t linked to a Helm account. Sign in another way, then add it in Settings.");
+      const pk = q("SELECT * FROM passkeys WHERE id=?").get(String(b.id || "")); if (!pk) throw new Error("This passkey isn’t linked to a Tasflow account. Sign in another way, then add it in Settings.");
       const raw = fromB64u(b.authenticatorData), ad = parseAuthData(raw); checkAuth(ad, rpId);
       const signed = Buffer.concat([raw, sha256(fromB64u(b.clientDataJSON))]);
       const key = createPublicKey({ key: JSON.parse(pk.jwk), format: "jwk" });

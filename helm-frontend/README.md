@@ -1,6 +1,6 @@
-# Helm: founder console
+# Tasflow: founder console
 
-Helm shows a founder their whole company in one place: what needs them today, projects and tasks, the team, money, wages, fundraising, board and legal, messages and spaces.
+Tasflow shows a founder their whole company in one place: what needs them today, projects and tasks, the team, money, wages, fundraising, board and legal, messages and spaces.
 
 It has two parts in this folder:
 
@@ -25,7 +25,7 @@ To look at the app on its own, without accounts or saving to a server, open `ind
    - **Source → Branch:** `claude/nice-euler-o5jz2b`
    - **Source → Root Directory:** `/helm-frontend`
 3. Add a **Volume** to the service and mount it at `/data`. This is where the database and uploaded files live. Without a volume, everything is wiped on each deploy.
-4. In **Variables**, add `DATA_DIR=/data`, `HELM_SECRET` set to a long random string, and `SETUP_CODE` set to a code only you know (you type it once when you set up your account). Helm uses `HELM_SECRET` to encrypt connection tokens. If you change it later, you'll need to connect each tool again.
+4. In **Variables**, add `DATA_DIR=/data`, `HELM_SECRET` set to a long random string, and `SETUP_CODE` set to a code only you know (you type it once when you set up your account). Tasflow uses `HELM_SECRET` to encrypt connection tokens. If you change it later, you'll need to connect each tool again.
 5. Under **Networking**, click **Generate Domain**, then open that address and set up your account.
 
 Railway runs `npm start`. The health check is `/health`.
@@ -34,14 +34,14 @@ Railway runs `npm start`. The health check is `/health`.
 
 | Area | How it works |
 | --- | --- |
-| Accounts | **Access is by PIN, given by the workspace owner** (the CEO, or whoever set Helm up). Nobody chooses or resets a password, and there is no help queue: the owner handles access. Each person gets a 6-digit PIN and a one-time link. Opening the link on a phone or computer and entering the PIN sets up that device; after that they type their PIN each time they open Helm. Sessions last 12 hours. PINs are stored as scrypt hashes and easy ones (123456, 111111, 121212…) are refused. |
+| Accounts | **Access is by PIN, given by the workspace owner** (the CEO, or whoever set Tasflow up). Nobody chooses or resets a password, and there is no help queue: the owner handles access. Each person gets a 6-digit PIN and a one-time link. Opening the link on a phone or computer and entering the PIN sets up that device; after that they type their PIN each time they open Tasflow. Sessions last 12 hours. PINs are stored as scrypt hashes and easy ones (123456, 111111, 121212…) are refused. |
 | Getting back in | **Only set-up devices can try a PIN**, so nobody else can guess at it or lock anyone out. **Five wrong PINs pause that one person**; everyone else carries on. The owner fixes it in Settings → Members: **New PIN** (after a security worry, a lost phone or a pause: the old PIN stops working and every device they used is signed out, with a new link), **Device link** (same PIN, for another phone or computer), **Turn off** / **Turn on** (access off at once, without losing their work) and **Remove**. The owner changes their own PIN and gets links for their own devices in Settings (**Change PIN**, **Add a device**). If the owner loses every device, they set a new PIN with the `SETUP_CODE` variable. **New sign-ins** from another device show on your other devices with a **Not me** button. |
 | First run | The first person creates the workspace and becomes the CEO. They need the setup code: `SETUP_CODE` if you set it, otherwise the one printed in the server log. Once the workspace exists, setup is closed for good. |
-| Inviting people | Settings → Members & permissions → **Give access** (for someone already on the team list) or **Invite people** (for someone new). Helm suggests a PIN (keep it or choose another) and makes a one-time link. **Email the link** opens your email with the link ready to send; tell them the PIN yourself, in person, by phone or by text, never in the same email. Links work once and stop after 7 days. |
+| Inviting people | Settings → Members & permissions → **Give access** (for someone already on the team list) or **Invite people** (for someone new). Tasflow suggests a PIN (keep it or choose another) and makes a one-time link. **Email the link** opens your email with the link ready to send; tell them the PIN yourself, in person, by phone or by text, never in the same email. Links work once and stop after 7 days. |
 | Removing people | Settings → Members & permissions. **Sign out** ends someone's sessions on every device. **Remove** deletes their account so they can't sign in again; their name stays on their past work and open tasks until you reassign them. Anyone can use **Sign out everywhere** for their own account. |
-| Roles | Everyone has a **job role**: CEO, CTO, Finance, Marketing, Engineering, Manager, Member or Guest, and the CEO can add more (Settings → Members & permissions → **+ Add role**). Each role has a level, which decides what it can change (Manager, Member or View only), and a set of areas it sees, ticked in the **What each role can see** grid. The server enforces it: an area that isn't ticked is never sent to that person, and changes to it are refused. Out of the box, Finance sees money, wages, fundraising and legal; the CTO sees projects, metrics and decisions; Marketing sees projects, metrics and announcements; Engineering sees tasks, projects and notes. Connections and Settings stay with the CEO. **Investor** is a view-only role for VCs: they see Money, Metrics and Messages (to chat with you), can't change anything, and start on the Money page. Invite them with the Investor role. The CEO can switch between every role's dashboard with the **View as** menu in the top bar, or press **Preview** next to a person to see Helm exactly as they do. |
+| Roles | Everyone has a **job role**: CEO, CTO, Finance, Marketing, Engineering, Manager, Member or Guest, and the CEO can add more (Settings → Members & permissions → **+ Add role**). Each role has a level, which decides what it can change (Manager, Member or View only), and a set of areas it sees, ticked in the **What each role can see** grid. The server enforces it: an area that isn't ticked is never sent to that person, and changes to it are refused. Out of the box, Finance sees money, wages, fundraising and legal; the CTO sees projects, metrics and decisions; Marketing sees projects, metrics and announcements; Engineering sees tasks, projects and notes. Connections and Settings stay with the CEO. **Investor** is a view-only role for VCs: they see Money, Metrics and Messages (to chat with you), can't change anything, and start on the Money page. Invite them with the Investor role. The CEO can switch between every role's dashboard with the **View as** menu in the top bar, or press **Preview** next to a person to see Tasflow exactly as they do. |
 | Wages | Based on role, with no PIN. The CEO always sees wages. The CEO can give access to Managers from Wages → **Access**, and those Managers can view wages but not change them. Members and Guests never can. Wages are never sent with the rest of the data, and the server checks access on every request. |
-| Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. If someone else changed the same thing while you were editing, Helm asks which version to keep. Each part has a size limit; messages can be up to 4,000 characters, and each space or chat keeps its latest 2,000 messages. |
+| Saving | Every change is saved to a SQLite database on the server, so the whole team sees the same data. If someone else changed the same thing while you were editing, Tasflow asks which version to keep. Each part has a size limit; messages can be up to 4,000 characters, and each space or chat keeps its latest 2,000 messages. |
 | Messages | Spaces and direct messages are stored on the server. People only receive the spaces they're in and their own direct messages, and can only post as themselves. New messages reach everyone straight away. |
 | Live updates | When someone changes something, everyone else's screen updates within a second. |
 | Files | Uploads (space files, contract and minutes PDFs, data room documents) are stored on the server, up to 25 MB each, 5 GB for the workspace and 1 GB for each person (change these with `FILES_QUOTA_MB` and `FILES_PER_PERSON_MB`). Each file is only available to roles allowed to see that area. |
@@ -55,7 +55,7 @@ Every task has one owner, who is accountable for it, plus a due date. Open any t
 - **Waits for:** another task that has to finish first.
 - **When done, hand to:** the person who takes over next.
 
-Helm then follows each task through:
+Tasflow then follows each task through:
 
 | When | What happens |
 | --- | --- |
@@ -69,23 +69,23 @@ Each project page has a **Held up** panel. It shows what's late, who has it, how
 
 ## Connections
 
-The CEO connects tools on the **Connections** page. Helm only reads from them. Helm checks each tool again every 30 minutes, and you can press **Sync now** at any time. Tokens are stored encrypted, and only the CEO's browser receives what Helm reads.
+The CEO connects tools on the **Connections** page. Tasflow only reads from them. Tasflow checks each tool again every 30 minutes, and you can press **Sync now** at any time. Tokens are stored encrypted, and only the CEO's browser receives what Tasflow reads.
 
 | Tool | What it fills in | What you need |
 | --- | --- | --- |
 | Gmail | Your unread count and latest emails, shown under Inbox on the Briefing | A Google app (see below) |
-| Google Calendar | Your meetings on the Helm calendar, from last week to 60 days ahead. The team doesn't see them. | The same Google app |
+| Google Calendar | Your meetings on the Tasflow calendar, from last week to 60 days ahead. The team doesn't see them. | The same Google app |
 | Google Drive | Your recently changed files | The same Google app |
 | QuickBooks | Bank account balances in Money | An Intuit app |
 | Xero | Bank account balances in Money, from the Bank Summary report | A Xero app |
 | Business bank account | Balances, through Plaid | Plaid keys |
 | Stripe | MRR (monthly recurring revenue) in Money and Metrics | A restricted key with Read access to Subscriptions and Prices. Paste it on the page. |
 
-**Setting up an app (Google, QuickBooks, Xero, Plaid).** Each service needs its own app for your Helm, which you set up once:
+**Setting up an app (Google, QuickBooks, Xero, Plaid).** Each service needs its own app for your Tasflow, which you set up once:
 
 1. Open the tool on the Connections page and press **Set up**. The window links to the right developer console and shows the redirect URL to copy, for example `https://your-app.up.railway.app/api/connect/callback/google`.
 2. In that console, create the app (for Google, an OAuth client of type *Web application*; also turn on the Gmail, Calendar and Drive APIs) and add the redirect URL.
-3. Paste the Client ID and Secret into Helm. Or set them as Railway variables instead: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `QUICKBOOKS_CLIENT_ID` and `QUICKBOOKS_CLIENT_SECRET`, `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET`, or `PLAID_CLIENT_ID`, `PLAID_SECRET` and `PLAID_ENV` (`sandbox` or `production`).
+3. Paste the Client ID and Secret into Tasflow. Or set them as Railway variables instead: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `QUICKBOOKS_CLIENT_ID` and `QUICKBOOKS_CLIENT_SECRET`, `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET`, or `PLAID_CLIENT_ID`, `PLAID_SECRET` and `PLAID_ENV` (`sandbox` or `production`).
 4. Press **Connect** and sign in.
 
 A Google app starts in *Testing* mode: add your own email as a test user in Google Cloud. Gmail is a restricted scope, so letting people outside your company use it needs Google's verification. For your own inbox, testing mode is enough. If Railway sits behind a custom domain, set `PUBLIC_URL` to that address so the redirect URLs and invite links use it.
@@ -108,4 +108,4 @@ Gusto, GitHub, Figma and Carta show as *Coming soon*.
 | `passkeys.mjs` | Passkey sign-in (WebAuthn), checked with Node's built-in crypto |
 | `login.html` | Sign in with a PIN, first-run setup, joining or adding a device from the owner's link, and owner recovery |
 | `serve.mjs` | A simple server for the demo only (no accounts) |
-| `SEED_FOUNDER_NEEDS.md` | What a seed-stage company needs from Helm |
+| `SEED_FOUNDER_NEEDS.md` | What a seed-stage company needs from Tasflow |

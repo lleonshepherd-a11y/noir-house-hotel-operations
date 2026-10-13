@@ -1,6 +1,6 @@
-# What Helm needs to be good for a seed-stage company
+# What Tasflow needs to be good for a seed-stage company
 
-A seed company moves through the nine stages, from set-up to scale. At every stage the founder needs the same seven things in one place: direction, execution, people, money, fundraising, traction and the paperwork that keeps the company clean. This list says what Helm needs for each, and what the front end already has.
+A seed company moves through the nine stages, from set-up to scale. At every stage the founder needs the same seven things in one place: direction, execution, people, money, fundraising, traction and the paperwork that keeps the company clean. This list says what Tasflow needs for each, and what the front end already has.
 
 Status: **Have** = built in the front end (sample data; the backend comes later). All three front-end batches are built.
 
