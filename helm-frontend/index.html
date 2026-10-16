@@ -2462,6 +2462,27 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 /* the brand in the sidebar: a bigger mark and the name, not a menu */
 .ws-brand{cursor:default;gap:10px!important;font-size:15.5px!important;padding:4px 6px!important}.ws-brand:hover{background:none!important}
 .ws-brand .logo{width:34px!important;height:34px!important;border-radius:9px!important}
+
+/* White side menu: light colours inside the sidebar only; the rest of the app stays dark */
+:root[data-theme] .side{background:#fff!important;color:#1c1d21;border-right:1px solid #e6e6e9;
+ --fg:#111114;--fg-2:#4a4b52;--fg-3:#8a8b92;--fg-4:#b4b5bb;--line:#e7e7ea;--line-2:#f0f0f2;--hover:rgba(15,15,20,.05);--sel:rgba(15,15,20,.075);--soft:#f2f2f4;--panel:#fff;--accent:#111114}
+:root[data-theme] .side::after{display:none!important}
+:root[data-theme] .side .ws-btn{color:#111114!important}
+:root[data-theme] .side .ni{color:#3f4046!important}
+:root[data-theme] .side .ni .ic{color:#8a8b92!important}
+:root[data-theme] .side .ni:hover{color:#111114!important;background:rgba(15,15,20,.05)!important}
+:root[data-theme] .side .ni:hover .ic,:root[data-theme] .side .ni.on .ic{color:#111114!important}
+:root[data-theme] .side .ni.on{color:#111114!important;background:rgba(15,15,20,.07)!important;box-shadow:none!important}
+:root[data-theme] .side .ib{color:#55565d!important}
+:root[data-theme] .side .ib:hover{background:rgba(15,15,20,.06)!important;color:#111114!important}
+:root[data-theme] .side .badge,:root[data-theme] .side .ni .badge{background:#111114!important;color:#fff!important}
+:root[data-theme] .side .grp-h{color:#8a8b92!important}
+:root[data-theme] .side .grp-h:hover{color:#111114!important}
+:root[data-theme] .side-foot{border-top:1px solid #ececef!important}
+:root[data-theme] .side-foot b{color:#111114!important}
+:root[data-theme] .side-foot small{color:#8a8b92!important}
+:root[data-theme] .side .ws-brand .logo{box-shadow:0 1px 2px rgba(0,0,0,.18)!important}
+:root[data-theme] .side-foot .av{background:#111114!important;color:#fff!important;border:0!important}
 </style>
 </head>
 <body>
