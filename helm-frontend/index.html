@@ -2487,6 +2487,32 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 :root[data-theme] .side .ni .ic{width:18px!important;height:18px!important;stroke-width:1.9!important;color:#2b2c31!important}
 :root[data-theme] .side .ni{font-weight:500}
 :root[data-theme] .side .ni.on .ic,:root[data-theme] .side .ni:hover .ic{color:#000!important}
+
+/* Briefing: three columns under the numbers (CEO) */
+.ny3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch;margin-top:34px}
+#numTop:empty~.ny3{margin-top:34px}
+.n3c{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#161718;position:relative;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.n3c::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(74,155,237,.85) 50%,transparent)}
+.n3h{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.n3i{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(74,155,237,.12);color:#7fb8f2;flex:none}.n3i .ic{width:18px;height:18px}
+.n3h h3{margin:0;font-size:16px;font-weight:650;letter-spacing:-.01em;color:#fff}.n3h small{display:block;margin-top:2px;font-size:12px;color:#8e8e94}
+.n3n{margin-left:auto;font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#fff}.n3n.red{color:#ff7b7f}
+.n3r{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:13px 16px;border-top:1px solid rgba(255,255,255,.06)}.n3h+.n3r{border-top:0}
+.n3r>.av,.n3x{width:28px!important;height:28px!important;border-radius:7px!important;font-size:10px!important;flex:none}
+.n3x{display:grid;place-items:center;background:#1b2a3a;color:#9cc8f5;font-weight:700}
+.n3r b{display:block;font-size:13.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.n3r small{display:block;margin-top:3px;font-size:12px;color:#8e8e94;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.n3r small .red{color:#ff7b7f;font-weight:500}
+.n3b{height:28px;min-width:76px;padding:0 10px;border-radius:8px;border:0;font:inherit;font-size:12.5px;font-weight:600;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.n3b:hover{background:#e6e6e6}
+.n3b.g{background:#232326;color:#fff}.n3b.g:hover{background:#2c2c30}
+.n3d{padding:15px 18px;border-top:1px solid rgba(255,255,255,.06)}.n3h+.n3d{border-top:0}
+.n3d .tt{display:flex;align-items:center;gap:8px;min-width:0}.n3d .tt b{font-size:13.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.n3d .urg{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:rgba(229,72,77,.14);color:#ff7b7f;flex:none}
+.n3d p{margin:4px 0 11px;font-size:12px;color:#8e8e94;line-height:1.45}
+.n3o{display:grid;grid-template-columns:1fr 1fr;gap:8px}.n3o button{height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#1c1c1f;color:#fff;font:inherit;font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer}.n3o button:hover{border-color:rgba(255,255,255,.3)}
+.n3d .who{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:#8e8e94}.n3d .who .av{width:20px!important;height:20px!important;border-radius:5px!important;font-size:9px!important}
+.n3f{margin-top:auto;padding:12px 18px;border:0;border-top:1px solid rgba(255,255,255,.07);background:none;font:inherit;font-size:12.5px;color:#a9a9b0;font-weight:500;display:flex;justify-content:center;cursor:pointer;width:100%}.n3f:hover{color:#fff}
+.n3e{padding:22px 18px;font-size:13px;color:#8e8e94;text-align:center}
+@media (max-width:1100px){.ny3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -2577,6 +2603,7 @@ function ceoKey(){try{const m=MEM.find(x=>x[1]==='CEO');return m&&P[m[0]]?m[0]:'
               <div id="numTop"></div>
               <div class="sp-sec" id="nyHead">Needs you <span id="nyN">6</span></div>
               <div class="cards" id="nyCards"></div>
+              <div class="ny3" id="ny3" hidden></div>
               <div id="ctoDash" hidden></div>
               <div id="hopDash" hidden></div>
               <div id="leDash" hidden></div>
@@ -5224,6 +5251,29 @@ const ROLE_HIDE={CFO:['feedback','announce']};
 {const c0=can;can=function(v,who=VIEWER){if(roleOf(who)!=='CEO'&&(ROLE_HIDE[jobOf(who)]||[]).includes(v))return false;return c0(v,who)}}
 {const nl=notifList;notifList=function(){const l=nl();return can('announce')?l:l.filter(x=>!String(x[6]||'').startsWith('ann'))}}
 {const sv=showView;showView=function(v,...a){if(!can(v)&&(ROLE_HIDE[jobOf(VIEWER)]||[]).includes(v))v='home';return sv.call(this,v,...a)}}
+
+/* ---------- Briefing: Needs you, Waiting on others, Decisions today (CEO, three columns) ---------- */
+const N3I={need:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',wait:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',dec:'<path d="M12 3v18M5 7h14M5 7l-2.5 6a3 3 0 005 0zM19 7l-2.5 6a3 3 0 005 0z"/>'};
+const N3T={n3:'Approve launch video',n4:'Reply to Northbeam',n5:'Pen-test report','acct-MUR-118':'Pen-test report',n6:'Approve board pack',n2:'Senior or two mid-level?'};
+const N3S={n4:'Term sheet'};
+const N3O={n1:['18 Nov','2 Dec'],n2:['1 senior','2 mid-level']};
+const N3W=[{id:'w1',who:'ML',t:'Q3 finance section',s:'Maya · Due Thu',b:'Nudge'},{id:'w2',ext:'NB',t:'Northbeam',s:'Redlines answer · 3 days',b:'Follow up',to:'Northbeam'},{id:'w3',ext:'AP',t:'Apple App Store',s:'In review since 14 Oct',b:'Check',to:'App Store Connect'}];
+function n3Col(k,title,sub,n,red,body,foot,go){return `<div class="n3c"><div class="n3h"><span class="n3i"><svg class="ic" viewBox="0 0 24 24">${N3I[k]}</svg></span><div><h3>${title}</h3><small>${sub}</small></div><span class="n3n${red?' red':''}">${n}</span></div>${body}<button class="n3f" data-n3view="${go}">${foot} →</button></div>`}
+function renderNY3(){const box=$('#ny3');if(!box)return;const left=NY.filter(x=>!x.done),fn=w=>esc((P[w]||[w])[0].split(' ')[0]);
+ const dec=left.filter(x=>x.act==='Decide'),wait=left.filter(x=>x.k==='blocked').filter((x,i,a)=>!(x.id==='n5'&&a.some(y=>y.id!=='n5'&&/MUR-118/.test(y.t)))),need=left.filter(x=>x.act!=='Decide'&&x.k!=='blocked');
+ const row=x=>`<div class="n3r">${av(x.who)}<div><b>${esc(N3T[x.id]||x.t)}</b><small>${esc(N3S[x.id]||fn(x.who))} · ${esc(x.due)}</small></div><button class="n3b" data-n3="${esc(x.id)}">${esc(x.act==='Open'?'Reply':x.act)}</button></div>`;
+ const wrow=x=>`<div class="n3r">${av(x.who)}<div><b>${esc(N3T[x.id]||x.t)}</b><small>${fn(x.who)} · <span class="red">${esc(String(x.due).replace(/^Waiting (\d+) days$/,'$1 days late'))}</span></small></div><button class="n3b g" data-n3="${esc(x.id)}">${esc(x.act)}</button></div>`;
+ const xrow=w=>`<div class="n3r">${w.ext?`<span class="n3x">${w.ext}</span>`:av(w.who)}<div><b>${esc(w.t)}</b><small>${esc(w.s)}</small></div><button class="n3b g" data-n3w="${w.id}">${esc(w.b)}</button></div>`;
+ const drow=x=>`<div class="n3d"><div class="tt"><b>${esc(N3T[x.id]||x.t)}</b>${nyUrgent(x)?'<span class="urg">Urgent</span>':''}</div><p>${esc(x.d)}</p><div class="n3o">${(N3O[x.id]||['Open','Later']).map(o=>`<button data-n3="${esc(x.id)}">${esc(o)}</button>`).join('')}</div><div class="who">${av(x.who)}${fn(x.who)} asked · ${esc(x.due.replace(/^Due /,'due '))}</div></div>`;
+ const empty=t=>`<div class="n3e">${t}</div>`;
+ box.innerHTML=n3Col('need','Needs you','Approvals and replies',need.length,false,need.map(row).join('')||empty('All caught up'),'Open my tasks','mytasks')
+  +n3Col('wait','Waiting on others','Team and outside replies',wait.length+N3W.length,false,wait.map(wrow).join('')+N3W.map(xrow).join(''),'See everything outstanding','week')
+  +n3Col('dec','Decisions today','Only you can make these',dec.length,dec.some(nyUrgent),dec.map(drow).join('')||empty('No decisions waiting'),'Decisions log','decisions')}
+{const rn=renderNY;renderNY=function(){rn();const ceo=roleOf(VIEWER)==='CEO',b=$('#ny3');if(!b)return;b.hidden=!ceo;['#nyTools','#nyHead','#nyCards'].forEach(q=>{const e=$(q);if(e)e.style.display=ceo?'none':''});if(ceo)renderNY3()}}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-n3]');if(a){const x=NY.find(y=>y.id===a.dataset.n3);if(x&&x.go)x.go();return}
+ const w=e.target.closest('[data-n3w]');if(w){const x=N3W.find(y=>y.id===w.dataset.n3w);if(x)toast(`<b>${x.b==='Check'?'Checked':'Reminder sent'}</b>`,x.to?`${esc(x.to)}`:`${esc(P[x.who][0])} will see it in Messages`);return}
+ const v=e.target.closest('[data-n3view]');if(v)showView(can(v.dataset.n3view)?v.dataset.n3view:'mytasks')});
+renderNY();
 applyRole();
 roleDash();
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
