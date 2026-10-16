@@ -2522,6 +2522,9 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 #view-home #hello{display:none!important}
 .bar #crumb .hello-t{color:#fff;font-weight:600;font-size:14px}
 #view-home .ph2{align-items:center!important}
+#view-home .ph2 .eyebrow{display:none!important}
+.bar #crumb .hello-d{color:#8e8e94;font-weight:500;font-size:13px;white-space:nowrap;padding-left:12px;margin-left:4px;border-left:1px solid rgba(255,255,255,.14)}
+@media (max-width:640px){.bar #crumb .hello-d{display:none}}
 </style>
 </head>
 <body>
@@ -5286,10 +5289,10 @@ renderNY();
 
 /* ---------- Briefing: the greeting sits in the top bar instead of "BRF-41 Morning briefing" ---------- */
 function helloCrumb(){if(curView!=='home')return;const c=$('#crumb'),h=$('#hello');if(!c||!h)return;const t=h.textContent.trim();if(!t)return;
- const sq=(c.querySelector('svg.ic[style*="2d9bff"]')||{}).outerHTML||'';const want=`${sq}<span class="t hello-t">${esc(t)}</span>`;if(c.innerHTML!==want)c.innerHTML=want}
+ const sq=(c.querySelector('svg.ic[style*="2d9bff"]')||{}).outerHTML||'';const dt=(($('#hDate')||{}).textContent||'').trim();const want=`${sq}<span class="t hello-t">${esc(t)}</span>${dt?`<span class="hello-d">${esc(dt)}</span>`:''}`;if(c.innerHTML!==want)c.innerHTML=want}
 {const sv=showView;showView=function(...a){const r=sv.apply(this,a);helloCrumb();return r}}
 {const sd=setDayText;setDayText=function(){sd();helloCrumb()}}
-{const h=$('#hello');if(h)new MutationObserver(helloCrumb).observe(h,{childList:true,characterData:true,subtree:true})}
+['#hello','#hDate'].forEach(q=>{const h=$(q);if(h)new MutationObserver(helloCrumb).observe(h,{childList:true,characterData:true,subtree:true})})
 applyRole();
 roleDash();
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
