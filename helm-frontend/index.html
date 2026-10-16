@@ -2535,6 +2535,37 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 @media (max-width:640px){.bar .bar-clock{display:none!important}}
 .bar #crumb .hello-d{color:#8e8e94;font-weight:500;font-size:13px;white-space:nowrap;padding-left:12px;margin-left:4px;border-left:1px solid rgba(255,255,255,.14)}
 @media (max-width:640px){.bar #crumb .hello-d{display:none}}
+
+/* Sidebar: icons only, labels on hover (desktop) */
+@media (min-width:861px){
+:root[data-theme] .app{grid-template-columns:76px minmax(0,1fr)!important}
+:root[data-theme] .side:not(#_k){padding:14px 0 12px!important;align-items:center;overflow:visible}
+:root[data-theme] .side .ws{flex-direction:column!important;align-items:center!important;gap:10px!important;padding:0 0 10px!important;margin:0!important}
+:root[data-theme] .side .ws-brand{font-size:0!important;gap:0!important;padding:0!important;justify-content:center}
+:root[data-theme] .side .ws-r{flex-direction:column!important;gap:4px!important;margin:0!important}
+:root[data-theme] .side .ws-r .ib{width:44px!important;height:40px!important}
+:root[data-theme] .side .ws-r .ib .ic{width:20px!important;height:20px!important}
+:root[data-theme] .side .side-sc{width:100%;display:flex;flex-direction:column;align-items:center;overflow-x:hidden}
+:root[data-theme] .side .nav{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+:root[data-theme] .side .ni:not(#_k){width:48px!important;height:44px!important;padding:0!important;gap:0!important;justify-content:center!important;font-size:0!important;position:relative;border-radius:10px!important;margin:0!important}
+:root[data-theme] .side .ni:not(#_k) .ic,:root[data-theme] .side .ni:not(#_k)>svg:first-child{width:22px!important;height:22px!important;margin:0!important}
+:root[data-theme] .side .ni .c,:root[data-theme] .side .ni .spchev,:root[data-theme] .side .subnav{display:none!important}
+:root[data-theme] .side .ni .badge{position:absolute!important;top:3px;right:2px;margin:0!important;font-size:9.5px!important;font-weight:700!important;min-width:18px!important;width:auto!important;height:18px!important;line-height:14px!important;padding:0 4px!important;border-radius:9px!important;border:2px solid #fff!important;box-sizing:border-box!important;text-align:center}
+:root[data-theme] .side .grp{width:100%;display:flex;flex-direction:column;align-items:center;margin-top:8px!important;padding-top:8px;border-top:1px solid #ececef}
+:root[data-theme] .side .grp-row{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;padding:0!important}
+:root[data-theme] .side .grp-h:not(#_k){width:48px;height:40px;padding:0!important;font-size:0!important;justify-content:center;display:flex!important;align-items:center;border-radius:10px;color:#2b2c31}
+:root[data-theme] .side .grp-h:hover{background:rgba(15,15,20,.06)}
+:root[data-theme] .side .grp-h>svg:not(.grp-ic){display:none!important}
+:root[data-theme] .side .grp-h .grp-ic{display:block!important;width:21px;height:21px}
+:root[data-theme] .side .grp-add{width:48px!important;height:28px!important;margin:0!important;opacity:.7}
+:root[data-theme] .side .side-foot:not(#_k){width:auto!important;justify-content:center;padding:6px!important;margin:8px auto 0!important}
+:root[data-theme] .side .side-foot>div,:root[data-theme] .side .side-foot>svg{display:none!important}
+:root[data-theme] .side .side-foot .av{width:34px!important;height:34px!important;font-size:12px!important}
+}
+.grp-h .grp-ic{display:none}
+.side-tip{position:fixed;z-index:200;pointer-events:none;background:#111114;color:#fff;font:500 12.5px/1 Inter,system-ui,sans-serif;padding:8px 10px;border-radius:8px;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transform:translateX(-4px);transition:opacity .12s,transform .12s}
+.side-tip.on{opacity:1;transform:none}
+.side-tip::before{content:"";position:absolute;left:-4px;top:50%;width:8px;height:8px;background:#111114;transform:translate(0,-50%) rotate(45deg)}
 </style>
 </head>
 <body>
@@ -5306,6 +5337,21 @@ function barClock(){const c=document.querySelector('.bar-clock');if(c)c.hidden=c
 {const sv=showView;showView=function(...a){const r=sv.apply(this,a);helloCrumb();barClock();return r}}
 {const sd=setDayText;setDayText=function(){sd();helloCrumb()}}
 ['#hello','#hDate'].forEach(q=>{const h=$(q);if(h)new MutationObserver(helloCrumb).observe(h,{childList:true,characterData:true,subtree:true})})
+
+/* ---------- Sidebar: icons only on desktop, name shows on hover ---------- */
+{const RAIL=matchMedia('(min-width:861px)');
+ const GI={wsHead:'<path d="M4 21V5a2 2 0 012-2h7a2 2 0 012 2v16"/><path d="M15 9h3a2 2 0 012 2v10M3 21h18M8 7h3M8 11h3M8 15h3"/>',proj:'<path d="M20.5 19a2 2 0 01-2 2h-13a2 2 0 01-2-2V5a2 2 0 012-2h3.9a2 2 0 011.7.9l.8 1.2a2 2 0 001.7.9h4.9a2 2 0 012 2z"/>'};
+ $$('.side .grp-h').forEach(h=>{if(h.querySelector('.grp-ic'))return;const k=h.id==='wsHead'?'wsHead':'proj';h.insertAdjacentHTML('afterbegin',`<svg class="ic grp-ic" viewBox="0 0 24 24">${GI[k]}</svg>`)});
+ const tip=document.createElement('div');tip.className='side-tip';document.body.appendChild(tip);
+ const label=el=>{if(el.classList.contains('side-foot'))return 'Alex Kim · Settings';if(el.dataset.tipL)return el.dataset.tipL;
+  const t=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();return t||el.getAttribute('aria-label')||el.title||''};
+ const side=$('.side');let cur=null;
+ side.addEventListener('mouseover',e=>{if(!RAIL.matches)return;const el=e.target.closest('.ni,.grp-h,.grp-add,.ws-r .ib,.side-foot');if(!el||el===cur)return;cur=el;
+  if(el.title){el.dataset.tipL=el.title.replace(/\s+\(.*\)|\s+⌘K/,'').trim();el.removeAttribute('title')}
+  const l=label(el);if(!l){tip.classList.remove('on');return}tip.textContent=l;const r=el.getBoundingClientRect();tip.style.left=(side.getBoundingClientRect().right+8)+'px';tip.style.top=(r.top+r.height/2-tip.offsetHeight/2)+'px';tip.classList.add('on')});
+ side.addEventListener('mouseleave',()=>{cur=null;tip.classList.remove('on')});
+ side.addEventListener('scroll',()=>tip.classList.remove('on'),true);
+ document.addEventListener('click',()=>tip.classList.remove('on'),true)}
 applyRole();
 roleDash();
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
