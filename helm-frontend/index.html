@@ -2524,6 +2524,15 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 #view-home .ph2{align-items:center!important}
 #view-home .ph2 .eyebrow{display:none!important}
 #view-home .note{display:none!important}
+#view-home .ph2{display:none!important}
+.bar .bar-clock{display:flex;align-items:center;margin-right:10px;padding-right:14px;border-right:1px solid rgba(255,255,255,.12);height:22px}
+.bar .bar-clock[hidden]{display:none!important}
+.bar .bar-clock .hc-t{display:flex!important;flex-direction:row!important;align-items:baseline!important;gap:6px!important}
+.bar .bar-clock #hcTime{font-size:15px!important;font-weight:600!important;color:#fff!important;font-variant-numeric:tabular-nums;letter-spacing:0!important}
+.bar .bar-clock #hcZone{font-size:12px!important;color:#8e8e94!important;font-weight:500!important}
+#view-home .spgrid{margin-top:0}
+#view-home .wrap.wide{padding-top:32px!important}
+@media (max-width:640px){.bar .bar-clock{display:none!important}}
 .bar #crumb .hello-d{color:#8e8e94;font-weight:500;font-size:13px;white-space:nowrap;padding-left:12px;margin-left:4px;border-left:1px solid rgba(255,255,255,.14)}
 @media (max-width:640px){.bar #crumb .hello-d{display:none}}
 </style>
@@ -5292,7 +5301,9 @@ renderNY();
 /* ---------- Briefing: the greeting sits in the top bar instead of "BRF-41 Morning briefing" ---------- */
 function helloCrumb(){if(curView!=='home')return;const c=$('#crumb'),h=$('#hello');if(!c||!h)return;const t=h.textContent.trim();if(!t)return;
  const sq=(c.querySelector('svg.ic[style*="2d9bff"]')||{}).outerHTML||'';const dt=(($('#hDate')||{}).textContent||'').trim();const want=`${sq}<span class="t hello-t">${esc(t)}</span>${dt?`<span class="hello-d">${esc(dt)}</span>`:''}`;if(c.innerHTML!==want)c.innerHTML=want}
-{const sv=showView;showView=function(...a){const r=sv.apply(this,a);helloCrumb();return r}}
+{const c=document.querySelector('#view-home .hclock'),br=document.querySelector('.bar-r');if(c&&br){c.classList.add('bar-clock');br.prepend(c)}}
+function barClock(){const c=document.querySelector('.bar-clock');if(c)c.hidden=curView!=='home'}
+{const sv=showView;showView=function(...a){const r=sv.apply(this,a);helloCrumb();barClock();return r}}
 {const sd=setDayText;setDayText=function(){sd();helloCrumb()}}
 ['#hello','#hDate'].forEach(q=>{const h=$(q);if(h)new MutationObserver(helloCrumb).observe(h,{childList:true,characterData:true,subtree:true})})
 applyRole();
