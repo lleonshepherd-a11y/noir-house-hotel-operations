@@ -2517,6 +2517,11 @@ h1.title .cur-tag{font-size:11px;position:relative;top:-3px}
 /* Briefing: use the width, smaller side gaps */
 #view-home .wrap.wide{max-width:1320px!important;padding-left:40px!important;padding-right:40px!important}
 @media (max-width:640px){#view-home .wrap.wide{padding-left:16px!important;padding-right:16px!important}}
+
+/* Briefing: greeting moved to the top bar */
+#view-home #hello{display:none!important}
+.bar #crumb .hello-t{color:#fff;font-weight:600;font-size:14px}
+#view-home .ph2{align-items:center!important}
 </style>
 </head>
 <body>
@@ -5278,6 +5283,13 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-n3]');if(a
  const w=e.target.closest('[data-n3w]');if(w){const x=N3W.find(y=>y.id===w.dataset.n3w);if(x)toast(`<b>${x.b==='Check'?'Checked':'Reminder sent'}</b>`,x.to?`${esc(x.to)}`:`${esc(P[x.who][0])} will see it in Messages`);return}
  const v=e.target.closest('[data-n3view]');if(v)showView(can(v.dataset.n3view)?v.dataset.n3view:'mytasks')});
 renderNY();
+
+/* ---------- Briefing: the greeting sits in the top bar instead of "BRF-41 Morning briefing" ---------- */
+function helloCrumb(){if(curView!=='home')return;const c=$('#crumb'),h=$('#hello');if(!c||!h)return;const t=h.textContent.trim();if(!t)return;
+ const sq=(c.querySelector('svg.ic[style*="2d9bff"]')||{}).outerHTML||'';const want=`${sq}<span class="t hello-t">${esc(t)}</span>`;if(c.innerHTML!==want)c.innerHTML=want}
+{const sv=showView;showView=function(...a){const r=sv.apply(this,a);helloCrumb();return r}}
+{const sd=setDayText;setDayText=function(){sd();helloCrumb()}}
+{const h=$('#hello');if(h)new MutationObserver(helloCrumb).observe(h,{childList:true,characterData:true,subtree:true})}
 applyRole();
 roleDash();
 {const h=location.hash.slice(1);showView(h&&document.getElementById('view-'+h)?h:'home')}
